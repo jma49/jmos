@@ -9,7 +9,9 @@ export interface OSData {
   location: string;
   email: string;
   links: { github: string; linkedin: string; photography: string };
-  bio: { short: string[]; long: string[] };
+  bio: { short: string[] };
+  /** About Me's opening: "Jincheng is building ocra in San Jose." and a few lines on them. */
+  summary: { now: string; project: string; place: string; text: string[] };
   jobs: {
     company: string;
     role: string;

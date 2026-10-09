@@ -475,6 +475,9 @@ The folders of `src/os/` are layers or domains. The layers are `core/`
   reset link's token) as it's handled, so a reload doesn't open it again
   (`core/deepLink.ts`). An applet not installed opens its store page, and
   Time Machine takes the screen, as from anywhere else (`launch()`).
+- `/profile` is the link to share: a temporary redirect in `vercel.json`
+  to `/?open=about`, the About Me window
+  ([0023](../decisions/0023-about-me-is-the-profile.md)).
 - The home page's browser tab says "Jincheng" (`tabTitle` in
   `Layout.astro`); link previews keep the full title.
 - There's no Chinese site any more: `/zh/*` redirects to the English
