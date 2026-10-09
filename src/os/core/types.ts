@@ -12,12 +12,15 @@ export interface OSData {
   bio: { short: string[] };
   /** About Me's opening: "Jincheng is building ocra in San Jose." and a few lines on them. */
   summary: { now: string; project: string; place: string; text: string[] };
+  /** The Résumé's header line, summary and the projects it lists. */
+  resume: { headline: string; summary: string; projects: { name: string; focus: string; link: string; bullets: string[] }[] };
   jobs: {
     company: string;
     role: string;
     period: string;
     summary: string;
-    bullets: string[];
+    /** Bullets in groups; a group's title, when it has one, is shown above them. */
+    sections: { title?: string; bullets: string[] }[];
   }[];
   skills: { name: string; items: string[] }[];
   education: { school: string; degree: string; period: string }[];
