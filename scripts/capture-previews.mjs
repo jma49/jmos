@@ -16,7 +16,8 @@
 // Every image is kept in git for good, so a capture is only written when
 // the page changed visibly: more than 0.1% of its pixels, compared with the
 // image already there. What the page shows is pinned for the same reason:
-// the clock and time zone (San Jose, 9:41 in the morning) and the weather
+// the clock and time zone (San Jose, 9:41 in the morning; the clock only on
+// this site's own pages) and the weather
 // in the menu bar (a fixed forecast instead of Open-Meteo's live one), so
 // an unchanged site captures the same wherever and whenever it runs. A page
 // that answers with an HTTP error keeps its old image.
@@ -163,7 +164,9 @@ try {
     );
     const page = await context.newPage();
     // Freeze time so the JM/OS menu-bar clock doesn't change every capture.
-    await page.clock.setFixedTime(NOW);
+    // Only on this site's own pages: a frozen clock also stops other sites'
+    // entrance animations, leaving their content blank in the capture.
+    if (target.startsWith('/')) await page.clock.setFixedTime(NOW);
     // Keep the current cover when the page is down; an error page is not a
     // preview. `::warning::` surfaces the skip in the GitHub Actions summary.
     const response = await page.goto(url, { waitUntil: 'networkidle' });

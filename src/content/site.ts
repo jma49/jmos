@@ -59,17 +59,18 @@ export const content = {
   jobs: [
     {
       company: 'TikTok',
-      role: 'Software Engineer in Test, Developer Tools & Agent Infrastructure',
+      role: 'Software Engineer in Test, AI Agents & Test Infrastructure',
       location: 'San Jose, CA',
       period: 'Jul 2025 – Sep 2026',
-      summary: 'Brought AI agents into code review and test design, and built the CI gates and developer tooling around them for 30+ repositories.',
+      summary: 'Brought AI agents into code review, and built the test automation, CI gates and reliability work around them across 30+ repositories.',
       bullets: [
-        'Built a multi-agent code review system that runs in CI on every merge request across 30+ internal repositories. A coordinator runs 7 specialist reviewers in parallel (security, performance, code quality, docs, release, internal standards), merges and de-duplicates their findings, and blocks the merge on critical issues. Review turnaround dropped by about 50%, and it has caught 100+ issues rated P2 or higher.',
-        'Kept it cheap and reliable enough to run on every merge request: the number of reviewers and the model tier scale with diff size and sensitive paths, reviewers share one cached context instead of each getting a copy (token spend down 30%+), and each run has per-model fallbacks, timeouts, and input sanitization against prompt injection. Per-review token and cost tracking made it possible to compare models on quality, latency and cost.',
-        'Built an AI pipeline that goes from PRD to test cases to automation scripts, raising test-case writing efficiency by 60% and cutting script development time by 70%.',
-        'Wired backend API, integration and E2E suites for Trust & Safety products into CI/CD as release gates. P0/P1 regression automation went from 80.21% to 95.82%.',
-        'Used production metrics and on-call trends to guide reliability work. Production issues dropped by 30%, and inspection stability went from 93.94% to 99.99%.',
-        'Compared deployments across regions in app code, runtime config, middleware and third-party dependencies, found 19 region-specific scenarios and 60 config sets, and turned them into layered CI checks to catch config drift early.'
+        'Built a CI-native multi-agent code review system that reviews every merge request across 30+ internal repositories. It runs OpenCode agent sessions behind a plugin architecture that keeps the code host, the model provider and internal engineering-standard checks separate.',
+        'Wrote the coordinator agent: it fans out to 7 specialist reviewers running in parallel, each in its own session (security, performance, code quality, docs, release, internal compliance), then merges their output into one schema-validated review. It de-duplicates findings, moves misfiled ones to the right category, drops speculative noise, and blocks the merge on any critical issue.',
+        "Calibrated the coordinator's severity calls against human reviewers' judgment, so they were right and not just consistent. Streaming JSONL telemetry attributed tokens and cost to each task, which made it possible to compare models and configurations on quality, latency and cost per review.",
+        'Cut the cost of each review: the number of reviewers and the model tier scale with diff size, file count and security-sensitive paths, diff noise is filtered out, and reviewers share one cached context file instead of each getting a copy, which brought token spend down by more than 30%.',
+        'Made it dependable in CI with per-model circuit breakers and fallback chains, timeouts at several levels, detection of hung sessions, and input sanitization that closes prompt-injection paths into the coordinator.',
+        'Owned test automation for Trust & Safety products: backend API, integration and frontend E2E suites wired into CI/CD as release gates. P0/P1 regression automation went from 80.21% to 95.82%. Using production metrics and on-call trends to guide reliability work, production issues dropped by 30% and inspection stability went from 93.94% to 99.99%.',
+        'Led a test-gap analysis across regions in app code, runtime config, middleware and third-party dependencies. It found 19 region-specific scenarios and 60 config sets, which became layered checks: config diffs and snapshots, API/RPC assertions and targeted E2E tests.'
       ]
     },
     {
@@ -101,20 +102,20 @@ export const content = {
     groups: [
       {
         name: 'AI agents',
-        items: ['Multi-agent systems', 'Agent orchestration', 'MCP', 'LLM evaluation', 'Claude Code', 'Cursor']
+        items: ['Multi-agent systems', 'Agent orchestration', 'MCP', 'LLM evaluation', 'LLM observability', 'Claude Code', 'Cursor']
       },
-      { name: 'Languages', items: ['Go', 'Python', 'TypeScript', 'Java', 'SQL'] },
+      { name: 'Languages', items: ['Go', 'Python', 'TypeScript', 'JavaScript', 'Java', 'SQL'] },
       {
         name: 'Backend',
-        items: ['REST', 'gRPC', 'PostgreSQL', 'MySQL', 'Redis', 'Kafka', 'Next.js']
+        items: ['REST', 'gRPC', 'Microservices', 'PostgreSQL', 'MySQL', 'Redis', 'Kafka', 'Spring Boot', 'Next.js', 'React']
       },
       {
         name: 'Testing',
-        items: ['Playwright', 'Pytest', 'JUnit', 'API & integration testing', 'E2E testing']
+        items: ['Playwright', 'Pytest', 'JUnit', 'Postman', 'API & integration testing', 'E2E testing', 'Regression testing']
       },
       {
         name: 'Infrastructure',
-        items: ['Docker', 'Kubernetes', 'AWS', 'GCP', 'GitHub Actions', 'GitLab CI']
+        items: ['Docker', 'Kubernetes', 'AWS', 'GCP', 'Linux', 'GitHub Actions', 'GitLab CI']
       }
     ]
   },
