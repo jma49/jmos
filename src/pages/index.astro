@@ -41,7 +41,8 @@ const data: OSData = {
     linkedin: profile.linkedin,
     photography: profile.photography
   },
-  bio: { short: [...t.bio.shortParagraphs], long: [...t.bio.longParagraphs] },
+  bio: { short: [...t.bio.shortParagraphs] },
+  summary: { ...t.summary, text: [...t.summary.text] },
   jobs: t.jobs.map((j) => ({ ...j, bullets: [...j.bullets] })),
   skills: t.skills.groups.map((g) => ({ name: g.name, items: [...g.items] })),
   education: t.education.items.map((e) => ({ ...e })),

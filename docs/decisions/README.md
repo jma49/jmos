@@ -35,3 +35,4 @@ replaces; don't delete the old one.
 | [0020](0020-the-migrations-are-the-schema.md) | The migrations are the schema | 2026-10-03 |
 | [0021](0021-nothing-is-added-to-the-desktop.md) | Nothing is added to the desktop | 2026-09-29 |
 | [0022](0022-handled-errors-are-reported.md) | Handled errors are reported | 2026-10-03 |
+| [0023](0023-about-me-is-the-profile.md) | About Me is the profile | 2026-10-08 |

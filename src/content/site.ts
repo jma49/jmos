@@ -27,6 +27,18 @@ export const content = {
     illustrationCredit: 'Illustration redrawn with AI from a photo I took.'
   },
   role: 'Software Engineer',
+  // About Me opens with this, the way a status reads: what Jincheng is up to
+  // now (`project` is a project's slug, opened from the sentence), then a few
+  // lines on who they are rather than their work history.
+  summary: {
+    now: 'Jincheng is building',
+    project: 'ocra',
+    place: 'in San Jose.',
+    text: [
+      "I'm a software engineer in the Bay Area. I like handing the tedious parts of shipping software to AI agents, review, tests and release, and building the tools that let a small team move fast. I'm looking for my next role.",
+      'Away from the keyboard I boulder (V6 for now), take photos and keep an eye on the markets. This desktop is where I keep my things; look around.'
+    ]
+  },
   bio: {
     label: 'Bio',
     short: 'Default',
