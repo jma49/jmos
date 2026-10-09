@@ -1,7 +1,6 @@
 import { useState, type CSSProperties } from 'react';
 import { createPortal } from 'react-dom';
 import { useOSData } from '../../core/context';
-import { plain } from '../../core/inline';
 import type { OSData } from '../../core/types';
 
 const ZOOMS = [0.75, 0.9, 1, 1.15, 1.3];
@@ -55,7 +54,7 @@ function ResumeSheet({ data, className, style }: { data: OSData; className: stri
     <article className={className} style={style}>
       <header className="os-cv-header">
         <h1>{data.name}</h1>
-        <p className="os-cv-role">{data.role}</p>
+        <p className="os-cv-role">{data.resume.headline}</p>
         <p className="os-cv-where">{data.location}</p>
       </header>
 
@@ -104,8 +103,8 @@ function ResumeSheet({ data, className, style }: { data: OSData; className: stri
 
         <main className="os-cv-main">
           <section>
-            <h2>Profile</h2>
-            <p className="os-cv-profile">{plain(data.bio.short[0])}</p>
+            <h2>Summary</h2>
+            <p className="os-cv-profile">{data.resume.summary}</p>
           </section>
 
           <section>
@@ -118,8 +117,33 @@ function ResumeSheet({ data, className, style }: { data: OSData; className: stri
                 </div>
                 <p className="os-cv-job-role">{job.role}</p>
                 <p className="os-cv-job-summary">{job.summary}</p>
+                {job.sections.map((group, i) => (
+                  <div key={i} className="os-cv-group">
+                    {group.title && <h4>{group.title}</h4>}
+                    <ul>
+                      {group.bullets.map((b, j) => (
+                        <li key={j}>{b}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </section>
+
+          <section>
+            <h2>Projects</h2>
+            {data.resume.projects.map((project) => (
+              <div key={project.name} className="os-cv-job">
+                <div className="os-cv-job-head">
+                  <h3>{project.name}</h3>
+                  <a className="os-cv-date" href={project.link} target="_blank" rel="noopener">
+                    {project.link.replace(/^https?:\/\//, '').replace(/\/$/, '')}
+                  </a>
+                </div>
+                <p className="os-cv-job-role">{project.focus}</p>
                 <ul>
-                  {job.bullets.map((b, i) => (
+                  {project.bullets.map((b, i) => (
                     <li key={i}>{b}</li>
                   ))}
                 </ul>
