@@ -1,5 +1,60 @@
 [
   {
+    "id": "XL7UDwPWeU8",
+    "width": 7008,
+    "height": 4672,
+    "color": "#262626",
+    "taken": "2026-10-20T06:21:06Z",
+    "alt": "The Golden Gate Bridge illuminated at night with city lights in the distance",
+    "thumb": "https://images.unsplash.com/photo-1792477218645-ab899a315b89?ixlib=rb-4.1.0&w=480&q=70&auto=format&fit=max",
+    "full": "https://images.unsplash.com/photo-1792477218645-ab899a315b89?ixlib=rb-4.1.0&w=2000&q=82&auto=format&fit=max",
+    "page": "https://unsplash.com/photos/golden-gate-bridge-at-night-XL7UDwPWeU8"
+  },
+  {
+    "id": "DK-qjXoxqVU",
+    "width": 7008,
+    "height": 4672,
+    "color": "#597373",
+    "taken": "2026-10-16T20:54:23Z",
+    "alt": "A container ship passing under the Golden Gate Bridge with the San Francisco skyline in the distance",
+    "thumb": "https://images.unsplash.com/photo-1792183913849-bd883b586036?ixlib=rb-4.1.0&w=480&q=70&auto=format&fit=max",
+    "full": "https://images.unsplash.com/photo-1792183913849-bd883b586036?ixlib=rb-4.1.0&w=2000&q=82&auto=format&fit=max",
+    "page": "https://unsplash.com/photos/container-ship-under-golden-gate-bridge-DK-qjXoxqVU"
+  },
+  {
+    "id": "XcK54F-Qy_0",
+    "width": 7008,
+    "height": 4672,
+    "color": "#262626",
+    "taken": "2026-10-16T20:54:23Z",
+    "alt": "The Golden Gate Bridge in San Francisco at night with light trails from traffic",
+    "thumb": "https://images.unsplash.com/photo-1792183997924-37f43d86cd0d?ixlib=rb-4.1.0&w=480&q=70&auto=format&fit=max",
+    "full": "https://images.unsplash.com/photo-1792183997924-37f43d86cd0d?ixlib=rb-4.1.0&w=2000&q=82&auto=format&fit=max",
+    "page": "https://unsplash.com/photos/golden-gate-bridge-at-night-XcK54F-Qy_0"
+  },
+  {
+    "id": "cFUUg7hF7so",
+    "width": 7008,
+    "height": 4672,
+    "color": "#595959",
+    "taken": "2026-10-16T20:54:23Z",
+    "alt": "The Golden Gate Bridge spanning the bay with the San Francisco skyline in the background",
+    "thumb": "https://images.unsplash.com/photo-1792183903334-9d4a985d9317?ixlib=rb-4.1.0&w=480&q=70&auto=format&fit=max",
+    "full": "https://images.unsplash.com/photo-1792183903334-9d4a985d9317?ixlib=rb-4.1.0&w=2000&q=82&auto=format&fit=max",
+    "page": "https://unsplash.com/photos/golden-gate-bridge-and-san-francisco-cFUUg7hF7so"
+  },
+  {
+    "id": "3IuNKJYFZeI",
+    "width": 7008,
+    "height": 4672,
+    "color": "#262640",
+    "taken": "2026-10-16T20:54:23Z",
+    "alt": "An aerial view of a large green container ship moving across the dark blue ocean",
+    "thumb": "https://images.unsplash.com/photo-1792183932594-ecf7f157fc6b?ixlib=rb-4.1.0&w=480&q=70&auto=format&fit=max",
+    "full": "https://images.unsplash.com/photo-1792183932594-ecf7f157fc6b?ixlib=rb-4.1.0&w=2000&q=82&auto=format&fit=max",
+    "page": "https://unsplash.com/photos/container-ship-on-dark-blue-ocean-3IuNKJYFZeI"
+  },
+  {
     "id": "C0L1mz16AP8",
     "width": 4672,
     "height": 7008,
