@@ -3,7 +3,7 @@ title: Assay
 description: Open-source SQL data checks for PostgreSQL. Write read-only queries whose rows are problems, run them on a schedule, and get alerted when results change.
 date: 2025-04
 status: live
-order: 2
+order: 3
 stack: [Next.js, TypeScript, PostgreSQL, MongoDB, Upstash, Better Auth, MCP]
 repo: https://github.com/jma49/Assay
 demo: https://assay.majincheng.com/

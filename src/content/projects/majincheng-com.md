@@ -3,7 +3,7 @@ title: JM/OS
 description: "This site: a Mac OS X–style desktop in the browser, with accounts, chat and a guestbook on Supabase."
 date: 2026-09
 status: live
-order: 3
+order: 4
 stack: [Astro, React, TypeScript, Supabase, Vercel]
 repo: https://github.com/jma49/jmos
 cover: ./covers/majincheng-com.jpg
