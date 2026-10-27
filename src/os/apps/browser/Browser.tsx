@@ -1,15 +1,13 @@
 import { useEffect, useEffectEvent, useMemo, useState } from 'react';
-import { ARCHIVE_URL } from '../../../config/site';
+import { BROWSER_HOME } from '../../../config/site';
 import { BackGlyph, ForwardGlyph } from '../../core/glyphs';
 import { useOSData } from '../../core/context';
 import type { AppProps } from '../../core/registry';
 import { useWindows } from '../../core/store';
 import { CLASSICS, type Bookmark } from './bookmarks';
-import { addressToUrl, back, forward, hostOf, pastYears, start, visit, waybackUrl, type History, type Visit } from './navigation';
+import { addressToUrl, back, forward, homeAt, hostOf, pastYears, start, visit, waybackUrl, type History, type Visit } from './navigation';
 
-const HOME: Visit = { url: ARCHIVE_URL, year: null };
-
-/** Whether a page may be shown in a frame here: unknown until /api/framing answers, and not asked for the archive or this site. */
+/** Whether a page may be shown in a frame here: unknown until /api/framing answers, and not asked for this site's own pages. */
 type Framing = 'unknown' | 'yes' | 'no';
 
 /** A year asked for by whoever opened the window (props are strings), if it's one the menu offers. */
@@ -35,14 +33,16 @@ const sameOrigin = (url: string) => {
  * Sites that forbid framing would show a blank page; /api/framing reads
  * their headers so the Browser can say so and offer a real tab instead.
  *
- * Home is ocra; the Bookmarks Bar has the projects' demos, then classic
- * sites in their early years (bookmarks.ts). A year shows the page at
+ * Home is ocra's page on this site, framed from wherever the site runs;
+ * the Bookmarks Bar has the projects' demos, then classic sites in their
+ * early years (bookmarks.ts). A year shows the page at
  * web.archive.org/web/<year>0701if_/<address>, which the archive redirects
  * to its nearest copy, with no server of ours in between (decision 0012).
  */
 export default function Browser({ win }: AppProps) {
   const data = useOSData();
-  const [history, setHistory] = useState<History>(() => start(win.props?.url ? { url: win.props.url, year: yearOf(win.props.year) } : HOME));
+  const home = (): Visit => ({ url: homeAt(BROWSER_HOME, window.location.href), year: null });
+  const [history, setHistory] = useState<History>(() => start(win.props?.url ? { url: win.props.url, year: yearOf(win.props.year) } : home()));
   const here = history.visits[history.at];
   const [draft, setDraft] = useState(here.url);
   const [loaded, setLoaded] = useState(false);
@@ -120,7 +120,7 @@ export default function Browser({ win }: AppProps) {
         >
           ↻
         </button>
-        <button type="button" className="os-button os-icon-button" aria-label="Home" title="Home" onClick={() => go(HOME)}>
+        <button type="button" className="os-button os-icon-button" aria-label="Home" title="Home" onClick={() => go(home())}>
           ⌂
         </button>
         <input

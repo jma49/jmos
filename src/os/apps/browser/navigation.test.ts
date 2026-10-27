@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { addressToUrl, back, forward, hostOf, pastYears, start, visit, waybackUrl } from './navigation';
+import { addressToUrl, back, forward, homeAt, hostOf, pastYears, start, visit, waybackUrl } from './navigation';
 
 describe('addressToUrl', () => {
   test('adds https to a bare address', () => {
@@ -48,4 +48,10 @@ test('waybackUrl asks for mid-year in the archive’s framed mode', () => {
 test('hostOf drops www', () => {
   expect(hostOf('https://www.apple.com/mac')).toBe('apple.com');
   expect(hostOf('not a url')).toBe('not a url');
+});
+
+test('homeAt turns the home path into an address on the page that asks', () => {
+  expect(homeAt('/projects/ocra/', 'https://www.majincheng.com/projects/')).toBe('https://www.majincheng.com/projects/ocra/');
+  // The Browser is a client island, so the origin it runs on is the one that has to frame it.
+  expect(new URL(homeAt('/projects/ocra/', 'http://127.0.0.1:4321/?open=browser')).origin).toBe('http://127.0.0.1:4321');
 });

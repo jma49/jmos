@@ -72,3 +72,6 @@ export function hostOf(url: string): string {
     return url;
   }
 }
+
+/** A site path as the address it is on the page that asks: the Browser's home, wherever the site runs. */
+export const homeAt = (path: string, base: string) => new URL(path, base).href;
