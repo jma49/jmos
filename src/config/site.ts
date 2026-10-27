@@ -19,8 +19,12 @@ export const SITE_URL = `https://www.${DOMAIN}`;
 /** Every address the site is served from: the canonical one first, then the bare domain. */
 export const SITE_ORIGINS = [SITE_URL, `https://${DOMAIN}`] as const;
 
-/** The archive the Browser opens on (ocra/, its own site). */
-export const ARCHIVE_URL = `https://ocra.${DOMAIN}/`;
+/**
+ * The page the Browser opens on: ocra's page on this site, as a path so
+ * every address the site runs from frames its own copy. (Its old home,
+ * ocra.majincheng.com, now redirects to a site that forbids framing.)
+ */
+export const BROWSER_HOME = '/projects/ocra/';
 
 /**
  * The domain of the address Supabase Auth gives each member, made from
