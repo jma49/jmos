@@ -28,7 +28,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           # The same Node as Vercel: engines.node in package.json.
           node-version-file: package.json
@@ -89,12 +89,12 @@ jobs:
       # run.sh generates supabase/schema.sql (Node) and the database's
       # TypeScript types (the Supabase CLI, then oxfmt from npm ci) and
       # fails when the committed ones are out of date.
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: package.json
           cache: npm
       - run: npm ci
-      - uses: supabase/setup-cli@45a513f8c64c0bc8e0e3dfe572b5c95be85f6359 # v3.0.1
+      - uses: supabase/setup-cli@689adcfb80d947100a1eab127289b97d1fb07b13 # v3.2.0
         with:
           # The types' wording changes between versions: keep this the
           # version SUPABASE_CLI in supabase/tests/run.sh names.
