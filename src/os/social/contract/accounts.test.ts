@@ -53,6 +53,17 @@ describe.each(backends)('accounts: $name', ({ make }) => {
     expect((await b.social.signIn('Alice', 'a password')).username).toBe('alice');
   });
 
+  test('a server that can’t be reached is not a wrong password', async () => {
+    fresh();
+    await b.signUp('alice');
+    await b.social.signOut();
+    // the stand-in has no server to lose; on Supabase, a paused project or a dropped connection
+    if (!b.db) return;
+    b.db.answer('auth.signInWithPassword', { error: { code: '', message: 'Failed to fetch' } });
+    await expect(b.social.signIn('alice', 'a password')).rejects.toMatchObject({ reason: 'failed' });
+    expect((await b.social.signIn('alice', 'a password')).username).toBe('alice');
+  });
+
   test('the recovery address is a member’s alone', async () => {
     fresh();
     await expect(b.social.recoveryEmail()).rejects.toMatchObject({ reason: 'signed-out' });
