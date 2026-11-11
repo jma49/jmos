@@ -1,6 +1,6 @@
 ---
 title: Devot
-description: Local-first Markdown notes for macOS. Notes live in a SQLite database on the Mac, and every feature works without an account or a connection.
+description: Local-first Markdown notes for Mac and iPhone. Write offline and without an account, then sync through your own iCloud.
 date: 2026-10
 status: live
 order: 2

@@ -10,6 +10,8 @@ interface Props {
   description?: string;
   /** What the browser tab says, when it should be shorter than the title (link previews keep the title). */
   tabTitle?: string;
+  /** The page fills the window itself (the pond): no page column and no skip link around it. */
+  bleed?: boolean;
 }
 
 const { path = '/' } = Astro.props;
@@ -89,9 +91,19 @@ const personLd = {
   </head>
 
   <body>
-    <a href="#main" class="sr-only skip-link">Skip to content</a>
-    <main id="main" class="page">
-      <slot />
-    </main>
+    {
+      Astro.props.bleed ? (
+        <slot />
+      ) : (
+        <>
+          <a href="#main" class="sr-only skip-link">
+            Skip to content
+          </a>
+          <main id="main" class="page">
+            <slot />
+          </main>
+        </>
+      )
+    }
   </body>
 </html>

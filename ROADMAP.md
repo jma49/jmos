@@ -8,7 +8,27 @@ decision it made there and take the item out of here.
 Each item says why it's worth doing, what it has to respect (the rules
 in [AGENTS.md](AGENTS.md)), and how we'll know it's done.
 
-## 1. The secret base
+## 1. The pond becomes the home page
+
+**Why.** Decided 2026-11-11 ([decision 0025](docs/decisions/0025-the-pond.md)):
+the pond at `/pond` replaces the desktop as the home page once it has
+what the home page needs. Built so far: the pond, its title page and
+chapters, the photos, the music, accounts, presence, the guestbook and
+the chat. Left:
+
+1. **Swap:** the pond at `/`, the desktop moved (or retired, as Jincheng
+   chooses), its redirects (`/?open=…` links in the wild) and
+   `public/og.jpg` recaptured; the README, AGENTS.md and the docs updated
+   for which is home.
+2. **Password resets** (`?reset=`) and a member's recovery address,
+   which only the desktop handles today.
+3. **Type the engine** (`src/pond/engine.js`, `life.js`) a section at a
+   time, comparing each with the pond as it is.
+
+**Done when** the pond is at `/`, every old link lands somewhere, and
+`npm run perf` measures the pond's first load against its budgets.
+
+## 2. The secret base
 
 **Why.** Decided 2026-09-29: JM/OS is Jincheng's own hideout, not a job
 portfolio. Jincheng chose seven things from prototypes staged in the
@@ -28,7 +48,7 @@ One pull request each; all but one are in, and what's left is:
 **Done when** each is in the site, checked in a browser with motion on
 and off, and its locked parts are proved locked by `test:db`.
 
-## 2. Lyrics that line up
+## 3. Lyrics that line up
 
 Paused by Jincheng (2026-09-28): later, after the secret base. It uses the owner check (`public.is_owner()`) to save a sync for everyone.
 
@@ -58,7 +78,7 @@ all gated to its admin by username):
 **Done when** every song in the library has been synced by ear once,
 and a sync made in Karaoke reaches another browser.
 
-## 3. Visitors ask for songs
+## 4. Visitors ask for songs
 
 **Why.** Decided as "may come later" with the music library: visitors
 request, Jincheng approves from Telegram.

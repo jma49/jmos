@@ -30,6 +30,13 @@ Around them sits a small working system:
 - **Ambient:** the desktop follows the light and weather where the visitor
   is.
 
+**The pond** ([`/pond`](https://www.majincheng.com/pond)) is the next
+home page, built beside the desktop: a pond seen from above, where every
+visitor is a koi, with a title page on the water and chapters (a timeline
+of work, projects and school; photos; music; the guestbook; the chat)
+that open as a sheet of glass drawn with the water. It keeps the
+desktop's accounts, chat and guestbook.
+
 The page also ships a plain-text copy of everything for screen readers,
 search engines and browsers without JavaScript. Every project has its own
 page at `/projects/<slug>/`.
@@ -46,6 +53,9 @@ page at `/projects/<slug>/`.
   `api/` (the visitor's location, a lyrics relay, the music library,
   cached at the edge, and whether a page can be framed in the Browser);
   what they read from other services is checked with valibot.
+- The pond (`src/pond/`): WebGL2 for the water and the glass, three.js
+  for the dove and the spider (loaded once the pond has settled), and
+  Newsreader, self-hosted, for its display type.
 - Vitest, Playwright for preview images, and GitHub Actions.
 
 ## Running it
@@ -114,9 +124,10 @@ Function secrets:
 
 ```
 src/os/            the desktop, one React island (its folders: docs/agents/desktop.md)
+src/pond/          the pond at /pond: the water, the koi, its chapters (docs/agents/pond.md)
 src/lib/           what the pages, the desktop and api/ share: the media library's shape, photos, projects
 src/config/        where the site lives (site.ts): its domain and addresses, for astro.config.mjs, the desktop and api/
-src/pages/         the home page, project pages, robots.txt, llms.txt
+src/pages/         the home page, the pond, project pages, robots.txt, llms.txt
 src/content/       the site's copy (site.ts), the projects (Markdown) and their covers
 src/data/          songs, desktop pictures, the photo snapshot
 api/               Vercel Functions: geo, lyrics, songs, framing (docs/agents/api.md)
@@ -124,6 +135,7 @@ tests/             the Vercel Functions' unit tests (api/; not in api/, or Verce
 supabase/          migrations, the schema generated from them, Edge Functions (deployed as config.toml says), database tests
 scripts/           preview capture, photo refresh, favicon and portrait builders, bot setup
 public/os/         icons, fonts and desktop pictures (from ryOS, see NOTICE)
+public/pond/       the marks of the companies, schools and projects on the pond's timeline
 docs/agents/       guidance for coding agents, by part (AGENTS.md is the entry point)
 docs/decisions/    decision records: what was chosen, what was turned down and why
 ```

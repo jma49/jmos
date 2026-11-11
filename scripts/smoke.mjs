@@ -1,4 +1,5 @@
-// Opens every app in a production build and fails if any of them breaks.
+// Opens every app in a production build, and the pond with each of its
+// chapters, and fails if any of them breaks.
 //
 // Usage: npm run build && npm run test:smoke
 //
@@ -39,7 +40,9 @@ async function targets() {
   }
   const projects = await readdir(join(ROOT, 'src/content/projects'));
   const project = projects.find((f) => f.endsWith('.md'))?.replace(/\.md$/, '');
-  return [...apps, project, 'dashboard', 'screensaver'].filter(Boolean);
+  // The pond (src/pages/pond.astro), and each chapter by its address.
+  const pond = ['pond', ...['about', 'career', 'photos', 'music', 'notes', 'chat'].map((c) => `pond#${c}`)];
+  return [...apps, project, 'dashboard', 'screensaver', ...pond].filter(Boolean);
 }
 
 const ignored = /Failed to load resource|net::ERR_|ERR_NAME_NOT_RESOLVED/;
@@ -77,13 +80,17 @@ async function check(target) {
     if (m.type() === 'error' && !thirdParty && !ignored.test(m.text())) problems.push(`console: ${m.text().slice(0, 300)}`);
   });
   try {
-    await page.goto(`${base}/?open=${target}`, { waitUntil: 'load' });
-    await page.waitForTimeout(SETTLE);
+    const pond = target.startsWith('pond');
+    await page.goto(pond ? `${base}/${target}` : `${base}/?open=${target}`, { waitUntil: 'load' });
+    // A chapter in the address opens once the pond is up.
+    await page.waitForTimeout(pond ? SETTLE + 1500 : SETTLE);
     if (await page.locator('.os-crash').count()) problems.push('showed the crash panel');
     for (const v of await page.evaluate(() => window.__cspViolations)) problems.push(`content security policy: ${v}`);
     // A window, or the whole screen for a full-screen app (Time Machine).
-    const opened = ['dashboard', 'screensaver'].includes(target) || (await page.locator('.os-window, .os-fullscreen').count()) > 0;
-    if (!opened) problems.push('opened no window');
+    const opened = pond
+      ? (await page.locator(target.includes('#') ? '#veil[data-open]' : '#hero').count()) > 0
+      : ['dashboard', 'screensaver'].includes(target) || (await page.locator('.os-window, .os-fullscreen').count()) > 0;
+    if (!opened) problems.push(pond ? 'showed no pond or chapter' : 'opened no window');
   } catch (e) {
     problems.push(`failed to load: ${e.message}`);
   } finally {
