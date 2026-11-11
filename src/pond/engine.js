@@ -793,7 +793,7 @@ function setYear(y) {
 function showTerm() {
   const i = Math.floor(yearGoal) % 24;
   $('#termV').innerHTML = [...TERMS[i][0]].map((ch) => `<span>${ch}</span>`).join('');
-  $('#termTxt').textContent = TERMS[i][1];
+  $('#termTxt').textContent = inkOn ? '' : TERMS[i][1];
 }
 function stepYear(dt) {
   let d = yearGoal - year;
@@ -1862,6 +1862,28 @@ let inkTimer = 0,
   blots = [];
 const blotU = new Float32Array(30),
   lerpN = (a, b, t) => a + (b - a) * t;
+// The words on the page, in English as the markup has them, and in Chinese from ZH.
+const HOME = {
+  say: $('.say').innerHTML,
+  toc: [...document.querySelectorAll('.toc .go b')].map((b) => b.textContent),
+  long: $('#cmdBtn .long').textContent,
+  short: $('#cmdBtn .short').textContent,
+  talk: $('#talk > span:last-child').textContent
+};
+function speak() {
+  pond.lang = inkOn ? 'zh' : 'en';
+  $('.say').innerHTML = inkOn ? `${esc(ZH.say)} <button class="tlink" data-sheet="about">${esc(ZH.more)}</button>` : HOME.say;
+  document.querySelectorAll('.toc .go b').forEach((b, i) => (b.textContent = inkOn ? ZH.toc[i] : HOME.toc[i]));
+  $('#cmdBtn .long').textContent = inkOn ? ZH.search[0] : HOME.long;
+  $('#cmdBtn .short').textContent = inkOn ? ZH.search[1] : HOME.short;
+  $('#palIn').placeholder = inkOn ? ZH.search[0] : 'Search the pond, or type / for commands';
+  $('#talk > span:last-child').textContent = inkOn ? ZH.talk : HOME.talk;
+  $('#hero').textContent = salute()[0];
+  showTerm();
+  tick();
+  fillNotes();
+  if (sheetOpen() && sheetId) openSheet(sheetId);
+}
 function setInk(on, from) {
   if (on === inkOn) return;
   inkOn = on;
@@ -1876,6 +1898,7 @@ function setInk(on, from) {
   inkTimer = setTimeout(
     () => {
       pond.toggleAttribute('data-ink', on);
+      speak();
       delete pond.dataset.inking;
     },
     on ? 700 : 900
@@ -2198,6 +2221,17 @@ const PHOTOS = D.photos;
 let NOTES = [];
 const PLAY = '<svg width="10" height="10" viewBox="0 0 12 12"><path d="M2.5 1v10l8-5z"/></svg>';
 const markSrc = (m) => `/pond/marks/${m}.png`;
+// In ink the pond speaks Chinese (content.ts, ZH): L(en, zh) picks the words for now.
+const ZH = D.zh;
+const L = (en, zh) => (inkOn ? zh : en);
+const CN_MONTH = { Jan: 1, Feb: 2, Mar: 3, Apr: 4, May: 5, Jun: 6, Jul: 7, Aug: 8, Sep: 9, Oct: 10, Nov: 11, Dec: 12 };
+const zhWhen = (w) => w.replace(/([A-Z][a-z]{2}) (\d{4})/g, (_, m, y) => `${y}.${CN_MONTH[m]}`);
+// an entry of the timeline as it reads now: in Chinese, what ZH gives for it over the English
+const tr = (e) => {
+  if (!inkOn) return e;
+  const z = ZH.log[e.id] || {};
+  return { ...e, ...z, when: zhWhen(e.when), ref: e.ref && z.ref ? [e.ref[0], z.ref] : e.ref };
+};
 function fillPanes() {
   // the row for the timeline carries the marks of the places worked at, newest first
   $('#tocWork').innerHTML = `<span class="marks">${LOG.filter((e) => e.kind === 'role')
@@ -2212,15 +2246,24 @@ function fillPanes() {
   fillMusic();
 }
 function fillNotes() {
-  $('#noteLast').textContent = NOTES.length ? NOTES[0].body : 'Leave the first line';
+  $('#noteLast').textContent = NOTES.length ? NOTES[0].body : L('Leave the first line', ZH.firstLine);
   $('#noteCount').textContent = NOTES.length || '';
   const all = $('#noteAll');
   if (all) all.innerHTML = notesHtml();
 }
 const notesHtml = () =>
-  NOTES.map((n) => `<li><q>${esc(n.body)}</q><em>${esc(n.name)}, ${esc(ago(n.created_at))}</em></li>`).join('') || '<li class="empty">No boats yet.</li>';
+  NOTES.map((n) => `<li><q>${esc(n.body)}</q><em>${esc(n.name)}, ${esc(ago(n.created_at))}</em></li>`).join('') ||
+  `<li class="empty">${L('No boats yet.', ZH.notes.empty)}</li>`;
 function ago(iso) {
   const m = Math.max(0, (Date.now() - Date.parse(iso)) / 60000);
+  if (inkOn)
+    return m < 1
+      ? '刚刚'
+      : m < 60
+        ? `${Math.round(m)} 分钟前`
+        : m < 1440
+          ? `${Math.round(m / 60)} 小时前`
+          : `${new Date(iso).getMonth() + 1}月${new Date(iso).getDate()}日`;
   return m < 1
     ? 'just now'
     : m < 60
@@ -2265,9 +2308,9 @@ const TODAY = (() => {
 const LOG = D.log;
 const PROJECTS = LOG.filter((e) => e.kind === 'project');
 const depthOf = (e) => (Math.max(0, TODAY - e.s) * 0.45).toFixed(1);
-const entry = (
-  e
-) => `<li id="p-${e.id}" data-kind="${e.kind}" data-depth="${depthOf(e)}" data-year="${Math.floor(e.s)}"><span class="depth"><b>${Math.floor(e.s)}</b>${depthOf(e)} m</span>${e.mark ? `<i class="node mark${e.kind === 'project' ? ' full' : ''}" style="--bg:${e.mark === 'tiktok' ? '#000' : '#fff'}"><img src="${markSrc(e.mark)}" alt=""></i>` : `<i class="node" style="--c:${e.c || 'none'}"></i>`}
+const entry = (en) => {
+  const e = tr(en);
+  return `<li id="p-${e.id}" data-kind="${e.kind}" data-depth="${depthOf(e)}" data-year="${Math.floor(e.s)}"><span class="depth"><b>${Math.floor(e.s)}</b>${depthOf(e)} m</span>${e.mark ? `<i class="node mark${e.kind === 'project' ? ' full' : ''}" style="--bg:${e.mark === 'tiktok' ? '#000' : '#fff'}"><img src="${markSrc(e.mark)}" alt=""></i>` : `<i class="node" style="--c:${e.c || 'none'}"></i>`}
   <h3>${esc(e.title)}${e.tag ? `<small>${esc(e.tag)}</small>` : ''}<span class="meta">${esc(e.when)}</span></h3>
   ${e.role ? `<p class="role">${esc(e.role)}${e.place ? ` <span>·</span> ${esc(e.place)}` : ''}</p>` : ''}${e.text ? `<p class="txt">${esc(e.text)}</p>` : ''}
   ${e.pts ? `<ul class="pts">${e.pts.map((x) => `<li>${x}</li>`).join('')}</ul>` : ''}${e.cover ? (e.visit ? `<a class="cover" href="${e.visit}" target="_blank" rel="noopener" aria-label="Open ${esc(e.title)}">` : '<div class="cover">') + `<img src="${e.cover}" alt="" loading="lazy">` + (e.visit ? '</a>' : '</div>') : ''}${
@@ -2279,8 +2322,12 @@ const entry = (
       : ''
   }
   ${e.ref ? `<button class="ref" data-goto="${e.ref[0]}" style="--c:${(PROJECTS.find((p) => p.id === e.ref[0]) || {}).c}">${esc(e.ref[1])} <span aria-hidden="true">↑</span></button>` : ''}
-  ${e.source ? `<div class="links">${e.visit ? `<a class="link" href="${e.visit}" target="_blank" rel="noopener">Visit ↗</a>` : ''}<a class="link" href="${e.source}" target="_blank" rel="noopener">Source ↗</a></div>` : ''}</li>`;
-const monthOf = (p) => new Date(p.taken).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+  ${e.source ? `<div class="links">${e.visit ? `<a class="link" href="${e.visit}" target="_blank" rel="noopener">${L('Visit', ZH.career.visit)} ↗</a>` : ''}<a class="link" href="${e.source}" target="_blank" rel="noopener">${L('Source', ZH.career.source)} ↗</a></div>` : ''}</li>`;
+};
+const monthOf = (p) =>
+  inkOn
+    ? `${new Date(p.taken).getFullYear()}年${new Date(p.taken).getMonth() + 1}月`
+    : new Date(p.taken).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
 const KINDS = [
   ['all', 'All'],
   ['role', 'Roles'],
@@ -2291,39 +2338,40 @@ let logKind = 'all',
   logCompact = false;
 const SHEETS = {
   career:
-    () => `<h1>Soundings</h1><p class="lede">Work, projects and school on one line, newest at the surface. Scroll, and the pond's focus sinks with you to the bed.</p>
-    <div class="filt" role="toolbar" aria-label="Show">${KINDS.map(([k, l]) => `<button data-kind="${k}">${l}<em>${k === 'all' ? LOG.length : LOG.filter((e) => e.kind === k).length}</em></button>`).join('')}<span class="gap"></span>
+    () => `<h1>${L('Soundings', ZH.career.title)}</h1><p class="lede">${L("Work, projects and school on one line, newest at the surface. Scroll, and the pond's focus sinks with you to the bed.", ZH.career.lede)}</p>
+    <div class="filt" role="toolbar" aria-label="Show">${KINDS.map(([k, l]) => `<button data-kind="${k}">${L(l, ZH.career.kinds[k])}<em>${k === 'all' ? LOG.length : LOG.filter((e) => e.kind === k).length}</em></button>`).join('')}<span class="gap"></span>
       <button data-view="detail" aria-label="In full"><svg width="14" height="14" viewBox="0 0 14 14" stroke-width="1.3" stroke-linecap="round"><rect x="1.5" y="2" width="4" height="4" rx="1"/><path d="M8 3h4.5M8 5h3M1.5 9.5h11M1.5 12h8"/></svg></button>
       <button data-view="list" aria-label="Titles only"><svg width="14" height="14" viewBox="0 0 14 14" stroke-width="1.3" stroke-linecap="round"><path d="M1.5 3h11M1.5 7h11M1.5 11h11"/></svg></button></div>
-    <ol class="sound" id="sound">${LOG.map(entry).join('')}<li class="bed" data-kind="bed" data-depth="${depthOf(LOG[LOG.length - 1])}" data-year="${Math.floor(LOG[LOG.length - 1].s)}"><span class="depth">bed</span><i class="node"></i><p class="role">The bed. Everything above settled on this.</p></li></ol>`,
-  about: () => `<h1>Hey, I'm Jincheng.</h1><div class="prose">${D.about.map((p) => `<p>${chips(p)}</p>`).join('')}
-    <div class="links"><a class="link" href="https://github.com/jma49" target="_blank" rel="noopener">GitHub ↗</a><button class="link" data-sheet="career">Timeline</button><a class="link" href="/">The old desktop</a></div></div>
+    <ol class="sound" id="sound">${LOG.map(entry).join('')}<li class="bed" data-kind="bed" data-depth="${depthOf(LOG[LOG.length - 1])}" data-year="${Math.floor(LOG[LOG.length - 1].s)}"><span class="depth">${L('bed', '池底')}</span><i class="node"></i><p class="role">${L('The bed. Everything above settled on this.', ZH.career.bed)}</p></li></ol>`,
+  about:
+    () => `<h1>${L("Hey, I'm Jincheng.", ZH.about.title)}</h1><div class="prose">${(inkOn ? ZH.about.paragraphs : D.about).map((p) => `<p>${chips(p)}</p>`).join('')}
+    <div class="links"><a class="link" href="https://github.com/jma49" target="_blank" rel="noopener">GitHub ↗</a><button class="link" data-sheet="career">${L('Timeline', ZH.toc[0])}</button><a class="link" href="/">${L('The old desktop', ZH.about.desktop)}</a></div></div>
     <p class="fine" id="letterTime"></p>`,
   music: () => {
     const m = music(),
       song = m.songs[m.index];
-    return `<h1>What's on</h1><p class="lede">The songs I keep coming back to. They play here as they do on my old desktop, and the pond's sound switch turns them down too.</p>
+    return `<h1>${L("What's on", ZH.music.title)}</h1><p class="lede">${L("The songs I keep coming back to. They play here as they do on my old desktop, and the pond's sound switch turns them down too.", ZH.music.lede)}</p>
     ${song ? `<div class="now-song"><img id="nowCover" src="${coverOf(song)}" alt=""><div><b id="nowTitle">${esc(song.title)}</b><span id="nowWho">${esc(song.artist)}</span></div></div>` : ''}
-    <ul class="rows songs" id="songList">${m.songs.map((t, i) => `<li data-i="${i}" ${i === m.index ? 'data-now' : ''}><button data-song="${i}" aria-label="Play ${esc(t.title)}">${PLAY}</button><b>${esc(t.title)}</b><span class="who">${esc(t.artist)}</span></li>`).join('') || '<li class="empty">The songs are on their way.</li>'}</ul>`;
+    <ul class="rows songs" id="songList">${m.songs.map((t, i) => `<li data-i="${i}" ${i === m.index ? 'data-now' : ''}><button data-song="${i}" aria-label="Play ${esc(t.title)}">${PLAY}</button><b>${esc(t.title)}</b><span class="who">${esc(t.artist)}</span></li>`).join('') || `<li class="empty">${L('The songs are on their way.', ZH.music.empty)}</li>`}</ul>`;
   },
   photos:
-    () => `<h1>${PHOTOS.length} photographs</h1><p class="lede">Newest first, from <a href="${D.unsplash}" target="_blank" rel="noopener">Unsplash</a>. Press one to see it large; the arrow keys move through them.</p>
+    () => `<h1>${L(`${PHOTOS.length} photographs`, ZH.photos.title.replace('{n}', PHOTOS.length))}</h1><p class="lede">${L('Newest first, from', ZH.photos.lede)} <a href="${D.unsplash}" target="_blank" rel="noopener">Unsplash</a>${L('. Press one to see it large; the arrow keys move through them.', ZH.photos.after)}</p>
     <div class="shots just">${PHOTOS.map((p, i) => `<a href="${p.page}" data-i="${i}" style="--ar:${(p.w / p.h).toFixed(3)};background:${p.color}" aria-label="Photograph, ${monthOf(p)}"><img src="${p.thumb}" alt="${esc(p.alt)}" loading="lazy"><span>${monthOf(p)}</span></a>`).join('')}</div>`,
   notes:
-    () => `<h1>Paper boats</h1><p class="lede">The guestbook. Leave a line, a few a day; it sails off across the pond as a boat, and whoever comes by can read it.</p>
+    () => `<h1>${L('Paper boats', ZH.notes.title)}</h1><p class="lede">${L('The guestbook. Leave a line, a few a day; it sails off across the pond as a boat, and whoever comes by can read it.', ZH.notes.lede)}</p>
     ${noteForm()}<ul class="notes" id="noteAll">${notesHtml()}</ul>`,
-  chat: () => `<h1>Chat</h1><p class="lede" id="chatWho"></p><div class="rooms" id="rooms" role="tablist" aria-label="Rooms"></div>
+  chat: () => `<h1>${L('Chat', ZH.chat.title)}</h1><p class="lede" id="chatWho"></p><div class="rooms" id="rooms" role="tablist" aria-label="Rooms"></div>
     <ol class="chat" id="chatLog" aria-live="polite"></ol>
-    ${me ? `<form class="noteform chatform"><input maxlength="500" placeholder="Say something to the room" autocomplete="off" aria-label="Your message"><button aria-label="Send"><svg width="15" height="15" viewBox="0 0 16 16" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></button></form>` : signInFirst('to talk')}`,
+    ${me ? `<form class="noteform chatform"><input maxlength="500" placeholder="${L('Say something to the room', ZH.chat.placeholder)}" autocomplete="off" aria-label="Your message"><button aria-label="Send"><svg width="15" height="15" viewBox="0 0 16 16" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></button></form>` : signInFirst(L('to talk', ZH.chat.why))}`,
   account: () =>
     me
-      ? `<h1>${esc(me.username)}</h1><p class="lede">Signed in. Your koi carries your name, and you can leave notes and talk in the chat.</p><div class="links"><button class="link" data-act="signout">Sign out</button></div>`
-      : `<h1>${signingUp ? 'Make an account' : 'Sign in'}</h1><p class="lede">${signingUp ? 'A username and a password; the recovery address is optional.' : 'The same account as on the old desktop.'}</p>
-    <form class="acct" data-mode="${signingUp ? 'up' : 'in'}"><label>Username<input name="u" autocomplete="username" required minlength="3" maxlength="20" pattern="[a-zA-Z0-9_]+"></label>
-      <label>Password<input name="p" type="password" autocomplete="${signingUp ? 'new-password' : 'current-password'}" required minlength="6"></label>
-      ${signingUp ? '<label>Recovery address <small>(optional)</small><input name="e" type="email" autocomplete="email"></label>' : ''}
+      ? `<h1>${esc(me.username)}</h1><p class="lede">${L('Signed in. Your koi carries your name, and you can leave notes and talk in the chat.', ZH.account.signedIn)}</p><div class="links"><button class="link" data-act="signout">${L('Sign out', ZH.account.signOut)}</button></div>`
+      : `<h1>${signingUp ? L('Make an account', ZH.account.signUp) : L('Sign in', ZH.account.signIn)}</h1><p class="lede">${signingUp ? L('A username and a password; the recovery address is optional.', ZH.account.ledeUp) : L('The same account as on the old desktop.', ZH.account.lede)}</p>
+    <form class="acct" data-mode="${signingUp ? 'up' : 'in'}"><label>${L('Username', ZH.account.username)}<input name="u" autocomplete="username" required minlength="3" maxlength="20" pattern="[a-zA-Z0-9_]+"></label>
+      <label>${L('Password', ZH.account.password)}<input name="p" type="password" autocomplete="${signingUp ? 'new-password' : 'current-password'}" required minlength="6"></label>
+      ${signingUp ? `<label>${L('Recovery address', ZH.account.recovery)} <small>${L('(optional)', ZH.account.optional)}</small><input name="e" type="email" autocomplete="email"></label>` : ''}
       <p class="err" id="acctErr" role="alert"></p>
-      <div class="links"><button class="link main">${signingUp ? 'Make the account' : 'Sign in'}</button><button type="button" class="link" data-act="switch">${signingUp ? 'I have an account' : 'Make an account'}</button></div></form>`
+      <div class="links"><button class="link main">${signingUp ? L('Make the account', ZH.account.make) : L('Sign in', ZH.account.signIn)}</button><button type="button" class="link" data-act="switch">${signingUp ? L('I have an account', ZH.account.have) : L('Make an account', ZH.account.makeOne)}</button></div></form>`
 };
 const chips = (p) =>
   p
@@ -2331,15 +2379,15 @@ const chips = (p) =>
       const e = PROJECTS.find((x) => x.id === id);
       return e ? `<button class="chip mk" data-sheet="work" data-focus="${id}"><img src="${markSrc(e.mark)}" alt="">${esc(e.title)}</button>` : id;
     })
-    .replace('{photos}', '<button class="chip" data-sheet="photos" style="--c:#6fb9cc">photos</button>');
+    .replace('{photos}', `<button class="chip" data-sheet="photos" style="--c:#6fb9cc">${L('photos', ZH.about.photos)}</button>`);
 const signInFirst = (why) =>
   accountsOpen
-    ? `<p class="signin"><button class="link main" data-sheet="account">Sign in</button> <span>${why}.</span></p>`
-    : '<p class="signin"><span>Signing in isn’t open on this copy of the site.</span></p>';
+    ? `<p class="signin"><button class="link main" data-sheet="account">${L('Sign in', ZH.account.signIn)}</button> <span>${why}${L('.', '。')}</span></p>`
+    : `<p class="signin"><span>${L('Signing in isn’t open on this copy of the site.', ZH.account.closed)}</span></p>`;
 const noteForm = () =>
   me
-    ? `<form class="noteform"><input maxlength="280" placeholder="Leave a line" autocomplete="off" aria-label="Your note"><button aria-label="Launch the note"><svg width="15" height="15" viewBox="0 0 16 16" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></button></form>`
-    : signInFirst('to leave one');
+    ? `<form class="noteform"><input maxlength="280" placeholder="${L('Leave a line', ZH.notes.placeholder)}" autocomplete="off" aria-label="Your note"><button aria-label="Launch the note"><svg width="15" height="15" viewBox="0 0 16 16" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></button></form>`
+    : signInFirst(L('to leave one', ZH.notes.why));
 let me = null,
   accountsOpen = false,
   signingUp = false;
@@ -2387,7 +2435,7 @@ function sound() {
   let cur = null;
   setFocus(0.1 + (room > 8 ? clamp(el.scrollTop / room, 0, 1) : 0) * 0.9);
   for (const li of $('#sound').children) if (!li.hidden && li.getBoundingClientRect().top <= line) cur = li;
-  $('#readout').textContent = cur ? `↓ ${cur.dataset.depth} m · ${cur.dataset.year}` : '↓ 0.0 m · today';
+  $('#readout').textContent = cur ? `↓ ${cur.dataset.depth} m · ${cur.dataset.year}` : `↓ 0.0 m · ${L('today', '今天')}`;
 }
 function showRow(at) {
   const row = at && $('#p-' + at),
@@ -2402,7 +2450,9 @@ function showRow(at) {
 }
 let lastFocus = null;
 const sheetOpen = () => 'open' in $('#veil').dataset;
+let sheetId = '';
 function openSheet(id, at) {
+  sheetId = id;
   const wasOpen = sheetOpen();
   if (!wasOpen) {
     lastFocus = document.activeElement;
@@ -2414,9 +2464,11 @@ function openSheet(id, at) {
   if (log) logKind = id === 'resume' ? 'role' : id === 'work' && !at ? 'project' : 'all';
   viewAt = -1;
   $('#sheet').innerHTML =
-    `<header class="head"><p class="eyebrow">${name}</p><span class="read" id="readout"></span><nav class="chap" aria-label="Chapters">${ORDER.map((k) => `<button data-sheet="${k}" aria-label="${CHAPTERS[k][1]}" ${CHAPTERS[k][0] === no ? 'aria-current="true"' : ''}>${+CHAPTERS[k][0]}</button>`).join('')}</nav><button class="x" aria-label="Close"><svg width="12" height="12" viewBox="0 0 12 12" stroke-width="1.6" stroke-linecap="round"><path d="M2 2l8 8M10 2l-8 8"/></svg></button></header><div class="scroll" id="scroll">${SHEETS[log ? 'career' : id]()}</div>` +
+    `<header class="head"><p class="eyebrow">${L(name, ZH.chapters[id])}</p><span class="read" id="readout"></span><nav class="chap" aria-label="Chapters">${ORDER.map((k) => `<button data-sheet="${k}" aria-label="${L(CHAPTERS[k][1], ZH.chapters[k])}" ${CHAPTERS[k][0] === no ? 'aria-current="true"' : ''}>${+CHAPTERS[k][0]}</button>`).join('')}</nav><button class="x" aria-label="Close"><svg width="12" height="12" viewBox="0 0 12 12" stroke-width="1.6" stroke-linecap="round"><path d="M2 2l8 8M10 2l-8 8"/></svg></button></header><div class="scroll" id="scroll">${SHEETS[log ? 'career' : id]()}</div>` +
     (id === 'photos'
-      ? '<div class="view" id="view" hidden><button class="vx" aria-label="Close the photograph"><svg width="12" height="12" viewBox="0 0 12 12" stroke-width="1.6" stroke-linecap="round"><path d="M2 2l8 8M10 2l-8 8"/></svg></button><button class="vs" data-step="-1" aria-label="Previous">‹</button><img id="viewImg" alt="Photo by Jincheng Ma"><button class="vs" data-step="1" aria-label="Next">›</button><p><span id="viewCap"></span><a class="link" id="viewLink" target="_blank" rel="noopener">Open on Unsplash ↗</a></p></div>'
+      ? '<div class="view" id="view" hidden><button class="vx" aria-label="Close the photograph"><svg width="12" height="12" viewBox="0 0 12 12" stroke-width="1.6" stroke-linecap="round"><path d="M2 2l8 8M10 2l-8 8"/></svg></button><button class="vs" data-step="-1" aria-label="Previous">‹</button><img id="viewImg" alt="Photo by Jincheng Ma"><button class="vs" data-step="1" aria-label="Next">›</button><p><span id="viewCap"></span><a class="link" id="viewLink" target="_blank" rel="noopener">' +
+        L('Open on Unsplash ↗', ZH.photos.open) +
+        '</a></p></div>'
       : '');
   if (wide) $('#sheet').dataset.wide = wide;
   else delete $('#sheet').dataset.wide;
@@ -2649,7 +2701,9 @@ async function openChat() {
   const el = $('#rooms');
   if (!el) return;
   el.innerHTML = r.map((x) => `<button role="tab" data-room="${esc(x.id)}" aria-selected="${x.id === chatRoom}">${esc(x.name)}</button>`).join('');
-  $('#chatWho').textContent = me ? `You're ${me.username}. Be kind; everyone here can read it.` : 'Anyone can read along; members can talk.';
+  $('#chatWho').textContent = me
+    ? L(`You're ${me.username}. Be kind; everyone here can read it.`, ZH.chat.you.replace('{u}', me.username))
+    : L('Anyone can read along; members can talk.', ZH.chat.anyone);
   void drawChat();
   if (!chatStop)
     chatStop = await people.watchChat(
@@ -2688,7 +2742,7 @@ function paintChat() {
         (m) =>
           `<li${me && m.user_id === me.id ? ' data-me' : ''}><b>${esc(m.username)}</b><span>${esc(m.body)}</span><time>${esc(ago(m.created_at))}</time></li>`
       )
-      .join('') || '<li class="empty">Nothing said here yet.</li>';
+      .join('') || `<li class="empty">${L('Nothing said here yet.', ZH.chat.empty)}</li>`;
   const sc = $('#scroll');
   if (sc) sc.scrollTop = sc.scrollHeight;
 }
@@ -3355,6 +3409,11 @@ function place() {
 // A word for whoever came: some for the hour, some for any hour, one picked each time.
 function salute() {
   const h = new Date().getHours();
+  if (inkOn) {
+    const g = ZH.greetings,
+      pool = [...(h < 5 || h >= 21 ? g.night : h < 12 ? g.morning : h < 17 ? g.afternoon : g.evening), ...g.any];
+    return [pool[(Math.random() * pool.length) | 0], ''];
+  }
   const hour =
     h < 5
       ? ['Still up?', 'Late one. Come in.']
@@ -3539,9 +3598,20 @@ function tick() {
     /* no time zones here: only the visitor's clock shows */
   }
   $('#hisTime').textContent = his ? `${his.replace(/\s?([AP])M$/, (_, x) => ` ${x.toLowerCase()}m`)} for me, in San Jose` : 'San Jose, California';
+  if (inkOn) {
+    let his24 = '';
+    try {
+      his24 = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Los_Angeles', hour: 'numeric', minute: '2-digit', hourCycle: 'h23' }).format(d);
+    } catch (err) {
+      /* no time zones here: his hour goes unsaid */
+    }
+    $('#clockBig').textContent = `${h}:${mm}`;
+    $('#clockPart').textContent = ZH.clock.yours;
+    $('#hisTime').textContent = his24 ? `${ZH.clock.mine} · ${his24}` : ZH.clock.mine;
+  }
   if (phaseChoice === 'auto') setPhase('auto');
   const lt = $('#letterTime');
-  if (lt) lt.textContent = `${h % 12 || 12}:${mm} ${part}${city ? ' in ' + city : ' where you are'}`;
+  if (lt) lt.textContent = inkOn ? `${ZH.clock.now} ${h}:${mm}。` : `${h % 12 || 12}:${mm} ${part}${city ? ' in ' + city : ' where you are'}`;
 }
 // Who is here: this visitor and everyone presence knows of, on the pond and on the old desktop alike.
 let online = 0;

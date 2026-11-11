@@ -18,7 +18,9 @@ The only exceptions are content that is Chinese by nature:
   (`alternateName` in `src/content/site.ts`), which may also be quoted
   in the docs;
 - the names of the 24 solar terms, which the pond shows beside their
-  English ones (`TERMS` in `src/pond/engine.js`);
+  English ones (`TERMS` in `src/pond/engine.js`), and the pond's
+  Chinese copy for its ink mode (`ZH` in `src/pond/content.ts`, with the
+  few words `engine.js` writes for it);
 - patterns that have to match Chinese text, such as the lyric credits in
   `api/lyrics.ts`.
 

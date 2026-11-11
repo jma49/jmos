@@ -171,3 +171,166 @@ export const ABOUT = [
   "Away from the keyboard I boulder (V6 for now), take {photos} and keep an eye on the markets. I'm looking for my next role.",
   'This site is a pond. Everyone who visits is a koi, and that includes you: the white one with the red spot. The gold one is me.'
 ];
+
+/**
+ * The pond in Chinese, for the ink mode: the same words in plain, natural Chinese, set in the brush.
+ * Timeline entries are keyed by id and override only what they name. Chips work as in ABOUT;
+ * `{n}` and `{u}` are filled in by the script.
+ */
+export const ZH = {
+  greetings: {
+    night: ['这么晚，还没睡？', '夜深了，进来坐坐。'],
+    morning: ['早上好。', '早，今天也来看鱼？'],
+    afternoon: ['下午好。', '午后，坐一会儿吧。'],
+    evening: ['晚上好。', '傍晚了，多待一会儿。'],
+    any: ['欢迎来到池塘。', '你好呀。', '你找到这儿了。', '慢慢看，不着急。', '小心荷叶。', '来了就坐一会儿。', '水正好，进来吧。', '谢谢你来。']
+  },
+  say: '你是那条带红点的白色锦鲤。点一下水面，可以喂其他的鱼。',
+  more: '关于我',
+  toc: ['履历', '照片', '音乐', '留言'],
+  search: ['搜索，或输入 / 使用命令', '搜索'],
+  talk: '聊天',
+  firstLine: '留下第一句话',
+  clock: { yours: '你的时间', mine: '我在圣何塞', now: '你那里现在是' },
+  chapters: {
+    about: '关于',
+    career: '履历',
+    resume: '履历',
+    work: '履历',
+    photos: '照片',
+    music: '音乐',
+    notes: '留言',
+    chat: '聊天',
+    account: '账号'
+  } as Record<string, string>,
+  career: {
+    title: '一路走来',
+    lede: '工作、项目和学业都在这一条线上，越新的越靠近水面。往下翻，池塘的焦点也会跟着沉到底。',
+    kinds: { all: '全部', role: '工作', project: '项目', school: '学业' } as Record<string, string>,
+    bed: '池底。上面的一切，都从这里开始。',
+    visit: '访问',
+    source: '源码'
+  },
+  about: {
+    title: '你好，我是马锦程。',
+    paragraphs: [
+      '我是一名在湾区的软件工程师。喜欢把软件交付里那些繁琐的事交给 AI 智能体，<i>代码审查、测试和发布</i>，也喜欢做让小团队跑得更快的工具。',
+      '最近在 TikTok，我做了一套在 CI 里运行的多智能体代码审查系统，覆盖 30 多个代码库；也搭了信任与安全团队发布时要经过的自动化和质量门禁。现在在做 {work:ocra}，一个开源的代码审查引擎。我还做了 {work:devot}，一款本地优先的 Mac 和 iPhone Markdown 笔记；以及 {work:assay}，PostgreSQL 的 SQL 数据检查工具。',
+      '离开键盘的时候，我攀岩（目前 V6），拍{photos}，也关注市场。正在找下一份工作。',
+      '这个网站是一方池塘。每个来访的人都是一条锦鲤，你也是：那条带红点的白鱼。金色的那条是我。'
+    ],
+    photos: '照片',
+    desktop: '旧桌面'
+  },
+  music: { title: '在听', lede: '我反复听的歌。和旧桌面上放的是同一份歌单，池塘的声音开关也管着它。', empty: '歌单正在来的路上。' },
+  photos: { title: '{n} 张照片', lede: '最新的在前，来自', after: '。点开看大图，用方向键翻页。', open: '在 Unsplash 查看原图 ↗' },
+  notes: {
+    title: '纸船',
+    lede: '这是留言簿。留一句话，每天几条，它会变成纸船漂过池塘，路过的人都能看到。',
+    placeholder: '留一句话',
+    empty: '还没有纸船。',
+    why: '后就能留言'
+  },
+  chat: {
+    title: '聊天',
+    placeholder: '对大家说点什么',
+    empty: '这里还没人说话。',
+    anyone: '谁都可以看，登录后可以发言。',
+    you: '你是 {u}。友善一点，大家都看得到。',
+    why: '后就能发言'
+  },
+  account: {
+    signIn: '登录',
+    signUp: '注册',
+    lede: '和旧桌面是同一个账号。',
+    ledeUp: '用户名和密码就够了，找回邮箱可以不填。',
+    signedIn: '已登录。你的锦鲤会带着你的名字，可以留言和聊天。',
+    signOut: '退出登录',
+    username: '用户名',
+    password: '密码',
+    recovery: '找回邮箱',
+    optional: '（可选）',
+    make: '注册',
+    have: '已有账号',
+    makeOne: '注册账号',
+    closed: '这个版本的网站没有开放登录。'
+  },
+  log: {
+    tiktok: {
+      role: '软件工程师',
+      place: '圣何塞',
+      text: '做了一套在 GitLab CI 里审查每个合并请求的多智能体代码审查系统，也负责信任与安全团队发布门禁的自动化。',
+      pts: [
+        '智能体审查了 <b>1,000+</b> 个合并请求，覆盖 <b>30+</b> 个代码库；开发者采纳了 <b>62%</b> 的意见',
+        '一个调度器把任务分给 <b>7</b> 个专职智能体，再把结果合并成一份结构化的审查，去掉重复和没有根据的意见',
+        '用按风险分流和提示缓存，把 token 开销降低 <b>30%+</b>；支持模型故障切换，防范提示注入',
+        '用 Python 和 TypeScript 做发布门禁自动化并接入 CI/CD：P0/P1 回归覆盖率从 <b>80%</b> 提升到 <b>96%</b>，门禁耗时减少 <b>50%</b>',
+        '定时线上巡检的可靠性从 <b>94%</b> 提升到 <b>99.99%</b>；线上事故减少 <b>30%</b>'
+      ]
+    },
+    infi: {
+      role: '软件测试工程师',
+      place: '芝加哥',
+      text: '独立搭建了内部的数据质量监控平台，并为自助点餐收银系统做端到端测试。',
+      pts: [
+        '每天定时运行 <b>150+</b> 项 SQL 检查，覆盖 <b>50+</b> 张 PostgreSQL 表，带看板和 webhook 告警',
+        '用 Playwright 搭了测试框架，覆盖 kiosk、Android 和 iOS 设备，在 CI 中运行'
+      ],
+      ref: '后来开源重写成了 Assay'
+    },
+    iit: { title: '伊利诺伊理工学院', role: '信息技术与管理硕士', text: 'GPA 4.0。《高级软件编程》课程助教。' },
+    carrefour: {
+      title: '家乐福中国',
+      tag: '苏宁',
+      role: '后端软件工程师（管理培训生）',
+      place: '上海',
+      text: '为零售数据平台开发 Go 后端服务。',
+      pts: [
+        '用 Go 开发 REST 查询接口：平均响应 <b>80 ms</b>，吞吐量提升 <b>35%</b>',
+        'OAuth 2.0 / JWT 角色权限，Redis 缓存命中率 <b>85%</b>',
+        '搭建 GitLab CI/CD，发布周期缩短 <b>30%</b>'
+      ]
+    },
+    njtech: { title: '南京工业大学', role: '材料科学与工程学士', text: '辅修人力资源管理，双学位。' },
+    ocra: {
+      tag: '代码审查引擎',
+      text: 'Open-CR-Agent，一个开源的代码审查引擎。审查哪些代码、评论落在哪一行，都由确定性的代码决定；只有需要判断的地方才交给 LLM 智能体。',
+      pts: [
+        '挑选文件、划分风险等级、匹配规则、把评论锚定到具体行，都是普通且经过测试的代码',
+        '校验器剔除被代码改动推翻的意见，裁判去重并校准严重程度',
+        '每一层都可以配置任意模型并逐级回退，每次调用都会报告 token 和费用',
+        '已发布到 npm（<b>@open-cr-agent/cli</b>），并提供可以审查 fork PR 的 GitHub Action'
+      ]
+    },
+    devot: {
+      tag: 'Mac 和 iPhone 上的笔记',
+      text: '本地优先的 Markdown 笔记，不联网、不用账号也能写，通过你自己的 iCloud 同步。',
+      pts: [
+        '左边写 Markdown，右边即时成文；代码、公式和 Mermaid 图边写边渲染',
+        '笔记本可以层层嵌套，标签有颜色，每篇笔记都有状态',
+        '全文搜索，可以用 <b>book:</b>、<b>tag:</b>、<b>status:</b> 缩小范围；<b>[[</b> 双向链接',
+        '支持 Apple 芯片的 macOS 26+ 和 iOS 26+，通过你自己的 iCloud 同步'
+      ]
+    },
+    assay: {
+      tag: 'SQL 数据检查',
+      text: 'PostgreSQL 的开源 SQL 数据检查工具：写只读查询，返回的行就是问题；定时运行，结果一变就告警。',
+      pts: [
+        '每项检查就是一条只读查询，每次运行的结果是 Clean、Issues 或 Broken',
+        '告警可以发到 Slack、Discord、Telegram、飞书、企业微信或签名 webhook',
+        '提供 MCP 服务，智能体可以列出检查、读取结果、直接运行',
+        '非管理员的修改可以先审核，每次编辑都有记录'
+      ]
+    },
+    pond: {
+      title: '这个池塘',
+      tag: '你所在的网站',
+      text: '一方池塘，每个来访的人都是一条锦鲤；账号、聊天和留言都在 Supabase 上。',
+      pts: [
+        '水面是涟漪模拟，玻璃和水在同一个着色器里绘制，所以玻璃下游过的东西会折射、变模糊',
+        '跟着二十四节气变化：春天有落花，夏天有荷花和蜻蜓，秋天有落叶，冬天有冰裂',
+        'Devot 的鸽子和 ocra 的跳蛛，都是用代码搭出来的 three.js 模型'
+      ]
+    }
+  } as Record<string, { title?: string; tag?: string; role?: string; place?: string; text?: string; pts?: string[]; ref?: string }>
+};
