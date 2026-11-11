@@ -173,155 +173,163 @@ export const ABOUT = [
 ];
 
 /**
- * The pond in Chinese, for the ink mode: the same words, rewritten with a classical turn, set in the
- * brush. Timeline entries are keyed by id and override only what they name. Chips work as in ABOUT.
+ * The pond in Chinese, for the ink mode: the same words in plain, natural Chinese, set in the brush.
+ * Timeline entries are keyed by id and override only what they name. Chips work as in ABOUT;
+ * `{n}` and `{u}` are filled in by the script.
  */
 export const ZH = {
   greetings: {
-    night: ['夜深矣，尚未眠乎？', '更深露重，且坐。'],
-    morning: ['晨光正好。', '早，见字如面。'],
-    afternoon: ['日长人倦，且坐。', '午后闲，来得正好。'],
-    evening: ['晚来无事，且住。', '晚来天欲雪，能饮一杯无？'],
-    any: ['有朋自远方来。', '君自何处来？', '来者是客，请。', '偷得浮生半日闲。', '一池清水，与君共赏。', '池边小坐，且慢行。', '幸会。', '君既来之，则安之。']
+    night: ['这么晚，还没睡？', '夜深了，进来坐坐。'],
+    morning: ['早上好。', '早，今天也来看鱼？'],
+    afternoon: ['下午好。', '午后，坐一会儿吧。'],
+    evening: ['晚上好。', '傍晚了，多待一会儿。'],
+    any: ['欢迎来到池塘。', '你好呀。', '你找到这儿了。', '慢慢看，不着急。', '小心荷叶。', '来了就坐一会儿。', '水正好，进来吧。', '谢谢你来。']
   },
-  say: '君乃那尾白身红斑之鲤。轻点水面，可饲群鱼。',
-  more: '其人其事',
-  toc: ['行迹', '光影', '清音', '尺素'],
-  search: ['寻物，或键入 / 发令', '寻'],
-  talk: '茶话',
-  firstLine: '留下第一句',
+  say: '你是那条带红点的白色锦鲤。点一下水面，可以喂其他的鱼。',
+  more: '关于我',
+  toc: ['履历', '照片', '音乐', '留言'],
+  search: ['搜索，或输入 / 使用命令', '搜索'],
+  talk: '聊天',
+  firstLine: '留下第一句话',
+  clock: { yours: '你的时间', mine: '我在圣何塞', now: '你那里现在是' },
   chapters: {
-    about: '其人',
-    career: '行迹',
-    resume: '行迹',
-    work: '行迹',
-    photos: '光影',
-    music: '清音',
-    notes: '尺素',
-    chat: '茶话',
-    account: '名号'
+    about: '关于',
+    career: '履历',
+    resume: '履历',
+    work: '履历',
+    photos: '照片',
+    music: '音乐',
+    notes: '留言',
+    chat: '聊天',
+    account: '账号'
   } as Record<string, string>,
   career: {
-    title: '水深几许',
-    lede: '所历所作，皆在此处。愈新者愈浅，愈旧者愈深；向下翻阅，池中焦点亦随之沉底。',
-    kinds: { all: '全部', role: '任职', project: '所作', school: '求学' } as Record<string, string>,
-    bed: '池底。上所积者，皆沉于此。',
-    visit: '往观',
+    title: '一路走来',
+    lede: '工作、项目和学业都在这一条线上，越新的越靠近水面。往下翻，池塘的焦点也会跟着沉到底。',
+    kinds: { all: '全部', role: '工作', project: '项目', school: '学业' } as Record<string, string>,
+    bed: '池底。上面的一切，都从这里开始。',
+    visit: '访问',
     source: '源码'
   },
   about: {
-    title: '吾乃马锦程。',
+    title: '你好，我是马锦程。',
     paragraphs: [
-      '余为湾区之软件工程师。好以 AI 代劳软件交付中之繁琐，<i>审阅、测试、发布</i>，亦好造器，使小队行之以速。',
-      '前于 TikTok，作多智能体代码审阅之系统，行于 CI 之中，遍及三十余库；又立信任与安全团队发布所经之关卡与自动化。今方作 {work:ocra}，开源之代码审阅引擎。亦曾作 {work:devot}，Mac 与 iPhone 上本地为先之 Markdown 笔记；及 {work:assay}，PostgreSQL 之 SQL 数据校验。',
-      '键盘之外，好攀岩（今至 V6），摄{photos}，亦观市况。今觅新职。',
-      '此站一池也。来者皆为锦鲤，君亦在其中：白身红斑者是也。金色者，余也。'
+      '我是一名在湾区的软件工程师。喜欢把软件交付里那些繁琐的事交给 AI 智能体，<i>代码审查、测试和发布</i>，也喜欢做让小团队跑得更快的工具。',
+      '最近在 TikTok，我做了一套在 CI 里运行的多智能体代码审查系统，覆盖 30 多个代码库；也搭了信任与安全团队发布时要经过的自动化和质量门禁。现在在做 {work:ocra}，一个开源的代码审查引擎。我还做了 {work:devot}，一款本地优先的 Mac 和 iPhone Markdown 笔记；以及 {work:assay}，PostgreSQL 的 SQL 数据检查工具。',
+      '离开键盘的时候，我攀岩（目前 V6），拍{photos}，也关注市场。正在找下一份工作。',
+      '这个网站是一方池塘。每个来访的人都是一条锦鲤，你也是：那条带红点的白鱼。金色的那条是我。'
     ],
-    photos: '光影',
+    photos: '照片',
     desktop: '旧桌面'
   },
-  music: { title: '耳边曲', lede: '常听之曲。此处所放，与旧桌面同；池塘之声闸，亦管其音。', empty: '曲目将至。' },
-  photos: { title: '光影 {n} 帧', lede: '新作在前，皆出自', after: '。点之可观大图，左右键翻阅。', open: '往 Unsplash 观原图 ↗' },
-  notes: { title: '纸船', lede: '此为留言簿。留一言，日不过三，化作纸船漂于池上，过者皆可读之。', placeholder: '留一言', empty: '尚无纸船。', why: '方可留言' },
+  music: { title: '在听', lede: '我反复听的歌。和旧桌面上放的是同一份歌单，池塘的声音开关也管着它。', empty: '歌单正在来的路上。' },
+  photos: { title: '{n} 张照片', lede: '最新的在前，来自', after: '。点开看大图，用方向键翻页。', open: '在 Unsplash 查看原图 ↗' },
+  notes: {
+    title: '纸船',
+    lede: '这是留言簿。留一句话，每天几条，它会变成纸船漂过池塘，路过的人都能看到。',
+    placeholder: '留一句话',
+    empty: '还没有纸船。',
+    why: '后就能留言'
+  },
   chat: {
-    title: '茶话',
-    placeholder: '与众人言',
-    empty: '此处尚无人言。',
-    anyone: '人皆可观，会友可言。',
-    you: '君为 {u}。善言之，人皆可见。',
-    why: '方可入席'
+    title: '聊天',
+    placeholder: '对大家说点什么',
+    empty: '这里还没人说话。',
+    anyone: '谁都可以看，登录后可以发言。',
+    you: '你是 {u}。友善一点，大家都看得到。',
+    why: '后就能发言'
   },
   account: {
-    signIn: '登入',
-    signUp: '新立名号',
-    lede: '与旧桌面同一名号。',
-    ledeUp: '名号与口令即可；找回之邮箱，可留可不留。',
-    signedIn: '已登入。君之锦鲤已书君名，可留言，可茶话。',
-    signOut: '登出',
-    username: '名号',
-    password: '口令',
-    recovery: '找回之邮箱',
-    optional: '（可不填）',
-    make: '立此名号',
-    have: '已有名号',
-    makeOne: '新立名号',
-    closed: '此处未开登入。'
+    signIn: '登录',
+    signUp: '注册',
+    lede: '和旧桌面是同一个账号。',
+    ledeUp: '用户名和密码就够了，找回邮箱可以不填。',
+    signedIn: '已登录。你的锦鲤会带着你的名字，可以留言和聊天。',
+    signOut: '退出登录',
+    username: '用户名',
+    password: '密码',
+    recovery: '找回邮箱',
+    optional: '（可选）',
+    make: '注册',
+    have: '已有账号',
+    makeOne: '注册账号',
+    closed: '这个版本的网站没有开放登录。'
   },
   log: {
     tiktok: {
       role: '软件工程师',
       place: '圣何塞',
-      text: '作多智能体代码审阅之系统，于 GitLab CI 中逐一审阅合并请求；并造信任与安全团队发布关卡之自动化。',
+      text: '做了一套在 GitLab CI 里审查每个合并请求的多智能体代码审查系统，也负责信任与安全团队发布门禁的自动化。',
       pts: [
-        '智能体审阅逾 <b>1,000</b> 合并请求，遍及 <b>30</b> 余库；开发者采纳其所见 <b>62%</b>',
-        '一总调度分派 <b>7</b> 专职智能体，合其所得为一份合乎结构之审阅，去其重复，去其臆测',
-        '按风险分流、缓存提示，token 之费减 <b>30%</b> 余；模型故障可转，提示注入可防',
-        '发布关卡之自动化以 Python、TypeScript 成之，接入 CI/CD：P0/P1 回归覆盖由 <b>80%</b> 至 <b>96%</b>，关卡耗时减 <b>50%</b>',
-        '定时线上巡检之可靠，由 <b>94%</b> 至 <b>99.99%</b>；线上事故减 <b>30%</b>'
+        '智能体审查了 <b>1,000+</b> 个合并请求，覆盖 <b>30+</b> 个代码库；开发者采纳了 <b>62%</b> 的意见',
+        '一个调度器把任务分给 <b>7</b> 个专职智能体，再把结果合并成一份结构化的审查，去掉重复和没有根据的意见',
+        '用按风险分流和提示缓存，把 token 开销降低 <b>30%+</b>；支持模型故障切换，防范提示注入',
+        '用 Python 和 TypeScript 做发布门禁自动化并接入 CI/CD：P0/P1 回归覆盖率从 <b>80%</b> 提升到 <b>96%</b>，门禁耗时减少 <b>50%</b>',
+        '定时线上巡检的可靠性从 <b>94%</b> 提升到 <b>99.99%</b>；线上事故减少 <b>30%</b>'
       ]
     },
     infi: {
       role: '软件测试工程师',
       place: '芝加哥',
-      text: '独力造内部数据质量监控之平台，并为自助点餐收银系统作端到端测试。',
+      text: '独立搭建了内部的数据质量监控平台，并为自助点餐收银系统做端到端测试。',
       pts: [
-        '每日定时 SQL 校验 <b>150</b> 余项，覆盖 PostgreSQL 表 <b>50</b> 余张，附看板与 webhook 告警',
-        '以 Playwright 成测试框架，兼测 kiosk、Android、iOS 诸端，行于 CI'
+        '每天定时运行 <b>150+</b> 项 SQL 检查，覆盖 <b>50+</b> 张 PostgreSQL 表，带看板和 webhook 告警',
+        '用 Playwright 搭了测试框架，覆盖 kiosk、Android 和 iOS 设备，在 CI 中运行'
       ],
-      ref: '后开源重写，即 Assay'
+      ref: '后来开源重写成了 Assay'
     },
-    iit: { title: '伊利诺伊理工学院', role: '信息技术与管理硕士', text: '绩点 4.0。任《高级软件编程》助教。' },
+    iit: { title: '伊利诺伊理工学院', role: '信息技术与管理硕士', text: 'GPA 4.0。《高级软件编程》课程助教。' },
     carrefour: {
       title: '家乐福中国',
       tag: '苏宁',
-      role: '后端软件工程师，管理培训生',
+      role: '后端软件工程师（管理培训生）',
       place: '上海',
-      text: '为零售数据平台作 Go 后端服务。',
+      text: '为零售数据平台开发 Go 后端服务。',
       pts: [
-        '以 Go 成 REST 查询接口：均响应 <b>80 ms</b>，吞吐增 <b>35%</b>',
-        'OAuth 2.0 / JWT 分角色授权；Redis 缓存命中 <b>85%</b>',
-        'GitLab CI/CD 使发布周期缩 <b>30%</b>'
+        '用 Go 开发 REST 查询接口：平均响应 <b>80 ms</b>，吞吐量提升 <b>35%</b>',
+        'OAuth 2.0 / JWT 角色权限，Redis 缓存命中率 <b>85%</b>',
+        '搭建 GitLab CI/CD，发布周期缩短 <b>30%</b>'
       ]
     },
     njtech: { title: '南京工业大学', role: '材料科学与工程学士', text: '辅修人力资源管理，双学位。' },
     ocra: {
-      tag: '代码审阅引擎',
-      text: 'Open-CR-Agent，开源之代码审阅引擎。审何处、评落何行，皆由确定之代码定之；唯须判断处，方交 LLM 智能体。',
+      tag: '代码审查引擎',
+      text: 'Open-CR-Agent，一个开源的代码审查引擎。审查哪些代码、评论落在哪一行，都由确定性的代码决定；只有需要判断的地方才交给 LLM 智能体。',
       pts: [
-        '择文件、定风险、配规则、锚评语于行，皆寻常且经测之代码',
-        '校验者弃其为改动所驳之所见；裁断者去重并定轻重',
-        '每层可配任意模型，可逐级回退；每次调用皆报 token 与费用',
-        '已发布于 npm（<b>@open-cr-agent/cli</b>），并有 GitHub Action 可审 fork 之 PR'
+        '挑选文件、划分风险等级、匹配规则、把评论锚定到具体行，都是普通且经过测试的代码',
+        '校验器剔除被代码改动推翻的意见，裁判去重并校准严重程度',
+        '每一层都可以配置任意模型并逐级回退，每次调用都会报告 token 和费用',
+        '已发布到 npm（<b>@open-cr-agent/cli</b>），并提供可以审查 fork PR 的 GitHub Action'
       ]
     },
     devot: {
-      tag: 'Mac 与 iPhone 之笔记',
-      text: '本地为先之 Markdown 笔记，可离线、无须账号书写，经自家 iCloud 同步。',
+      tag: 'Mac 和 iPhone 上的笔记',
+      text: '本地优先的 Markdown 笔记，不联网、不用账号也能写，通过你自己的 iCloud 同步。',
       pts: [
-        '一侧书 Markdown，一侧即成文；代码、公式、Mermaid 图随写随现',
-        '笔记本可层层相套，标签有色，每篇皆有其状态',
-        '全文可搜，以 <b>book:</b>、<b>tag:</b>、<b>status:</b> 收窄；<b>[[</b> 互链，自有反向链接',
-        'macOS 26+（Apple 芯片）与 iOS 26+，经自家 iCloud 同步'
+        '左边写 Markdown，右边即时成文；代码、公式和 Mermaid 图边写边渲染',
+        '笔记本可以层层嵌套，标签有颜色，每篇笔记都有状态',
+        '全文搜索，可以用 <b>book:</b>、<b>tag:</b>、<b>status:</b> 缩小范围；<b>[[</b> 双向链接',
+        '支持 Apple 芯片的 macOS 26+ 和 iOS 26+，通过你自己的 iCloud 同步'
       ]
     },
     assay: {
-      tag: 'SQL 数据校验',
-      text: 'PostgreSQL 之开源 SQL 数据校验：书只读之查询，所返之行即为问题；定时而行，结果有变则告。',
+      tag: 'SQL 数据检查',
+      text: 'PostgreSQL 的开源 SQL 数据检查工具：写只读查询，返回的行就是问题；定时运行，结果一变就告警。',
       pts: [
-        '一校验即一只读查询；每次运行，或 Clean，或 Issues，或 Broken',
-        '告警可达 Slack、Discord、Telegram、飞书、企业微信，或签名之 webhook',
-        '有 MCP 服务，智能体可列校验、读结果、执行之',
-        '非管理者之改动可待审，每次修改皆有记录'
+        '每项检查就是一条只读查询，每次运行的结果是 Clean、Issues 或 Broken',
+        '告警可以发到 Slack、Discord、Telegram、飞书、企业微信或签名 webhook',
+        '提供 MCP 服务，智能体可以列出检查、读取结果、直接运行',
+        '非管理员的修改可以先审核，每次编辑都有记录'
       ]
     },
     pond: {
-      title: '此池',
-      tag: '君所在之站',
-      text: '一方池塘，来者皆为锦鲤；名号、茶话、留言皆在 Supabase。',
+      title: '这个池塘',
+      tag: '你所在的网站',
+      text: '一方池塘，每个来访的人都是一条锦鲤；账号、聊天和留言都在 Supabase 上。',
       pts: [
-        '水面乃涟漪之模拟；玻璃与水同出一着色器，故游于其下者皆折而朦胧',
-        '随二十四节气而变：春有落英，夏有荷与蜻蜓，秋有落叶，冬有冰裂',
-        'Devot 之鸽、ocra 之跳蛛，皆以代码构建之 three.js 模型'
+        '水面是涟漪模拟，玻璃和水在同一个着色器里绘制，所以玻璃下游过的东西会折射、变模糊',
+        '跟着二十四节气变化：春天有落花，夏天有荷花和蜻蜓，秋天有落叶，冬天有冰裂',
+        'Devot 的鸽子和 ocra 的跳蛛，都是用代码搭出来的 three.js 模型'
       ]
     }
   } as Record<string, { title?: string; tag?: string; role?: string; place?: string; text?: string; pts?: string[]; ref?: string }>

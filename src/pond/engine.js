@@ -2221,7 +2221,7 @@ const PHOTOS = D.photos;
 let NOTES = [];
 const PLAY = '<svg width="10" height="10" viewBox="0 0 12 12"><path d="M2.5 1v10l8-5z"/></svg>';
 const markSrc = (m) => `/pond/marks/${m}.png`;
-// In ink the pond speaks Chinese, with a classical turn (content.ts, ZH): L(en, zh) picks the words for now.
+// In ink the pond speaks Chinese (content.ts, ZH): L(en, zh) picks the words for now.
 const ZH = D.zh;
 const L = (en, zh) => (inkOn ? zh : en);
 const CN_MONTH = { Jan: 1, Feb: 2, Mar: 3, Apr: 4, May: 5, Jun: 6, Jul: 7, Aug: 8, Sep: 9, Oct: 10, Nov: 11, Dec: 12 };
@@ -2232,8 +2232,6 @@ const tr = (e) => {
   const z = ZH.log[e.id] || {};
   return { ...e, ...z, when: zhWhen(e.when), ref: e.ref && z.ref ? [e.ref[0], z.ref] : e.ref };
 };
-// the twelve double hours, with their first and second halves
-const shichen = (h) => '子丑寅卯辰巳午未申酉戌亥'[Math.floor(((h + 1) % 24) / 2)] + (h % 2 ? '初' : '正');
 function fillPanes() {
   // the row for the timeline carries the marks of the places worked at, newest first
   $('#tocWork').innerHTML = `<span class="marks">${LOG.filter((e) => e.kind === 'role')
@@ -2260,11 +2258,11 @@ function ago(iso) {
   const m = Math.max(0, (Date.now() - Date.parse(iso)) / 60000);
   if (inkOn)
     return m < 1
-      ? '方才'
+      ? '刚刚'
       : m < 60
-        ? `${Math.round(m)} 分前`
+        ? `${Math.round(m)} 分钟前`
         : m < 1440
-          ? `${Math.round(m / 60)} 时前`
+          ? `${Math.round(m / 60)} 小时前`
           : `${new Date(iso).getMonth() + 1}月${new Date(iso).getDate()}日`;
   return m < 1
     ? 'just now'
@@ -2437,7 +2435,7 @@ function sound() {
   let cur = null;
   setFocus(0.1 + (room > 8 ? clamp(el.scrollTop / room, 0, 1) : 0) * 0.9);
   for (const li of $('#sound').children) if (!li.hidden && li.getBoundingClientRect().top <= line) cur = li;
-  $('#readout').textContent = cur ? `↓ ${cur.dataset.depth} m · ${cur.dataset.year}` : `↓ 0.0 m · ${L('today', '今')}`;
+  $('#readout').textContent = cur ? `↓ ${cur.dataset.depth} m · ${cur.dataset.year}` : `↓ 0.0 m · ${L('today', '今天')}`;
 }
 function showRow(at) {
   const row = at && $('#p-' + at),
@@ -3601,19 +3599,19 @@ function tick() {
   }
   $('#hisTime').textContent = his ? `${his.replace(/\s?([AP])M$/, (_, x) => ` ${x.toLowerCase()}m`)} for me, in San Jose` : 'San Jose, California';
   if (inkOn) {
-    let hisH = -1;
+    let his24 = '';
     try {
-      hisH = +new Intl.DateTimeFormat('en-US', { timeZone: 'America/Los_Angeles', hour: 'numeric', hourCycle: 'h23' }).format(d);
+      his24 = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Los_Angeles', hour: 'numeric', minute: '2-digit', hourCycle: 'h23' }).format(d);
     } catch (err) {
-      /* no time zones here: his double hour goes unsaid */
+      /* no time zones here: his hour goes unsaid */
     }
     $('#clockBig').textContent = `${h}:${mm}`;
-    $('#clockPart').textContent = `君处 · ${shichen(h)}`;
-    $('#hisTime').textContent = hisH >= 0 ? `吾在圣何塞 · ${shichen(hisH)}` : '吾在圣何塞';
+    $('#clockPart').textContent = ZH.clock.yours;
+    $('#hisTime').textContent = his24 ? `${ZH.clock.mine} · ${his24}` : ZH.clock.mine;
   }
   if (phaseChoice === 'auto') setPhase('auto');
   const lt = $('#letterTime');
-  if (lt) lt.textContent = inkOn ? `君处此刻，${shichen(h)}。` : `${h % 12 || 12}:${mm} ${part}${city ? ' in ' + city : ' where you are'}`;
+  if (lt) lt.textContent = inkOn ? `${ZH.clock.now} ${h}:${mm}。` : `${h % 12 || 12}:${mm} ${part}${city ? ' in ' + city : ' where you are'}`;
 }
 // Who is here: this visitor and everyone presence knows of, on the pond and on the old desktop alike.
 let online = 0;
