@@ -1,138 +1,186 @@
 ---
-// Home: JM/OS, a Mac OS X–style desktop. The shell is one client-only React
-// island; everything it shows is gathered here at build time. A plain-text
-// copy of the same content sits beside it for screen readers, crawlers and
-// visitors without JavaScript.
+// Home: the pond, a personal site as a pond seen from above, with a title page on
+// the water and chapters that open as one sheet of glass. Everything it
+// shows is gathered here at build time (the timeline from the project pages
+// and src/pond/content.ts, the latest photos from Unsplash); the script
+// (src/pond/engine.js) draws the water and runs the rest. A plain-text copy
+// sits beside it for screen readers, crawlers and visitors without
+// JavaScript. docs/agents/pond.md has the map.
 import { getImage } from 'astro:assets';
+import '@fontsource/cormorant-garamond/latin-500.css';
+import '@fontsource/cormorant-garamond/latin-600.css';
+import '@fontsource/cormorant-garamond/latin-400-italic.css';
+import '@fontsource/cormorant-garamond/latin-500-italic.css';
+import '../pond/brush.css';
+import '../pond/pond.css';
 import Layout from '../layouts/Layout.astro';
-import Desktop from '../os/Desktop';
-import wallpaperSource from '../assets/os/stones.jpg';
-import { content, profile } from '../content/site';
-import { formatMonth, getProjects, projectHref } from '../lib/projects';
+import { profile } from '../content/site';
+import { formatMonth, getProjects } from '../lib/projects';
 import { getPhotos } from '../lib/photos';
-import type { OSData } from '../os/core/types';
+import { ABOUT, type LogEntry, PATH, PROJECT_EXTRAS, THIS_POND, ZH } from '../pond/content';
+import pondCover from '../assets/pond/cover.jpg';
 
-const t = content;
-const wallpaper = await getImage({ src: wallpaperSource, width: 2560, format: 'webp', quality: 75 });
-const entries = await getProjects();
+const cover = async (src: ImageMetadata) => (await getImage({ src, width: 1100, format: 'webp', quality: 74 })).src;
+const yearOf = (d: Date) => d.getUTCFullYear() + d.getUTCMonth() / 12;
 
-const projects = await Promise.all(
-  entries.map(async (p) => ({
-    slug: p.slug,
+const projects: LogEntry[] = [];
+for (const p of await getProjects()) {
+  const extra = PROJECT_EXTRAS[p.slug];
+  if (!extra) continue;
+  projects.push({
+    kind: 'project',
+    id: p.slug,
+    mark: p.slug,
     title: p.data.title,
-    description: p.data.description,
+    tag: extra.tag,
+    c: extra.c,
     when: formatMonth(p.data.date),
-    status: p.data.status,
-    stack: p.data.stack,
-    repo: p.data.repo,
-    demo: p.data.demo,
-    cover: p.data.cover ? (await getImage({ src: p.data.cover, width: 1200, format: 'webp' })).src : undefined,
-    html: p.rendered?.html ?? ''
-  }))
-);
+    s: yearOf(p.data.date),
+    text: p.data.description,
+    pts: extra.pts,
+    stack: p.data.stack.join(' · '),
+    visit: p.data.demo,
+    source: p.data.repo,
+    cover: p.data.cover ? await cover(p.data.cover) : undefined
+  });
+}
+projects.push({ kind: 'project', mark: 'pond', ...THIS_POND, cover: await cover(pondCover) });
 
-const data: OSData = {
-  name: profile.name,
-  role: t.role,
-  location: profile.location,
-  email: profile.email,
-  links: {
-    github: profile.github,
-    linkedin: profile.linkedin,
-    photography: profile.photography
-  },
-  bio: { short: [...t.bio.shortParagraphs] },
-  summary: { ...t.summary, text: [...t.summary.text] },
-  resume: { ...t.resume, projects: t.resume.projects.map((p) => ({ ...p, bullets: [...p.bullets] })) },
-  jobs: t.jobs.map((j) => ({ ...j, sections: j.sections.map((g) => ({ ...g, bullets: [...g.bullets] })) })),
-  skills: t.skills.groups.map((g) => ({ name: g.name, items: [...g.items] })),
-  education: t.education.items.map((e) => ({ ...e })),
-  projects,
-  photos: await getPhotos(profile.photography),
-  wallpaper: wallpaper.src
-};
-
-const unlink = (text: string) => text.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
+const log = [...projects, ...PATH].sort((a, b) => b.s - a.s);
+const photos = (await getPhotos(profile.photography)).map((p) => ({
+  id: p.id,
+  w: p.width,
+  h: p.height,
+  color: p.color,
+  taken: p.taken,
+  alt: p.alt,
+  thumb: p.thumb,
+  full: p.full,
+  page: p.page
+}));
+const data = { log, photos, about: ABOUT, unsplash: profile.photography, zh: ZH };
+const plain = (html: string) => html.replace(/<[^>]+>/g, '').replace(/\{work:(\w+)\}/g, '$1').replace('{photos}', 'photos').replace(/&amp;/g, '&');
 ---
 
-<Layout tabTitle="Jincheng">
-  <Desktop client:only="react" data={data} />
+<Layout bleed path="/" tabTitle="Jincheng's pond" title="Jincheng Ma: a pond" description="Jincheng Ma, a software engineer in the Bay Area. A pond seen from above: his work, projects, photos and music, and everyone who visits is a koi.">
+  <div id="pond" data-phase="day">
+    <canvas id="gl" aria-hidden="true"></canvas>
+    <div id="tags" aria-hidden="true"></div>
+    <div class="shade" aria-hidden="true"><i></i><i></i></div>
+    <div class="boat-tip" id="boatTip" aria-hidden="true"></div>
+
+    <main class="home" id="home">
+      <p class="greet" id="greet" aria-live="polite"></p>
+      <div class="lead" id="lead">
+        <h1 class="hero rise" id="hero">Hello.</h1>
+        <p class="say rise">You're the white koi with the red spot. Press the water to feed the others. <button class="tlink" data-sheet="about">More about me</button></p>
+        <nav class="toc" id="toc" aria-label="Contents">
+          <div class="row rise"><button class="go" data-sheet="career"><i>01</i><b>Timeline</b></button><span class="live"></span><em id="tocWorkN"></em></div>
+          <div class="row rise"><button class="go" data-sheet="photos"><i>02</i><b>Photos</b></button><span class="live"></span><em id="photoMore"></em></div>
+          <div class="row rise">
+            <button class="go" data-sheet="music"><i>03</i><b>Music</b></button><span class="live"
+              ><span class="t"><b id="npTitle"></b><span id="npWho"></span></span><span class="bars" id="bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+              <button class="playbtn" id="play" aria-label="Play music" aria-pressed="false"
+                ><svg id="playIcon" width="11" height="11" viewBox="0 0 12 12"><path d="M2.5 1v10l8-5z"></path></svg></button
+              ></span
+            ><em id="songMore"></em>
+          </div>
+          <div class="row rise"><button class="go" data-sheet="notes"><i>04</i><b>Notes</b></button><span class="live"><q id="noteLast"></q></span><em id="noteCount"></em></div>
+        </nav>
+      </div>
+      <aside class="alm rise" aria-label="Now">
+        <b class="term-v" id="termV" lang="zh"></b>
+        <div class="txt"><span id="termTxt"></span><span><b id="clockBig"></b> <span id="clockPart"></span></span><span id="hisTime"></span></div>
+      </aside>
+    </main>
+
+    <div class="hud">
+      <div class="bl">
+        <button class="pill icon glass" data-r="20" id="snd" aria-label="Turn the sound off" aria-pressed="true"
+          ><svg width="16" height="16" viewBox="0 0 16 16" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"
+            ><path d="M2.5 6.2h2.6L8.6 3.5v9L5.1 9.8H2.5z" fill="currentColor" stroke="none"></path><path id="sndWave" d="M11 5.6a3.4 3.4 0 0 1 0 4.8"></path></svg
+          ></button
+        >
+      </div>
+      <button class="glass cmd" id="cmdBtn" data-r="20" aria-label="Search or type a command"
+        ><svg width="15" height="15" viewBox="0 0 16 16" stroke-width="1.6"><circle cx="7" cy="7" r="4.6"></circle><path d="m10.6 10.6 3.4 3.4" stroke-linecap="round"></path></svg
+        ><span class="long">Search, or type / for commands</span><span class="short">Search</span><kbd id="cmdKey">⌘K</kbd></button
+      >
+      <div class="gauge" id="gauge" role="slider" tabindex="0" aria-label="Focus depth" aria-orientation="vertical" aria-valuemin="0" aria-valuemax="100">
+        <span style="top:0">surface</span><span style="top:55%">koi</span><span style="top:100%">bed</span><i id="knob"></i>
+      </div>
+      <div class="br">
+        <button class="pill glass ink-btn lang-btn" data-r="20" id="langBtn" aria-label="中文 (L)"><span lang="zh">中</span></button>
+        <button class="pill glass ink-btn" data-r="20" id="inkBtn" aria-pressed="false" aria-label="Ink and paper (I)"><span lang="zh">墨</span></button>
+        <button class="pill icon glass" data-r="20" id="clear" aria-label="Hide the glass" aria-pressed="true"
+          ><svg width="16" height="16" viewBox="0 0 16 16" stroke-width="1.4" stroke-linejoin="round"
+            ><rect x="2" y="3" width="8.5" height="7" rx="2"></rect><path d="M12.6 6.2A2 2 0 0 1 14 8.1V11a2 2 0 0 1-2 2H7.6a2 2 0 0 1-1.9-1.4" stroke-linecap="round"></path></svg
+          ></button
+        >
+        <button class="pill glass talk" data-r="20" id="talk" data-sheet="chat" aria-label="Chat, and who is here"
+          ><span class="here"><span id="dots"></span><b id="talkN">1</b></span><span>Chat</span></button
+        >
+      </div>
+    </div>
+
+    <canvas id="air" aria-hidden="true"></canvas>
+
+    <div class="pal-wrap" id="palWrap">
+      <div class="pal" role="dialog" aria-label="Command bar">
+        <div class="pal-in">
+          <svg width="17" height="17" viewBox="0 0 16 16" stroke-width="1.5"><circle cx="7" cy="7" r="4.6"></circle><path d="m10.6 10.6 3.4 3.4" stroke-linecap="round"></path></svg>
+          <input
+            id="palIn"
+            role="combobox"
+            aria-expanded="true"
+            aria-controls="palList"
+            aria-autocomplete="list"
+            placeholder="Search the pond, or type / for commands"
+            autocomplete="off"
+            autocapitalize="off"
+            spellcheck="false"
+            aria-label="Search the pond, or type / for commands"
+          /><kbd>esc</kbd>
+        </div>
+        <ul id="palList" role="listbox" aria-label="Results"></ul>
+        <div class="pal-foot"><span><kbd>↑</kbd><kbd>↓</kbd> move</span><span><kbd>↵</kbd> run</span><span><kbd>/</kbd> commands only</span><span class="n" id="palN"></span></div>
+      </div>
+    </div>
+
+    <div class="veil" id="veil"><article class="sheet glass" id="sheet" data-r="26" role="dialog" aria-modal="true" tabindex="-1"></article></div>
+  </div>
+
+  <script type="application/json" id="pond-data" set:html={JSON.stringify(data).replace(/</g, '\\u003c')} />
+  <script>
+    import '../pond/engine.js';
+  </script>
 
   <noscript>
     <style>
-      .os-text-copy {
-        position: static;
-        width: auto;
-        height: auto;
-        margin: 0 auto;
-        overflow: visible;
-        clip: auto;
-        clip-path: none;
-        padding: 0 1rem 3rem;
-        white-space: normal;
-        max-width: 38rem;
-        font: 16px/1.6 -apple-system, system-ui, sans-serif;
-      }
-      .os-text-copy h1 {
-        font-size: 1.6rem;
-      }
-      .os-text-copy p {
-        margin: 0 0 0.8rem;
-      }
-      .os-text-copy h2 {
-        margin-top: 1.6rem;
-        font-size: 1.1rem;
-      }
-      .os-text-copy ul {
-        padding-left: 1.2rem;
-        list-style: disc;
-      }
-      .os-text-copy a {
-        text-decoration: underline;
-      }
-      .os-noscript-note {
-        max-width: 38rem;
-        margin: 2rem auto 1rem;
-        padding: 0 1rem;
-        font: 14px/1.5 -apple-system, system-ui, sans-serif;
-        color: #666;
-      }
+      #pond { display: none; }
+      body { overflow: auto; }
+      .pond-text { position: static; width: auto; height: auto; overflow: visible; clip-path: none; white-space: normal; max-width: 38rem; margin: 0 auto; padding: 2rem 1rem 3rem; font: 16px/1.6 -apple-system, system-ui, sans-serif; }
     </style>
-    <p class="os-noscript-note">This site is a desktop that needs JavaScript. Here is what's on it, as text.</p>
   </noscript>
-
-  {/* The content as plain text: for screen readers and crawlers, and shown
-      to visitors without JavaScript (the <noscript> above). */}
-  <article class="sr-only os-text-copy">
-    <h1>{profile.name} — {t.role}</h1>
-    {t.bio.shortParagraphs.map((p) => <p>{unlink(p)}</p>)}
-    <h2>Projects</h2>
+  <div class="pond-text">
+    <h2>About</h2>
+    {ABOUT.map((p) => <p>{plain(p)}</p>)}
+    <h2>Timeline</h2>
     <ul>
       {
-        entries.map((p) => (
+        log.map((e) => (
           <li>
-            <a href={projectHref(p.slug)}>{p.data.title}</a>: {p.data.description}
+            <strong>{e.title}</strong>, {e.role ?? e.tag}, {e.when}. {e.text}
+            {e.visit && (
+              <>
+                {' '}
+                <a href={e.visit}>{e.visit}</a>
+              </>
+            )}
           </li>
         ))
       }
     </ul>
-    <h2>Experience</h2>
-    <ul>
-      {
-        t.jobs.map((job) => (
-          <li>
-            {job.company}, {job.role} ({job.period}): {job.summary}
-          </li>
-        ))
-      }
-    </ul>
-    <h2>Links</h2>
-    <ul>
-      <li><a href="/?open=resume">Résumé</a></li>
-      <li><a href={`mailto:${profile.email}`}>{profile.email}</a></li>
-      <li><a href={profile.github}>GitHub</a></li>
-      <li><a href={profile.linkedin}>LinkedIn</a></li>
-      <li><a href={profile.photography}>Photography on Unsplash</a></li>
-    </ul>
-  </article>
+    <p><a href={profile.photography}>Photographs on Unsplash</a> · <a href={profile.github}>GitHub</a> · <a href="/os">The old desktop</a></p>
+  </div>
 </Layout>

@@ -23,7 +23,8 @@ never did), and a chart-like timeline beside the one in soundings.
 
 - The pond is built at `/pond` beside the desktop, which stays at `/`
   until the pond has everything the home page needs; then they swap
-  (ROADMAP.md). The desktop's code is kept in the private repository
+  (ROADMAP.md). Swapped on 2026-11-11: the pond is at `/` and the
+  desktop at `/os`; `/?open=…` links and `/pond` redirect (vercel.json). The desktop's code is kept in the private repository
   `jma49/jmos-classic` as well as in this one's history.
 - It keeps the desktop's accounts, chat, guestbook and presence (the
   same backend and rules), reached from the command bar, a Chat button

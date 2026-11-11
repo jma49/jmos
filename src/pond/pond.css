@@ -1326,32 +1326,65 @@ button.more:hover {
   border-radius: 3.5px;
   background: var(--c);
 }
-.toc .thumbs {
-  gap: 6px;
-}
-.toc .thumbs img {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  object-fit: cover;
-  box-shadow: 0 2px 10px rgba(0, 12, 14, 0.4);
-}
-.toc .playbtn {
-  flex: none;
-  width: 32px;
-  height: 32px;
+/* the song now playing: title and singer on one line and one baseline, the bars only while it plays,
+   and a ring for play in the line of the glass controls */
+.toc .t {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  line-height: 1;
 }
 .toc #npTitle {
-  font: 600 15px / 1 var(--cjk);
+  font: 400 17px / 1 var(--cjk);
   color: var(--mist);
 }
 .toc #npWho {
-  margin-left: 9px;
-  font-size: 12.5px;
+  font: 400 14px / 1 var(--cjk);
+  color: var(--mist-faint);
 }
 .toc .bars {
   flex: none;
-  height: 14px;
+  width: 0;
+  height: 12px;
+  gap: 2px;
+  overflow: hidden;
+  transition: width 0.3s ease;
+}
+.toc .bars[data-on] {
+  width: 15px;
+}
+.toc .bars i {
+  width: 2.25px;
+}
+.toc .playbtn {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  background: none;
+  box-shadow: inset 0 0 0 1px var(--hair);
+  transition:
+    box-shadow 0.2s,
+    background 0.2s;
+}
+.toc .playbtn svg {
+  width: 9px;
+  height: 9px;
+  fill: var(--mist);
+  translate: 0.5px 0;
+}
+.toc .playbtn[aria-pressed='true'] svg {
+  translate: 0 0;
+}
+.toc .row:hover .playbtn,
+.toc .playbtn:hover {
+  scale: none;
+  box-shadow: inset 0 0 0 1px var(--mist-dim);
+}
+.toc .playbtn:hover {
+  background: var(--lift);
+}
+.playbtn:focus-visible {
+  border-radius: 50%;
 }
 .toc q {
   quotes: none;
@@ -1477,18 +1510,6 @@ button.more:hover {
 .sound .node.mark.full img {
   border-radius: 6.5px;
 }
-.toc .marks {
-  align-items: center;
-}
-.toc .marks img.full {
-  padding: 0;
-}
-.toc .marks i {
-  width: 1px;
-  height: 16px;
-  margin: 0 4px;
-  background: rgba(255, 255, 255, 0.28);
-}
 .chip.mk::before {
   content: none;
 }
@@ -1507,28 +1528,9 @@ button.more:hover {
 .toc .row:hover {
   background: linear-gradient(90deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0));
 }
-.toc .marks {
-  display: flex;
-  gap: 6px;
-}
-.toc .marks img {
-  width: 24px;
-  height: 24px;
-  padding: 2px;
-  box-sizing: border-box;
-  border-radius: 6.5px;
-  object-fit: contain;
-  box-shadow: 0 2px 8px rgba(0, 12, 14, 0.35);
-}
 ::selection {
   background: rgba(231, 96, 58, 0.5);
   color: #fff;
-}
-.toc .marks b {
-  width: 24px;
-  height: 24px;
-  border-radius: 6.5px;
-  box-shadow: 0 2px 8px rgba(0, 12, 14, 0.35);
 }
 /* what is looked at rather than read gets most of the pond's width; a strip of open water stays beside it */
 .sheet[data-wide='wide'] {
@@ -1696,11 +1698,6 @@ button.more:hover {
   top: 14px;
   right: 14px;
   font-size: 20px;
-}
-.toc .marks img {
-  box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.24),
-    0 2px 8px rgba(0, 12, 14, 0.35);
 }
 .sound .cover {
   display: block;
@@ -2546,6 +2543,16 @@ button.more:hover {
   padding: 0;
   font: 400 21px / 1 var(--cjk);
 }
+/* 中 / En: the language, apart from the look; En is set in the serif */
+.lang-btn span[lang='en'] {
+  font: italic 400 20px / 1 var(--display);
+}
+#pond[data-speaking] .home,
+#pond[data-speaking] .hud,
+#pond[data-speaking] .sheet #scroll {
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
 .ink-btn[aria-pressed='true'] {
   background: rgba(20, 18, 16, 0.85) !important;
   color: #f1e9d8;
@@ -2586,6 +2593,15 @@ button.more:hover {
 }
 #pond[data-ink] .playbtn svg {
   fill: #f1e9d8;
+}
+#pond[data-ink] .toc .playbtn {
+  background: none;
+}
+#pond[data-ink] .toc .playbtn:hover {
+  background: var(--lift);
+}
+#pond[data-ink] .toc .playbtn svg {
+  fill: var(--mist);
 }
 #pond[data-ink] .pill svg {
   stroke: #1b1916;
@@ -2715,7 +2731,7 @@ button.more:hover {
 #pond[data-ink] .stack span {
   box-shadow: inset 0 0 0 1px rgba(27, 25, 22, 0.18);
 }
-#pond[data-ink] .ink-btn span {
+#pond[data-ink] .ink-btn[aria-pressed='true'] span {
   color: #f1e9d8;
 }
 #pond[data-ink] .bars[data-on] i {

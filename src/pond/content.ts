@@ -173,7 +173,7 @@ export const ABOUT = [
 ];
 
 /**
- * The pond in Chinese, for the ink mode: the same words in plain, natural Chinese, set in the brush.
+ * The pond in Chinese, chosen with 中 apart from the look: the same words in plain, natural Chinese, set in the brush.
  * Timeline entries are keyed by id and override only what they name. Chips work as in ABOUT;
  * `{n}` and `{u}` are filled in by the script.
  */

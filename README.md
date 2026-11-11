@@ -2,12 +2,19 @@
 
 **Live at [www.majincheng.com](https://www.majincheng.com).**
 
-[![The JM/OS desktop: a Mac OS X menu bar, Dock and desktop icons over a wallpaper of river stones, with the Welcome window open.](public/og.jpg)](https://www.majincheng.com)
+[![The pond: a title page set on the water, with koi and lily pads under it.](public/og.jpg)](https://www.majincheng.com)
 
-Jincheng Ma's own place on the web, a Mac OS X Aqua desktop in the
-browser: a hideout rather than a portfolio.
+Jincheng Ma's own place on the web: a hideout rather than a portfolio.
 
-Projects, the résumé, photos and posts open as windows on the desktop.
+**The pond** is the home page: a pond seen from above, where every
+visitor is a koi, with a title page on the water and chapters (a timeline
+of work, projects and school; photos; music; the guestbook; the chat)
+that open as a sheet of glass drawn with the water; the 墨 switch turns
+it into an ink painting on xuan paper, in slow motion. It keeps the
+desktop's accounts, chat and guestbook.
+
+**JM/OS** ([`/os`](https://www.majincheng.com/os)), the old home page,
+is a Mac OS X Aqua desktop in the browser. Projects, the résumé, photos and posts open as windows on the desktop.
 Around them sits a small working system:
 
 - **Shell:** menu bar, Dock, Exposé, Dashboard, Spotlight, a screen saver,
@@ -30,13 +37,6 @@ Around them sits a small working system:
 - **Ambient:** the desktop follows the light and weather where the visitor
   is.
 
-**The pond** ([`/pond`](https://www.majincheng.com/pond)) is the next
-home page, built beside the desktop: a pond seen from above, where every
-visitor is a koi, with a title page on the water and chapters (a timeline
-of work, projects and school; photos; music; the guestbook; the chat)
-that open as a sheet of glass drawn with the water; the 墨 switch turns
-it into an ink painting on xuan paper, in slow motion. It keeps the
-desktop's accounts, chat and guestbook.
 
 The page also ships a plain-text copy of everything for screen readers,
 search engines and browsers without JavaScript. Every project has its own
@@ -126,7 +126,7 @@ Function secrets:
 
 ```
 src/os/            the desktop, one React island (its folders: docs/agents/desktop.md)
-src/pond/          the pond at /pond: the water, the koi, its chapters (docs/agents/pond.md)
+src/pond/          the pond, the home page: the water, the koi, its chapters (docs/agents/pond.md)
 src/lib/           what the pages, the desktop and api/ share: the media library's shape, photos, projects
 src/config/        where the site lives (site.ts): its domain and addresses, for astro.config.mjs, the desktop and api/
 src/pages/         the home page, the pond, project pages, robots.txt, llms.txt

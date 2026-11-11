@@ -53,7 +53,7 @@ async function buildAsProduction() {
 
 const built = process.argv[2] ? null : await buildAsProduction();
 const server = built ? await serveDist({ dir: built }) : null;
-const URL_ = process.argv[2] ?? server.url;
+const URL_ = process.argv[2] ?? `${server.url}os`;
 /** Requests to a backend, refused (see above). */
 const backendRequests = [];
 /** Budgets that measure time, not bytes: too noisy to fail CI on. */

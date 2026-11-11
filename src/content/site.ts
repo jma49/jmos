@@ -1,5 +1,5 @@
 // The site's copy: the profile, bio, experience and the few words the
-// project pages use. The desktop gets it through OSData (src/pages/index.astro).
+// project pages use. The desktop gets it through OSData (src/pages/os.astro).
 export const profile = {
   name: 'Jincheng Ma',
   // Their name in Chinese, for search engines (schema.org alternateName).
@@ -207,7 +207,7 @@ export const content = {
     github: 'GitHub',
     linkedin: 'LinkedIn',
     resume: 'Résumé',
-    resumeHref: '/?open=resume',
+    resumeHref: '/os?open=resume',
     photography: 'Photography'
   },
   footer: {
