@@ -1,5 +1,6 @@
-// The pond's music: the library the desktop's iPod plays (/api/songs, or the
-// repository's snapshot when it can't be read), played with YouTube's
+// The pond's music: Ryuichi Sakamoto's songs (POND_MUSIC in content.ts) from the
+// library the desktop's iPod plays (/api/songs, or the repository's snapshot
+// when it can't be read), and a few more named there, played with YouTube's
 // player. YouTube's own chrome never shows: the player plays in a frame
 // clipped to nothing, and the Music chapter shows the album cover. (It is
 // never moved: moving an iframe reloads it.) The pond's sound switch governs it,
@@ -8,6 +9,7 @@
 import type { Library, Song } from '../lib/library';
 import { report } from '../os/core/report';
 import { ENDED, PAUSED, PLAYING, type YTNamespace, type YTPlayer } from '../os/media/player';
+import { POND_MUSIC } from './content';
 
 export type { Song };
 
@@ -66,7 +68,13 @@ export function loadSongs(): Promise<void> {
     // simplified (the library itself is untouched), and `original` keeps them as written, for search.
     const { Converter } = await import('opencc-js/t2cn');
     const toCn = Converter({ from: 'tw', to: 'cn' });
-    state.songs = library.songs.map((s) => ({ ...s, title: toCn(s.title), artist: toCn(s.artist), original: `${s.title} ${s.artist}` }));
+    // the pond plays only Sakamoto (POND_MUSIC): its chosen songs first, in order, then the rest of his
+    const his = [...POND_MUSIC.extra, ...library.songs.filter((s) => POND_MUSIC.artist.test(s.artist))].filter(
+      (s, i, all) => all.findIndex((t) => t.id === s.id) === i
+    );
+    const at = (s: Song) => (POND_MUSIC.first.includes(s.id) ? POND_MUSIC.first.indexOf(s.id) : POND_MUSIC.first.length);
+    his.sort((a, b) => at(a) - at(b));
+    state.songs = his.map((s) => ({ ...s, title: toCn(s.title), artist: toCn(s.artist), original: `${s.title} ${s.artist}` }));
     state.ready = true;
     tell();
   })();

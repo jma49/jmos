@@ -939,6 +939,13 @@ button.more:hover {
   fill: none;
   stroke: var(--mist);
 }
+.pal .ic img {
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  object-fit: cover;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+}
 .pal .ic i {
   width: 11px;
   height: 11px;
