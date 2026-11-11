@@ -222,7 +222,7 @@ export const ZH = {
     photos: '照片',
     desktop: '旧桌面'
   },
-  music: { title: '在听', lede: '我反复听的歌。和旧桌面上放的是同一份歌单，池塘的声音开关也管着它。', empty: '歌单正在来的路上。' },
+  music: { title: '在听', lede: '坂本龙一，多是钢琴，安静的时候我就放这些。池塘的声音开关也管着它。', empty: '歌单正在来的路上。' },
   photos: { title: '{n} 张照片', lede: '最新的在前，来自', after: '。点开看大图，用方向键翻页。', open: '在 Unsplash 查看原图 ↗' },
   notes: {
     title: '纸船',
@@ -333,4 +333,22 @@ export const ZH = {
       ]
     }
   } as Record<string, { title?: string; tag?: string; role?: string; place?: string; text?: string; pts?: string[]; ref?: string }>
+};
+
+/**
+ * What the pond plays: Ryuichi Sakamoto only, quiet piano for the water. The desktop's iPod keeps the
+ * whole library. These come first, in this order; the songs not in the library (`/api/songs`, or
+ * src/data/songs.json) are named here, all official uploads. After them, the rest of his songs the
+ * library has. Sakamoto's songs are found by artist.
+ */
+export const POND_MUSIC: { artist: RegExp; first: string[]; extra: { id: string; title: string; artist: string; album: string }[] } = {
+  artist: /sakamoto|坂本/i,
+  first: ['SJcbMTz2oNw', 'ELJf83TelA0', 'pygwK0sBUdM', 'n6OqLXvri3M', 'jHC_yMY9N0I', '__aJL8i1kL4', 'Se8cQsuBhaA', 'n59qeMSCAgA'],
+  extra: [
+    { id: 'ELJf83TelA0', title: 'Merry Christmas Mr. Lawrence', artist: 'Ryuichi Sakamoto', album: 'Playing the Piano 2022' },
+    { id: 'pygwK0sBUdM', title: 'andata', artist: 'Ryuichi Sakamoto', album: 'async' },
+    { id: 'n6OqLXvri3M', title: 'solari', artist: 'Ryuichi Sakamoto', album: 'async' },
+    { id: '__aJL8i1kL4', title: 'The Sheltering Sky', artist: 'Ryuichi Sakamoto', album: 'The Sheltering Sky' },
+    { id: 'Se8cQsuBhaA', title: '20220304', artist: 'Ryuichi Sakamoto', album: '12' }
+  ]
 };

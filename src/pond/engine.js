@@ -2368,7 +2368,7 @@ const SHEETS = {
   music: () => {
     const m = music(),
       song = m.songs[m.index];
-    return `<h1>${L("What's on", ZH.music.title)}</h1><p class="lede">${L("The songs I keep coming back to. They play here as they do on my old desktop, and the pond's sound switch turns them down too.", ZH.music.lede)}</p>
+    return `<h1>${L("What's on", ZH.music.title)}</h1><p class="lede">${L("Ryuichi Sakamoto, mostly at the piano: what I put on when it's quiet. The pond's sound switch turns him down too.", ZH.music.lede)}</p>
     ${song ? `<div class="now-song"><img id="nowCover" src="${coverOf(song)}" alt=""><div><b id="nowTitle">${esc(song.title)}</b><span id="nowWho">${esc(song.artist)}</span></div></div>` : ''}
     <ul class="rows songs" id="songList">${m.songs.map((t, i) => `<li data-i="${i}" ${i === m.index ? 'data-now' : ''}><button data-song="${i}" aria-label="Play ${esc(t.title)}">${PLAY}</button><b>${esc(t.title)}</b><span class="who">${esc(t.artist)}</span></li>`).join('') || `<li class="empty">${L('The songs are on their way.', ZH.music.empty)}</li>`}</ul>`;
   },
@@ -2818,9 +2818,9 @@ function commands() {
   const cleared = 'clear' in pond.dataset;
   return [
     { sec: 'Go to', icon: 'letter', label: 'About me', hint: 'Who I am, in four paragraphs', kw: 'about hello jincheng who bio', top: true, run: openLetter },
-    ...PROJECTS.map((p) => ({
+    ...PROJECTS.map(tr).map((p) => ({
       sec: 'Go to',
-      dot: p.c,
+      mark: p.mark,
       label: p.title,
       hint: `${p.tag}, ${p.when}`,
       kw: 'work project ' + p.text,
@@ -3142,7 +3142,7 @@ function drawPal() {
   mark();
 }
 const row = (c, i, label, right) =>
-  `<li role="option" id="opt-${i}" data-i="${i}"><span class="ic">${c.dot ? `<i style="--c:${c.dot}"></i>` : ico(c.icon)}</span><span class="tx"><b>${label}</b><small>${esc(c.hint)}</small></span><span class="rt">${right ? (right.length <= 3 && right !== 'pond' ? `<kbd>${esc(right)}</kbd>` : esc(right)) : ''}</span></li>`;
+  `<li role="option" id="opt-${i}" data-i="${i}"><span class="ic">${c.mark ? `<img src="${markSrc(c.mark)}" alt="">` : c.dot ? `<i style="--c:${c.dot}"></i>` : ico(c.icon)}</span><span class="tx"><b>${label}</b><small>${esc(c.hint)}</small></span><span class="rt">${right ? (right.length <= 3 && right !== 'pond' ? `<kbd>${esc(right)}</kbd>` : esc(right)) : ''}</span></li>`;
 function mark() {
   $('#palList')
     .querySelectorAll('[role=option]')
