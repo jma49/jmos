@@ -36,9 +36,13 @@ for; keep it true when the file changes.
   wide window the left of the pond is deeper and out of focus (`uCalm`
   in the water's shader); on a phone, all of it. Type stays on that side.
 - **Type:** Cormorant Garamond (self-hosted, `@fontsource/cormorant-garamond`)
-  for what's set large, the solar term brushed in Zhi Mang Xing (cut to
-  the terms' 27 characters, `src/pond/fonts/`; a new character needs the
-  font cut again), the system's sans for everything else, figures
+  for what's set large, and every Chinese character, wherever it is,
+  brushed in Zhi Mang Xing (`src/pond/brush.css`: the font's CJK chunks
+  only, so a page loads just the chunks its characters fall in and Latin
+  never falls to the brush; `brush.test.ts` writes and checks it). The
+  brush has only simplified forms, so song titles and artists are shown
+  simplified (`music.ts`; the library is untouched). The system's sans
+  for everything else, figures
   in tabular numerals. No monospace labels and no tracked capitals; only
   keys (`kbd`) are set in a monospace.
 - **Sound:** one switch (bottom left, M) for the water, the fish and the

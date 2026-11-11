@@ -11,8 +11,11 @@ import { ENDED, PAUSED, PLAYING, type YTNamespace, type YTPlayer } from '../os/m
 
 export type { Song };
 
+/** A song as the pond shows it: title and artist in simplified forms, `original` as the library has them. */
+export type PondSong = Song & { original?: string };
+
 export interface MusicState {
-  songs: Song[];
+  songs: PondSong[];
   index: number;
   playing: boolean;
   /** False until the library has been read. */
@@ -58,7 +61,12 @@ export function loadSongs(): Promise<void> {
       if (!import.meta.env.DEV) report(error, 'pond music library');
     }
     library ??= (await import('../data/songs.json')).default as Library;
-    state.songs = library.songs;
+    // The pond writes Chinese in a brush hand that has only simplified forms; a traditional character
+    // would fall back to another font in the middle of a title. So titles and artists are shown
+    // simplified (the library itself is untouched), and `original` keeps them as written, for search.
+    const { Converter } = await import('opencc-js/t2cn');
+    const toCn = Converter({ from: 'tw', to: 'cn' });
+    state.songs = library.songs.map((s) => ({ ...s, title: toCn(s.title), artist: toCn(s.artist), original: `${s.title} ${s.artist}` }));
     state.ready = true;
     tell();
   })();

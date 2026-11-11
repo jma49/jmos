@@ -2749,7 +2749,7 @@ function commands() {
       icon: 'music',
       label: t.title,
       hint: t.artist,
-      kw: 'song play music ' + t.artist + ' ' + (t.album || ''),
+      kw: 'song play music ' + t.artist + ' ' + (t.album || '') + ' ' + (t.original || ''),
       run: () => playSong(i)
     })),
     ...[

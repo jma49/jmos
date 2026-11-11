@@ -18,15 +18,20 @@
   --rule: rgba(23, 35, 31, 0.16);
   --koi: #e7603a;
   --gold: #e6b144;
-  --display: 'Cormorant Garamond', 'Songti SC', 'Noto Serif CJK SC', 'Source Han Serif SC', Georgia, serif;
-  --body: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', system-ui, sans-serif;
+  --display: 'Cormorant Garamond', 'Zhi Mang Xing', 'Songti SC', 'Noto Serif CJK SC', 'Source Han Serif SC', Georgia, serif;
+  --body: 'Zhi Mang Xing', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', system-ui, sans-serif;
   --mono: var(--body);
   --keys: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
-  --cjk: 'Songti SC', 'Noto Serif CJK SC', 'Source Han Serif SC', 'SimSun', serif;
+  --cjk: 'Zhi Mang Xing', 'Cormorant Garamond', 'Songti SC', 'Noto Serif CJK SC', 'Source Han Serif SC', 'SimSun', serif;
 }
 html,
 body {
   height: 100%;
+}
+/* Chinese is brushed (brush.css holds only the CJK chunks, so Latin never falls to it), and the brush
+   has one weight: it is never thickened by smearing. */
+#pond {
+  font-synthesis-weight: none;
 }
 /* The page never scrolls (the pond fills it), so it keeps no room for a scroll bar. */
 html {
@@ -1386,21 +1391,14 @@ button.more:hover {
   text-shadow: 0 1px 10px rgba(0, 16, 18, 0.7);
   pointer-events: none;
 }
-/* The solar term is brushed: Zhi Mang Xing, a running hand, cut to the 27 characters the terms use
-   (src/pond/fonts; NOTICE). Read top to bottom, a character a line. */
-@font-face {
-  font-family: 'Pond Terms';
-  src: url('./fonts/zhi-mang-xing-terms.woff2') format('woff2');
-  font-display: swap;
-}
+/* The solar term, read top to bottom, a character a line. Every Chinese character on the pond is
+   brushed in Zhi Mang Xing (brush.css), by the font stacks above. */
 .alm .term-v {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.04em;
-  font:
-    400 34px / 1 'Pond Terms',
-    var(--cjk);
+  font: 400 34px / 1 var(--cjk);
 }
 .alm .txt {
   display: flex;

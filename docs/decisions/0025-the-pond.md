@@ -38,8 +38,9 @@ never did), and a chart-like timeline beside the one in soundings.
   with nothing to check it against; typing it section by section, with
   the prototype's behaviour to compare, is left for later.
 - Type: a serif (Cormorant Garamond, self-hosted) for what is set large,
-  the solar term in a brush hand (Zhi Mang Xing, cut to its characters), the
-  system's sans for the rest, no monospace labels or tracked capitals:
+  every Chinese character in a brush hand (Zhi Mang Xing, loaded by the
+  chunk; song titles and artists shown in simplified forms, since the
+  brush has no traditional ones), the system's sans for the rest, no monospace labels or tracked capitals:
   Jincheng found those read as machine-made.
 - three.js (about 126 KB gzipped, with the models) loads only once the
   pond has settled, never with the first screen.
