@@ -61,6 +61,20 @@ for; keep it true when the file changes.
 - **Addresses:** a chapter is `#<chapter>`, and an entry on the timeline
   `#career/<id>` (ids from `content.ts` and the project pages' slugs).
 
+## Ink and paper
+
+The 墨 switch (bottom right; I; ⌘K "Ink and paper") turns the pond into
+an ink painting. A drop falls from the switch and its front spreads with
+a ragged, fibrous edge (`uInk`: radius, origin, state); what it has
+passed is drawn as xuan paper, the fish as washes with a dark edge and
+cinnabar where their patches are red, pads as pale washes, the ripples
+only as faint crests. Time all but stops as the drop lands, then runs at
+about a third (`timeScale`, which also paces the ripple simulation), and
+back to full going home. A press on paper leaves a blot that spreads
+(`uBlot`, ten at most). The page's colours follow from `#pond[data-ink]`
+in `pond.css`, which redefines the palette and puts every chapter on
+paper; a new pane or control needs its ink colours there too.
+
 ## Changing it
 
 - **Wording, a job, a school, a project's highlights:** `content.ts`; a

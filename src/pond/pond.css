@@ -2539,3 +2539,222 @@ button.more:hover {
   clip-path: inset(50%);
   white-space: nowrap;
 }
+
+/* ---------- ink and paper (I, ⌘K, or 墨): the pond as an ink painting; engine.js draws it ---------- */
+.ink-btn {
+  width: 40px;
+  padding: 0;
+  font: 400 21px / 1 var(--cjk);
+}
+.ink-btn[aria-pressed='true'] {
+  background: rgba(20, 18, 16, 0.85) !important;
+  color: #f1e9d8;
+}
+/* the type fades as the ink arrives and comes back in ink */
+#pond .home,
+#pond .hud {
+  transition: opacity 0.7s ease;
+}
+#pond[data-inking] .home,
+#pond[data-inking] .hud {
+  opacity: 0;
+  transition-duration: 0.3s;
+}
+/* the pond's own type takes its colour from the pond, so ink can turn it dark */
+#pond {
+  color: var(--mist);
+}
+#pond[data-ink] {
+  --mist: #1b1916;
+  --mist-dim: rgba(27, 25, 22, 0.72);
+  --mist-faint: rgba(27, 25, 22, 0.48);
+  --hair: rgba(27, 25, 22, 0.16);
+  --lift: rgba(27, 25, 22, 0.06);
+  --koi: #b8382a;
+}
+#pond[data-ink] .home *,
+#pond[data-ink] .hud *,
+#pond[data-ink] .sheet * {
+  text-shadow: none !important;
+}
+#pond[data-ink] .toc .row,
+#pond[data-ink] .toc .row:first-child {
+  border-color: rgba(27, 25, 22, 0.2);
+}
+#pond[data-ink] .playbtn {
+  background: #1b1916;
+}
+#pond[data-ink] .playbtn svg {
+  fill: #f1e9d8;
+}
+#pond[data-ink] .pill svg {
+  stroke: #1b1916;
+}
+#pond[data-ink] .pill {
+  color: #1b1916;
+}
+#pond[data-ink] .tag {
+  color: #1b1916;
+  background: rgba(241, 233, 216, 0.7);
+  box-shadow: inset 0 0 0 1px rgba(27, 25, 22, 0.3);
+}
+#pond[data-ink] #air {
+  filter: grayscale(1) contrast(1.25) brightness(0.75);
+  transition: filter 1.6s;
+}
+#pond[data-ink] .alm .term-v {
+  color: #b8382a;
+}
+#pond[data-ink] .gauge::before {
+  background: rgba(27, 25, 22, 0.4);
+}
+#pond[data-ink] .gauge i {
+  background: #1b1916;
+}
+#pond[data-ink] .sheet {
+  background: rgba(241, 233, 216, 0.55) !important;
+}
+#pond[data-ink] .link {
+  background: rgba(27, 25, 22, 0.06);
+}
+#pond[data-ink] .say {
+  color: rgba(27, 25, 22, 0.78);
+}
+#pond[data-ink] .alm .txt,
+#pond[data-ink] .alm .txt b {
+  color: rgba(27, 25, 22, 0.7);
+}
+#pond[data-ink] .shade {
+  opacity: 0.35;
+}
+/* the chapters on paper: everything that was dark teal glass becomes paper, and what was pressed is inked */
+#pond[data-ink] .veil {
+  background: rgba(60, 48, 30, 0.08);
+}
+#pond[data-ink] .filt {
+  background: rgba(241, 233, 216, 0.94);
+  box-shadow: inset 0 0 0 1px rgba(27, 25, 22, 0.14);
+}
+#pond[data-ink] .filt button[aria-pressed='true'],
+#pond[data-ink] .sheet .chap button[aria-current],
+#pond[data-ink] .rooms button[aria-selected='true'] {
+  background: #1b1916;
+  color: #f1e9d8;
+}
+#pond[data-ink] .filt button[aria-pressed='true'] em {
+  color: rgba(241, 233, 216, 0.66);
+}
+#pond[data-ink] .filt button[aria-pressed='true'] svg {
+  stroke: #f1e9d8;
+}
+#pond[data-ink] .sound .node {
+  background: #efe7d6;
+}
+#pond[data-ink] .sound > li[data-kind='project'] .node,
+#pond[data-ink] .sound > li[data-kind='school'] .node,
+#pond[data-ink] .sound > li[data-kind='role']:hover .node {
+  box-shadow: 0 0 0 3px #efe7d6;
+}
+#pond[data-ink] .sound > li[data-kind='role']:hover .node {
+  background: #1b1916;
+}
+#pond[data-ink] .sound > li[data-kind] .node.mark {
+  box-shadow:
+    0 0 0 1px rgba(27, 25, 22, 0.2),
+    0 0 0 4px #efe7d6;
+}
+#pond[data-ink] .sound > li::after {
+  background: rgba(27, 25, 22, 0.06);
+}
+#pond[data-ink] .view {
+  background: rgba(236, 228, 211, 0.97);
+}
+#pond[data-ink] .view .vs,
+#pond[data-ink] .view .vx {
+  color: #1b1916;
+  background: rgba(27, 25, 22, 0.07);
+}
+#pond[data-ink] .view img {
+  filter: drop-shadow(0 14px 30px rgba(60, 45, 25, 0.28));
+}
+#pond[data-ink] .pal-wrap {
+  background: rgba(60, 48, 30, 0.1);
+}
+#pond[data-ink] .pal {
+  background: rgba(241, 233, 216, 0.9);
+  box-shadow:
+    inset 0 0 0 1px rgba(27, 25, 22, 0.14),
+    0 30px 70px rgba(60, 45, 25, 0.25);
+}
+#pond[data-ink] .pal li[aria-selected='true'] {
+  background: rgba(27, 25, 22, 0.07);
+  box-shadow: inset 0 0 0 1px rgba(27, 25, 22, 0.08);
+}
+#pond[data-ink] .pal mark {
+  color: #b8382a;
+  background: none;
+}
+#pond[data-ink] .boat-tip {
+  color: #1b1916;
+  background: rgba(241, 233, 216, 0.95);
+}
+#pond[data-ink] kbd {
+  background: rgba(27, 25, 22, 0.1);
+}
+#pond[data-ink] .noteform input {
+  color: #1b1916;
+}
+#pond[data-ink] .noteform input:focus {
+  outline-color: #b8382a;
+}
+#pond[data-ink] .sheet .cover {
+  box-shadow:
+    0 0 0 1px rgba(27, 25, 22, 0.12),
+    0 14px 30px rgba(60, 45, 25, 0.2);
+}
+#pond[data-ink] .stack span {
+  box-shadow: inset 0 0 0 1px rgba(27, 25, 22, 0.18);
+}
+#pond[data-ink] .ink-btn span {
+  color: #f1e9d8;
+}
+#pond[data-ink] .bars[data-on] i {
+  background: #b8382a;
+}
+#pond[data-ink] .songs li[data-now] b {
+  color: #b8382a;
+}
+#pond[data-ink] .chip:hover {
+  background: #1b1916;
+  color: #f1e9d8;
+}
+#pond[data-ink] .sheet .x:hover,
+#pond[data-ink] .view .vs:hover,
+#pond[data-ink] .view .vx:hover {
+  background: rgba(27, 25, 22, 0.14);
+}
+#pond[data-ink] .link.main {
+  background: #1b1916;
+  color: #f1e9d8;
+}
+#pond[data-ink] .sheet .acct input {
+  color: #1b1916;
+}
+#pond[data-ink] .sheet .acct input:focus {
+  outline-color: #b8382a;
+}
+#pond[data-ink] .sheet .err {
+  color: #a3301f;
+}
+#pond[data-ink] .sheet .chat li[data-me] b {
+  color: #b8382a;
+}
+#pond[data-ink] .sheet .chatform {
+  background: linear-gradient(rgba(241, 233, 216, 0), rgba(241, 233, 216, 0.95) 30%);
+}
+#pond[data-ink] .talk .here i {
+  box-shadow: 0 0 0 1.5px rgba(241, 233, 216, 0.95);
+}
+#pond[data-ink] .now-song img {
+  box-shadow: 0 10px 24px rgba(60, 45, 25, 0.25);
+}
