@@ -34,7 +34,8 @@ Around them sits a small working system:
 home page, built beside the desktop: a pond seen from above, where every
 visitor is a koi, with a title page on the water and chapters (a timeline
 of work, projects and school; photos; music; the guestbook; the chat)
-that open as a sheet of glass drawn with the water. It keeps the
+that open as a sheet of glass drawn with the water; the 墨 switch turns
+it into an ink painting on xuan paper, in slow motion. It keeps the
 desktop's accounts, chat and guestbook.
 
 The page also ships a plain-text copy of everything for screen readers,

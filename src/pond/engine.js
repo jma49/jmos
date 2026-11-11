@@ -863,7 +863,7 @@ precision highp float; in vec2 vUv; out vec4 o;
 uniform sampler2D uBed,uH,uFish,uPads,uTop,uIceN;
 uniform vec2 uRes,uGrid,uMoonPos,uCss; uniform float uTime,uAmb,uCaI,uMoon,uSwell,uFocus,uIce,uSnow; uniform vec2 uCalm;
 uniform vec3 uTint,uCaC,uSky,uSeason;
-uniform vec4 uBox[12]; uniform vec4 uBoxB[12]; uniform int uBoxN; uniform vec4 uCrack[6]; uniform float uBroke[6];
+uniform vec4 uBox[12]; uniform vec4 uBoxB[12]; uniform int uBoxN; uniform vec4 uCrack[6]; uniform float uBroke[6]; uniform vec4 uInk; uniform vec3 uBlot[10];
 float hash1(vec2 p){ return fract(sin(dot(p,vec2(41.3,289.1)))*43758.5453); }
 vec2 hash2(vec2 p){ p=vec2(dot(p,vec2(127.1,311.7)),dot(p,vec2(269.5,183.3))); return fract(sin(p)*43758.5453); }
 float noise(vec2 p){ vec2 i=floor(p),f=fract(p); f=f*f*(3.-2.*f);
@@ -976,6 +976,44 @@ void main(){
   col=tp.rgb*(uAmb*.74+.26)*mix(vec3(1.),uTint*uSeason,.22)+col*(1.-tp.a);
   vec2 q=uv-.5; col*=1.-dot(q,q)*.6;
   col=mix(col*(1.-.5*calm),vec3(.02,.09,.1),calm*.3);
+  // ---------- ink and paper: what the ink front has passed over is a painting on xuan paper ----------
+  if(uInk.w>0.){
+    float fib=fbm(P*.03)*.55+noise(P*.21)*.25+noise(P*vec2(1.1,.06))*.12+noise(P*vec2(.05,1.3))*.08;
+    float r=length(P-uInk.yz)+(fib-.5)*150.+(noise(P*.012+uInk.x*.003)-.5)*120.;
+    float inside=1.-smoothstep(uInk.x-40.,uInk.x+40.,r);
+    float wetEdge=exp(-pow((r-uInk.x)/38.,2.))*step(1.,uInk.x)*(1.-step(.999,uInk.w));
+    // the paper: warm, uneven, with fibres
+    vec3 paper=vec3(.925,.885,.8)*(.95+.07*fbm(P*.012))-vec3(.04,.045,.05)*smoothstep(.62,.95,noise(P*vec2(.9,.04)))-vec3(.025)*smoothstep(.7,1.,noise(P*vec2(.03,.7)));
+    paper*=1.-.18*dot(uv-.5,uv-.5);
+    vec3 INK=vec3(.075,.07,.065);
+    // the fish: a pale wash for the body, dark where the body ends, the scales' patches as darker strokes, red kept as cinnabar
+    vec2 fuv=uv+ref*.25;
+    vec4 f0=textureLod(uFish,fuv,.0); float fa=textureLod(uFish,fuv,1.).a, fb=textureLod(uFish,fuv,3.2).a, fc2=textureLod(uFish,fuv+vec2(.004,.006),4.5).a;
+    vec3 fcol=f0.rgb/max(f0.a,1e-3); float lum=dot(fcol,vec3(.3,.59,.11)), red=clamp((fcol.r-max(fcol.g,fcol.b))*2.2-.4,0.,1.)*f0.a;
+    float bleed=fbm(P*.08+3.)*.5+.5;
+    float wash=fb*(.32+.2*bleed)+fa*(.18+.55*(1.-lum))*(1.-red);
+    float edge=clamp((fa-fb)*2.6,0.,1.)*(.6+.4*bleed);
+    float shadow=fc2*.12;
+    vec3 ink=paper*(1.-shadow);
+    ink=mix(ink,INK,clamp(wash*.8+edge*.75,0.,.95));
+    ink=mix(ink,vec3(.72,.2,.13),red*.75);
+    // the water: only where it moves, a few grey rings
+    ink=mix(ink,INK,smoothstep(.006,.02,-lap)*.16);
+    // pads as broad pale washes with a darker rim; petals, leaves and boats as small strokes
+    vec4 pd2=textureLod(uPads,uv+g*ia*.006,ls+.5); float pr=textureLod(uPads,uv,ls+3.).a;
+    ink=mix(ink,vec3(.35,.38,.33),pd2.a*(.28+.25*fbm(P*.05))); ink=mix(ink,INK,clamp((pd2.a-pr)*1.8,0.,.5));
+    vec4 tp2=textureLod(uTop,uv+g*ia*.004,ls); float tl=dot(tp2.rgb/max(tp2.a,1e-3),vec3(.3,.59,.11));
+    ink=mix(ink,INK,tp2.a*(.35+.5*(1.-tl)));
+    // blots where the paper was touched: ink spreading, fastest at first, the rim darker as it dries
+    for(int i=0;i<10;i++){ vec3 b=uBlot[i]; if(b.z<0.) continue;
+      float t=b.z, R2=10.+70.*sqrt(t)*(1.-exp(-t*.9))+18.*t, d=length(P-b.xy)+(fbm((P-b.xy)*.06+b.x*.01)-.5)*R2*.55;
+      float core=1.-smoothstep(R2*.25,R2,d), rim=exp(-pow((d-R2*.9)/(5.+R2*.08),2.)), halo=1.-smoothstep(R2,R2*1.6,d);
+      float dens=exp(-t*.05)*(.5+.5*exp(-t*.5));
+      ink=mix(ink,INK,clamp(core*dens*.7+rim*dens*.3+halo*dens*.08,0.,.9));
+    }
+    col=mix(col,ink,inside);
+    col=mix(col,INK,wetEdge*.55);
+  }
   o=vec4(col,1.);
 }`;
 // The second pass. Inside a pane the picture is blurred and smoked; towards the rim it is
@@ -1097,7 +1135,9 @@ function initGL() {
     'uBoxN',
     'uCrack',
     'uBroke',
-    'uCalm'
+    'uCalm',
+    'uInk',
+    'uBlot'
   ])
     U[n] = gl.getUniformLocation(prog, n);
   for (const n of ['uScene', 'uCss', 'uLod', 'uFrost', 'uGlass', 'uPane', 'uPaneB', 'uPaneN']) UG[n] = gl.getUniformLocation(glassProg, n);
@@ -1810,6 +1850,55 @@ function drawBugs(c) {
 }
 // The model stands on the feet the pond gives it, which step as it turns and walks; sitting, it tilts
 // its face up at whoever is looking down. It is drawn larger at the top of a jump.
+// ---------- the ink world: a drop from the switch spreads over the pond and turns it to paper; time slows ----------
+let inkTimer = 0,
+  inkOn = false,
+  inkR = 0,
+  inkMax = 0,
+  inkO = [0, 0],
+  timeScale = 1,
+  simAcc = 0,
+  inkAt = -9,
+  blots = [];
+const blotU = new Float32Array(30),
+  lerpN = (a, b, t) => a + (b - a) * t;
+function setInk(on, from) {
+  if (on === inkOn) return;
+  inkOn = on;
+  inkAt = performance.now() / 1000;
+  const r = (from || $('#inkBtn')).getBoundingClientRect(),
+    pr = pond.getBoundingClientRect();
+  inkO = [r.left - pr.left + r.width / 2, r.top - pr.top + r.height / 2];
+  inkMax = Math.hypot(Math.max(inkO[0], W - inkO[0]), Math.max(inkO[1], H - inkO[1])) + 220;
+  pond.dataset.inking = '';
+  $('#inkBtn').setAttribute('aria-pressed', String(on));
+  clearTimeout(inkTimer);
+  inkTimer = setTimeout(
+    () => {
+      pond.toggleAttribute('data-ink', on);
+      delete pond.dataset.inking;
+    },
+    on ? 700 : 900
+  );
+  if (on) {
+    drop(inkO[0], inkO[1], 7, -3.2);
+    audio();
+    plip('ink');
+  } else blots = [];
+}
+// The front runs out fast and then slows, as ink does in wet paper; time all but stops as the drop lands
+// and comes back slow; going back, the paper draws in to the switch and time runs up again.
+function stepInk(raw) {
+  const k = performance.now() / 1000 - inkAt;
+  if (inkOn) {
+    inkR = inkMax * (1 - Math.exp(-k * 1.25)) * Math.min(1, 0.2 + k * 3);
+    if (k > 4.5) inkR = inkMax;
+  } else if (inkR > 0) {
+    inkR = Math.max(0, inkR - raw * inkMax * (0.4 + k * 1.3));
+  }
+  const goal = inkOn ? (k < 0.5 ? 0.06 : 0.32) : inkR > 0 ? 0.25 : 1;
+  timeScale += (goal - timeScale) * Math.min(1, raw * (inkOn && k < 0.5 ? 9 : 1.6));
+}
 let calmNow = 1,
   spiderPic = null,
   spiderSig = '',
@@ -2620,6 +2709,7 @@ const letterOpen = () => false,
   putDown = () => {},
   openLetter = () => openSheet('about');
 let arrived = false;
+$('#inkBtn').addEventListener('click', (e) => setInk(!inkOn, e.currentTarget));
 function setClear(on) {
   pond.toggleAttribute('data-clear', on);
   $('#clear').setAttribute('aria-pressed', String(!on));
@@ -2642,6 +2732,7 @@ const ICONS = {
   sun: '<circle cx="8" cy="8" r="3"/><path d="M8 1.5v1.8M8 12.7v1.8M1.5 8h1.8M12.7 8h1.8M3.4 3.4l1.3 1.3M11.3 11.3l1.3 1.3M3.4 12.6l1.3-1.3M11.3 4.7l1.3-1.3"/>',
   moon: '<path d="M12.5 9.5A5.5 5.5 0 0 1 6.5 3.5a5.5 5.5 0 1 0 6 6z"/>',
   rain: '<path d="M4.5 9.5a3 3 0 0 1 .4-6 3.6 3.6 0 0 1 6.8 1 2.5 2.5 0 0 1-.3 5z"/><path d="M5.5 11.5 5 13M8.2 11.5 7.7 13M11 11.5l-.5 1.5"/>',
+  brush: '<path d="M13.5 2.5 7 9"/><path d="M7 9c-1.6-.5-3.4.5-3.6 2.4-.1 1.2-.7 1.9-1.4 2.1 2.6.6 5.6-.1 5.9-2.6z"/>',
   glass: '<rect x="2" y="3" width="8.5" height="7" rx="2"/><path d="M12.6 6.2A2 2 0 0 1 14 8.1V11a2 2 0 0 1-2 2H7.6a2 2 0 0 1-1.9-1.4"/>',
   sound: '<path d="M2.5 6.2h2.6L8.6 3.5v9L5.1 9.8H2.5z"/><path d="M11 5.6a3.4 3.4 0 0 1 0 4.8"/>',
   chat: '<path d="M2.5 3.5h11v7h-6l-3 2.5v-2.5h-2z"/>',
@@ -2829,6 +2920,17 @@ function commands() {
         if (letterOpen()) putDown();
         setClear(!cleared);
       }
+    },
+    {
+      sec: 'Pond',
+      icon: 'brush',
+      label: inkOn ? 'Back to the water' : 'Ink and paper',
+      hint: 'The pond as an ink painting, in slow motion',
+      key: 'I',
+      kw: 'ink paper painting chinese brush black white slow 水墨',
+      top: true,
+      cmd: true,
+      run: () => setInk(!inkOn)
     },
     {
       sec: 'Pond',
@@ -3066,7 +3168,8 @@ addEventListener('keydown', (e) => {
   if (e.key === '/') {
     e.preventDefault();
     openPal('/');
-  } else if (e.key === 'g' || e.key === 'G') {
+  } else if (e.key === 'i' || e.key === 'I') setInk(!inkOn);
+  else if (e.key === 'g' || e.key === 'G') {
     if (letterOpen()) putDown();
     setClear(!('clear' in pond.dataset));
   } else if (e.key === 'f' || e.key === 'F') feedMiddle();
@@ -3175,6 +3278,13 @@ const saveMuted = (on) => save('pond-sound', on ? 'off' : null);
 function plip(kind, vol) {
   if (!AC || muted) return;
   const t = AC.currentTime;
+  if (kind === 'ink') {
+    // a drop of ink: a soft low touch and a long breath of the brush
+    const v = 0.07 * (vol || 1);
+    hiss(t, 0.5, 900, 0.6, v * 0.35);
+    bubble(t, rnd(180, 220), v, 0.4);
+    return;
+  }
   if (kind === 'drop') {
     const v = 0.075 * (vol || 1),
       f0 = rnd(540, 760);
@@ -3369,7 +3479,7 @@ const spot = (e) => {
 pond.addEventListener('pointermove', (e) => {
   const [x, y] = spot(e),
     wet = !e.target.closest(DRY);
-  if (ptr.moved && wet) {
+  if (ptr.moved && wet && !inkOn) {
     const d = Math.hypot(x - ptr.lx, y - ptr.ly),
       n = Math.min(6, Math.ceil(d / 14));
     for (let i = 1; i <= n; i++) drop(ptr.lx + ((x - ptr.lx) * i) / n, ptr.ly + ((y - ptr.ly) * i) / n, 1.5, -clamp(d * 0.012, 0.03, 0.3) / n);
@@ -3395,6 +3505,16 @@ pond.addEventListener('pointerdown', (e) => {
   audio();
   if (iceAt(x, y) > 0.5) {
     crack(x, y);
+    return;
+  }
+  if (inkOn) {
+    // on paper a press leaves a blot that spreads, and the fish still come to it
+    blots.unshift({ x, y, at: T });
+    blots.length = Math.min(blots.length, 10);
+    drop(x, y, 2.4, -0.9);
+    feed(x, y);
+    plip('ink', 0.7);
+    for (const k of kois) if (k !== you && Math.hypot(k.x - x, k.y - y) < 130) k.burst = 0.5;
     return;
   }
   drop(x, y, 3.2, -2);
@@ -3447,8 +3567,11 @@ function resize() {
 let last = 0;
 function frame(now) {
   requestAnimationFrame(frame);
-  const dt = Math.min(0.05, (now - last) / 1000 || 0.016);
+  const raw = Math.min(0.05, (now - last) / 1000 || 0.016);
   last = now;
+  stepInk(raw);
+  // in ink, time runs slow: everything that moves is stepped by dt
+  const dt = raw * timeScale;
   T += dt;
   lifeDt = dt;
   panes();
@@ -3460,8 +3583,11 @@ function frame(now) {
   // rain over open water; over ice it comes as snow instead
   if (raining && AM.ice < 0.3) for (let i = 0; i < (big ? 3 : 1); i++) if (Math.random() < 0.55) drop(rnd(0, W), rnd(0, H), 1.1, -rnd(0.25, 0.7));
   for (const k of kois) k.update(dt);
-  stepSim();
-  stepSim();
+  simAcc += 2 * timeScale;
+  while (simAcc >= 1) {
+    stepSim();
+    simAcc -= 1;
+  }
   stepAfloat(dt);
   stepSpider(dt);
   stepAir(dt);
@@ -3524,6 +3650,12 @@ function frame(now) {
   gl.uniform2f(U.uRes, glc.width, glc.height);
   gl.uniform2f(U.uGrid, GW, GH);
   gl.uniform2f(U.uMoonPos, big ? 0.6 : 0.74, big ? 0.1 : 0.12);
+  gl.uniform4f(U.uInk, inkR, inkO[0], inkO[1], inkR > 0 ? (inkOn && inkR >= inkMax ? 1 : 0.5) : 0);
+  for (let i = 0; i < 10; i++) {
+    const b = blots[i];
+    blotU.set(b ? [b.x, b.y, T - b.at] : [0, 0, -1], i * 3);
+  }
+  gl.uniform3fv(U.uBlot, blotU);
   calmNow += (('clear' in pond.dataset ? 0 : 1) - calmNow) * Math.min(1, lifeDt * 3);
   gl.uniform2f(U.uCalm, big ? 0 : 1, calmNow);
   gl.uniform1f(U.uTime, RM ? 3 : T);
@@ -3561,7 +3693,10 @@ function frame(now) {
   gl.uniform2f(UG.uCss, W, H);
   gl.uniform1f(UG.uLod, 2.4 + Math.log2(glDpr));
   gl.uniform1f(UG.uFrost, Math.max(AM.ice, AM.snow * 0.8));
-  gl.uniform3f(UG.uGlass, 0.03 + cur.tint[0] * 0.03, 0.09 + cur.tint[1] * 0.04, 0.1 + cur.tint[2] * 0.045);
+  // the glass turns to paper with the pond
+  const pk = inkMax ? clamp(inkR / inkMax, 0, 1) : 0,
+    gs = [0.03 + cur.tint[0] * 0.03, 0.09 + cur.tint[1] * 0.04, 0.1 + cur.tint[2] * 0.045];
+  gl.uniform3f(UG.uGlass, lerpN(gs[0], 0.95, pk), lerpN(gs[1], 0.92, pk), lerpN(gs[2], 0.85, pk));
   gl.uniform4fv(UG.uPane, paneA);
   gl.uniform4fv(UG.uPaneB, paneB);
   gl.uniform1i(UG.uPaneN, paneN);
