@@ -37,7 +37,8 @@ never did), and a chart-like timeline beside the one in soundings.
   Typing 4,500 lines of tuned drawing code would have been a rewrite
   with nothing to check it against; typing it section by section, with
   the prototype's behaviour to compare, is left for later.
-- Type: a serif (Newsreader, self-hosted) for what is set large, the
+- Type: a serif (Cormorant Garamond, self-hosted) for what is set large,
+  the solar term in a brush hand (Zhi Mang Xing, cut to its characters), the
   system's sans for the rest, no monospace labels or tracked capitals:
   Jincheng found those read as machine-made.
 - three.js (about 126 KB gzipped, with the models) loads only once the

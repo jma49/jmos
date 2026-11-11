@@ -35,8 +35,10 @@ for; keep it true when the file changes.
 - **The title page reads because the pond is calmer under it.** On a
   wide window the left of the pond is deeper and out of focus (`uCalm`
   in the water's shader); on a phone, all of it. Type stays on that side.
-- **Type:** Newsreader (self-hosted, `@fontsource-variable/newsreader`)
-  for what's set large, the system's sans for everything else, figures
+- **Type:** Cormorant Garamond (self-hosted, `@fontsource/cormorant-garamond`)
+  for what's set large, the solar term brushed in Zhi Mang Xing (cut to
+  the terms' 27 characters, `src/pond/fonts/`; a new character needs the
+  font cut again), the system's sans for everything else, figures
   in tabular numerals. No monospace labels and no tracked capitals; only
   keys (`kbd`) are set in a monospace.
 - **Sound:** one switch (bottom left, M) for the water, the fish and the

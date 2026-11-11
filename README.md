@@ -55,7 +55,8 @@ page at `/projects/<slug>/`.
   what they read from other services is checked with valibot.
 - The pond (`src/pond/`): WebGL2 for the water and the glass, three.js
   for the dove and the spider (loaded once the pond has settled), and
-  Newsreader, self-hosted, for its display type.
+  Cormorant Garamond and Zhi Mang Xing (a brush hand, for the solar
+  terms), self-hosted.
 - Vitest, Playwright for preview images, and GitHub Actions.
 
 ## Running it

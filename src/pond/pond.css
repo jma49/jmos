@@ -18,7 +18,7 @@
   --rule: rgba(23, 35, 31, 0.16);
   --koi: #e7603a;
   --gold: #e6b144;
-  --display: 'Newsreader Variable', 'Songti SC', 'Noto Serif CJK SC', 'Source Han Serif SC', Georgia, serif;
+  --display: 'Cormorant Garamond', 'Songti SC', 'Noto Serif CJK SC', 'Source Han Serif SC', Georgia, serif;
   --body: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', system-ui, sans-serif;
   --mono: var(--body);
   --keys: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
@@ -1386,13 +1386,21 @@ button.more:hover {
   text-shadow: 0 1px 10px rgba(0, 16, 18, 0.7);
   pointer-events: none;
 }
-/* the term, read top to bottom: a character a line, so it stands the same in any font */
+/* The solar term is brushed: Zhi Mang Xing, a running hand, cut to the 27 characters the terms use
+   (src/pond/fonts; NOTICE). Read top to bottom, a character a line. */
+@font-face {
+  font-family: 'Pond Terms';
+  src: url('./fonts/zhi-mang-xing-terms.woff2') format('woff2');
+  font-display: swap;
+}
 .alm .term-v {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.12em;
-  font: 600 27px / 1 var(--cjk);
+  gap: 0.04em;
+  font:
+    400 34px / 1 'Pond Terms',
+    var(--cjk);
 }
 .alm .txt {
   display: flex;
@@ -2191,8 +2199,8 @@ button.more:hover {
   }
   .alm .term-v {
     flex-direction: row;
-    gap: 0.08em;
-    font-size: 16px;
+    gap: 0.04em;
+    font-size: 20px;
   }
   .alm .txt > :not(:nth-child(2)) {
     display: none;
