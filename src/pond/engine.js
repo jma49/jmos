@@ -1,5 +1,5 @@
 // The pond: a full-bleed pond seen from above, its title page and its
-// chapters (src/pages/pond.astro has the markup and the build-time data).
+// chapters (src/pages/index.astro has the markup and the build-time data).
 // The water is a height field stepped on the CPU, drawn with WebGL2 with
 // the koi, lily pads and what floats; the glass panes over it are drawn in
 // the same pass, from the panes' places on the page each frame. It follows
@@ -793,7 +793,7 @@ function setYear(y) {
 function showTerm() {
   const i = Math.floor(yearGoal) % 24;
   $('#termV').innerHTML = [...TERMS[i][0]].map((ch) => `<span>${ch}</span>`).join('');
-  $('#termTxt').textContent = inkOn ? '' : TERMS[i][1];
+  $('#termTxt').textContent = zhOn ? '' : TERMS[i][1];
 }
 function stepYear(dt) {
   let d = yearGoal - year;
@@ -1853,6 +1853,9 @@ function drawBugs(c) {
 // ---------- the ink world: a drop from the switch spreads over the pond and turns it to paper; time slows ----------
 let inkTimer = 0,
   inkOn = false,
+  // the language is the visitor's own choice, apart from the look: remembered, else the browser's
+  zhOn = (load('pond-lang') ?? (navigator.languages || [navigator.language]).find((l) => /^(zh|en)/i.test(l)) ?? 'en').toLowerCase().startsWith('zh'),
+  langTimer = 0,
   inkR = 0,
   inkMax = 0,
   inkO = [0, 0],
@@ -1871,18 +1874,39 @@ const HOME = {
   talk: $('#talk > span:last-child').textContent
 };
 function speak() {
-  pond.lang = inkOn ? 'zh' : 'en';
-  $('.say').innerHTML = inkOn ? `${esc(ZH.say)} <button class="tlink" data-sheet="about">${esc(ZH.more)}</button>` : HOME.say;
-  document.querySelectorAll('.toc .go b').forEach((b, i) => (b.textContent = inkOn ? ZH.toc[i] : HOME.toc[i]));
-  $('#cmdBtn .long').textContent = inkOn ? ZH.search[0] : HOME.long;
-  $('#cmdBtn .short').textContent = inkOn ? ZH.search[1] : HOME.short;
-  $('#palIn').placeholder = inkOn ? ZH.search[0] : 'Search the pond, or type / for commands';
-  $('#talk > span:last-child').textContent = inkOn ? ZH.talk : HOME.talk;
+  pond.lang = zhOn ? 'zh' : 'en';
+  $('.say').innerHTML = zhOn ? `${esc(ZH.say)} <button class="tlink" data-sheet="about">${esc(ZH.more)}</button>` : HOME.say;
+  document.querySelectorAll('.toc .go b').forEach((b, i) => (b.textContent = zhOn ? ZH.toc[i] : HOME.toc[i]));
+  $('#cmdBtn .long').textContent = zhOn ? ZH.search[0] : HOME.long;
+  $('#cmdBtn .short').textContent = zhOn ? ZH.search[1] : HOME.short;
+  $('#palIn').placeholder = zhOn ? ZH.search[0] : 'Search the pond, or type / for commands';
+  $('#talk > span:last-child').textContent = zhOn ? ZH.talk : HOME.talk;
   $('#hero').textContent = salute()[0];
   showTerm();
   tick();
   fillNotes();
   if (sheetOpen() && sheetId) openSheet(sheetId);
+}
+// 中 / En: the page's words fade, turn to the other language and come back; the look is left as it is.
+function setLang(zh) {
+  if (zh === zhOn) return;
+  zhOn = zh;
+  save('pond-lang', zh ? 'zh' : 'en');
+  langBtn();
+  pond.dataset.speaking = '';
+  clearTimeout(langTimer);
+  langTimer = setTimeout(
+    () => {
+      speak();
+      delete pond.dataset.speaking;
+    },
+    RM ? 0 : 260
+  );
+}
+function langBtn() {
+  const b = $('#langBtn');
+  b.innerHTML = zhOn ? '<span lang="en">En</span>' : '<span lang="zh">中</span>';
+  b.setAttribute('aria-label', zhOn ? 'English (L)' : '中文 (L)');
 }
 function setInk(on, from) {
   if (on === inkOn) return;
@@ -2221,26 +2245,20 @@ const PHOTOS = D.photos;
 let NOTES = [];
 const PLAY = '<svg width="10" height="10" viewBox="0 0 12 12"><path d="M2.5 1v10l8-5z"/></svg>';
 const markSrc = (m) => `/pond/marks/${m}.png`;
-// In ink the pond speaks Chinese (content.ts, ZH): L(en, zh) picks the words for now.
+// The pond speaks English or, chosen with 中, Chinese (content.ts, ZH): L(en, zh) picks the words for now.
 const ZH = D.zh;
-const L = (en, zh) => (inkOn ? zh : en);
+const L = (en, zh) => (zhOn ? zh : en);
 const CN_MONTH = { Jan: 1, Feb: 2, Mar: 3, Apr: 4, May: 5, Jun: 6, Jul: 7, Aug: 8, Sep: 9, Oct: 10, Nov: 11, Dec: 12 };
 const zhWhen = (w) => w.replace(/([A-Z][a-z]{2}) (\d{4})/g, (_, m, y) => `${y}.${CN_MONTH[m]}`);
 // an entry of the timeline as it reads now: in Chinese, what ZH gives for it over the English
 const tr = (e) => {
-  if (!inkOn) return e;
+  if (!zhOn) return e;
   const z = ZH.log[e.id] || {};
   return { ...e, ...z, when: zhWhen(e.when), ref: e.ref && z.ref ? [e.ref[0], z.ref] : e.ref };
 };
 function fillPanes() {
-  // the row for the timeline carries the marks of the places worked at, newest first
-  $('#tocWork').innerHTML = `<span class="marks">${LOG.filter((e) => e.kind === 'role')
-    .map((e) => `<img src="${markSrc(e.mark)}" alt="${esc(e.title)}" style="background:${e.mark === 'tiktok' ? '#000' : '#fff'}">`)
-    .join('')}</span>`;
+  // the timeline's and the photos' rows say only how many; their marks and pictures wait inside
   $('#tocWorkN').textContent = LOG.length;
-  $('#mosaic').innerHTML = PHOTOS.slice(0, 4)
-    .map((p) => `<img src="${p.thumb}" alt="" loading="lazy">`)
-    .join('');
   $('#photoMore').textContent = PHOTOS.length;
   fillNotes();
   fillMusic();
@@ -2256,7 +2274,7 @@ const notesHtml = () =>
   `<li class="empty">${L('No boats yet.', ZH.notes.empty)}</li>`;
 function ago(iso) {
   const m = Math.max(0, (Date.now() - Date.parse(iso)) / 60000);
-  if (inkOn)
+  if (zhOn)
     return m < 1
       ? '刚刚'
       : m < 60
@@ -2325,7 +2343,7 @@ const entry = (en) => {
   ${e.source ? `<div class="links">${e.visit ? `<a class="link" href="${e.visit}" target="_blank" rel="noopener">${L('Visit', ZH.career.visit)} ↗</a>` : ''}<a class="link" href="${e.source}" target="_blank" rel="noopener">${L('Source', ZH.career.source)} ↗</a></div>` : ''}</li>`;
 };
 const monthOf = (p) =>
-  inkOn
+  zhOn
     ? `${new Date(p.taken).getFullYear()}年${new Date(p.taken).getMonth() + 1}月`
     : new Date(p.taken).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
 const KINDS = [
@@ -2344,8 +2362,8 @@ const SHEETS = {
       <button data-view="list" aria-label="Titles only"><svg width="14" height="14" viewBox="0 0 14 14" stroke-width="1.3" stroke-linecap="round"><path d="M1.5 3h11M1.5 7h11M1.5 11h11"/></svg></button></div>
     <ol class="sound" id="sound">${LOG.map(entry).join('')}<li class="bed" data-kind="bed" data-depth="${depthOf(LOG[LOG.length - 1])}" data-year="${Math.floor(LOG[LOG.length - 1].s)}"><span class="depth">${L('bed', '池底')}</span><i class="node"></i><p class="role">${L('The bed. Everything above settled on this.', ZH.career.bed)}</p></li></ol>`,
   about:
-    () => `<h1>${L("Hey, I'm Jincheng.", ZH.about.title)}</h1><div class="prose">${(inkOn ? ZH.about.paragraphs : D.about).map((p) => `<p>${chips(p)}</p>`).join('')}
-    <div class="links"><a class="link" href="https://github.com/jma49" target="_blank" rel="noopener">GitHub ↗</a><button class="link" data-sheet="career">${L('Timeline', ZH.toc[0])}</button><a class="link" href="/">${L('The old desktop', ZH.about.desktop)}</a></div></div>
+    () => `<h1>${L("Hey, I'm Jincheng.", ZH.about.title)}</h1><div class="prose">${(zhOn ? ZH.about.paragraphs : D.about).map((p) => `<p>${chips(p)}</p>`).join('')}
+    <div class="links"><a class="link" href="https://github.com/jma49" target="_blank" rel="noopener">GitHub ↗</a><button class="link" data-sheet="career">${L('Timeline', ZH.toc[0])}</button><a class="link" href="/os">${L('The old desktop', ZH.about.desktop)}</a></div></div>
     <p class="fine" id="letterTime"></p>`,
   music: () => {
     const m = music(),
@@ -2764,6 +2782,7 @@ const letterOpen = () => false,
   openLetter = () => openSheet('about');
 let arrived = false;
 $('#inkBtn').addEventListener('click', (e) => setInk(!inkOn, e.currentTarget));
+$('#langBtn').addEventListener('click', () => setLang(!zhOn));
 function setClear(on) {
   pond.toggleAttribute('data-clear', on);
   $('#clear').setAttribute('aria-pressed', String(!on));
@@ -2985,6 +3004,16 @@ function commands() {
       top: true,
       cmd: true,
       run: () => setInk(!inkOn)
+    },
+    {
+      sec: 'Pond',
+      icon: 'brush',
+      label: zhOn ? 'English' : '中文',
+      hint: zhOn ? 'The pond in English' : 'The pond in Chinese',
+      key: 'L',
+      kw: 'language chinese english 中文 语言 lang',
+      cmd: true,
+      run: () => setLang(!zhOn)
     },
     {
       sec: 'Pond',
@@ -3223,6 +3252,7 @@ addEventListener('keydown', (e) => {
     e.preventDefault();
     openPal('/');
   } else if (e.key === 'i' || e.key === 'I') setInk(!inkOn);
+  else if (e.key === 'l' || e.key === 'L') setLang(!zhOn);
   else if (e.key === 'g' || e.key === 'G') {
     if (letterOpen()) putDown();
     setClear(!('clear' in pond.dataset));
@@ -3409,7 +3439,7 @@ function place() {
 // A word for whoever came: some for the hour, some for any hour, one picked each time.
 function salute() {
   const h = new Date().getHours();
-  if (inkOn) {
+  if (zhOn) {
     const g = ZH.greetings,
       pool = [...(h < 5 || h >= 21 ? g.night : h < 12 ? g.morning : h < 17 ? g.afternoon : g.evening), ...g.any];
     return [pool[(Math.random() * pool.length) | 0], ''];
@@ -3598,7 +3628,7 @@ function tick() {
     /* no time zones here: only the visitor's clock shows */
   }
   $('#hisTime').textContent = his ? `${his.replace(/\s?([AP])M$/, (_, x) => ` ${x.toLowerCase()}m`)} for me, in San Jose` : 'San Jose, California';
-  if (inkOn) {
+  if (zhOn) {
     let his24 = '';
     try {
       his24 = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Los_Angeles', hour: 'numeric', minute: '2-digit', hourCycle: 'h23' }).format(d);
@@ -3611,7 +3641,7 @@ function tick() {
   }
   if (phaseChoice === 'auto') setPhase('auto');
   const lt = $('#letterTime');
-  if (lt) lt.textContent = inkOn ? `${ZH.clock.now} ${h}:${mm}。` : `${h % 12 || 12}:${mm} ${part}${city ? ' in ' + city : ' where you are'}`;
+  if (lt) lt.textContent = zhOn ? `${ZH.clock.now} ${h}:${mm}。` : `${h % 12 || 12}:${mm} ${part}${city ? ' in ' + city : ' where you are'}`;
 }
 // Who is here: this visitor and everyone presence knows of, on the pond and on the old desktop alike.
 let online = 0;
@@ -3829,6 +3859,8 @@ function start() {
   makePetals();
   makeShade();
   fillPanes();
+  langBtn();
+  if (zhOn) speak();
   setPhase('auto');
   showTerm();
   tick();

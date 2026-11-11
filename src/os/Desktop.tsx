@@ -91,7 +91,7 @@ function Shell({ data }: { data: OSData }) {
       stops.forEach((stop) => stop());
     };
   }, [data]);
-  // The page's plain-text copy (index.astro) is for screen readers, which
+  // The page's plain-text copy (os.astro) is for screen readers, which
   // still read it; with the desktop running, its links would only be
   // invisible stops for someone moving through the page with Tab.
   useEffect(() => {

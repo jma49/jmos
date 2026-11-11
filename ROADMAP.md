@@ -11,21 +11,20 @@ in [AGENTS.md](AGENTS.md)), and how we'll know it's done.
 ## 1. The pond becomes the home page
 
 **Why.** Decided 2026-11-11 ([decision 0025](docs/decisions/0025-the-pond.md)):
-the pond at `/pond` replaces the desktop as the home page once it has
-what the home page needs. Built so far: the pond, its title page and
-chapters, the photos, the music, accounts, presence, the guestbook and
-the chat. Left:
+the pond replaces the desktop as the home page. Done: the pond, its
+title page and chapters, the photos, the music, accounts, presence, the
+guestbook and the chat, and the swap (the pond at `/`, the desktop at
+`/os`, `/?open=…` links redirected there). Left:
 
-1. **Swap:** the pond at `/`, the desktop moved (or retired, as Jincheng
-   chooses), its redirects (`/?open=…` links in the wild) and
-   `public/og.jpg` recaptured; the README, AGENTS.md and the docs updated
-   for which is home.
+1. **Languages and looks:** the language (English, 中文) chosen apart
+   from the look (water, ink); the other looks (ukiyo-e, glow, blueprint,
+   pixel) once Jincheng has reviewed their demo.
 2. **Password resets** (`?reset=`) and a member's recovery address,
    which only the desktop handles today.
 3. **Type the engine** (`src/pond/engine.js`, `life.js`) a section at a
    time, comparing each with the pond as it is.
 
-**Done when** the pond is at `/`, every old link lands somewhere, and
+**Done when** every old link lands somewhere, and
 `npm run perf` measures the pond's first load against its budgets.
 
 ## 2. The secret base

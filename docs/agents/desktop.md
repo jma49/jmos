@@ -6,7 +6,7 @@ the shell every app shares. Read this before changing anything under
 music and lyrics are in [media.md](media.md); accounts, chat and
 presence in [supabase.md](supabase.md).
 
-The home page (`src/pages/index.astro`) is JM/OS, a Mac OS X–style
+The old home page, now at `/os` (`src/pages/os.astro`), is JM/OS, a Mac OS X–style
 desktop rendered by one client-only React island in `src/os/`. The page
 also renders a visually hidden plain-text copy of the content for screen
 readers, crawlers and visitors without JavaScript.
@@ -15,7 +15,7 @@ readers, crawlers and visitors without JavaScript.
 
 ```mermaid
 flowchart TD
-  page["src/pages/index.astro<br/>builds OSData at build time"] --> desktop["Desktop.tsx<br/>the React island"]
+  page["src/pages/os.astro<br/>builds OSData at build time"] --> desktop["Desktop.tsx<br/>the React island"]
   desktop --> shell["shell/<br/>menu bar, Dock, windows, Exposé, Spotlight"]
   desktop --> look["look/ and ambient/<br/>desktop picture, accent, sky"]
   desktop --> social["social/ and media/<br/>accounts, presence, AirDrop, music"]
@@ -131,7 +131,7 @@ The folders of `src/os/` are layers or domains. The layers are `core/`
   Projects) short, and nothing is added to them, not even a disc in DVD
   Player's drive ([0021](../decisions/0021-nothing-is-added-to-the-desktop.md)); a phone's home screen lists every app.
 - `src/os/apps/`: one folder per built-in app. Content comes from `OSData`,
-  assembled at build time in `index.astro` from `src/content/site.ts`, the
+  assembled at build time in `os.astro` from `src/content/site.ts`, the
   projects collection and `src/lib/photos.ts` (Unsplash, fetched at build).
 - Applets are self-contained: each is a folder under `applets/` that
   imports only `src/os/kit` and its own files, never the rest of the OS or

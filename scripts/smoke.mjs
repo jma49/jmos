@@ -4,7 +4,7 @@
 // Usage: npm run build && npm run test:smoke
 //
 // The unit tests check logic and the build checks that everything compiles,
-// but neither runs the apps. This loads /?open=<app> for each app in the
+// but neither runs the apps. This loads /os?open=<app> for each app in the
 // catalog (and a project, the Dashboard and the screen saver) in a fresh
 // page and fails on an uncaught error, a console error, an app showing
 // AppBoundary's crash panel, or anything the Content Security Policy
@@ -40,7 +40,7 @@ async function targets() {
   }
   const projects = await readdir(join(ROOT, 'src/content/projects'));
   const project = projects.find((f) => f.endsWith('.md'))?.replace(/\.md$/, '');
-  // The pond (src/pages/pond.astro), and each chapter by its address.
+  // The pond (src/pages/index.astro, the home page), and each chapter by its address.
   const pond = ['pond', ...['about', 'career', 'photos', 'music', 'notes', 'chat'].map((c) => `pond#${c}`)];
   return [...apps, project, 'dashboard', 'screensaver', ...pond].filter(Boolean);
 }
@@ -81,7 +81,7 @@ async function check(target) {
   });
   try {
     const pond = target.startsWith('pond');
-    await page.goto(pond ? `${base}/${target}` : `${base}/?open=${target}`, { waitUntil: 'load' });
+    await page.goto(pond ? `${base}/${target.slice(4)}` : `${base}/os?open=${target}`, { waitUntil: 'load' });
     // A chapter in the address opens once the pond is up.
     await page.waitForTimeout(pond ? SETTLE + 1500 : SETTLE);
     if (await page.locator('.os-crash').count()) problems.push('showed the crash panel');

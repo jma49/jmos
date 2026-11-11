@@ -19,7 +19,7 @@ The only exceptions are content that is Chinese by nature:
   in the docs;
 - the names of the 24 solar terms, which the pond shows beside their
   English ones (`TERMS` in `src/pond/engine.js`), and the pond's
-  Chinese copy for its ink mode (`ZH` in `src/pond/content.ts`, with the
+  Chinese copy (`ZH` in `src/pond/content.ts`, with the
   few words `engine.js` writes for it);
 - patterns that have to match Chinese text, such as the lyric credits in
   `api/lyrics.ts`.
@@ -32,7 +32,7 @@ characters over `git ls-files`.
 
 | Changing… | Read |
 | --- | --- |
-| the pond (`/pond`, `src/pond/`): the water, the koi, the title page, its chapters | [docs/agents/pond.md](docs/agents/pond.md) |
+| the pond (the home page, `src/pond/`): the water, the koi, the title page, its chapters | [docs/agents/pond.md](docs/agents/pond.md) |
 | anything under `src/os/`: windows, the Dock, menus, apps, desktop pictures, the sky | [docs/agents/desktop.md](docs/agents/desktop.md) (the map, boundaries, naming and the shared shell), then the header comment of the component you change (each app's own behaviour) |
 | the iPod, Karaoke, songs, lyrics, anything that makes a sound | [docs/agents/media.md](docs/agents/media.md) |
 | accounts, Stickies, Chat, presence, AirDrop, Soapbox, the schema, migrations, Edge Functions | [docs/agents/supabase.md](docs/agents/supabase.md) (with its Security section) |

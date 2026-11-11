@@ -67,7 +67,7 @@ export function localAccounts(ctx: LocalContext): AccountsSocial {
       if (!user?.recovery) return;
       const token = crypto.randomUUID().replace(/-/g, '').padEnd(43, 'x');
       saveJSON(RESETS_KEY, [...resets(), { token, username: user.username, expires: Date.now() + 30 * 60_000 }]);
-      console.info(`[social] A reset link for ${user.username}, "sent" to ${user.recovery}: ${location.origin}/?open=account&reset=${token}`);
+      console.info(`[social] A reset link for ${user.username}, "sent" to ${user.recovery}: ${location.origin}/os?open=account&reset=${token}`);
     },
 
     async checkReset(token) {

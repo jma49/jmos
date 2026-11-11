@@ -1,0 +1,138 @@
+---
+// /os: JM/OS, the old home, a Mac OS X–style desktop. The shell is one client-only React
+// island; everything it shows is gathered here at build time. A plain-text
+// copy of the same content sits beside it for screen readers, crawlers and
+// visitors without JavaScript.
+import { getImage } from 'astro:assets';
+import Layout from '../layouts/Layout.astro';
+import Desktop from '../os/Desktop';
+import wallpaperSource from '../assets/os/stones.jpg';
+import { content, profile } from '../content/site';
+import { formatMonth, getProjects, projectHref } from '../lib/projects';
+import { getPhotos } from '../lib/photos';
+import type { OSData } from '../os/core/types';
+
+const t = content;
+const wallpaper = await getImage({ src: wallpaperSource, width: 2560, format: 'webp', quality: 75 });
+const entries = await getProjects();
+
+const projects = await Promise.all(
+  entries.map(async (p) => ({
+    slug: p.slug,
+    title: p.data.title,
+    description: p.data.description,
+    when: formatMonth(p.data.date),
+    status: p.data.status,
+    stack: p.data.stack,
+    repo: p.data.repo,
+    demo: p.data.demo,
+    cover: p.data.cover ? (await getImage({ src: p.data.cover, width: 1200, format: 'webp' })).src : undefined,
+    html: p.rendered?.html ?? ''
+  }))
+);
+
+const data: OSData = {
+  name: profile.name,
+  role: t.role,
+  location: profile.location,
+  email: profile.email,
+  links: {
+    github: profile.github,
+    linkedin: profile.linkedin,
+    photography: profile.photography
+  },
+  bio: { short: [...t.bio.shortParagraphs] },
+  summary: { ...t.summary, text: [...t.summary.text] },
+  resume: { ...t.resume, projects: t.resume.projects.map((p) => ({ ...p, bullets: [...p.bullets] })) },
+  jobs: t.jobs.map((j) => ({ ...j, sections: j.sections.map((g) => ({ ...g, bullets: [...g.bullets] })) })),
+  skills: t.skills.groups.map((g) => ({ name: g.name, items: [...g.items] })),
+  education: t.education.items.map((e) => ({ ...e })),
+  projects,
+  photos: await getPhotos(profile.photography),
+  wallpaper: wallpaper.src
+};
+
+const unlink = (text: string) => text.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
+---
+
+<Layout path="/os" tabTitle="Jincheng">
+  <Desktop client:only="react" data={data} />
+
+  <noscript>
+    <style>
+      .os-text-copy {
+        position: static;
+        width: auto;
+        height: auto;
+        margin: 0 auto;
+        overflow: visible;
+        clip: auto;
+        clip-path: none;
+        padding: 0 1rem 3rem;
+        white-space: normal;
+        max-width: 38rem;
+        font: 16px/1.6 -apple-system, system-ui, sans-serif;
+      }
+      .os-text-copy h1 {
+        font-size: 1.6rem;
+      }
+      .os-text-copy p {
+        margin: 0 0 0.8rem;
+      }
+      .os-text-copy h2 {
+        margin-top: 1.6rem;
+        font-size: 1.1rem;
+      }
+      .os-text-copy ul {
+        padding-left: 1.2rem;
+        list-style: disc;
+      }
+      .os-text-copy a {
+        text-decoration: underline;
+      }
+      .os-noscript-note {
+        max-width: 38rem;
+        margin: 2rem auto 1rem;
+        padding: 0 1rem;
+        font: 14px/1.5 -apple-system, system-ui, sans-serif;
+        color: #666;
+      }
+    </style>
+    <p class="os-noscript-note">This site is a desktop that needs JavaScript. Here is what's on it, as text.</p>
+  </noscript>
+
+  {/* The content as plain text: for screen readers and crawlers, and shown
+      to visitors without JavaScript (the <noscript> above). */}
+  <article class="sr-only os-text-copy">
+    <h1>{profile.name} — {t.role}</h1>
+    {t.bio.shortParagraphs.map((p) => <p>{unlink(p)}</p>)}
+    <h2>Projects</h2>
+    <ul>
+      {
+        entries.map((p) => (
+          <li>
+            <a href={projectHref(p.slug)}>{p.data.title}</a>: {p.data.description}
+          </li>
+        ))
+      }
+    </ul>
+    <h2>Experience</h2>
+    <ul>
+      {
+        t.jobs.map((job) => (
+          <li>
+            {job.company}, {job.role} ({job.period}): {job.summary}
+          </li>
+        ))
+      }
+    </ul>
+    <h2>Links</h2>
+    <ul>
+      <li><a href="/os?open=resume">Résumé</a></li>
+      <li><a href={`mailto:${profile.email}`}>{profile.email}</a></li>
+      <li><a href={profile.github}>GitHub</a></li>
+      <li><a href={profile.linkedin}>LinkedIn</a></li>
+      <li><a href={profile.photography}>Photography on Unsplash</a></li>
+    </ul>
+  </article>
+</Layout>

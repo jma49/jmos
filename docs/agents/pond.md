@@ -1,7 +1,7 @@
 # The pond
 
-The pond is the site's next home, at `/pond` while the desktop stays at
-`/` ([decision 0025](../decisions/0025-the-pond.md)). It's a full-bleed
+The pond is the site's home page, at `/`; the desktop it replaced is at
+`/os` ([decision 0025](../decisions/0025-the-pond.md)). It's a full-bleed
 pond seen from above: a title page set on the water (a greeting, the
 contents), and chapters (About, Timeline, Photos, Music, Notes, Chat)
 that open as one tall sheet of glass. Everyone who visits is a koi.
@@ -10,7 +10,7 @@ that open as one tall sheet of glass. Everyone who visits is a koi.
 
 | File | What it holds |
 | --- | --- |
-| `src/pages/pond.astro` | The markup, and everything gathered at build time: the timeline (each project's page plus `src/pond/content.ts`), the latest Unsplash photos (`src/lib/photos.ts`), covers resized by `getImage`. It hands them to the script as JSON (`#pond-data`) and keeps a plain-text copy for screen readers and visitors without JavaScript. |
+| `src/pages/index.astro` | The markup, and everything gathered at build time: the timeline (each project's page plus `src/pond/content.ts`), the latest Unsplash photos (`src/lib/photos.ts`), covers resized by `getImage`. It hands them to the script as JSON (`#pond-data`) and keeps a plain-text copy for screen readers and visitors without JavaScript. |
 | `src/pond/engine.js` | Everything that moves: the water (a height field stepped on the CPU), the koi, lily pads, the 24 solar terms and the time of day, ice that cracks and breaks, boats, the dove's and spider's behaviour, the WebGL passes (the pond into a texture, then the glass over it), the chapters, the command bar, the sound effects, the opening. Its sections are marked `/* ===== … ===== */`. |
 | `src/pond/life.js` | Devot's dove and ocra's jumping spider as three.js models built in code, drawn from straight above into a small picture each frame. It and three.js load once the pond has settled. |
 | `src/pond/music.ts` | The music: the library the iPod plays (`/api/songs`, or `src/data/songs.json`), played with YouTube's player in a frame clipped to nothing. |
@@ -75,12 +75,16 @@ back to full going home. A press on paper leaves a blot that spreads
 in `pond.css`, which redefines the palette and puts every chapter on
 paper; a new pane or control needs its ink colours there too.
 
-In ink the pond also speaks Chinese, plain and natural, in the brush:
-the greeting, the contents, the clock, every chapter and the timeline's entries. The words are `ZH` in
-`content.ts`; `L(en, zh)` in `engine.js` picks them, `tr()` lays an
-entry's Chinese over its English, and `speak()` rewrites the page's own
-words when the ink arrives or leaves. A new piece of copy needs its
-Chinese in `ZH` too.
+## Languages
+
+The language is chosen apart from the look: the 中 / En switch beside 墨
+(L; ⌘K) turns the pond's words to plain, natural Chinese, set in the
+brush, and back: the greeting, the contents, the clock, every chapter and
+the timeline's entries. It's remembered (`pond-lang`); a first visit
+takes the browser's language. The words are `ZH` in `content.ts`;
+`L(en, zh)` in `engine.js` picks them, `tr()` lays an entry's Chinese
+over its English, and `speak()` rewrites the page's own words as the
+language changes. A new piece of copy needs its Chinese in `ZH` too.
 
 ## Changing it
 
