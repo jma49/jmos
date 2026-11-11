@@ -1326,22 +1326,65 @@ button.more:hover {
   border-radius: 3.5px;
   background: var(--c);
 }
-.toc .playbtn {
-  flex: none;
-  width: 32px;
-  height: 32px;
+/* the song now playing: title and singer on one line and one baseline, the bars only while it plays,
+   and a ring for play in the line of the glass controls */
+.toc .t {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  line-height: 1;
 }
 .toc #npTitle {
-  font: 600 15px / 1 var(--cjk);
+  font: 400 17px / 1 var(--cjk);
   color: var(--mist);
 }
 .toc #npWho {
-  margin-left: 9px;
-  font-size: 12.5px;
+  font: 400 14px / 1 var(--cjk);
+  color: var(--mist-faint);
 }
 .toc .bars {
   flex: none;
-  height: 14px;
+  width: 0;
+  height: 12px;
+  gap: 2px;
+  overflow: hidden;
+  transition: width 0.3s ease;
+}
+.toc .bars[data-on] {
+  width: 15px;
+}
+.toc .bars i {
+  width: 2.25px;
+}
+.toc .playbtn {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  background: none;
+  box-shadow: inset 0 0 0 1px var(--hair);
+  transition:
+    box-shadow 0.2s,
+    background 0.2s;
+}
+.toc .playbtn svg {
+  width: 9px;
+  height: 9px;
+  fill: var(--mist);
+  translate: 0.5px 0;
+}
+.toc .playbtn[aria-pressed='true'] svg {
+  translate: 0 0;
+}
+.toc .row:hover .playbtn,
+.toc .playbtn:hover {
+  scale: none;
+  box-shadow: inset 0 0 0 1px var(--mist-dim);
+}
+.toc .playbtn:hover {
+  background: var(--lift);
+}
+.playbtn:focus-visible {
+  border-radius: 50%;
 }
 .toc q {
   quotes: none;
@@ -2550,6 +2593,15 @@ button.more:hover {
 }
 #pond[data-ink] .playbtn svg {
   fill: #f1e9d8;
+}
+#pond[data-ink] .toc .playbtn {
+  background: none;
+}
+#pond[data-ink] .toc .playbtn:hover {
+  background: var(--lift);
+}
+#pond[data-ink] .toc .playbtn svg {
+  fill: var(--mist);
 }
 #pond[data-ink] .pill svg {
   stroke: #1b1916;
