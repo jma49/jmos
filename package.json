@@ -30,6 +30,8 @@
   "dependencies": {
     "@astrojs/react": "^7.1.1",
     "@astrojs/sitemap": "^3.7.4",
+    "@fontsource/cormorant-garamond": "^5.3.0",
+    "@fontsource/zhi-mang-xing": "^5.3.0",
     "@sentry/browser": "^11.4.0",
     "@supabase/supabase-js": "^2.117.2",
     "astro": "^7.4.2",
@@ -38,6 +40,7 @@
     "opencc-js": "^1.4.2",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "three": "^0.170.0",
     "valibot": "^1.5.0",
     "zustand": "^5.0.15"
   },
@@ -47,6 +50,7 @@
     "@eslint/js": "^10.0.1",
     "@types/react": "^19.1.2",
     "@types/react-dom": "^19.1.2",
+    "@types/three": "^0.170.0",
     "@vitest/coverage-v8": "^5.0.3",
     "eslint": "^10.11.0",
     "eslint-plugin-react-hooks": "^7.1.1",

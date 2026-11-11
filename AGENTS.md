@@ -17,6 +17,8 @@ The only exceptions are content that is Chinese by nature:
   `supabase/migrations/` and Jincheng's name in Chinese
   (`alternateName` in `src/content/site.ts`), which may also be quoted
   in the docs;
+- the names of the 24 solar terms, which the pond shows beside their
+  English ones (`TERMS` in `src/pond/engine.js`);
 - patterns that have to match Chinese text, such as the lyric credits in
   `api/lyrics.ts`.
 
@@ -28,6 +30,7 @@ characters over `git ls-files`.
 
 | Changing… | Read |
 | --- | --- |
+| the pond (`/pond`, `src/pond/`): the water, the koi, the title page, its chapters | [docs/agents/pond.md](docs/agents/pond.md) |
 | anything under `src/os/`: windows, the Dock, menus, apps, desktop pictures, the sky | [docs/agents/desktop.md](docs/agents/desktop.md) (the map, boundaries, naming and the shared shell), then the header comment of the component you change (each app's own behaviour) |
 | the iPod, Karaoke, songs, lyrics, anything that makes a sound | [docs/agents/media.md](docs/agents/media.md) |
 | accounts, Stickies, Chat, presence, AirDrop, Soapbox, the schema, migrations, Edge Functions | [docs/agents/supabase.md](docs/agents/supabase.md) (with its Security section) |

@@ -28,6 +28,14 @@ the package (node_modules/chess.js/LICENSE). The piece-square tables in
 src/os/apps/chess/engine.ts are Tomasz Michniewski's "Simplified
 Evaluation Function", as published on the Chess Programming Wiki.
 
+The pond (src/pond) sets its type in two fonts licensed under the SIL
+Open Font License 1.1 (https://openfontlicense.org): Cormorant Garamond,
+Copyright 2015 The Cormorant Project Authors, shipped by the
+@fontsource/cormorant-garamond package with its license; and Zhi Mang
+Xing, Copyright 2018 The ZhiMangXing Project Authors
+(https://github.com/googlefonts/zhimangxing), shipped by the
+@fontsource/zhi-mang-xing package with its license.
+
 The reset at the top of src/styles/global.css is adapted from Preflight,
 part of Tailwind CSS (https://github.com/tailwindlabs/tailwindcss),
 distributed under the MIT License:
