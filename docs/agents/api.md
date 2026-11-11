@@ -87,6 +87,16 @@ or has no songs, the snapshot in `src/data/songs.json` is served with
 `x-library: snapshot` and `public, s-maxage=60`, and the failure is
 logged. Never an error status.
 
+### `GET /api/keepalive`
+
+One small read of the database (one song's id), run every day at 14:23
+UTC by Vercel's cron (`crons` in `vercel.json`). Supabase's free plan
+pauses a project after a week with no requests, and a paused project
+refuses every sign-in, note and chat message until it's restored by hand.
+**200** `{ ok: true }`; **502** `{ ok: false }` when Supabase can't be
+reached (logged: it may already be paused); **503** with no database
+configured. Always `no-store`.
+
 ### `GET /api/framing?url=`
 
 Whether a page lets `https://www.majincheng.com` frame it, from its

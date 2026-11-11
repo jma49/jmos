@@ -38,7 +38,14 @@ export function supabaseAccounts(ctx: SupabaseContext): AccountsSocial {
   async function signIn(username: string, password: string) {
     const name = username.trim().toLowerCase();
     const { data, error } = await client.auth.signInWithPassword({ email: addressOf(name), password });
-    if (error) throw new SocialError('credentials', 'That username and password don’t match.');
+    if (error) {
+      // Only a wrong username or password is the visitor's; anything else (the network, a paused or
+      // overloaded project, a rate limit) is ours, and saying "don't match" sends them hunting for a
+      // password that was right all along.
+      const wrong = (error as { code?: string }).code === 'invalid_credentials' || /invalid login credentials/i.test(error.message);
+      if (wrong) throw new SocialError('credentials', 'That username and password don’t match.');
+      throw new SocialError('failed', 'Couldn’t reach the accounts server. Try again in a moment.');
+    }
     ctx.setAccount(accountOf(data.user));
     return ctx.account()!;
   }

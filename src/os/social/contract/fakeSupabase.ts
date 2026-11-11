@@ -133,6 +133,8 @@ export function fakeSupabase() {
         return { data: signedIn(user), error: null };
       },
       async signInWithPassword({ email, password }: { email: string; password: string }) {
+        const primedAnswer = take('auth.signInWithPassword');
+        if (primedAnswer?.error) return { data: { user: null, session: null }, error: primedAnswer.error };
         const user = users.get(email);
         if (!user || user.password !== password) return { data: { user: null, session: null }, error: { message: 'Invalid login credentials' } };
         return { data: signedIn(user), error: null };
@@ -161,7 +163,7 @@ export function fakeSupabase() {
     client: client as unknown as Client,
     calls,
     channels,
-    /** Primes the database's next answer to `key` (`table.op`, `rpc.name` or `functions.name`). */
+    /** Primes the database's next answer to `key` (`table.op`, `rpc.name`, `functions.name` or `auth.signInWithPassword`). */
     answer(key: string, answer: Answer) {
       primed.set(key, [...(primed.get(key) ?? []), answer]);
     },
