@@ -75,6 +75,14 @@ back to full going home. A press on paper leaves a blot that spreads
 in `pond.css`, which redefines the palette and puts every chapter on
 paper; a new pane or control needs its ink colours there too.
 
+In ink the pond also speaks Chinese, with a classical turn, in the
+brush: the greeting, the contents, the clock (by the double hours),
+every chapter and the timeline's entries. The words are `ZH` in
+`content.ts`; `L(en, zh)` in `engine.js` picks them, `tr()` lays an
+entry's Chinese over its English, and `speak()` rewrites the page's own
+words when the ink arrives or leaves. A new piece of copy needs its
+Chinese in `ZH` too.
+
 ## Changing it
 
 - **Wording, a job, a school, a project's highlights:** `content.ts`; a

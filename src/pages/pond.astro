@@ -17,7 +17,7 @@ import Layout from '../layouts/Layout.astro';
 import { profile } from '../content/site';
 import { formatMonth, getProjects } from '../lib/projects';
 import { getPhotos } from '../lib/photos';
-import { ABOUT, type LogEntry, PATH, PROJECT_EXTRAS, THIS_POND } from '../pond/content';
+import { ABOUT, type LogEntry, PATH, PROJECT_EXTRAS, THIS_POND, ZH } from '../pond/content';
 import pondCover from '../assets/pond/cover.jpg';
 
 const cover = async (src: ImageMetadata) => (await getImage({ src, width: 1100, format: 'webp', quality: 74 })).src;
@@ -58,7 +58,7 @@ const photos = (await getPhotos(profile.photography)).map((p) => ({
   full: p.full,
   page: p.page
 }));
-const data = { log, photos, about: ABOUT, unsplash: profile.photography };
+const data = { log, photos, about: ABOUT, unsplash: profile.photography, zh: ZH };
 const plain = (html: string) => html.replace(/<[^>]+>/g, '').replace(/\{work:(\w+)\}/g, '$1').replace('{photos}', 'photos').replace(/&amp;/g, '&');
 ---
 
