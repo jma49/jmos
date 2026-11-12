@@ -82,7 +82,7 @@ vec3 lookMonet(){
   col+=vec3(.10,.10,.09)*smoothstep(.2,.9,-ridge)-vec3(.07)*smoothstep(.3,.95,ridge);
   col+=vec3(.9,.95,1.)*clamp(abs(gLap)*14.,0.,.5)*(1.-gCalm*.8)*step(.4,c2);
   col*=.95+.05*sin(gP.x*2.6)*sin(gP.y*2.6);
-  col=mix(col,vec3(.33,.36,.44),gCalm*.34);
+  col=mix(col,vec3(.27,.30,.42),gCalm*.5);
   return col;
 }
 // 青花: white glaze with a soft gloss and a fine crackle; the koi, the lotus and the water in cobalt, in
@@ -97,7 +97,7 @@ vec3 lookQinghua(){
   float pool=.62+.38*noise(P*.09)+.5*smoothstep(.62,.9,noise(P*.035+5.));
   vec3 c=glaze;
   // the water: scale-waves in a pale line, firmer where it moves
-  float wv=seigaiha(P+gG*36.); c=mix(c,wash,wv*(.16+clamp(abs(gLap)*30.+length(gG)*1.4,0.,.6))*(1.-gCalm*.75)*pool);
+  float wv=seigaiha(P+gG*36.); c=mix(c,wash,wv*(.16+clamp(abs(gLap)*30.+length(gG)*1.4,0.,.6))*(1.-gCalm*.97)*pool);
   // pads and lotus: a washed leaf inside a drawn line, veins from its heart
   vec4 pd=textureLod(uPads,uv,0.); float pe=textureLod(uPads,uv,1.6).a, pw=textureLod(uPads,uv,3.).a;
   c=mix(c,wash,pw*.34*pool); c=mix(c,deep,clamp(abs(pd.a-pe)*3.2,0.,1.)*pool);
@@ -111,7 +111,7 @@ vec3 lookQinghua(){
   float e=min(min(P.x,uCss.x-P.x),min(P.y,uCss.y-P.y)), along=(min(P.x,uCss.x-P.x)<min(P.y,uCss.y-P.y))?P.y:P.x;
   float rim=(1.-smoothstep(0.,1.,abs(e-10.)-.5))+(1.-smoothstep(0.,1.,abs(e-13.5)-.2))+(1.-smoothstep(0.,1.,abs(e-36.)-.4));
   float pet=1.-smoothstep(0.,1.1,abs(length(vec2((fract(along/24.)-.5)*24.,e-25.))-8.)-.5);
-  c=mix(c,deep,clamp(rim+pet*step(15.,e)*step(e,35.),0.,1.)*clamp(pool,0.,1.)*.85*(1.-gCalm*.5));
+  c=mix(c,deep,clamp(rim+pet*step(15.,e)*step(e,35.),0.,1.)*clamp(pool,0.,1.)*.85);
   // the crackle, and a new craze line from each press, running out along the glaze
   c=mix(c,vec3(.55,.50,.44),seams(P/46.)*.13+seams(P/17.+3.)*.05);
   for(int i=0;i<10;i++){ vec3 b=uBlot[i]; if(b.z<0.) continue;
@@ -134,7 +134,7 @@ vec3 lookDunhuang(){
   // the water: ribbons that rise and fall together, a white line between each
   float y=P.y+26.*sin(P.x*.011+uTime*.12)+10.*sin(P.x*.031-uTime*.2)+gH*70., band=y/30., bi=floor(band), bf=fract(band);
   vec3 bc=mod(bi,3.)<1.?qing:mod(bi,3.)<2.?lv:mix(qing,bai,.55);
-  c=mix(c,bc,.62*keep*(1.-gCalm*.7)); c=mix(c,bai,smoothstep(.43,.5,abs(bf-.5))*.7*keep*(1.-gCalm*.7));
+  c=mix(c,bc,.62*keep*(1.-gCalm*.96)); c=mix(c,bai,smoothstep(.43,.5,abs(bf-.5))*.7*keep*(1.-gCalm*.96));
   // two ribbons adrift, as the flying figures trail them
   for(int i=0;i<2;i++){ float fi=float(i), x=P.x+uTime*(6.+fi*3.), yy=uCss.y*(.24+.5*fi)+46.*sin(x*.006+fi*2.)+18.*sin(x*.017), w=7.+5.*sin(x*.011+fi);
     float rb=1.-smoothstep(w-1.5,w,abs(P.y-yy)); c=mix(c,mix(zhu,bai,.25+.5*fi),rb*.7*keep*smoothstep(.3,.6,noise(vec2(x*.002,fi*7.)))*(1.-gCalm)); c=mix(c,line,(1.-smoothstep(0.,1.2,abs(abs(P.y-yy)-w)))*rb*.0); }
@@ -145,7 +145,8 @@ vec3 lookDunhuang(){
   vec4 f0; float fa,fb,fc,red; fishAt(f0,fa,fb,fc,red); vec3 fcol=f0.rgb/max(f0.a,1e-3);
   c=mix(c,mix(mix(bai,vec3(.80,.56,.22),clamp((fcol.r-fcol.b)*1.6-.1,0.,1.)),zhu,smoothstep(.2,.5,red)),f0.a*mix(1.,keep,.5));
   c=mix(c,line,clamp((fa-fb)*3.8,0.,1.));
-  vec4 tp=textureLod(uTop,uv,0.); float te=textureLod(uTop,uv,1.5).a; c=mix(c,tp.rgb/max(tp.a,1e-3)*.8,tp.a*.8*keep); c=mix(c,line,clamp(abs(tp.a-te)*3.,0.,1.)*.7);
+  c=mix(c,wall,gCalm*.62);
+  vec4 tp=textureLod(uTop,uv,0.); float te=textureLod(uTop,uv,1.5).a; c=mix(c,tp.rgb/max(tp.a,1e-3)*.8,tp.a*.8*keep*(1.-gCalm*.6)); c=mix(c,line,clamp(abs(tp.a-te)*3.,0.,1.)*.7);
   // a press: the pigment lifts off in a patch, and its dust drifts out and settles
   for(int i=0;i<10;i++){ vec3 b=uBlot[i]; if(b.z<0.) continue;
     float t=b.z, R=10.+34.*(1.-exp(-t*3.)), d=length(P-b.xy)+(noise(P*.2)-.5)*16.;

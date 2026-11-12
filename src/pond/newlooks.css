@@ -25,6 +25,9 @@
   font-size: clamp(18px, 1.5vw, 21px);
   color: rgba(247, 241, 230, 0.94);
 }
+#pond[data-look='monet'] .home * {
+  text-shadow: 0 1px 12px rgba(22, 26, 56, 0.6);
+}
 #pond[data-look='monet'] .term-v {
   color: #f6c1c6;
 }
@@ -180,17 +183,13 @@
   --cjk-b: 'Klee One';
 }
 #pond[data-look='chalk'] .hero {
-  font-size: clamp(38px, 5vw, 72px);
-  line-height: 1.08;
   letter-spacing: 0.02em;
-  color: #fbf6d8;
-  text-shadow:
-    3px 3px 0 rgba(247, 154, 166, 0.75),
-    0 0 1px rgba(255, 255, 255, 0.6);
+  color: #f3f2e8;
+  text-shadow: 2px 2px 0 rgba(247, 154, 166, 0.5);
 }
 #pond[data-look='chalk'] .toc .go b,
 #pond[data-look='chalk'] .sheet h1 {
-  color: #f7dd7e;
+  color: #f3f2e8;
 }
 #pond[data-look='chalk'] .filt button[aria-pressed='true'],
 #pond[data-look='chalk'] .sheet .chap button[aria-current],
