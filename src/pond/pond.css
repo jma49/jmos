@@ -3216,13 +3216,7 @@ button.more:hover {
   content: ' ]';
   color: var(--koi);
 }
-/* the term as a print's title cartouche; in the blueprint, in the drawing's title block */
-#pond[data-look='ukiyo'] .alm .term-v {
-  padding: 7px 5px 6px;
-  color: #b8382a;
-  background: #f3ead6;
-  box-shadow: inset 0 0 0 1.5px #14284a;
-}
+/* the term in the blueprint, in the drawing's title block; in ukiyo-e it stands on the water as it is */
 #pond[data-look='blueprint'] .alm {
   padding: 9px 10px;
   box-shadow: inset 0 0 0 1px rgba(225, 240, 255, 0.5);
