@@ -57,7 +57,7 @@ pass, and the move from drawing things in code to painted pictures. How the pond
 
 | Look | State | Pictures in use | Delivered, not used | Wrong or unverified |
 | --- | --- | --- | --- | --- |
-| Water | Live. Unchanged but for the seal on a koi. In a preview build the dove and the spider are sprites. | `water/dove`, `water/spider` (preview only; placeholders, being redone), `water/lilies` (preview only) | none | Petals and the dragonfly are still drawn in code. The pictured pads were seen in summer and autumn at 1280 × 800; shipping them means 157 KB more after the first screen, which the image budget (982 of 1100 KB) doesn't have room for as it stands. The sprites were seen in frame sequences in the water, ink and the blueprint (flight, landing, sitting, preening, take-off); the other looks' dress was made but not looked at. The spider reads as a dark soft shape on its pad, as the model did. |
+| Water | Live. Unchanged but for the seal on a koi. In a preview build the dove and the spider are sprites. | `water/dove`, `water/spider` (preview only; placeholders, being redone), `water/lilies` (preview only) | none | Petals and the dragonfly are still drawn in code. The pictured pads were seen in summer and autumn at 1280 × 800; shipping them means 157 KB more on every visit once the pond has settled; a lighter sheet is asked for in the brief. The sprites were seen in frame sequences in the water, ink and the blueprint (flight, landing, sitting, preening, take-off); the other looks' dress was made but not looked at. The spider reads as a dark soft shape on its pad, as the model did. |
 | Ink | Live; Jincheng's favourite and the benchmark. Seasonal motif is now a painting; seasons put right. | `ink/willow`, `lotus`, `reeds`, `plum` | none | Checked at 1280, 1440, 2000 and phone in summer only. Dry lotus stems asked for, not drawn. The seals are still the brush face, not seal script. |
 | Ukiyo-e | Live. Its arrival has a carved-wave front. In a preview build: the great crests on that front, wavelets round a press, painted koi. | `ukiyo/waves`, `koi` + mask (preview only) | none | The crests were judged in a 640 × 400 frame sequence only. The press's wavelets are small beside its two swell rings; whether the rings should thin is a matter of taste on a real screen. |
 | Glow | Live. Goes dark, then relights in rings. | none wanted | none | Seen once in a frame sequence. |
@@ -154,6 +154,11 @@ koi moved to the common sheet. What is left of those:
     desktop and phone × En, 中, 日.
 12. **Performance on a real Mac with `?perf`:** frame rate, GPU time and scale in each look and
     through each arrival. Nothing here could measure that (see the traps).
+
+Asked of the local thread since this page was first written (each is marked "new" in the art brief
+in pond.md): a lighter lily sheet for the water, a grid that tiles for the star chart, and a bolder
+cut of the relief's koi. The relief's koi sheet and stone face came while the look was being built
+and are in use.
 
 ## 5. Rules learnt the hard way
 

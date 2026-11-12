@@ -463,8 +463,8 @@ the revised renders are approved.
   `drawPads()` draws the water's pads from it (whole or notched by size, the withered row laid over the
   green as autumn comes) and their flowers (a bud as summer comes, open at its height, none in autumn).
   The sheet is fetched once the pond has settled, never on the first screen, and the drawn pads stand
-  until it has come. To ship it, the first visit's image budget has to take its 157 KB or the sheet has
-  to be smaller.
+  until it has come. It is 157 KB, fetched on every visit's water look once shipped: a lighter sheet
+  is asked for in the brief before that.
 
 
 #### What is drawn by code, and what should be a picture
@@ -605,7 +605,10 @@ like clear water over stones, nothing looks pasted on.
    a normal map `bed-n.webp`, 2048 × 1152, opaque, river pebbles from straight above in soft even
    light, seamless left to right, under 150 KB together.
 2. Koi: keep the pond's own. No sheet wanted.
-3. Delivered and in use (preview): `lilies.webp` (summer pads, autumn pads, two flowers and a bud). P1
+3. Delivered and in use (preview): `lilies.webp` (summer pads, autumn pads, two flowers and a bud).
+   **P1, new:** the same sheet again at 768 × 576 (cells of 192), under 80 KB, for shipping: the pads
+   are drawn at most 150 pixels across, so the present 256-pixel cells are more than is shown. Keep
+   the grid and the order exactly, so only the cell size changes in code. P1
    `afloat.webp`, 1024 × 512, 4 × 2: two cherry petals, three autumn leaves (maple, ginkgo, oak), a
    folded paper boat from above in three tones.
 4. Ornaments: none.
@@ -698,7 +701,10 @@ dark painted game mural.
 7. Seal: on the ink sheet.
 
 **Star chart.** Judge it by: a plate from an eighteenth-century celestial atlas.
-1. Delivered and in use: `plate`. 2. Delivered and in use: `koi-figures`. P1: the same to the common spec (four rows,
+1. Delivered and in use: `plate`. **P1, new:** a grid that tiles, `grid.webp`, 1024 × 1024, seamless on
+   all four sides: the same engraved parallels and meridians without the frame, the equator or the
+   ecliptic, so it can repeat as the sky turns (the plate is repeated mirrored for now, and its
+   meridians kink at the mirror lines). 2. Delivered and in use: `koi-figures`. P1: the same to the common spec (four rows,
    outline and engraved scales only, with a mask of where a visitor's colour tints the line).
 3. P1 `nebulae.webp`, 1024 × 512, 4 × 2: engraved discs and wreaths that stand for the lily pads
    (a ringed planet, a nebula as stippling, a cluster, an armillary ring), the pale line `#C9D4F0`.
@@ -715,6 +721,9 @@ lighter raised, darker cut in; opaque) and `-c` the faded paint over it (Egyptia
 green `#5E8F6A`, red ochre `#A8482C`, yellow `#D6A23E`, black line; transparent where bare).
 1. Delivered and in use: `stone-h.webp`, the limestone face.
 2. Delivered and in use: `koi-h.webp`, `koi-c.webp` + `koi-mask.webp`, to the common spec.
+   **P1, new:** a bolder cut of the same sheet (same names with `-bold`): a koi is drawn 100 to 170
+   pixels long, about a sixth of the sheet's size, so its scales should be half as many and their
+   lines twice as wide, and the outline 6 pixels; the patches and the mask unchanged in place.
 3. Delivered and in use: `fish`, `lotus`, `frieze`. P1 `papyrus`, 512 × 1024, a papyrus clump; `duck`, 512 ×
    512, a duck in profile.
 4. P1 `cartouche`, 512 × 768, an empty cartouche ring, upright, for the solar term. Nothing in it.
