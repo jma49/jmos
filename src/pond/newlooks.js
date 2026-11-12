@@ -34,14 +34,18 @@ export const NEW_COMMANDS = [
 export const NEW_GLSL = `
 // ---------- the preview looks ----------
 float grain(vec2 P){ return .5+.5*noise(P*1.9)*(.6+.4*noise(P*.7+9.)); }
-// one layer of short loaded strokes: cells longer than they are high, every other row set off; returns the
-// stroke's own place (where its colour is taken) and how much of it covers here, thick in the middle
+// one layer of loaded strokes. Each lies along the water's flow where it is, a little off it; longer or shorter,
+// pressed harder or less; ragged at its ends where the bristles part. Returns the stroke's own place (where its
+// colour is taken), how much of it covers here, and where across its width this is (for the ridge of paint).
 vec2 dab(vec2 P, vec2 cell, float seed, out float cover, out float ridge){
   vec2 q=P/cell; q.x+=step(1.,mod(floor(q.y),2.))*.5; vec2 id=floor(q), f=fract(q)-.5;
-  vec2 j=(hash2(id+seed)-.5)*vec2(.5,.3); f-=j*.5;
-  float a=(hash1(id+seed*3.)-.5)*.5; f=vec2(f.x*cos(a)-f.y*sin(a)*cell.y/cell.x, f.x*sin(a)*cell.x/cell.y+f.y*cos(a));
-  float d=length(f*vec2(1.9,2.1)); cover=1.-smoothstep(.72,1.02,d+(noise(P*.35+seed)-.5)*.28);
-  ridge=f.y*2.; vec2 at=(id+.5+j); at.x-=step(1.,mod(id.y,2.))*.5; return at*cell;
+  vec2 j=(hash2(id+seed)-.5)*vec2(.6,.4); f-=j*.5;
+  vec2 at=id+.5+j*.5; at.x-=step(1.,mod(id.y,2.))*.5; at*=cell;
+  float a=(noise(at*.0035+seed)-.5)*1.3+(hash1(id+seed*3.)-.5)*.5+clamp(gG.x*5.,-.3,.3);
+  float ln=.8+.55*hash1(id+seed*5.), pr=.6+.4*hash1(id+seed*7.);
+  vec2 px=f*cell, r=vec2(px.x*cos(a)+px.y*sin(a),-px.x*sin(a)+px.y*cos(a))/cell; r.x/=ln;
+  float d=length(r*vec2(1.7,2.15))+(noise(P*.3+seed)-.5)*.3+abs(noise(vec2(r.y*11.,id.x+seed))-.5)*.5*smoothstep(.18,.5,abs(r.x));
+  cover=(1.-smoothstep(.5,1.06,d))*pr; ridge=r.y*2.; return at;
 }
 // what Monet's pond is at a place: water in violet, green, rose and blue, the lilies' pads, the koi
 vec3 pondOil(vec2 at, float seed){
@@ -53,9 +57,14 @@ vec3 pondOil(vec2 at, float seed){
   col=mix(col,vec3(.70,.80,.90),smoothstep(.56,.84,fbm(at*vec2(.004,.016)+11.))*.7);
   col=mix(col,vec3(.14,.30,.26),smoothstep(.6,.86,fbm(at*vec2(.009,.003)+31.))*.6);
   col=mix(col,vec3(.93,.86,.70),smoothstep(.74,.92,noise(at*.006+17.))*.5);
+  // broken colour: each stroke leans to one pure pigment, so the eye does the mixing
+  float hq=hash1(floor(at/4.)+seed*11.);
+  col=mix(col,hq<.25?vec3(.44,.34,.72):hq<.5?vec3(.20,.40,.74):hq<.75?vec3(.18,.50,.38):vec3(.88,.58,.70),.26*step(.5,seed));
   col*=.86+.3*hash1(floor(at/7.)+seed);
-  vec4 pd=textureLod(uPads,uv,2.); vec3 pc=pd.rgb/max(pd.a,1e-3);
-  col=mix(col,mix(vec3(.26,.50,.36),vec3(.48,.62,.40),hash1(floor(at/9.)+seed))*(.8+.5*pc.g)+vec3(.5,.2,.3)*clamp((pc.r-pc.g)*2.,0.,1.),smoothstep(.25,.6,pd.a));
+  // the lilies: pads in thick greens, lighter where the light catches them; the flowers pink and white
+  vec4 pd=textureLod(uPads,uv,1.6); vec3 pc=pd.rgb/max(pd.a,1e-3); float hp=hash1(floor(at/9.)+seed);
+  vec3 leaf=mix(mix(vec3(.20,.42,.30),vec3(.44,.62,.38),hp),vec3(.62,.74,.50),step(.82,hp));
+  col=mix(col,mix(leaf,mix(vec3(.97,.90,.92),vec3(.93,.52,.66),hp),clamp((pc.r-pc.g)*3.,0.,1.)),smoothstep(.2,.55,pd.a));
   vec4 f=textureLod(uFish,uv+gRef*.25,2.2); vec3 fc=f.rgb/max(f.a,1e-3);
   col=mix(col,mix(fc*1.15+vec3(.08,.02,-.04),vec3(.95,.5,.2),clamp((fc.r-fc.b)*1.2,0.,.6)),smoothstep(.3,.7,f.a));
   vec4 tp=textureLod(uTop,uv,1.5); col=mix(col,tp.rgb/max(tp.a,1e-3),smoothstep(.3,.7,tp.a)*.8);
@@ -68,20 +77,24 @@ vec3 pondOil(vec2 at, float seed){
   return col;
 }
 vec3 lookMonet(){
-  vec2 P=gP+gG*70.+vec2(sin(gP.y*.02+uTime*.3),0.)*1.5;
-  float c1,r1,c2,r2,c3,r3;
-  vec2 a1=dab(P,vec2(46.,17.),1.,c1,r1), a2=dab(P+vec2(13.,7.),vec2(34.,13.),5.,c2,r2), a3=dab(P.yx+vec2(5.,21.),vec2(40.,12.),9.,c3,r3);
-  vec3 col=pondOil(P,0.)*.92;
+  vec2 P=gP+gG*26.+vec2(sin(gP.y*.02+uTime*.3),0.)*1.5;
+  float c1,r1,c2,r2,c3,r3,c4,r4;
+  vec2 a1=dab(P,vec2(58.,19.),1.,c1,r1), a2=dab(P+vec2(13.,7.),vec2(38.,13.),5.,c2,r2), a3=dab(P.yx+vec2(5.,21.),vec2(62.,11.),9.,c3,r3), a4=dab(P+vec2(31.,3.),vec2(22.,9.),13.,c4,r4);
+  // an underpainting, then the strokes over it wet into wet: each takes a little of what is under it
+  vec3 col=pondOil(P,0.)*.9;
   col=mix(col,pondOil(a1,1.),c1);
-  // reflections run downwards: upright strokes where the trees stand in the water
-  float up=smoothstep(.5,.7,fbm(gP*vec2(.006,.0018)+20.));
-  col=mix(col,pondOil(a3.yx-vec2(21.,5.)+vec2(0.,0.),9.)*vec3(.82,.9,.84),c3*up);
-  col=mix(col,pondOil(a2-vec2(13.,7.),5.),c2*.92);
-  // thick paint catches the light along a stroke's upper edge, and the canvas shows through its weave
-  float ridge=mix(r1*c1,r2*c2,c2);
-  col+=vec3(.10,.10,.09)*smoothstep(.2,.9,-ridge)-vec3(.07)*smoothstep(.3,.95,ridge);
+  // reflections are dragged downwards: long upright strokes where the trees stand in the water
+  float up=smoothstep(.42,.66,fbm(gP*vec2(.006,.0018)+20.));
+  col=mix(col,pondOil(a3.yx-vec2(21.,5.),9.)*vec3(.80,.90,.86),c3*up*.9);
+  col=mix(col,pondOil(a2-vec2(13.,7.),5.),c2);
+  c4*=step(.42,hash1(floor(a4/7.)));
+  col=mix(col,pondOil(a4-vec2(31.,3.),13.)*1.06,c4*.9);
+  // thick paint stands up: light along a stroke's upper edge, a thin shadow under its lower one
+  float cov=max(max(c1*.6,c2),c4), ridge=c4>.3?r4:c2>.3?r2:r1;
+  col+=vec3(.17,.16,.14)*smoothstep(.2,.85,-ridge)*cov-vec3(.11,.11,.12)*smoothstep(.3,.95,ridge)*cov;
   col+=vec3(.9,.95,1.)*clamp(abs(gLap)*14.,0.,.5)*(1.-gCalm*.8)*step(.4,c2);
-  col*=.95+.05*sin(gP.x*2.6)*sin(gP.y*2.6);
+  // the canvas shows through, a weave under everything
+  col*=.94+.06*sin(gP.x*2.6)*sin(gP.y*2.6);
   col=mix(col,vec3(.27,.30,.42),gCalm*.5);
   return col;
 }
@@ -108,7 +121,9 @@ vec3 lookQinghua(){
   c=mix(c,mix(wash,deep,.4),step(.5,f0.a)*smoothstep(.34,.46,abs(fract((P.x+P.y)*.11)-.5))*.35);
   vec4 tp=textureLod(uTop,uv,0.); float te=textureLod(uTop,uv,1.5).a; c=mix(c,deep,clamp(abs(tp.a-te)*3.,0.,1.)*.8*pool);
   // the rim: two lines and a row of petals between them
-  float e=min(min(P.x,uCss.x-P.x),min(P.y,uCss.y-P.y)), along=(min(P.x,uCss.x-P.x)<min(P.y,uCss.y-P.y))?P.y:P.x;
+  float fs=mix(1.,.56,uCalm.x), e=min(min(P.x,uCss.x-P.x),min(P.y,uCss.y-P.y))/fs, along=((min(P.x,uCss.x-P.x)<min(P.y,uCss.y-P.y))?P.y:P.x)/fs;
+  // (what is painted inside the bowl stops at the rim: nothing swims under it)
+  c=mix(c,glaze,1.-smoothstep(39.,43.,e));
   float rim=(1.-smoothstep(0.,1.,abs(e-10.)-.5))+(1.-smoothstep(0.,1.,abs(e-13.5)-.2))+(1.-smoothstep(0.,1.,abs(e-36.)-.4));
   float pet=1.-smoothstep(0.,1.1,abs(length(vec2((fract(along/24.)-.5)*24.,e-25.))-8.)-.5);
   c=mix(c,deep,clamp(rim+pet*step(15.,e)*step(e,35.),0.,1.)*clamp(pool,0.,1.)*.85);
@@ -193,8 +208,6 @@ vec3 lookStars(){
   return c;
 }
 // 黑板报: a dark green board, smudged where it was wiped; everything in chalk
-float star5(vec2 p,float r){ float a=atan(p.x,-p.y), s=6.2831853/5.; a=mod(a,s)-s*.5; vec2 q=length(p)*vec2(cos(a),abs(sin(a)));
-  vec2 e=vec2(cos(s*.5),sin(s*.5)); q-=r*e; vec2 w=vec2(-e.y*.42-e.x*.6,e.x*.42-e.y*.6); float hh=clamp(dot(q,w)/dot(w,w),0.,1.); return length(q-w*hh); }
 vec3 lookChalk(){
   vec2 P=gP, uv=gUv;
   vec3 board=vec3(.085,.215,.165)*(.92+.16*fbm(P*.003));
@@ -213,16 +226,28 @@ vec3 lookChalk(){
   // koi: a white line round them, their patches rubbed in with coloured chalk
   vec4 f0; float fa,fb,fc,red; fishAt(f0,fa,fb,fc,red); vec3 fcol=f0.rgb/max(f0.a,1e-3);
   float fh=smoothstep(.28,.44,abs(fract((P.x+P.y)*.09)-.5));
-  c=mix(c,mix(ylw,wht,step(.5,fcol.b)),f0.a*fh*.5*g); c=mix(c,pnk,smoothstep(.2,.5,red)*g*.9); c=mix(c,wht,clamp((fa-fb)*3.8,0.,1.)*(.55+.45*g));
+  c=mix(c,mix(ylw,wht,step(.5,fcol.b)),f0.a*fh*.5*g); c=mix(c,pnk,smoothstep(.2,.5,red)*g*.9); c=mix(c,wht,clamp((fa-fb)*4.4+(fb-fc)*.5,0.,1.)*(.8+.2*g));
   vec4 tp=textureLod(uTop,uv,0.); float te=textureLod(uTop,uv,1.5).a; c=mix(c,ylw,clamp(abs(tp.a-te)*3.,0.,1.)*g*.8);
-  // the border the class draws round its board: a line, a row of points in two colours, a line
-  float e=min(min(P.x,uCss.x-P.x),min(P.y,uCss.y-P.y)), along=(min(P.x,uCss.x-P.x)<min(P.y,uCss.y-P.y))?P.y:P.x;
-  float zig=abs(fract(along/26.)-.5)*2., bl=(1.-smoothstep(0.,1.3,abs(e-8.)-.7))+(1.-smoothstep(0.,1.3,abs(e-30.)-.7));
-  float tri=1.-smoothstep(0.,1.6,abs((e-12.)-zig*14.)-.8);
-  c=mix(c,ylw,bl*g*.85*(1.-gCalm*.4)); c=mix(c,mod(floor(along/26.),2.)<1.?pnk:blu,tri*step(10.,e)*step(e,28.)*g*.9*(1.-gCalm*.4));
-  // in two corners, what every board has: a few stars
-  for(int i=0;i<3;i++){ float fi=float(i); vec2 sp=vec2(uCss.x-70.-fi*44.,uCss.y-64.-mod(fi,2.)*22.);
-    c=mix(c,i==1?pnk:ylw,(1.-smoothstep(0.,1.5,abs(star5(P-sp,13.-fi*2.))-.7))*g*.9); }
+  // the border the class draws round its board, always on top: two lines, a row of points in two colours
+  // between them, and a fan of arcs in each corner
+  float fs=mix(1.,.56,uCalm.x); vec2 ed=vec2(min(P.x,uCss.x-P.x),min(P.y,uCss.y-P.y))/fs; float e=min(ed.x,ed.y), along=(ed.x<ed.y?P.y:P.x)/fs;
+  c=mix(c,board+vec3(.10,.12,.11)*sm,1.-smoothstep(42.,46.,e));
+  float zig=abs(fract(along/30.)-.5)*2., bl=(1.-smoothstep(0.,1.3,abs(e-9.)-.8))+(1.-smoothstep(0.,1.3,abs(e-39.)-.8));
+  float tri=1.-smoothstep(0.,1.6,abs((e-14.)-zig*20.)-.9), corner=step(ed.x,46.)*step(ed.y,46.), cr=length(ed-46.);
+  c=mix(c,ylw,bl*g*.9*(1.-corner));
+  c=mix(c,mod(floor(along/30.),2.)<1.?pnk:blu,tri*step(11.,e)*step(e,37.)*g*.9*(1.-corner));
+  for(int i=0;i<3;i++){ float rr=12.+float(i)*12.; c=mix(c,i==0?ylw:i==1?pnk:blu,(1.-smoothstep(0.,1.4,abs(cr-rr)-.9))*corner*step(cr,40.)*g*.9); }
+  // drawings in coloured chalk, where a wide board has room: a sun up top, flowers along the bottom
+  if(uCalm.x<.5){
+    vec2 sp=P-vec2(uCss.x*.52,88.); float sr=length(sp), sa=atan(sp.y,sp.x);
+    c=mix(c,ylw,((1.-smoothstep(0.,1.5,abs(sr-19.)-1.))+(1.-smoothstep(0.,.16,abs(fract(sa*12./6.2832)-.5)-.07))*step(26.,sr)*step(sr,38.+4.*sin(sa*6.)))*g*.9);
+    for(int i=0;i<3;i++){ float fi=float(i); vec2 fp=P-vec2(uCss.x*(.535+.045*fi),uCss.y-78.-mod(fi,2.)*9.); float fr=length(fp), fa=atan(fp.y,fp.x);
+      c=mix(c,i==1?ylw:pnk,(1.-smoothstep(0.,1.4,abs(fr-(7.+3.5*cos(fa*5.)))-.8))*g*.9); c=mix(c,i==1?pnk:ylw,(1.-smoothstep(1.5,3.,fr))*g);
+      c=mix(c,grn,(1.-smoothstep(0.,1.3,abs(fp.x-2.*sin(fp.y*.2))-.8))*step(11.,fp.y)*step(fp.y,30.)*g*.9); }
+  }
+  // the ledge under the board, and the dust that has settled on it
+  float ly=(uCss.y-P.y)/fs; c=mix(c,vec3(.33,.25,.16)*(.85+.3*noise(P*vec2(.05,.8))),1.-smoothstep(4.,5.5,ly));
+  c=mix(c,wht,step(.82+.16*smoothstep(4.,26.,ly),hash1(floor(P/2.)))*step(ly,26.)*.55);
   // a press: a small burst of chalk dust, and the mark it leaves, slow to fade
   for(int i=0;i<10;i++){ vec3 b=uBlot[i]; if(b.z<0.) continue;
     float t=b.z, d=length(P-b.xy), R=6.+46.*(1.-exp(-t*2.2));

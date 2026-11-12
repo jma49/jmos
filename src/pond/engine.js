@@ -2992,6 +2992,7 @@ const airWanted = () =>
   (look !== 'water' && rainNow()) ||
   gest.down ||
   gest.letters.length > 0 ||
+  (PREVIEW && gest.taps && gest.taps.length > 0) ||
   gest.glint > 0.05 ||
   AM.snow > 0.02 ||
   fx.snow > 0.02 ||
@@ -5289,7 +5290,48 @@ function drawGesture(c) {
       c.stroke();
     }
   }
+  if (PREVIEW) drawNewCues(c, now);
   c.restore();
+}
+// The preview looks' cues: the taps so far (dabs of paint where they are close, stars joined by a line
+// where they are far apart), and a stroke that is neither round nor ruled, drawn as it goes: a rub's
+// passes, or a tick once it has turned its corner.
+function drawNewCues(c, now) {
+  const taps = (gest.taps = (gest.taps || []).filter((q) => now - q.t < 1.8));
+  if (taps.length && look === 'water') {
+    const close = taps.length > 1 && taps.every((q) => Math.hypot(q.x - taps[0].x, q.y - taps[0].y) < 90);
+    c.lineWidth = 1;
+    taps.forEach((q, i) => {
+      const f = 1 - (now - q.t) / 1.8;
+      if (close) {
+        c.fillStyle = `rgba(${['242,160,168', '150,170,230', '240,213,138', '140,190,150'][i % 4]},${0.7 * f})`;
+        c.beginPath();
+        c.ellipse(q.x, q.y, 9, 5, i * 0.7, 0, TAU);
+        c.fill();
+      } else {
+        c.fillStyle = `rgba(233,237,248,${0.9 * f})`;
+        c.beginPath();
+        c.arc(q.x, q.y, 2.4, 0, TAU);
+        c.fill();
+        if (i) {
+          c.strokeStyle = `rgba(214,224,248,${0.45 * f})`;
+          c.beginPath();
+          c.moveTo(taps[i - 1].x, taps[i - 1].y);
+          c.lineTo(q.x, q.y);
+          c.stroke();
+        }
+      }
+    });
+  }
+  const P = gest.pts;
+  if (gest.down && P.length > 8 && gest.len > 70 && Math.abs(gest.turn) < Math.PI * 0.6 && !straightness()) {
+    c.lineCap = c.lineJoin = 'round';
+    c.lineWidth = 2;
+    c.strokeStyle = 'rgba(243,242,232,0.5)';
+    c.beginPath();
+    P.forEach((q, i) => (i ? c.lineTo(q[0], q[1]) : c.moveTo(q[0], q[1])));
+    c.stroke();
+  }
 }
 
 /* ================= the clock and who is here ================= */

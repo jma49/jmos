@@ -244,3 +244,95 @@
   border-radius: 3px;
   filter: none;
 }
+
+/* A look with a border round the whole pond (the bowl's rim, the board's frame): the border is the page's
+   margin in that look, and the title page, the clock and every control stand inside it, clear by the same
+   gap on every side. --frame is how far the border reaches in (newlooks.js draws it at this scale). */
+#pond[data-look='qinghua'],
+#pond[data-look='chalk'] {
+  --frame: 48px;
+  --edge: max(clamp(20px, 4.2vw, 68px), calc(var(--frame) + 14px));
+}
+#pond[data-look='qinghua'] .alm,
+#pond[data-look='chalk'] .alm {
+  top: calc(var(--frame) + 10px);
+}
+#pond[data-look='qinghua'] .hud .bl,
+#pond[data-look='qinghua'] .hud .br,
+#pond[data-look='qinghua'] .hud .cmd,
+#pond[data-look='chalk'] .hud .bl,
+#pond[data-look='chalk'] .hud .br,
+#pond[data-look='chalk'] .hud .cmd {
+  bottom: calc(var(--frame) + 10px);
+}
+#pond[data-look='qinghua'] .preview,
+#pond[data-look='chalk'] .preview {
+  bottom: calc(var(--frame) + 10px);
+}
+#pond[data-look='qinghua'] .stamp,
+#pond[data-look='chalk'] .stamp {
+  bottom: calc(var(--frame) + 58px);
+}
+#pond[data-look='qinghua'] .veil,
+#pond[data-look='chalk'] .veil {
+  padding: calc(var(--frame) + 6px);
+}
+@media (max-width: 860px) {
+  #pond[data-look='qinghua'],
+  #pond[data-look='chalk'] {
+    --frame: 27px;
+  }
+  #pond[data-look='qinghua'] .home,
+  #pond[data-look='chalk'] .home {
+    padding-inline: calc(var(--frame) + 8px);
+  }
+  #pond[data-look='qinghua'] .lead,
+  #pond[data-look='chalk'] .lead {
+    padding-top: calc(var(--frame) + 4px);
+  }
+  #pond[data-look='qinghua'] .hud,
+  #pond[data-look='chalk'] .hud {
+    padding-inline: calc(var(--frame) + 6px);
+  }
+  #pond[data-look='qinghua'] .veil,
+  #pond[data-look='chalk'] .veil {
+    padding: calc(var(--frame) + 2px);
+  }
+}
+
+/* 黑板报, as a class lays one out: a headline in block letters filled with coloured chalk between two
+   ruled lines, the contents in a ruled box, the date in the duty corner */
+#pond[data-look='chalk'] .hero {
+  display: inline-block;
+  padding: 0.16em 0.5em 0.22em 0.1em;
+  border-block: 2px solid rgba(243, 242, 232, 0.7);
+  font-size: clamp(34px, 4.4vw, 64px);
+  line-height: 1.12;
+  letter-spacing: 0.05em;
+  color: #f7dd7e;
+  -webkit-text-stroke: 1.2px #f3f2e8;
+  paint-order: stroke fill;
+  text-shadow: 3px 3px 0 rgba(247, 154, 166, 0.6);
+}
+#pond[data-look='chalk'] .toc {
+  padding: 2px 16px 4px;
+  border: 2px solid rgba(243, 242, 232, 0.55);
+  border-radius: 9px 13px 8px 12px;
+}
+#pond[data-look='chalk'] .toc .row:first-child {
+  border-top-color: transparent;
+}
+#pond[data-look='chalk'] .toc .row:last-child {
+  border-bottom-color: transparent;
+}
+#pond[data-look='chalk'] .toc .go i {
+  color: #f79aa6;
+}
+#pond[data-look='chalk'] .alm .txt {
+  padding: 8px 10px;
+  border: 1.5px dashed rgba(247, 221, 126, 0.7);
+  border-radius: 7px 9px 6px 10px;
+}
+#pond[data-look='chalk'] .seals-btn {
+  margin-top: 0;
+}
