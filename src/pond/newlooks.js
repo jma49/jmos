@@ -57,9 +57,10 @@ export const KOI_SHEETS = {
     palette: ['#b34026', '#2b6385', '#4d856e', '#cc8f38']
   },
   relief: {
-    src: '/pond/relief/koi-c.webp',
-    height: '/pond/relief/koi-h.webp',
-    mask: '/pond/relief/koi-mask.webp',
+    // (the bolder cut: a koi is drawn about a sixth of the sheet's size)
+    src: '/pond/relief/koi-c-bold.webp',
+    height: '/pond/relief/koi-h-bold.webp',
+    mask: '/pond/relief/koi-mask-bold.webp',
     rowH: 384,
     x1: 962,
     host: 0,
@@ -93,13 +94,12 @@ export const MONET = {
 /** Ukiyo-e's pictures (public/pond/ukiyo/): the wave crests of a press and of its arrival (the koi are in KOI_SHEETS). */
 export const UKIYO = { waves: '/pond/ukiyo/waves.webp' };
 /**
- * The star chart's pictures (public/pond/stars/): the plate's engraved grid, and a koi in outline for the
- * figure behind each constellation. `grid` is the plate inside its frame, `figure` the straight koi's paint.
+ * The star chart's pictures (public/pond/stars/): an engraved grid that tiles, and a koi in outline for the
+ * figure behind each constellation (`figure` is the straight koi's paint in its sheet).
  */
 export const STARS = {
-  plate: '/pond/stars/plate.webp',
+  grid: '/pond/stars/grid.webp',
   figures: '/pond/stars/koi-figures.webp',
-  grid: [100, 84, 1848, 856],
   figure: [46, 184, 424, 163]
 };
 /**
@@ -373,9 +373,9 @@ vec3 lookStars(){
   // the sky turns, slowly, about a point off the top
   vec2 pole=vec2(uCss.x*.62,-uCss.y*.5); float an=uTime*.004; vec2 d0=P-pole; vec2 S=pole+vec2(d0.x*cos(an)-d0.y*sin(an),d0.x*sin(an)+d0.y*cos(an));
   vec3 c=vec3(.010,.016,.045)+vec3(.012,.02,.05)*fbm(S*.002);
-  // the atlas's engraved grid (a picture, laid into the one texture once, and repeated mirrored so it has
-  // no edge), faint, turning with the sky; it is ruled in after the first stars are out
-  c+=vec3(.79,.83,.94)*texture(uMural,S/uCss).a*uPic*.2*(1.-gCalm*.5)*smoothstep(1.2,3.2,uLookT);
+  // the atlas's engraved grid (a picture that tiles, repeated), faint, turning with the sky; it is ruled
+  // in after the first stars are out
+  c+=vec3(.79,.83,.94)*texture(uMural,S/520.).a*uPic*.2*(1.-gCalm*.5)*smoothstep(1.2,3.2,uLookT);
   float band=exp(-pow(((S.x-pole.x)*.55+(S.y-pole.y)*.83-uCss.y*.95)/(uCss.y*.2),2.));
   c+=vec3(.16,.17,.24)*band*(.25+.75*fbm(S*.006+3.))*.55+vec3(.5,.52,.6)*band*pow(noise(S*.5),6.)*.5;
   // (the stars come out a few at a time as the dusk deepens, the brightest first)

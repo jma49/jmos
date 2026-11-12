@@ -309,16 +309,17 @@ In `public/pond/ukiyo/`, and in use in a preview build (the look itself ships; i
 
 In `public/pond/stars/`, and in use. One colour, `#C9D4F0`, its strength in the alpha.
 
-- **The plate** is the sky's engraved grid: `paintPlate()` cuts it inside its frame (`STARS.grid`) and
-  lays it to cover the pond in the look's picture texture, which repeats it mirrored, so the grid has
-  no edge; `lookStars()` rules it in faintly after the first stars are out, turning with them.
+- **The grid** is the sky's engraved grid: `grid.webp` tiles on all four sides, so it is the look's
+  picture texture as it is, repeated (`paintPlate()`, with smaller copies); `lookStars()` lays a tile
+  over 520 pixels of the pond and rules it in faintly after the first stars are out, turning with
+  them. The framed plate it replaced (meridians drawing together, an equator and an ecliptic) could
+  not repeat and is gone.
 - **The figures:** the straight koi (`STARS.figure`) is kept as one row to the koi sheets' measure and
   bent along each constellation's spine by `Koi.drawSprite()`, faint, behind its stars. The koi in an S
   is not used: the spine does the bending.
 
 | File | Size | What is in it |
 | --- | --- | --- |
-| `plate.webp` | 2048 × 1024, 166 KB | A graticule without stars, figures or lettering: curved parallels and converging meridians, the equator and the ecliptic as arcs with tick marks, a thin frame with ticks (the paint: 85, 69, 1879, 885). It is constructed, not drawn by the image model (which kept adding numerals and stars), so it is more regular than an engraving and has little hatching. |
 | `koi-figures.webp` | 1024 × 512, 31 KB | Two koi from above in outline, heads to the left, in two 512-pixel cells: one straight (46, 184, 424, 163), one in a shallow S (in its own cell: 40, 185, 435, 167). A few scale arcs and fin rays, no fill. Plainer than an atlas figure. |
 | `grid.webp` | 1024 × 1024, 51 KB | A grid that tiles on all four sides, made in code: eight meridians and eight parallels to a tile, each gently bowed (so it reads as a chart, not graph paper) and a little uneven in strength, every fourth one heavier and ticked. No frame, equator or ecliptic. Meridians that draw together, as on the plate, can't tile, so these stay evenly spaced: it is a quieter thing than the plate. |
 
@@ -362,7 +363,7 @@ In `public/pond/relief/`, each picture as a pair that lines up to the pixel: `-c
   sand blown off in streaks; winter is frost; the gesture is a zigzag of three peaks or more, read when
   the finger lifts (`zigzag()` in `gestures.ts`: five sharp corners, so a wavy line is not one); the
   seal is 刻; the sounds are a chisel's knock and running sand. No inscription anywhere.
-- **The koi** are the carved sheet (`KOI_SHEETS.relief`). The fish's canvas holds one picture, so
+- **The koi** are the carved sheet, in its bolder cut (`KOI_SHEETS.relief`). The fish's canvas holds one picture, so
   `carved()` in `engine.js` makes one of the pair: the koi's whole shape from the height, the paint over
   a colour that stands for bare stone. The shader shows stone where a koi is bare, cuts the sheet's
   dark line into the surface, and raises the whole fish with a soft shoulder; a visitor's colour goes
@@ -379,7 +380,6 @@ In `public/pond/relief/`, each picture as a pair that lines up to the pixel: `-c
 | `fish-c.webp`, `fish-h.webp` | 1024 × 512, 83 KB and 35 KB | Two tilapia in profile, heads to the left, in two 512-pixel cells: blue head and back, green flank, a yellow belly line, red ochre fins. The straight one: 36, 136, 476, 376. The other: 36, 138, 476, 373; it is only slightly curved. |
 | `frieze-c.webp`, `frieze-h.webp` | 1024 × 128, 34 KB and 3 KB | An open blue lotus and a bud on a red base line, a stem looping from one to the other, four times in a tile, seamless left to right in both files. The flowers reach to 4 pixels from the top; the base line is at the bottom. |
 | `lotus-c.webp`, `lotus-h.webp` | 1024 × 512, 98 KB and 33 KB | Eight motifs in a 4 × 2 grid of 256-pixel cells, each at least 18 pixels clear of its cell's edge. Top row: two open lotus flowers, a blue bud, a green bud. Bottom row: two leaves from above, with a notch and veins, a papyrus clump, a duck facing left (18, 70, 238, 185). |
-| `koi-c.webp`, `koi-h.webp`, `koi-mask.webp` | 1024 × 1536, 181 KB, 149 KB and 14 KB | The koi sheet to the common spec, as carved fish seen from above: four rows of 384 pixels, heads to the left, each from x 62 to a tail tip at 962, the spine on its row's middle line (y 192, 576, 960, 1344); one drawing mirrored about the spine. In the paint, the body is left bare (transparent) where a koi is white: row 1 is yellow ochre with red ochre fins, row 2 bare but for its line and one red ochre spot on the head, rows 3 and 4 bare with three and four grey patches. 12% of the paint is worn away, none of the line and none of the head spot. The height is the same carving in all four rows: the face 128, the top about 30 above it (highest 158), the scales and rays cut back to 115. The mask is white over the grey patches (about 15% of each fish). The drawing is more regular than a tomb's, and its mirroring shows. |
 | `stone-h.webp` | 1024 × 1024, 167 KB | The height of a dressed limestone face, made in code, not by the image model: short parallel chisel strokes in drifting directions, fine pores, a few deeper pocks and hairline flaws. It averages 128 and stays low (nearly all within 10 of it; the deepest pock is 108, nothing is above 133), so the carvings stand well clear. It tiles on all four sides; the dressing is even all over, with no large feature to repeat. |
 | `koi-c-bold.webp`, `koi-h-bold.webp`, `koi-mask-bold.webp` | 1024 × 1536, 177 KB, 88 KB and 14 KB | The koi sheet cut bolder, for the size a koi is drawn at: the same fish, outline and places; about 16 scales along the body where there were 30, and 3 across where there were 6, their lines 6 pixels where they were 3; fewer, wider fin rays; plain round eyes; an outline of 6 pixels. The patches are where they were and the mask is the same file as `koi-mask.webp`, byte for byte. The height is cut from the new lines (face 128, highest 158, lowest 115). The scales are drawn by rule and look it; a few joins at the fins' roots are angular. |
 
@@ -455,21 +455,17 @@ the revised renders are approved.
   little.
 - **To change them:** they are made by scripts kept on the owner's machine (one command a sheet,
   about two minutes), so a different facing, size, frame count or light is cheap to ask for.
-- **`lilies.webp`**, 1024 × 768, 157 KB: eleven motifs in a 4 × 3 grid of 256-pixel cells, from straight
-  above, like softened photographs, even light, no shadow. Row 1, summer: a large whole pad (215
-  pixels across), a large one with a notch, a medium one with a notch (170), a small young one (120).
-  Row 2, autumn, the same four withered: yellowing with a brown curled edge, brown and torn with a
-  notch, brown with a notch, small and yellow-brown. Row 3: a white flower and a pink one, open (150
-  across), a bud (98 × 120), and an empty cell. The leaves are closer to lotus leaves than to a water
+- **`lilies-768.webp`**, 768 × 576, 77 KB: eleven motifs in a 4 × 3 grid of 192-pixel cells, from
+  straight above, like softened photographs, even light, no shadow. Row 1, summer: a large whole pad
+  (161 pixels across), a large one with a notch, a medium one with a notch (128), a small young one
+  (90). Row 2, autumn, the same four withered: yellowing with a brown curled edge, brown and torn
+  with a notch, brown with a notch, small and yellow-brown. Row 3: a white flower and a pink one,
+  open (112 across), a bud, and an empty cell. The leaves are closer to lotus leaves than to a water
   lily's, their sheen is slight, and the flowers are a little cupped. In use in a preview build:
   `drawPads()` draws the water's pads from it (whole or notched by size, the withered row laid over the
   green as autumn comes) and their flowers (a bud as summer comes, open at its height, none in autumn).
   The sheet is fetched once the pond has settled, never on the first screen, and the drawn pads stand
-  until it has come. It is 157 KB, fetched on every visit's water look once shipped: a lighter sheet
-  is asked for in the brief before that.
-- **`lilies-768.webp`**, 768 × 576, 77 KB: the same sheet for shipping, made from the same original, the
-  grid and the order unchanged, the cells 192 pixels (every position is `lilies.webp`'s × 3/4). Once
-  the code reads this one, `lilies.webp` can go.
+  until it has come. The first sheet, with cells of 256, is gone.
 
 
 #### What is drawn by code, and what should be a picture
@@ -610,8 +606,8 @@ like clear water over stones, nothing looks pasted on.
    a normal map `bed-n.webp`, 2048 × 1152, opaque, river pebbles from straight above in soft even
    light, seamless left to right, under 150 KB together.
 2. Koi: keep the pond's own. No sheet wanted.
-3. Delivered and in use (preview): `lilies.webp` (summer pads, autumn pads, two flowers and a bud).
-   Delivered, to change over to: `lilies-768.webp`, the same sheet with cells of 192. P1
+3. Delivered and in use (preview): `lilies-768.webp` (summer pads, autumn pads, two flowers and a
+   bud; cells of 192). P1
    `afloat.webp`, 1024 × 512, 4 × 2: two cherry petals, three autumn leaves (maple, ginkgo, oak), a
    folded paper boat from above in three tones.
 4. Ornaments: none.
@@ -704,7 +700,7 @@ dark painted game mural.
 7. Seal: on the ink sheet.
 
 **Star chart.** Judge it by: a plate from an eighteenth-century celestial atlas.
-1. Delivered and in use: `plate`. Delivered, to wire in: `grid.webp`, a grid that tiles.
+1. Delivered and in use: `grid.webp`, a grid that tiles (the plate it replaced is gone).
 2. Delivered and in use: `koi-figures`. P1: the same to the common spec (four rows,
    outline and engraved scales only, with a mask of where a visitor's colour tints the line).
 3. P1 `nebulae.webp`, 1024 × 512, 4 × 2: engraved discs and wreaths that stand for the lily pads
@@ -722,7 +718,8 @@ lighter raised, darker cut in; opaque) and `-c` the faded paint over it (Egyptia
 green `#5E8F6A`, red ochre `#A8482C`, yellow `#D6A23E`, black line; transparent where bare).
 1. Delivered and in use: `stone-h.webp`, the limestone face.
 2. Delivered and in use: `koi-h.webp`, `koi-c.webp` + `koi-mask.webp`, to the common spec.
-   Delivered, to wire in: the bolder cut, `koi-c-bold.webp`, `koi-h-bold.webp`, `koi-mask-bold.webp`.
+   Delivered and in use: the bolder cut, `koi-c-bold.webp`, `koi-h-bold.webp`, `koi-mask-bold.webp`
+   (the first cut is gone).
 3. Delivered and in use: `fish`, `lotus`, `frieze`. P1 `papyrus`, 512 × 1024, a papyrus clump; `duck`, 512 ×
    512, a duck in profile.
 4. P1 `cartouche`, 512 × 768, an empty cartouche ring, upright, for the solar term. Nothing in it.

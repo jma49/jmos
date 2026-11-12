@@ -776,7 +776,7 @@ const mixHex = (a, b, t) => {
     y = n(b);
   return `rgb(${x.map((v, i) => Math.round(v + (y[i] - v) * t)).join(',')})`;
 };
-// The water's own lily pads and flowers as pictures (public/pond/water/lilies.webp): a preview build
+// The water's own lily pads and flowers as pictures (public/pond/water/lilies-768.webp, cells of 192): a preview build
 // fetches the sheet once the pond has settled, never on the first screen, and the drawn pads stand until then.
 let waterLily = null;
 function drawPads() {
@@ -802,10 +802,10 @@ function drawPads() {
       c.translate(x * W, y * H);
       c.rotate(rot);
       c.globalAlpha = Math.min(1, grow * 1.6);
-      c.drawImage(waterLily, ci * 256, 0, 256, 256, -d / 2, -d / 2, d, d);
+      c.drawImage(waterLily, ci * 192, 0, 192, 192, -d / 2, -d / 2, d, d);
       if (AM.brown > 0.02) {
         c.globalAlpha = Math.min(1, grow * 1.6) * Math.min(1, AM.brown * 1.25);
-        c.drawImage(waterLily, ci * 256, 256, 256, 256, -d / 2, -d / 2, d, d);
+        c.drawImage(waterLily, ci * 192, 192, 192, 192, -d / 2, -d / 2, d, d);
       }
       c.restore();
     }
@@ -913,7 +913,7 @@ function drawPads() {
       const open = AM.bloom > 0.55,
         ci = open ? Math.floor(r0 * 5) % 2 : 2,
         d = (big ? 92 : 72) * (0.6 + 0.4 * AM.bloom) * (open ? 1 : 0.8);
-      c.drawImage(waterLily, ci * 256, 512, 256, 256, clamp(x * W, d / 2, W - d / 2) - d / 2 + Math.cos(rot) * r * 0.1, y * H - r * 0.12 - d / 2, d, d);
+      c.drawImage(waterLily, ci * 192, 384, 192, 192, clamp(x * W, d / 2, W - d / 2) - d / 2 + Math.cos(rot) * r * 0.1, y * H - r * 0.12 - d / 2, d, d);
     } else if (real) {
       // (no flower out of its season)
     } else if (lily && kind === 1 && (AM.bloom > 0.05 || AM.petals > 0.3)) {
@@ -5054,9 +5054,10 @@ function loadWaves() {
 function paintWaves() {
   if (glOK && waves && waves.complete && waves.naturalWidth) sendPic(waves, gl.CLAMP_TO_EDGE, true);
 }
-// The star chart's plate: its grid, cut inside the frame, laid to cover the pond; the texture repeats it
-// mirrored, so the grid runs on past every edge as the sky turns. The koi's figure is kept as one row to the
-// koi sheets' measure, for Koi.drawSprite to bend along a constellation.
+// The star chart's grid: a picture that tiles on all four sides is the look's texture as it is, repeated,
+// with smaller copies (lookStars lays a tile over 520 pixels of the pond), so the grid runs on past every
+// edge as the sky turns. The koi's figure is kept as one row to the koi sheets' measure, for
+// Koi.drawSprite to bend along a constellation.
 let starImgs = null,
   starFigure = null;
 function loadStars() {
@@ -5072,7 +5073,7 @@ function loadStars() {
     im.onerror = () => report(new Error(`no picture at ${STARS[k]}`), 'pond pictures');
     im.src = STARS[k];
   };
-  get('plate', () => paintPic());
+  get('grid', () => paintPic());
   get('figures', (im) => {
     const [x, y, w, h] = STARS.figure,
       k = 900 / w,
@@ -5085,17 +5086,7 @@ function loadStars() {
 }
 const FIGURE = { rowH: 384, x1: 962 };
 function paintPlate() {
-  if (!glOK || !starImgs || !starImgs.plate) return;
-  const [gx, gy, gw, gh] = STARS.grid,
-    k = Math.min(2048 / W, glc.width / W, 2),
-    cv = document.createElement('canvas');
-  cv.width = Math.max(1, Math.round(W * k));
-  cv.height = Math.max(1, Math.round(H * k));
-  const f = Math.max(cv.width / gw, cv.height / gh),
-    w = cv.width / f,
-    h = cv.height / f;
-  cv.getContext('2d').drawImage(starImgs.plate, gx + (gw - w) / 2, gy + (gh - h) / 2, w, h, 0, 0, cv.width, cv.height);
-  sendPic(cv, gl.MIRRORED_REPEAT);
+  if (glOK && starImgs && starImgs.grid) sendPic(starImgs.grid, gl.REPEAT, true);
 }
 // 青花's rim: the lotus scroll tiled along all four sides (as many whole turns as fit, stretched a little to
 // close), the corner piece in each corner, mirrored. It is the frame the page stands inside.
@@ -6549,8 +6540,8 @@ if (PREVIEW)
       padsNow();
       invalidate();
     };
-    im.onerror = () => report(new Error('no picture at /pond/water/lilies.webp'), 'pond pictures');
-    im.src = '/pond/water/lilies.webp';
+    im.onerror = () => report(new Error('no picture at /pond/water/lilies-768.webp'), 'pond pictures');
+    im.src = '/pond/water/lilies-768.webp';
   });
 if (PREVIEW)
   settled.then(loadSprites).then(

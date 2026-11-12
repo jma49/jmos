@@ -57,7 +57,7 @@ pass, and the move from drawing things in code to painted pictures. How the pond
 
 | Look | State | Pictures in use | Delivered, not used | Wrong or unverified |
 | --- | --- | --- | --- | --- |
-| Water | Live. Unchanged but for the seal on a koi. In a preview build the dove and the spider are sprites. | `water/dove`, `water/spider` (preview only; placeholders, being redone), `water/lilies` (preview only) | none | Petals and the dragonfly are still drawn in code. The pictured pads were seen in summer and autumn at 1280 × 800; shipping them means 157 KB more on every visit once the pond has settled; a lighter sheet is asked for in the brief. The sprites were seen in frame sequences in the water, ink and the blueprint (flight, landing, sitting, preening, take-off); the other looks' dress was made but not looked at. The spider reads as a dark soft shape on its pad, as the model did. |
+| Water | Live. Unchanged but for the seal on a koi. In a preview build the dove and the spider are sprites. | `water/dove`, `water/spider` (preview only; placeholders, being redone), `water/lilies-768` (preview only) | none | Petals and the dragonfly are still drawn in code. The pictured pads were seen in summer and autumn at 1280 × 800; shipping them means 77 KB more on every visit, once the pond has settled. The sprites were seen in frame sequences in the water, ink and the blueprint (flight, landing, sitting, preening, take-off); the other looks' dress was made but not looked at. The spider reads as a dark soft shape on its pad, as the model did. |
 | Ink | Live; Jincheng's favourite and the benchmark. Seasonal motif is now a painting; seasons put right. | `ink/willow`, `lotus`, `reeds`, `plum` | none | Checked at 1280, 1440, 2000 and phone in summer only. Dry lotus stems asked for, not drawn. The seals are still the brush face, not seal script. |
 | Ukiyo-e | Live. Its arrival has a carved-wave front. In a preview build: the great crests on that front, wavelets round a press, painted koi. | `ukiyo/waves`, `koi` + mask (preview only) | none | The crests were judged in a 640 × 400 frame sequence only. The press's wavelets are small beside its two swell rings; whether the rings should thin is a matter of taste on a real screen. |
 | Glow | Live. Goes dark, then relights in rings. | none wanted | none | Seen once in a frame sequence. |
@@ -66,8 +66,8 @@ pass, and the move from drawing things in code to painted pictures. How the pond
 | Monet | Preview. Rebuilt on its paintings: bed, lilies, koi. | `monet/bed`, `bed-1280`, `bed-tall`, `lilies`, `koi-v2` + mask | `strokes`, `canvas` | The press is a soft dab from the shader, not the stamps. The dove is only dimmed. |
 | 青花 | Preview. Painted rim and corners; painted koi with visitors' colours through the mask; the frame is the page's margin. | `qinghua/rim`, `corner`, `koi` + mask | none | Lotus and the pads are still shader outlines. The tint through the mask has never been seen with a second visitor. |
 | Dunhuang | Preview. The flying figures are the wall; mural koi; nothing painted under the controls. | `dunhuang/feitian-pipa`, `feitian-flowers`, `feitian-far`, `sky-flowers`, `border`, `cloud-trail`, `halo`, `koi` + mask | `caisson`, `feitian-pipa-2560` (never fetched while the picture texture is at most 2048 across: see pond.md) | The caisson has no place. Seen at 1280 × 800, 1920 × 900 and a 390 × 844 phone; shorter phones are held by a test, not seen. |
-| Star chart | Preview. Koi drawn as constellations in code, the atlas's koi in outline behind each; the plate's grid in the sky. | `stars/plate`, `koi-figures` | none | Seen once, at 1280 × 800, a few seconds in. The grid repeats mirrored: where a mirror line crosses the window the meridians kink; not seen after minutes of turning. |
-| Egyptian relief | Preview. Built: carved and painted limestone under a light that goes round with the day; zigzag water; the frieze and a marsh of the delivered carvings; a chisel's strike for a press; sand blown off as it arrives; the zigzag gesture; the seal 刻. The blackboard is gone from the code. | `relief/fish`, `lotus`, `frieze` (each `-h` and `-c`), `koi-c`, `koi-h` + mask, `stone-h` | none | Seen at 1280 × 800 (dawn, noon, night), 1440 × 900 (dusk, and dawn with its own koi and stone), a phone in winter, and its arrival and a press in a 640 × 400 frame sequence. The carved koi are small on screen, so their cut scales are fine: to be judged on a real screen. Chapters, the album's stamp, the dove and the spider in its dress, and a second language were not looked at. |
+| Star chart | Preview. Koi drawn as constellations in code, the atlas's koi in outline behind each; the plate's grid in the sky. | `stars/grid`, `koi-figures` | none | Seen at 1280 × 800, a few seconds in. The grid tiles, so it has no edge as the sky turns; it is quieter than the framed plate it replaced. |
+| Egyptian relief | Preview. Built: carved and painted limestone under a light that goes round with the day; zigzag water; the frieze and a marsh of the delivered carvings; a chisel's strike for a press; sand blown off as it arrives; the zigzag gesture; the seal 刻. The blackboard is gone from the code. | `relief/fish`, `lotus`, `frieze` (each `-h` and `-c`), `koi-c-bold`, `koi-h-bold` + mask, `stone-h` | none | Seen at 1280 × 800 (dawn, noon, night), 1440 × 900 (dusk, and dawn with its own koi and stone), a phone in winter, and its arrival and a press in a 640 × 400 frame sequence. The carved koi are small on screen, so their cut scales are fine: to be judged on a real screen. Chapters, the album's stamp, the dove and the spider in its dress, and a second language were not looked at. |
 
 Jincheng's words that still stand:
 
@@ -115,8 +115,8 @@ koi moved to the common sheet. What is left of those:
 2. **Ukiyo-e, to ship:** the crests and the painted koi are behind the preview flag (`CRESTS` in the
    pass, `KOI_SHEETS`). Shipping them means the look fetches its pictures in a release build: a
    decision for Jincheng once he has seen them on a real screen.
-3. **Star chart:** look at the grid after the sky has turned a while; if the mirror line's kink shows,
-   ask for a plate that tiles.
+3. **Star chart:** whether the quiet grid is enough, or the atlas wants its equator and ecliptic back
+   as a second, fixed layer: Jincheng's to say on a real screen.
 4. **Dunhuang:** a place for the caisson (the album page or a chapter's header for this look; the
    wall's left is the title's). `feitian-pipa-2560.webp` and its line in
    `scripts/check-public-sizes.mjs` can go unless the picture texture is to grow past 2048.
@@ -155,10 +155,9 @@ koi moved to the common sheet. What is left of those:
 12. **Performance on a real Mac with `?perf`:** frame rate, GPU time and scale in each look and
     through each arrival. Nothing here could measure that (see the traps).
 
-Asked of the local thread since this page was first written (each is marked "new" in the art brief
-in pond.md): a lighter lily sheet for the water, a grid that tiles for the star chart, and a bolder
-cut of the relief's koi. The relief's koi sheet and stone face came while the look was being built
-and are in use.
+Asked of the local thread since this page was first written, delivered, and in use: the relief's koi
+sheet and stone face, then a lighter lily sheet for the water, a grid that tiles for the star chart,
+and a bolder cut of the relief's koi. The files each replaced are deleted.
 
 ## 5. Rules learnt the hard way
 
