@@ -1841,7 +1841,8 @@ let paneN = 0,
 // The panes are read from the page only while something there is moving (a transition, an animation,
 // a resize or a scroll); otherwise the last reading stands, and the frame touches no style or layout.
 let panesUntil = 0;
-const panesLive = () => (panesUntil = performance.now() + 700);
+const panesLive = () => (panesUntil = performance.now() + 700),
+  panesFor = (ms) => (panesUntil = Math.max(panesUntil, performance.now() + ms));
 for (const ev of ['transitionrun', 'transitionend', 'animationstart', 'animationend', 'scroll'])
   addEventListener(
     ev,
@@ -2657,6 +2658,35 @@ function alignInk(sel) {
     s.style.setProperty('--dy', `${dy.toFixed(2)}px`);
   }
 }
+// A look may put the page's blocks elsewhere (青花's rim insets them, the Dunhuang wall's bands lift the clock
+// and the controls, each face sets the title a little differently). They glide from where they stood to
+// where the look puts them, as they come back into view: measured before and after the change, then eased
+// from the old place by a transform laid over whatever transform they have. Under reduced motion they just change.
+const GLIDES = ['#lead', '.alm', '.hud .bl', '.hud .cmd', '.hud .br', '.gauge', '.preview'];
+function glide(change) {
+  const els = RM ? [] : GLIDES.map((q) => $(q)).filter((el) => el && el.animate),
+    was = els.map((el) => el.getBoundingClientRect());
+  change();
+  let moved = false;
+  els.forEach((el, i) => {
+    const a = was[i],
+      b = el.getBoundingClientRect();
+    if (!a.width || !b.width) return;
+    // by the corner the block hangs from: whichever side of the pond it is nearer
+    const dx = a.left + a.width / 2 < W / 2 ? a.left - b.left : a.right - b.right,
+      dy = a.top + a.height / 2 < H / 2 ? a.top - b.top : a.bottom - b.bottom;
+    if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) return;
+    moved = true;
+    el.animate([{ transform: `translate(${dx.toFixed(2)}px,${dy.toFixed(2)}px)` }, { transform: 'translate(0,0)' }], {
+      duration: GLIDE_MS,
+      easing: 'cubic-bezier(0.22, 0.8, 0.2, 1)',
+      composite: 'add'
+    });
+  });
+  // the glass under a gliding control is drawn where the control is, all the way
+  if (moved) panesFor(GLIDE_MS + 80);
+}
+const GLIDE_MS = 640;
 const setInk = (on, from) => setLook(on ? 'ink' : 'water', from || $('#inkBtn'));
 function setLook(name, from) {
   if (!LOOKS.includes(name) || name === look) return;
@@ -2700,22 +2730,23 @@ function setLook(name, from) {
   $('#inkBtn').setAttribute('aria-pressed', String(inkOn));
   clearTimeout(lookTimer);
   lookTimer = setTimeout(
-    () => {
-      pond.toggleAttribute('data-ink', inkOn);
-      if (life && life.dress) {
-        life.dress(name);
-        spiderSig = '';
-      }
-      if (inkOn) {
-        paintInk();
-        placeKuan();
-        alignSeg();
-      }
-      if (name === 'water') delete pond.dataset.look;
-      else pond.dataset.look = name;
-      speak();
-      delete pond.dataset.inking;
-    },
+    () =>
+      glide(() => {
+        pond.toggleAttribute('data-ink', inkOn);
+        if (life && life.dress) {
+          life.dress(name);
+          spiderSig = '';
+        }
+        if (name === 'water') delete pond.dataset.look;
+        else pond.dataset.look = name;
+        speak();
+        if (inkOn) {
+          paintInk();
+          placeKuan();
+          alignSeg();
+        }
+        delete pond.dataset.inking;
+      }),
     name === 'water' ? 900 : 700
   );
   audio();

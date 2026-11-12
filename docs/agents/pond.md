@@ -712,6 +712,11 @@ air) and ASCII (the pond in characters).
   runs the front for any of them. Ice and snow are drawn in each look's
   own idiom (`gIce`, `gHit`, `snowOn()`), and cracking the ice works in
   all of them.
+- **The page through a change:** the title page's type fades out as a look comes and back in its
+  face; the controls only dim. A look that puts the page's blocks elsewhere (青花's rim, the Dunhuang
+  wall's bands, a face's own measure) has them glide there from where they stood (`glide()`, the
+  blocks in `GLIDES`); a new block that a look can move goes in that list. Under reduced motion they
+  just change.
 - **Finding them** (`gest` in `engine.js`), each with a cue while it
   builds (`drawGesture()`):
   - ink: hold still on the water for 1.2 s (I and 墨 still work);

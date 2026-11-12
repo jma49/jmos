@@ -2592,6 +2592,10 @@ button.more:hover {
   opacity: 0;
   transition-duration: 0.3s;
 }
+/* the controls only dim: they stay where a hand can find them, and glide to the look's places (glide()) */
+#pond[data-inking] .hud {
+  opacity: 0.4;
+}
 /* the pond's own type takes its colour from the pond, so ink can turn it dark */
 #pond {
   color: var(--mist);

@@ -45,6 +45,7 @@ pass, and the move from drawing things in code to painted pictures. How the pond
   | `trans.cjs`, `koi.cjs` | Frame sequences on a virtual clock: a look arriving and leaving (`PRESS=x,y` adds a press and what it leaves); a look's painted koi swimming, turning and curling (`koi.cjs <dist> <look>`). |
 | `life.cjs` | The dove and the spider through their states, as strips of crops round each, in the looks given (`HOUR` sets the time of day). It opens the page with `?perf`, which hands their places to `window.__pond`. Slow: six minutes a look and more. |
 | `virtual.cjs` | The virtual clock the newer tools share. |
+| `glide.cjs` | The layout glide between looks, measured: where each block stood, where it is drawn the moment the look's styles apply, where it ends. |
   | `terms.cjs` | Ink in each of the 24 solar terms. |
   | `ab.cjs`, `abdiff.py` | A deterministic A/B of two builds (seeded random, virtual clock, frames stepped by hand) and the largest pixel difference. |
   | `gest5.cjs` | Each look's gesture made with a real pointer, and which look arrives. |
@@ -119,11 +120,16 @@ koi moved to the common sheet. What is left of those:
 4. **Dunhuang:** a place for the caisson (the album page or a chapter's header for this look; the
    wall's left is the title's). `feitian-pipa-2560.webp` and its line in
    `scripts/check-public-sizes.mjs` can go unless the picture texture is to grow past 2048.
-5. **Layout glides between looks (FLIP).** Today the title page and controls fade out while a look
-   arrives and come back in their new places. Wanted: they stay visible where the look allows and
-   move from the old box to the new (measure, apply, transform back, ease), text that changes face
-   cross-fading in place. At least: 青花's inset, Dunhuang's offsets, font-metric shifts. Check with
-   a performance trace for reflow.
+5. **Layout glides between looks: done, to be felt on a real screen.** When a look's styles apply,
+   the title block, the clock, the three groups of controls, the gauge and the Preview pill ease from
+   where they stood to where the look puts them (`glide()` in `engine.js`: measured before and after,
+   a transform laid over their own, 640 ms), and the controls only dim to 0.4 through a change instead
+   of vanishing. The type of the title page still fades out and back, since its face changes: a true
+   cross-fade in place would need the old look's styles kept on a copy, which the selectors
+   (`#pond[data-look]`) don't allow without a rewrite. `tools/pond/glide.cjs` prints each block's
+   place before, at the swap and after; it was right for 青花 and Dunhuang at 1280 × 800. Not done:
+   a performance trace for reflow (two rounds of `getBoundingClientRect` on seven elements, once a
+   change of look).
 6. **Egyptian relief look.** The brief is in pond.md ("Egyptian relief" in the art brief) and in
    this session's notes there: carved and painted limestone lit by a raking light that follows the
    time of day; zigzag water; no inscriptions; press as a chisel strike; arrival as sand blowing
