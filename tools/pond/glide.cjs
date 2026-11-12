@@ -19,7 +19,11 @@ const { chromium } = require('playwright');
         new Promise((done) => {
           const Q = ['#lead', '.alm', '.hud .bl', '.hud .cmd', '.hud .br', '.gauge', '.preview'],
             pond = document.querySelector('#pond'),
-            at = () => Q.map((q) => { const r = document.querySelector(q).getBoundingClientRect(); return [Math.round(r.left), Math.round(r.top), Math.round(r.right), Math.round(r.bottom)]; }),
+            at = () =>
+              Q.map((q) => {
+                const r = document.querySelector(q).getBoundingClientRect();
+                return [Math.round(r.left), Math.round(r.top), Math.round(r.right), Math.round(r.bottom)];
+              }),
             before = at();
           new MutationObserver((_, ob) => {
             if ((pond.dataset.look || 'water') !== l) return;
