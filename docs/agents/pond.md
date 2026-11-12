@@ -495,7 +495,7 @@ light and refraction, the glass) stays in the shader.
 | Ink: far hills, mist | canvas washes, CSS | Good | Keep; hills later | `ink/hills` later |
 | Seals (ten looks and 锦程) | the brush face in CSS | A family, but running script, not seal script | Replace | `ink/seals` (asked) |
 | Ink: inscription | the brush face | Good | Keep | none |
-| Festival things (preview) | canvas paths | Lanterns pass; the dragon boat is crude | Replace the boat and the river lanterns | `water/festival` sheet, later |
+| Festival things (preview) | canvas paths | Lanterns pass; the dragon boat is crude | Replace the boat and the lanterns | asked: `water/dragon-boat`, `water/lanterns` |
 | Borders and frames | pictures (青花's rim, the Dunhuang band, the relief's frieze) | In keeping | Done | in use (`qinghua/rim`, `corner`; `dunhuang/border`; `relief/frieze`) |
 | Solar-term block, chapter headers, the album's paper | type and CSS | In keeping | Keep | per look only where asked below |
 | Presses | shader, per look | Good where they are physics (rings, blots); ukiyo-e's claws are stiff | Ukiyo-e's replaced in a preview build | in use (`ukiyo/waves`) |
@@ -619,6 +619,22 @@ like clear water over stones, nothing looks pasted on.
    from in a preview build; the revised ones replace them.
 7. P1 `dragonfly.webp`, 1024 × 256, four frames of a dragonfly from above, wings in four positions
    of a beat.
+8. **P0, new:** the dragon boat of the Dragon Boat festival, which is three paths today and reads as
+   a red sliver. `dragon-boat.webp`, 1024 × 512, two frames stacked in rows of 256, the boat from
+   straight above, bow to the right, about 940 pixels long and at most 110 across with its paddles,
+   centred in its row. A long narrow hull in red lacquer with a band of gold scales along each side;
+   a carved dragon's head at the bow (horns, whiskers, an open mouth, in gold and green) and its tail
+   curling up at the stern; a drummer with a drum facing the crew just behind the head; two files of
+   nine paddlers; a helmsman with a long oar at the stern. Frame 1: the paddles reaching forward,
+   blades just entering the water. Frame 2: the stroke's end, blades back. The hull, the head, the
+   drum and the helmsman are the same to the pixel in both frames; only the paddlers and paddles
+   differ. No water, wake, spray or shadow (the pond draws its own wake). Drawn about 240 pixels
+   long on screen, so keep the shapes bold: a head that reads at that size matters more than
+   detail. In the manner of the water look's own pictures (like softened photographs). Under 120 KB.
+9. **P1, new:** `lanterns.webp`, 512 × 256, two cells of 256, from straight above: a river lantern
+   (a paper lotus of pale pink petals round a small candle) and a red paper lantern (round, gold
+   caps top and bottom, ribs showing). No glow painted (the pond adds the light), no shadow. Each
+   is drawn about 40 pixels across. Under 40 KB.
 
 **Ink** (the benchmark; Jincheng's favourite). Judge it by: a Song or Yuan album leaf; empty paper
 is most of it.
