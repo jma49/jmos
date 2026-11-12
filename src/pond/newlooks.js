@@ -458,7 +458,8 @@ vec3 lookRelief(){
   c=mix(c,mix(pc.rgb/max(pc.a,1e-3),stone,.18),pc.a*.92);
   c=mix(c,mix(mix(grn,red,clamp((pcol.r-pcol.g)*2.5,0.,1.)),stone,.2),pd.a*(.35+.5*held));
   vec3 fp=mix(mix(vec3(.9,.87,.8),ylw,clamp((fcol.r-fcol.b)*1.7-.1,0.,1.)),red,smoothstep(.2,.5,rd));
-  c=mix(c,mix(mix(fp,fcol,uSprite),stone,.12),f0.a*mix(.6+.35*held,(1.-fbare)*.92,uSprite));
+  // (under the title's type the koi are only faintly there, as in the other looks)
+  c=mix(c,mix(mix(fp,fcol,uSprite),stone,.12),f0.a*mix(.6+.35*held,(1.-fbare)*.92,uSprite)*(1.-gCalm*.72));
   c=mix(c,mix(tp.rgb/max(tp.a,1e-3),stone,.45),tp.a*.7);
   c=mix(c,dark,clamp(max(max((fa-fb)*3.4,abs(pd.a-pb)*2.6),abs(tp.a-tb)*2.4),0.,1.)*.7*flt);
   c=mix(c,stone*1.06,bare);

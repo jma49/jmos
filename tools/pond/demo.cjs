@@ -1,8 +1,10 @@
 // @ts-nocheck (a scratch tool kept from the session: see docs/agents/pond-handoff.md)
 // the demo's screenshots: node demo.cjs <dist> <stamps|album|looks|winter>
 const { chromium } = require('playwright');
-const ALL = ['ink', 'ukiyo', 'glow', 'blueprint', 'ascii', 'monet', 'qinghua', 'dunhuang', 'stars', 'relief'],
-  NEW = ALL.slice(5);
+// (LOOKS=a,b limits the stamps, looks and titles to those looks)
+const EVERY = ['ink', 'ukiyo', 'glow', 'blueprint', 'ascii', 'monet', 'qinghua', 'dunhuang', 'stars', 'relief'],
+  ALL = process.env.LOOKS ? process.env.LOOKS.split(',') : EVERY,
+  NEW = process.env.LOOKS ? ALL : EVERY.slice(5);
 const out = __dirname + '/demo/';
 (async () => {
   const [, , dir, what] = process.argv;
@@ -93,7 +95,7 @@ const out = __dirname + '/demo/';
       });
     }
   } else if (what === 'album') {
-    const states = { empty: found([]), part: found(['ink', 'glow', 'monet', 'stars', 'ukiyo', 'ascii']), full: found(ALL) };
+    const states = { empty: found([]), part: found(['ink', 'glow', 'monet', 'stars', 'ukiyo', 'ascii']), full: found(EVERY) };
     for (const [st, seals] of Object.entries(states))
       for (const [g, phone] of [
         ['en', false],
