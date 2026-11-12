@@ -18,11 +18,26 @@
   --rule: rgba(23, 35, 31, 0.16);
   --koi: #e7603a;
   --gold: #e6b144;
-  --display: 'Cormorant Garamond', 'Zhi Mang Xing', 'Songti SC', 'Noto Serif CJK SC', 'Source Han Serif SC', Georgia, serif;
-  --body: 'Zhi Mang Xing', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', system-ui, sans-serif;
-  --mono: var(--body);
   --keys: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
-  --cjk: 'Zhi Mang Xing', 'Cormorant Garamond', 'Songti SC', 'Noto Serif CJK SC', 'Source Han Serif SC', 'SimSun', serif;
+  /* The type is built from two parts: the CJK face, which has only CJK in it (the brush for Chinese,
+     kana.css for Japanese, loaded with looks.css), and the look's Latin. Each is swapped on #pond, where these
+     are worked out. */
+  --cjk-d: 'Zhi Mang Xing';
+  --cjk-b: 'Zhi Mang Xing';
+  --latin-d: 'Cormorant Garamond';
+  --latin-b: -apple-system, BlinkMacSystemFont, 'Segoe UI';
+}
+:root,
+#pond {
+  --display: var(--cjk-d), var(--latin-d), 'Songti SC', 'Noto Serif CJK SC', 'Source Han Serif SC', Georgia, serif;
+  --body: var(--cjk-b), var(--latin-b), 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', system-ui, sans-serif;
+  --mono: var(--body);
+  --cjk: var(--cjk-d), 'Cormorant Garamond', 'Songti SC', 'Noto Serif CJK SC', 'Source Han Serif SC', 'SimSun', serif;
+}
+/* Japanese: Yuji Syuku for what is large, Shippori Mincho to read */
+#pond[lang='ja'] {
+  --cjk-d: 'Yuji Syuku', 'Shippori Mincho';
+  --cjk-b: 'Shippori Mincho';
 }
 html,
 body {
@@ -2545,14 +2560,13 @@ button.more:hover {
 }
 
 /* ---------- ink and paper (I, ⌘K, or 墨): the pond as an ink painting; engine.js draws it ---------- */
+.ink-btn[hidden] {
+  display: none;
+}
 .ink-btn {
   width: 40px;
   padding: 0;
   font: 400 21px / 1 var(--cjk);
-}
-/* 中 / En: the language, apart from the look; En is set in the serif */
-.lang-btn span[lang='en'] {
-  font: italic 400 20px / 1 var(--display);
 }
 #pond[data-speaking] .home,
 #pond[data-speaking] .hud,
@@ -2809,4 +2823,319 @@ button.more:hover {
 }
 #pond[lang='zh'] .alm .txt {
   font-size: 12.5px;
+}
+
+/* ---------- the language in three segments, and each look's colours and type ---------- */
+.seg.pill {
+  position: relative;
+  display: flex;
+  gap: 0;
+  height: 40px;
+  min-width: 0;
+  padding: 3px;
+  box-sizing: border-box;
+}
+/* the one in use: a disc inset 3px on every side, so it sits concentric with the pill's ends, and slides */
+.seg .seg-on {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 34px;
+  height: 34px;
+  border-radius: 17px;
+  background: var(--mist);
+  translate: calc(var(--i, 0) * 34px) 0;
+  transition: translate 0.32s cubic-bezier(0.3, 0.7, 0.2, 1);
+}
+.seg button {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 17px;
+  color: var(--mist-dim);
+  transition: color 0.2s;
+}
+/* each label is set with line-height 1 and centred by flex; alignSeg() measures its ink and nudges it
+   (--dx, --dy) so its visual centre is the cell's */
+.seg button span {
+  display: block;
+  line-height: 1;
+  translate: var(--dx, 0) var(--dy, 0);
+}
+.seg button[lang='en'] {
+  font:
+    600 12.5px / 1 -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    system-ui,
+    sans-serif;
+}
+.seg button[lang='zh'],
+.seg button[lang='ja'] {
+  font:
+    400 18px / 1 'Zhi Mang Xing',
+    serif;
+}
+.seg button:hover {
+  color: var(--mist);
+}
+.seg button[aria-pressed='true'] {
+  color: var(--deep);
+}
+#pond[data-ink] .seg .seg-on {
+  background: #1b1916;
+}
+#pond[data-ink] .seg button[aria-pressed='true'] {
+  color: #f1e9d8;
+}
+/* the pictures in the chapters take the look too */
+#pond[data-look='ukiyo'] .sheet img:not(.mk img) {
+  filter: sepia(0.3) saturate(0.85) contrast(1.05);
+}
+#pond[data-look='blueprint'] .sheet img {
+  filter: grayscale(1) sepia(1) hue-rotate(178deg) saturate(2.4) brightness(0.92);
+}
+#pond[data-look='glow'] .sheet img {
+  filter: saturate(1.3) contrast(1.08) brightness(0.92);
+}
+
+/* Ukiyo-e: a woodblock print. Cream on Prussian blue, vermilion for what is lit; Shippori Mincho for the
+   English, Yuji Syuku for the Japanese. */
+#pond[data-look='ukiyo'] {
+  --deep: #10243f;
+  --mist: #f6edd8;
+  --mist-dim: rgba(246, 237, 216, 0.8);
+  --mist-faint: rgba(246, 237, 216, 0.52);
+  --hair: rgba(246, 237, 216, 0.26);
+  --lift: rgba(246, 237, 216, 0.09);
+  --koi: #e2563a;
+  --gold: #e9b44c;
+  --latin-d: 'Shippori Mincho Latin';
+  --latin-b: 'Shippori Mincho Latin';
+}
+#pond[data-look='ukiyo'][lang='ja'] {
+  --cjk-d: 'Yuji Syuku';
+}
+#pond[data-look='ukiyo'] .hero,
+#pond[data-look='ukiyo'] .toc .go b,
+#pond[data-look='ukiyo'] .sheet h1 {
+  font-weight: 400;
+  text-shadow: 2px 2px 0 rgba(8, 20, 40, 0.5);
+}
+#pond[data-look='ukiyo'] .term-v {
+  color: #e2563a;
+}
+
+/* Glow: the pond at night, lit only by what moves. Orbitron for what is large, Rajdhani to read. */
+#pond[data-look='glow'] {
+  --deep: #02060e;
+  --mist: #e4fdff;
+  --mist-dim: rgba(170, 248, 255, 0.74);
+  --mist-faint: rgba(170, 248, 255, 0.46);
+  --hair: rgba(80, 255, 240, 0.24);
+  --lift: rgba(80, 255, 240, 0.08);
+  --koi: #ff3cac;
+  --gold: #3cffe9;
+  --latin-d: 'Orbitron';
+  --latin-b: 'Rajdhani';
+}
+#pond[data-look='glow'] .hero {
+  font-size: clamp(34px, 4.1vw, 60px);
+  font-weight: 700;
+  line-height: 1.12;
+  letter-spacing: 0.01em;
+}
+#pond[data-look='glow'] .toc .go b,
+#pond[data-look='glow'] .sheet h1 {
+  font-weight: 500;
+  font-size: clamp(20px, 1.9vw, 27px);
+  letter-spacing: 0.04em;
+}
+#pond[data-look='glow'] .hero,
+#pond[data-look='glow'] .toc .go b,
+#pond[data-look='glow'] .sheet h1 {
+  text-shadow:
+    0 0 18px rgba(60, 255, 235, 0.6),
+    0 0 2px rgba(255, 255, 255, 0.5);
+}
+#pond[data-look='glow'] .term-v {
+  color: #ff4fbe;
+  text-shadow: 0 0 16px rgba(255, 60, 180, 0.8);
+}
+#pond[data-look='glow'] {
+  font-weight: 500;
+}
+
+/* Blueprint: a drawing on blue paper. A draughtsman's hand for what is large, a plotter's type to read. */
+#pond[data-look='blueprint'] {
+  --deep: #0a2a5c;
+  --mist: #eaf3ff;
+  --mist-dim: rgba(220, 235, 255, 0.8);
+  --mist-faint: rgba(220, 235, 255, 0.52);
+  --hair: rgba(220, 235, 255, 0.32);
+  --lift: rgba(220, 235, 255, 0.08);
+  --koi: #ffd75a;
+  --gold: #ffd75a;
+  --latin-d: 'Architects Daughter';
+  --latin-b: 'IBM Plex Mono';
+}
+#pond[data-look='blueprint'] .hero {
+  font-weight: 400;
+  font-size: clamp(44px, 5.4vw, 80px);
+}
+#pond[data-look='blueprint'] .toc .go b,
+#pond[data-look='blueprint'] .sheet h1 {
+  font-weight: 400;
+}
+#pond[data-look='blueprint'] .say,
+#pond[data-look='blueprint'] .sheet .lede {
+  font-size: 14.5px;
+}
+#pond[data-look='blueprint'] .toc .row {
+  border-style: dashed;
+}
+
+/* ASCII: the pond in characters. JetBrains Mono for all of it, M PLUS 1 Code for the Japanese; the
+   page stays dark and quiet, so the text on the water is what moves. */
+#pond[data-look='ascii'] {
+  --deep: #050909;
+  --mist: #d9ece6;
+  --mist-dim: rgba(205, 230, 222, 0.74);
+  --mist-faint: rgba(205, 230, 222, 0.46);
+  --hair: rgba(205, 230, 222, 0.2);
+  --lift: rgba(205, 230, 222, 0.07);
+  --koi: #f0a04b;
+  --gold: #f0a04b;
+  --latin-d: 'JetBrains Mono';
+  --latin-b: 'JetBrains Mono';
+}
+#pond[data-look='ascii'][lang='ja'] {
+  --cjk-d: 'M PLUS 1 Code';
+  --cjk-b: 'M PLUS 1 Code';
+}
+#pond[data-look='ascii'] .hero {
+  font-size: clamp(32px, 3.9vw, 56px);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.12;
+}
+#pond[data-look='ascii'] .toc .go b,
+#pond[data-look='ascii'] .sheet h1 {
+  font-weight: 500;
+  font-size: clamp(19px, 1.8vw, 25px);
+  letter-spacing: -0.01em;
+}
+#pond[data-look='ascii'] .say,
+#pond[data-look='ascii'] .sheet .lede {
+  font-size: 14px;
+}
+#pond[data-look='ascii'] .hero::before {
+  content: '> ';
+  color: var(--koi);
+}
+#pond[data-look='ascii'] .term-v {
+  color: var(--koi);
+}
+#pond[data-look='ascii'] .toc .row {
+  border-style: dashed;
+}
+#pond[data-look='ascii'] .sheet img {
+  filter: grayscale(0.6) contrast(1.1) brightness(0.85);
+}
+
+/* ---------- ink as a hanging painting: the season's motif at one edge, hills along the foot, mist, and
+   an inscription with a seal under the solar term (painting.js draws the motif; engine.js lays it on) ---------- */
+#inkArt {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  mix-blend-mode: multiply;
+  opacity: 0;
+  transition: opacity 2.4s ease;
+}
+#pond[data-ink] #inkArt[data-on] {
+  opacity: 1;
+}
+.mist {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 2s ease;
+}
+#pond[data-ink] .mist {
+  opacity: 1;
+}
+.mist i {
+  position: absolute;
+  left: -30%;
+  width: 160%;
+  height: 26vh;
+  background: linear-gradient(180deg, rgba(246, 242, 232, 0), rgba(246, 242, 232, 0.42), rgba(246, 242, 232, 0));
+  filter: blur(18px);
+  animation: mist 90s ease-in-out infinite alternate;
+}
+.mist i:first-child {
+  top: 22%;
+}
+.mist i:last-child {
+  top: 60%;
+  animation-duration: 120s;
+  animation-direction: alternate-reverse;
+}
+@keyframes mist {
+  from {
+    translate: -8% 0;
+  }
+  to {
+    translate: 8% 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mist i {
+    animation: none;
+  }
+}
+.kuan {
+  position: absolute;
+  top: calc(100% + 14px);
+  right: 2px;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+#pond[data-ink] .kuan {
+  display: flex;
+}
+.kuan span {
+  writing-mode: vertical-rl;
+  font:
+    400 15px / 1.1 'Zhi Mang Xing',
+    serif;
+  letter-spacing: 0.12em;
+  color: rgba(27, 25, 22, 0.72);
+}
+.kuan .seal {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 3px;
+  writing-mode: vertical-rl;
+  font:
+    400 12px / 1 'Zhi Mang Xing',
+    serif;
+  color: #f1e9d8;
+  background: #b8382a;
+  box-shadow: inset 0 0 0 1.5px rgba(241, 233, 216, 0.35);
 }

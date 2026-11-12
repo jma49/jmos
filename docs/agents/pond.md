@@ -77,14 +77,75 @@ paper; a new pane or control needs its ink colours there too.
 
 ## Languages
 
-The language is chosen apart from the look: the 中 / En switch beside 墨
-(L; ⌘K) turns the pond's words to plain, natural Chinese, set in the
-brush, and back: the greeting, the contents, the clock, every chapter and
-the timeline's entries. It's remembered (`pond-lang`); a first visit
-takes the browser's language. The words are `ZH` in `content.ts`;
-`L(en, zh)` in `engine.js` picks them, `tr()` lays an entry's Chinese
-over its English, and `speak()` rewrites the page's own words as the
-language changes. A new piece of copy needs its Chinese in `ZH` too.
+The language is chosen apart from the look: the En / 中 / 日 segments
+beside 墨 (L steps through them; ⌘K too) turn the pond's words to plain,
+natural Chinese, set in the brush, or plain Japanese, and back: the
+greeting, the contents, the clock, every chapter and the timeline's
+entries. It's remembered (`pond-lang`); a first visit takes the
+browser's language. The words are `ZH` and `JA` in `content.ts`;
+`L(en, zh)` in `engine.js` picks them (from `ZH`, which points at the
+Japanese when 日 is chosen), `tr()` lays an entry's words over its
+English, and `speak()` rewrites the page's own words as the language
+changes. A new piece of copy needs its Chinese in `ZH` and its Japanese
+in `JA` too.
+
+## Looks, gestures and languages
+
+Six looks ([decision 0026](../decisions/0026-looks-and-gestures.md)):
+water, ink, ukiyo-e (a woodblock print), glow (the pond at night, lit by
+what moves), blueprint (a drawing on blue paper, the koi measured in the
+air) and ASCII (the pond in characters).
+
+- **How they're drawn:** each is a function in the water's shader
+  (`look()`, brought in by `reveal()`); ASCII's characters are the glass
+  pass's (`uAscii`, a strip of glyphs drawn by `atlas()`). `setLook()`
+  runs the front for any of them. Ice and snow are drawn in each look's
+  own idiom (`gIce`, `gHit`, `snowOn()`), and cracking the ice works in
+  all of them.
+- **Finding them** (`gest` in `engine.js`), each with a cue while it
+  builds (`drawGesture()`):
+  - ink: hold still on the water for 1.2 s (I and 墨 still work);
+  - ukiyo-e: stir the water once round;
+  - glow: press the light on the water (the moon's, or the sun's glint
+    by day);
+  - blueprint: draw a long straight line;
+  - ASCII: type five letters that aren't shortcuts within 3 s (each
+    lands on the water at the pointer), or "ascii" or "text" in ⌘K on a
+    phone.
+
+  In a look, a press on the gold koi (mine) brings the water back, from
+  the koi, before whatever lies over it. ⌘K finds the looks when
+  searched, and never lists them.
+- **Weather:** rain falls only where the look can carry it (`RAINY`,
+  `drawRain()`):
+  - in ink as fine dry strokes;
+  - in ukiyo-e as Hiroshige's straight lines;
+  - in ASCII as falling `|` and `/`.
+
+  Glow and blueprint hold it off, and the ⌘K rain command is hidden in a
+  look. In ukiyo-e the swell's bands and foam follow only large crests,
+  so the rain's rings never cut them up.
+- **Sound:** each look has its own sounds (`lookSound()`):
+  - ink: brush and paper;
+  - ukiyo-e: wood and koto;
+  - glow: a soft shimmer;
+  - blueprint: pencil and a ruler's click;
+  - ASCII: keys.
+
+  They play for a press, the ice cracking, a gesture's cue and the look
+  coming in. All are about one loudness, behind the one sound switch.
+- **Languages:** En / 中 / 日, apart from the look. The words are `ZH` and
+  `JA` in `content.ts`, shaped alike. Japanese is set in Yuji Syuku and
+  Shippori Mincho, with M PLUS 1 Code in ASCII and Klee One in blueprint
+  (`kana.css`, written by `kana.test.ts`).
+- **Type:** each look has its own Latin (`--latin-d` and `--latin-b` on
+  `#pond[data-look]`), and each language its CJK (`--cjk-d`, `--cjk-b`).
+  `--display` and `--body` are built from both.
+- **What loads when:** a first visit loads only the water's type
+  (Cormorant and the brush). The looks' faces and the Japanese
+  (`looks.css`: `kana.css` and the @fontsource faces) are linked the
+  first time a look other than ink, or 日, is chosen (`loadType()`). Even
+  then, a face's file loads only when its characters show.
 
 ## Changing it
 
