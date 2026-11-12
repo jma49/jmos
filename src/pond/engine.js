@@ -33,6 +33,8 @@ import {
 } from './seals';
 import { FPS, IDLE_AFTER, due, learnBeat, simSteps } from './clock.js';
 import { PERF, add, count, frameDone, span } from './perf.js';
+import { strokeLifted, strokeMoving, tapsLook } from './gestures';
+import { NEW_COMMANDS, NEW_GLASS, NEW_GLSL, NEW_LAY, NEW_LOOKS, NEW_SID } from './newlooks.js';
 import { SocialError } from '../os/social/errors';
 import { coverOf, loadSongs, music, onMusic, play as playSongAt, setMusicMuted, toggle as toggleSong } from './music';
 import * as people from './people';
@@ -207,8 +209,65 @@ class Koi {
       this.wake = T + 0.22;
     }
   }
+  // In the star chart a koi is a constellation: a few stars along its back and at its fins, joined by thin
+  // lines that bend as it swims, the brightest lettered as an atlas letters them.
+  drawStars(c) {
+    const s = this.spine,
+      S = this.size,
+      at = [0, 2, 4, 7, 9, N - 1],
+      gold = this === host,
+      col = gold ? '255,214,140' : '214,228,255';
+    const nrm = (i) => {
+      const a = s[Math.max(0, i - 1)],
+        b = s[Math.min(N - 1, i + 1)],
+        l = Math.hypot(a.x - b.x, a.y - b.y) || 1;
+      return [-(a.y - b.y) / l, (a.x - b.x) / l];
+    };
+    const [nx, ny] = nrm(3),
+      [tx, ty] = nrm(N - 2),
+      fins = [
+        [s[3].x + nx * S * 0.2, s[3].y + ny * S * 0.2],
+        [s[3].x - nx * S * 0.2, s[3].y - ny * S * 0.2]
+      ],
+      tail = [
+        [s[N - 1].x + tx * S * 0.11 + (s[N - 1].x - s[N - 2].x) * 1.6, s[N - 1].y + ty * S * 0.11 + (s[N - 1].y - s[N - 2].y) * 1.6],
+        [s[N - 1].x - tx * S * 0.11 + (s[N - 1].x - s[N - 2].x) * 1.6, s[N - 1].y - ty * S * 0.11 + (s[N - 1].y - s[N - 2].y) * 1.6]
+      ];
+    c.save();
+    c.globalAlpha = this.alpha * (1 - 0.3 * this.depth);
+    c.strokeStyle = `rgba(${col},0.5)`;
+    c.lineWidth = 0.9;
+    c.beginPath();
+    at.forEach((i, k) => (k ? c.lineTo(s[i].x, s[i].y) : c.moveTo(s[i].x, s[i].y)));
+    for (const f of fins) {
+      c.moveTo(s[2].x, s[2].y);
+      c.lineTo(f[0], f[1]);
+      c.lineTo(s[4].x, s[4].y);
+    }
+    c.moveTo(tail[0][0], tail[0][1]);
+    c.lineTo(s[N - 1].x, s[N - 1].y);
+    c.lineTo(tail[1][0], tail[1][1]);
+    c.stroke();
+    const dot = (x, y, r, fill) => {
+      c.fillStyle = fill;
+      c.beginPath();
+      c.arc(x, y, r, 0, 6.2832);
+      c.fill();
+    };
+    at.forEach((i, k) => {
+      const r = (k === 0 ? 2.6 : k % 2 ? 1.5 : 2) * (S / 100) * 0.9 + 0.6;
+      dot(s[i].x, s[i].y, r * 2.6, `rgba(${col},0.16)`);
+      dot(s[i].x, s[i].y, r, k === 0 && this === you ? 'rgb(255,120,110)' : `rgb(${col})`);
+    });
+    for (const q of [...fins, ...tail]) dot(q[0], q[1], 1.2, `rgba(${col},0.9)`);
+    c.font = "italic 10px 'Cormorant Garamond', Georgia, serif";
+    c.fillStyle = `rgba(${col},0.75)`;
+    ['α', 'β', 'γ'].forEach((g, k) => c.fillText(g, s[at[k]].x + 6, s[at[k]].y - 5));
+    c.restore();
+  }
   draw(c) {
     if (this.alpha <= 0.01) return;
+    if (look === 'stars' && inkR > inkMax * 0.45) return this.drawStars(c);
     const s = this.spine,
       S = this.size,
       HW = S * 0.13,
@@ -852,6 +911,8 @@ function stepYear(dt) {
   pond.toggleAttribute('data-bare', AM.lush < 0.2);
 }
 
+// a preview build has the looks that are still being made (newlooks.js) and their seals
+const PREVIEW = !!import.meta.env.PUBLIC_POND_PREVIEW;
 /* ================= WebGL: the pond into a texture, then the glass over it ================= */
 const VS = `#version 300 es
 in vec2 a; out vec2 vUv; void main(){ vUv=vec2(a.x*.5+.5,.5-a.y*.5); gl_Position=vec4(a,0.,1.); }`;
@@ -903,7 +964,7 @@ void main(){
 // The pond. Three layers lie at three depths (what floats, the koi, the bed) and each is
 // sharp or soft by how far it is from the focus. Ice grows in from the banks over a field
 // of slow noise shared with the ripple simulation, so nothing moves under it.
-const FS = `#version 300 es
+const FS_SRC = `#version 300 es
 precision highp float; in vec2 vUv; out vec4 o;
 uniform sampler2D uBed,uH,uFish,uPads,uTop,uIceN;
 uniform vec2 uRes,uGrid,uMoonPos,uCss; uniform float uTime,uAmb,uCaI,uMoon,uSwell,uFocus,uIce,uSnow,uFog; uniform vec2 uCalm;
@@ -1234,7 +1295,12 @@ void main(){
 // The water pass is built three ways from the one source: all of it (PART 0), for while a look comes in or
 // goes; the water alone (1), with no look shown; and a look alone (2), once one has come in all the way and
 // covers the water. Each draws exactly what the whole would, without the work that wouldn't be seen.
-const fsPart = (n) => FS.replace('\n', `\n#define PART ${n}\n`);
+// A look alone is built for that one look (ONLY), so each is a pass of its own with none of the others in it.
+const FS = FS_SRC.replace(
+  'vec3 look(int s){',
+  `${PREVIEW ? NEW_GLSL : ''}vec3 look(int s){\n#ifdef ONLY\n  s=ONLY;\n#endif\n${PREVIEW ? '  if(s>=6) return lookNew(s);\n' : ''}`
+);
+const fsPart = (n, only) => FS.replace('\n', `\n#define PART ${n}\n${only ? `#define ONLY ${only}\n` : ''}`);
 // The second pass. Inside a pane the picture is blurred and smoked; towards the rim it is
 // pulled sideways as through the edge of a lens, and the rim itself catches the light. In
 // the cold, frost gathers along the rim.
@@ -1291,6 +1357,7 @@ let gl,
   progU = new Map(),
   pcx = null,
   progAt = 0,
+  progAts = [],
   passNow = 0,
   UG = {},
   texH,
@@ -1367,10 +1434,15 @@ const locs = (p) => Object.fromEntries(FS_U.map((n) => [n, gl.getUniformLocation
 // Which build of the water pass draws this frame: a part is used once it has been built (asked without
 // waiting where the browser can say, else after a few seconds); one that failed is never used.
 function waterProg(part) {
+  // a look's own pass is asked for the first time the look is
+  if (part > 1 && !progs[part]) {
+    progs[part] = mk(fsPart(2, part - 1), true);
+    progAts[part] = performance.now();
+  }
   const p = progs[part];
   if (!part || !p) return prog;
   if (progOK[part] === undefined) {
-    if (pcx ? !gl.getProgramParameter(p, pcx.COMPLETION_STATUS_KHR) : performance.now() - progAt < 4000) return prog;
+    if (pcx ? !gl.getProgramParameter(p, pcx.COMPLETION_STATUS_KHR) : performance.now() - (progAts[part] || progAt) < 4000) return prog;
     progOK[part] = !!gl.getProgramParameter(p, gl.LINK_STATUS);
     if (progOK[part]) progU.set(p, locs(p));
   }
@@ -1400,8 +1472,8 @@ function initGL() {
   prog = mk(fsPart(0));
   bedProg = mk(BED);
   glassProg = mk(GLASS);
-  // the water alone and a look alone are built in the background, and used once they're ready
-  progs = [prog, mk(fsPart(1), true), mk(fsPart(2), true)];
+  // the water alone is built in the background now, and each look alone when it is first asked for
+  progs = [prog, mk(fsPart(1), true)];
   pcx = gl.getExtension('KHR_parallel_shader_compile');
   progAt = performance.now();
   const vb = gl.createBuffer();
@@ -2181,8 +2253,8 @@ function drawBugs(c) {
 // A front brings a look in over the one before (`top` over `base`); going back to the water, the front
 // draws in again. Ink: a drop from the switch spreads and turns the pond to paper, and time slows.
 // The other looks are found by gestures on the water (`gest`, below) or by searching ⌘K.
-const LOOKS = ['water', 'ink', 'ukiyo', 'glow', 'blueprint', 'ascii'],
-  SID = { water: 0, ink: 1, ukiyo: 2, glow: 3, blueprint: 4, ascii: 5 };
+const LOOKS = ['water', 'ink', 'ukiyo', 'glow', 'blueprint', 'ascii', ...(PREVIEW ? NEW_LOOKS : [])],
+  SID = { water: 0, ink: 1, ukiyo: 2, glow: 3, blueprint: 4, ascii: 5, ...(PREVIEW ? NEW_SID : {}) };
 // The looks' own type and Japanese (looks.css: kana.css and the looks' faces) load the first time a
 // look or 日 is chosen, so a first visit costs no more than the water and the brush.
 let typeLoad = null;
@@ -2641,7 +2713,7 @@ function drawDove(c) {
   laidIn(c, () => c.drawImage(sits && doveAt ? dovePic : life.canvas, dove.x - half, dove.y - half, half * 2, half * 2));
 }
 // how the look lays the two into the air: ink soaks into the paper, glow adds light; the rest as they are
-const LAY = { ink: ['multiply', 0.8], glow: ['lighter', 0.65], ascii: ['source-over', 0.6] };
+const LAY = { ink: ['multiply', 0.8], glow: ['lighter', 0.65], ascii: ['source-over', 0.6], ...(PREVIEW ? NEW_LAY : {}) };
 function laidIn(c, draw) {
   const l = LAY[look];
   if (!l) return draw();
@@ -3768,7 +3840,8 @@ function commands() {
       ['ukiyo', '浮世絵 Ukiyo-e', 'A woodblock print; or stir the water once round', 'ukiyo ukiyo-e woodblock print hokusai wave japan 浮世絵'],
       ['glow', 'Glow', 'The lights go out; or press the light on the water', 'glow night neon dark light'],
       ['blueprint', 'Blueprint', 'A drawing on blue paper; or draw a long straight line', 'blueprint drawing plan draft ruler'],
-      ['ascii', 'ASCII', 'The pond in characters; or type a few letters', 'ascii text characters terminal type']
+      ['ascii', 'ASCII', 'The pond in characters; or type a few letters', 'ascii text characters terminal type'],
+      ...(PREVIEW ? NEW_COMMANDS : [])
     ].map(([id, label, hint, kw]) => ({
       sec: 'Pond',
       icon: 'brush',
@@ -4292,6 +4365,56 @@ function lookSound(name, what, t, vol) {
     if (what === 'in') for (let i = 0; i < 6; i++) key(t + i * 0.055 + Math.random() * 0.02, v * 0.6);
     else if (what === 'crack') for (let i = 0; i < 3; i++) key(t + i * 0.035, v * 0.7);
     else key(t, v * 0.6);
+  } else if (name === 'monet') {
+    // oil: a loaded brush laid down, soft and short; coming in, three of them
+    if (what === 'in') [0, 0.16, 0.3].forEach((d, i) => (hiss(t + d, 0.16, 700 + i * 160, 0.8, v * 0.5), bubble(t + d, rnd(150, 190), v * 0.5, 0.12)));
+    else if (what === 'crack') hiss(t, 0.1, 1800, 1, v * 0.8);
+    else {
+      hiss(t, 0.14, rnd(650, 900), 0.8, v * 0.5);
+      bubble(t + 0.01, rnd(160, 210), v * 0.6, 0.14);
+    }
+  } else if (name === 'qinghua') {
+    // porcelain rings: a struck bowl coming in, a small clear ting for a press
+    const ting = (at, f, len, k) => {
+      tone('sine', f, at, len, v * k, f * 0.998, 0.002);
+      tone('sine', f * 2.76, at, len * 0.5, v * k * 0.35, undefined, 0.002);
+    };
+    if (what === 'in') {
+      ting(t, 1174.66, 1.6, 0.6);
+      ting(t + 0.22, 1567.98, 1.2, 0.35);
+    } else if (what === 'crack') {
+      hiss(t, 0.03, 5200, 2, v);
+      ting(t + 0.01, 2093, 0.5, 0.4);
+    } else ting(t, rnd(1900, 2300), 0.6, 0.45);
+  } else if (name === 'dunhuang') {
+    // a cave: a low drum far off coming in; a press is dust, dry and brief
+    if (what === 'in') {
+      bubble(t, 82, v * 1.4, 0.5);
+      bubble(t + 0.34, 98, v, 0.4);
+      hiss(t + 0.05, 0.7, 900, 0.5, v * 0.2);
+    } else if (what === 'crack') hiss(t, 0.12, 1400, 0.8, v);
+    else {
+      hiss(t, 0.22, rnd(1500, 2100), 0.6, v * 0.4);
+      bubble(t, rnd(105, 125), v * 0.6, 0.12);
+    }
+  } else if (name === 'stars') {
+    // the sky: thin high lights, far apart
+    if (what === 'in') [987.77, 1318.5, 1975.5].forEach((f, i) => shimmer(t + i * 0.2, f, v * 0.2, 1.8));
+    else if (what === 'crack') shimmer(t, 1760, v * 0.3, 0.8);
+    else {
+      shimmer(t, note() * 4, v * 0.22, 1.2);
+      tone('sine', 2600, t, 0.5, v * 0.12, 900);
+    }
+  } else if (name === 'chalk') {
+    // chalk on a board: taps and a short stroke, the stroke with its little squeak left out
+    const tap = (at, k) => (hiss(at, 0.018, 3400, 2.5, v * k), tone('triangle', rnd(380, 460), at, 0.03, v * k * 0.3));
+    if (what === 'in') {
+      [0, 0.09, 0.2].forEach((d) => tap(t + d, 0.8));
+      hiss(t + 0.3, 0.32, 2600, 1.6, v * 0.45);
+    } else if (what === 'crack') {
+      tap(t, 1);
+      tap(t + 0.06, 0.7);
+    } else tap(t, 0.9);
   }
 }
 function plip(kind, vol) {
@@ -4392,7 +4515,6 @@ $('#snd').addEventListener('click', () => {
    the small mark by the solar term, which shows once there is a seal to see. Someone who has found none is
    shown one quiet line on the water, once. None of it runs in the frame: a stamp is a CSS animation, and
    the line a timer. */
-const PREVIEW = !!import.meta.env.PUBLIC_POND_PREVIEW;
 const VOLS = volumes(PREVIEW);
 let album = readAlbum(load('pond-seals'));
 album = { ...album, visits: album.visits + 1 };
@@ -4786,6 +4908,15 @@ const HOLD = 1.2,
     gest.len += d;
     P.push([x, y]);
     if (P.length > 400) P.splice(1, 1);
+    // the preview looks' strokes (gestures.ts): a rub over one spot, or once round the rim of the screen
+    if (PREVIEW) {
+      const m = strokeMoving(P, W, H);
+      if (m === 'dunhuang' || m === 'qinghua') {
+        const xs = P.map((p) => p[0]),
+          ys = P.map((p) => p[1]);
+        return void toggleLook(m, m === 'qinghua' ? [x, y] : [(Math.max(...xs) + Math.min(...xs)) / 2, (Math.max(...ys) + Math.min(...ys)) / 2]);
+      }
+    }
     // stirred once round, wide enough to be meant
     if (Math.abs(gest.turn) > Math.PI * 1.9 && gest.len > 260) {
       let xs = P.map((p) => p[0]),
@@ -4806,11 +4937,23 @@ const HOLD = 1.2,
       ln = straightness();
     gest.down = false;
     clearTimeout(gest.holdTimer);
+    const drawn = gest.pts;
     if (ln && ln.chord > 320) toggleLook('blueprint', [x, y]);
     else if (dt < 0.4 && gest.len < 10) {
       const [gx, gy] = glintAt();
       if (Math.hypot(x - gx, y - gy) < 46) toggleLook('glow', [gx, gy]);
-    }
+      else if (PREVIEW) {
+        // taps: three far apart join as a triangle of stars; four in one place are dabs of paint
+        const now = performance.now() / 1000;
+        gest.taps = [...(gest.taps || []).filter((q) => now - q.t < 2), { t: now, x, y }];
+        const t = tapsLook(gest.taps);
+        if (t) {
+          const at = t === 'stars' ? gest.taps.slice(-3) : gest.taps.slice(-4);
+          gest.taps = [];
+          toggleLook(t, [at.reduce((a, q) => a + q.x, 0) / at.length, at.reduce((a, q) => a + q.y, 0) / at.length]);
+        }
+      }
+    } else if (PREVIEW && strokeLifted(drawn) === 'chalk') toggleLook('chalk', [x, y]);
     gest.pts = [];
   };
   pond.addEventListener('pointerup', lift);
@@ -5186,7 +5329,7 @@ function frame(now) {
     span('frame', () => tick1(raw));
   } finally {
     afterFrame(started);
-    if (PERF) frameDone(now, { gpu: gpuMs, scale: `${glc.width}×${glc.height}`, quality, pass: ['whole', 'water', 'look'][passNow] });
+    if (PERF) frameDone(now, { gpu: gpuMs, scale: `${glc.width}×${glc.height}`, quality, pass: ['whole', 'water'][passNow] || 'look' });
   }
 }
 function tick1(raw) {
@@ -5284,7 +5427,7 @@ function tick1(raw) {
   // with no look shown the water alone is drawn, and a look alone once it covers the water
   const shown = top !== 'water' && SID[top] !== SID[base] ? inkR : SID[top] ? inkMax : 0,
     inkW = shown > 0 ? (look !== 'water' && inkR >= inkMax ? 1 : 0.5) : 0,
-    wp = waterProg(inkW === 0 ? 1 : inkW === 1 ? 2 : 0);
+    wp = waterProg(inkW === 0 ? 1 : inkW === 1 ? 1 + SID[top] : 0);
   U = progU.get(wp);
   passNow = progs.indexOf(wp);
   gl.useProgram(wp);
@@ -5392,7 +5535,7 @@ function tick1(raw) {
   // the glass turns to paper with the pond
   const pk = clamp(inkR / inkMax, 0, 1),
     gs = [0.03 + cur.tint[0] * 0.03, 0.09 + cur.tint[1] * 0.04, 0.1 + cur.tint[2] * 0.045],
-    GT = { ink: [0.95, 0.92, 0.85], ukiyo: [0.07, 0.17, 0.32], glow: [0.01, 0.02, 0.05], blueprint: [0.08, 0.24, 0.5] },
+    GT = { ink: [0.95, 0.92, 0.85], ukiyo: [0.07, 0.17, 0.32], glow: [0.01, 0.02, 0.05], blueprint: [0.08, 0.24, 0.5], ...(PREVIEW ? NEW_GLASS : {}) },
     gt = GT[top] || gs,
     gf = GT[base] || gs;
   gl.uniform3f(UG.uGlass, lerpN(gf[0], gt[0], pk), lerpN(gf[1], gt[1], pk), lerpN(gf[2], gt[2], pk));
