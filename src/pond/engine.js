@@ -34,7 +34,7 @@ import {
 import { FPS, IDLE_AFTER, due, learnBeat, simSteps } from './clock.js';
 import { PERF, add, count, frameDone, span } from './perf.js';
 import { strokeLifted, strokeMoving, tapsLook } from './gestures';
-import { NEW_COMMANDS, NEW_GLASS, NEW_GLSL, NEW_LAY, NEW_LOOKS, NEW_SID } from './newlooks.js';
+import { NEW_COMMANDS, NEW_GLASS, NEW_GLSL, NEW_LAY, NEW_LOOKS, NEW_SHADE, NEW_SID } from './newlooks.js';
 import { SocialError } from '../os/social/errors';
 import { coverOf, loadSongs, music, onMusic, play as playSongAt, setMusicMuted, toggle as toggleSong } from './music';
 import * as people from './people';
@@ -2985,7 +2985,8 @@ function shadeTex() {
 // shade's strength, eased over 2.5 s as its opacity was, by the time of day and the look.
 let shadeK = 0.9;
 function shadeUniforms(dt) {
-  const goal = 'bare' in pond.dataset ? 0.25 : inkOn ? 0.35 : ({ night: 0.3, dawn: 0.6, dusk: 0.6 }[phase] ?? 0.9);
+  const goal =
+    PREVIEW && look in NEW_SHADE ? NEW_SHADE[look] : 'bare' in pond.dataset ? 0.25 : inkOn ? 0.35 : ({ night: 0.3, dawn: 0.6, dusk: 0.6 }[phase] ?? 0.9);
   shadeK += clamp(goal - shadeK, -dt / 2.5, dt / 2.5);
   let u = RM ? -1 : (performance.now() / 27000) % 2;
   u = u < 0 ? 0 : u > 1 ? 2 - u : u;

@@ -18,6 +18,9 @@ export const NEW_GLASS = {
   chalk: [0.07, 0.17, 0.13]
 };
 
+/** How much of the tree's shade lies over each: none on glaze, plaster, the night sky or a board. */
+export const NEW_SHADE = { monet: 0.5, qinghua: 0, dunhuang: 0, stars: 0, chalk: 0 };
+
 /** The command bar's entries: found by name only, as the other looks are. */
 export const NEW_COMMANDS = [
   ['monet', 'Water lilies', 'Monet’s pond in oil; or dab the water a few times in one place', 'monet water lilies oil paint impression giverny 睡莲 莫奈'],

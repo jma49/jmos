@@ -132,6 +132,21 @@ gesture, key or ⌘K, its seal is stamped in the corner above the controls, in t
   in each language, and its stamp's manner in `pond.css`. Looks marked `preview` exist only in a build
   with `PUBLIC_POND_PREVIEW=1`.
 
+## Looks that are only previews
+
+Five looks exist only in a build with `PUBLIC_POND_PREVIEW=1` (`newlooks.js`, `newlooks.css`): Monet's
+water lilies in oil, blue-and-white porcelain (青花), a Dunhuang mural (敦煌), a star chart (星图) and a
+school blackboard newspaper (黑板报). A release build leaves out their shader source, gestures and
+commands; their seals are marked `preview` in `seals.ts`.
+
+- Each is one function of the water pass, built as a pass of its own the first time it is asked for
+  (`fsPart(2, sid)`), as every look now is. None adds a pass or a per-frame cost outside it.
+- Each has its press (`uBlot`), its winter, a palette and a pairing of faces the pond already loads, its
+  sounds (`lookSound`), a glass tint, how the dove and spider are laid in, and its stamp. Rain is off in
+  all five. In the star chart `Koi.drawStars` draws the koi as constellations.
+- The gestures are rules apart from the pond (`gestures.ts`), with the table of all ten looks at the
+  top; `gestures.test.ts` tries every pair. A new gesture goes in the table and gets its pairs.
+
 ## Languages
 
 The language is chosen apart from the look: the En / 中 / 日 segments
