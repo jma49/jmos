@@ -251,6 +251,8 @@ In `public/pond/qinghua/`. Cobalt only, the porcelain left transparent.
 | --- | --- | --- |
 | `rim.webp` | 1024 × 128, 106 KB | A lotus scroll between two lines, seamless left to right. The lines are 2 pixels, at the very top and bottom. One tile is one turn of the scroll: an open lotus and a lotus in profile with their leaves take about the middle 60% of it, and a plain stem at mid-height joins one tile to the next, so tiled it reads as flowers set apart, not a dense scroll. |
 | `corner.webp` | 256 × 256, 13 KB | The top-left corner: the outer lines along the top and left edges, the inner lines meeting at 128, 128, the stem turning at 64, 64 under a small lotus. Its right edge meets `rim.webp` and its bottom edge meets `rim.webp` turned a quarter, to the pixel. The lotus is small and pale beside the rim's flowers. |
+| `koi.webp` | 1024 × 1536, 163 KB | Four koi from straight above in rows of 384 pixels, heads to the left, each from x 62 (the barbels; the snout is a little to the right) to a tail tip at 962, the spine on its row's middle line (y 192, 576, 960, 1344). All four are one drawing, its upper half mirrored onto the lower, so the spine is exactly straight and the fish exactly symmetrical; the brush marks repeat across it. Scales and fin rays in cobalt line, the body an opaque porcelain white. Row 1 has four gold patches, row 2 one cobalt spot on the head, rows 3 and 4 are in greys with four and three grey patches. The patches are plain rounded shapes laid under the line, not brushed washes: good enough to prove the method, to be redrawn once it is settled. |
+| `koi-mask.webp` | 1024 × 1536, 6 KB | White over the patches of rows 3 and 4 (about 6% of each row), with edges 2 to 3 pixels soft, black elsewhere. Made from the same shapes as the patches, so it lines up with `koi.webp` to the pixel. |
 
 #### Ukiyo-e
 
@@ -360,9 +362,8 @@ visitors in their colours. One loader reads every look's sheet, so every sheet i
 Asked for one look first, as the proof of the method; the rest once it swims well, in case the
 method wants different numbers:
 
-- ★ `koi.webp` and `koi-mask.webp` for 青花 (in `public/pond/qinghua/`): cobalt line and wash, a scale pattern drawn in line,
-  the blue pooling at line ends; the gold koi as the same drawing with its patches left for a gold
-  wash (`#C9A24A`), the white one with its spot in the deep cobalt.
+- 青花's pair has come, as the proof (the table under "青花" above). The others wait for word that it
+  swims well, and for any change to the numbers.
 
 Then, in each look's manner: ukiyo-e (flat colour inside a key line, as a carp print); Monet (a few
 loaded dabs); Dunhuang (mineral colour in an iron-wire line); the relief (with a height sheet,
