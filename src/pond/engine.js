@@ -35,7 +35,7 @@ import {
 import { FPS, IDLE_AFTER, due, learnBeat, simSteps } from './clock.js';
 import { PERF, add, count, frameDone, span } from './perf.js';
 import { strokeLifted, strokeMoving, tapsLook } from './gestures';
-import { MURAL, MURAL_LARGE, NEW_COMMANDS, NEW_GLASS, NEW_GLSL, NEW_LAY, NEW_LOOKS, NEW_SHADE, NEW_SID, muralLayout } from './newlooks.js';
+import { MONET, MURAL, MURAL_LARGE, NEW_COMMANDS, NEW_GLASS, NEW_GLSL, NEW_LAY, NEW_LOOKS, NEW_SHADE, NEW_SID, muralLayout } from './newlooks.js';
 import { SocialError } from '../os/social/errors';
 import { coverOf, loadSongs, music, onMusic, play as playSongAt, setMusicMuted, toggle as toggleSong } from './music';
 import * as people from './people';
@@ -274,9 +274,64 @@ class Koi {
     ['α', 'β', 'γ'].forEach((g, k) => c.fillText(g, s[at[k]].x + 6, s[at[k]].y - 5));
     c.restore();
   }
+  // A painted koi: a straight picture seen from above, cut into slices along its length, each slice laid
+  // along the koi's own spine as it is now, so the painting swims, turns and curls as the drawn koi does. The
+  // tail runs on past the spine's end and sways with the stroke. row picks which koi of the sheet.
+  drawSprite(c, pic, row) {
+    const s = this.spine,
+      acc = [0];
+    for (let i = 1; i < N; i++) acc.push(acc[i - 1] + Math.hypot(s[i].x - s[i - 1].x, s[i].y - s[i - 1].y));
+    const L = acc[N - 1],
+      tail = L * 0.27,
+      total = L + tail,
+      n = 28,
+      k = total / 896,
+      h = 256 * k,
+      live = (0.5 + clamp(this.sp / this.cruise, 0, 2.4) * 0.6) * (0.74 + 0.26 * Math.sin(T * 0.7 + this.seed)),
+      sway = Math.sin(this.ph - 3.6) * 0.42 * live,
+      ex = s[N - 1].x - s[N - 2].x,
+      ey = s[N - 1].y - s[N - 2].y,
+      ea = Math.atan2(ey, ex);
+    let j = 0;
+    const at = (d) => {
+      if (d >= L) {
+        // the tail: on from the last joint, bending with the stroke
+        const u = (d - L) / tail,
+          a = ea + sway * u;
+        return [s[N - 1].x + Math.cos(a) * (d - L), s[N - 1].y + Math.sin(a) * (d - L)];
+      }
+      while (j < N - 2 && acc[j + 1] < d) j++;
+      const t = (d - acc[j]) / (acc[j + 1] - acc[j] || 1);
+      return [s[j].x + (s[j + 1].x - s[j].x) * t, s[j].y + (s[j + 1].y - s[j].y) * t];
+    };
+    c.save();
+    c.globalAlpha = this.alpha * (1 - 0.34 * this.depth);
+    let [x0, y0] = at(0);
+    for (let i = 0; i < n; i++) {
+      const [x1, y1] = at((total * (i + 1)) / n),
+        len = Math.hypot(x1 - x0, y1 - y0);
+      c.save();
+      c.translate(x0, y0);
+      c.rotate(Math.atan2(y1 - y0, x1 - x0));
+      c.drawImage(pic, 62 + (896 * i) / n, row * 256, 896 / n + 1.5, 256, -0.4, -h / 2, len + 1.2, h);
+      c.restore();
+      x0 = x1;
+      y0 = y1;
+    }
+    if (this.seal) {
+      const [qx, qy] = at(L * 0.62),
+        q = this.size * 0.03;
+      c.fillStyle = 'rgba(184,56,42,0.9)';
+      c.fillRect(qx - q, qy - q, q * 2, q * 2);
+    }
+    c.restore();
+  }
   draw(c) {
     if (this.alpha <= 0.01) return;
     if (look === 'stars' && inkR > inkMax * 0.45) return this.drawStars(c);
+    // Monet's koi are painted: the gold one for mine, the white and red for the visitor's own and the pale
+    // ones, the orange for the rest
+    if (look === 'monet' && koiPic && inkR > inkMax * 0.45) return this.drawSprite(c, koiPic, this === host ? 2 : this === you || this.base === WHITE ? 1 : 0);
     const s = this.spine,
       S = this.size,
       HW = S * 0.13,
@@ -701,8 +756,32 @@ function drawPads() {
     const grow = kind === 2 ? sstep(0.55, 0.95, AM.lush) : sstep(0.02, 0.45, AM.lush),
       r = r0 * (0.55 + 0.45 * AM.lush) * Math.sqrt(grow);
     if (grow < 0.03) continue;
+    // in Monet's pond the pads are painted ones, from their sheet (large, medium and small, by size)
+    const lily = lilyPic && look === 'monet';
+    if (lily) {
+      const n = Math.floor(r0 * 7 + rot * 3),
+        [ci, cj] =
+          r > 58
+            ? [n % 3, 0]
+            : r > 34
+              ? [
+                  [3, 0],
+                  [0, 1]
+                ][n % 2]
+              : [
+                  [1, 1],
+                  [2, 1]
+                ][n % 2],
+        d = r * 2.75;
+      c.save();
+      c.globalAlpha = Math.min(1, grow * 1.6) * (1 - 0.35 * AM.brown);
+      c.translate(x * W, y * H);
+      c.rotate(rot);
+      c.drawImage(lilyPic, ci * 256, cj * 256, 256, 256, -d / 2, -d / 2, d, d);
+      c.restore();
+    }
     c.save();
-    c.globalAlpha = Math.min(1, grow * 1.6);
+    c.globalAlpha = lily ? 0 : Math.min(1, grow * 1.6);
     c.translate(x * W, y * H);
     c.rotate(rot);
     const g = c.createRadialGradient(-r * 0.25, -r * 0.3, r * 0.1, 0, 0, r);
@@ -775,7 +854,13 @@ function drawPads() {
     const px = cx + (ax / al) * r * off,
       py = cy + (ay / al) * r * off;
     if (r > 26 && Math.hypot(px - x * W, py - y * H) < r * 0.8) padSpots.push({ x: px, y: py, r: r * 0.36 });
-    if (kind === 1 && AM.bloom > 0.05) {
+    // and their flowers: a bud in spring, half open as summer comes, open at its height, in white or pink
+    if (lily && kind === 1 && (AM.bloom > 0.05 || AM.petals > 0.3)) {
+      const pink = Math.floor(r0 * 5) % 2,
+        [ci, cj] = AM.bloom > 0.55 ? (pink ? [1, 2] : [3, 1]) : AM.bloom > 0.05 ? (pink ? [2, 2] : [0, 2]) : [3, 2],
+        d = (big ? 96 : 76) * (0.6 + 0.4 * Math.max(AM.bloom, 0.3));
+      c.drawImage(lilyPic, ci * 256, cj * 256, 256, 256, clamp(x * W, d / 2, W - d / 2) - d / 2 + Math.cos(rot) * r * 0.1, y * H - r * 0.12 - d / 2, d, d);
+    } else if (kind === 1 && AM.bloom > 0.05) {
       const fr = 34 * (0.35 + 0.65 * AM.bloom) * (big ? 1 : 0.8),
         fx = clamp(x * W, fr, W - fr) + Math.cos(rot) * r * 0.1,
         fy = y * H - r * 0.12;
@@ -807,7 +892,7 @@ function drawPads() {
   }
 }
 function padsNow() {
-  const key = `${Math.round(AM.lush * 30)}|${Math.round(AM.brown * 20)}|${Math.round(AM.bloom * 20)}`;
+  const key = `${Math.round(AM.lush * 30)}|${Math.round(AM.brown * 20)}|${Math.round(AM.bloom * 20)}|${lilyPic && look === 'monet' ? Math.round(AM.petals * 4) + 1 : 0}`;
   if (key === padKey) return;
   padKey = key;
   drawPads();
@@ -1591,7 +1676,7 @@ function sizeGL() {
   padKey = '';
   padsNow();
   if (!glOK) return;
-  paintMural();
+  paintPic();
   // the pebble bed never changes, so it's drawn once into a texture
   gl.bindTexture(gl.TEXTURE_2D, texBed);
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, glc.width, glc.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
@@ -2516,10 +2601,16 @@ function alignInk(sel) {
 const setInk = (on, from) => setLook(on ? 'ink' : 'water', from || $('#inkBtn'));
 function setLook(name, from) {
   if (!LOOKS.includes(name) || name === look) return;
-  if (name === 'dunhuang') loadMural();
+  if (name === 'dunhuang' || name === 'monet') {
+    picLook = name;
+    name === 'monet' ? loadMonet() : loadMural();
+    paintPic();
+  }
   if (name !== 'water' && name !== 'ink') loadType();
   const was = look;
   look = name;
+  // (the pads are painted ones in Monet's pond, and drawn ones out of it)
+  if (name === 'monet' || was === 'monet') setTimeout(padsNow, 0);
   inkOn = name === 'ink';
   inkAt = performance.now() / 1000;
   actx.setTransform(1, 0, 0, 1, 0, 0);
@@ -4709,9 +4800,61 @@ function loadMural() {
         })
     )
   ).then(() => {
-    paintMural();
+    paintPic();
     invalidate();
   });
+}
+// The one texture a look's picture lies in holds the picture of the look last asked for.
+let picLook = '';
+function paintPic() {
+  if (picLook === 'dunhuang') paintMural();
+  else if (picLook === 'monet') paintBed();
+}
+function sendPic(cv) {
+  const was = gl.getParameter(gl.ACTIVE_TEXTURE);
+  gl.activeTexture(gl.TEXTURE10);
+  gl.bindTexture(gl.TEXTURE_2D, texMural);
+  gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, cv);
+  gl.activeTexture(was);
+}
+// Monet's pictures: the painted water (upright on a phone, the small one on a small window, the large one
+// where the pond is drawn large), the lilies and the koi. Fetched the first time the look is asked for.
+let monetImgs = null,
+  lilyPic = null,
+  koiPic = null;
+function loadMonet() {
+  if (monetImgs) return;
+  monetImgs = {};
+  const get = (k, src, then) => {
+    const im = new Image();
+    im.onload = () => {
+      monetImgs[k] = im;
+      then(im);
+      invalidate();
+    };
+    im.src = src;
+  };
+  get('bed', H > W * 1.15 ? MONET.bedTall : W * glDpr > 1500 ? MONET.bed : MONET.bedSmall, () => paintPic());
+  get('lilies', MONET.lilies, (im) => {
+    lilyPic = im;
+    padsNow();
+  });
+  get('koi', MONET.koi, (im) => (koiPic = im));
+}
+function paintBed() {
+  if (!glOK || !monetImgs || !monetImgs.bed) return;
+  const im = monetImgs.bed,
+    k = Math.min(2048 / W, glc.width / W, 2),
+    cv = document.createElement('canvas');
+  cv.width = Math.max(1, Math.round(W * k));
+  cv.height = Math.max(1, Math.round(H * k));
+  // the painting covers the pond, cut at the sides or at top and bottom as the pond's shape needs
+  const f = Math.max(cv.width / im.naturalWidth, cv.height / im.naturalHeight),
+    w = im.naturalWidth * f,
+    h = im.naturalHeight * f;
+  cv.getContext('2d').drawImage(im, (cv.width - w) / 2, (cv.height - h) / 2, w, h);
+  sendPic(cv);
 }
 function paintMural() {
   if (!glOK || !muralImgs || !muralImgs.pipa) return;
@@ -4757,13 +4900,7 @@ function paintMural() {
     im.src = MURAL_LARGE.pipa;
   }
   faces.forEach((f, i) => muralFaces.set(f, i * 3));
-  const was = gl.getParameter(gl.ACTIVE_TEXTURE);
-  gl.activeTexture(gl.TEXTURE10);
-  texMural ??= tex(gl.LINEAR);
-  gl.bindTexture(gl.TEXTURE_2D, texMural);
-  gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, cv);
-  gl.activeTexture(was);
+  sendPic(cv);
 }
 
 /* ================= the seal album (集印册) =================

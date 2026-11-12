@@ -22,6 +22,14 @@ export const NEW_GLASS = {
 /** How much of the tree's shade lies over each: none on glaze, plaster, the night sky or a board. */
 export const NEW_SHADE = { monet: 0.5, qinghua: 0, dunhuang: 0, stars: 0, chalk: 0 };
 
+/** Monet's pictures (public/pond/monet/): the painted water in three shapes, the lilies and the koi. */
+export const MONET = {
+  bed: '/pond/monet/bed.webp',
+  bedSmall: '/pond/monet/bed-1280.webp',
+  bedTall: '/pond/monet/bed-tall.webp',
+  lilies: '/pond/monet/lilies.webp',
+  koi: '/pond/monet/koi.webp'
+};
 /** The Dunhuang wall's pictures (public/pond/dunhuang/), fetched the first time the look is asked for. */
 export const MURAL = {
   pipa: '/pond/dunhuang/feitian-pipa.webp',
@@ -98,57 +106,30 @@ export const NEW_GLSL = `
 // ---------- the preview looks ----------
 uniform sampler2D uMural; uniform vec3 uFace[2];
 float grain(vec2 P){ return .5+.5*noise(P*1.9)*(.6+.4*noise(P*.7+9.)); }
-// Monet, kept calm until its painted pictures come (docs/agents/pond.md): soft passages of colour in short
-// strokes of one size, nothing laid over anything else to fight it.
-// one layer of short loaded strokes: cells longer than they are high, every other row set off; returns the
-// stroke's own place (where its colour is taken) and how much of it covers here, thick in the middle
-vec2 dab(vec2 P, vec2 cell, float seed, out float cover, out float ridge){
-  vec2 q=P/cell; q.x+=step(1.,mod(floor(q.y),2.))*.5; vec2 id=floor(q), f=fract(q)-.5;
-  vec2 j=(hash2(id+seed)-.5)*vec2(.5,.3); f-=j*.5;
-  float a=(hash1(id+seed*3.)-.5)*.5; f=vec2(f.x*cos(a)-f.y*sin(a)*cell.y/cell.x, f.x*sin(a)*cell.x/cell.y+f.y*cos(a));
-  float d=length(f*vec2(1.9,2.1)); cover=1.-smoothstep(.72,1.02,d+(noise(P*.35+seed)-.5)*.28);
-  ridge=f.y*2.; vec2 at=(id+.5+j); at.x-=step(1.,mod(id.y,2.))*.5; return at*cell;
-}
-// what Monet's pond is at a place: water in violet, green, rose and blue, the lilies' pads, the koi
-vec3 pondOil(vec2 at, float seed){
-  vec2 uv=at/uCss;
-  float a=fbm(at*.0042+vec2(0.,uTime*.006)), b=fbm(at*vec2(.011,.0034)+7.+seed), c=noise(at*.0028+3.);
-  vec3 col=mix(vec3(.30,.36,.60),vec3(.25,.47,.42),smoothstep(.35,.65,a));
-  col=mix(col,vec3(.52,.42,.66),smoothstep(.5,.78,b)*.8);
-  col=mix(col,vec3(.84,.60,.68),smoothstep(.52,.78,c)*smoothstep(.36,.6,b)*.85);
-  col=mix(col,vec3(.70,.80,.90),smoothstep(.56,.84,fbm(at*vec2(.004,.016)+11.))*.7);
-  col=mix(col,vec3(.14,.30,.26),smoothstep(.6,.86,fbm(at*vec2(.009,.003)+31.))*.6);
-  col=mix(col,vec3(.93,.86,.70),smoothstep(.74,.92,noise(at*.006+17.))*.5);
-  col*=.86+.3*hash1(floor(at/7.)+seed);
-  vec4 pd=textureLod(uPads,uv,2.); vec3 pc=pd.rgb/max(pd.a,1e-3);
-  col=mix(col,mix(vec3(.26,.50,.36),vec3(.48,.62,.40),hash1(floor(at/9.)+seed))*(.8+.5*pc.g)+vec3(.5,.2,.3)*clamp((pc.r-pc.g)*2.,0.,1.),smoothstep(.25,.6,pd.a));
-  vec4 f=textureLod(uFish,uv+gRef*.25,2.2); vec3 fc=f.rgb/max(f.a,1e-3);
-  col=mix(col,mix(fc*1.15+vec3(.08,.02,-.04),vec3(.95,.5,.2),clamp((fc.r-fc.b)*1.2,0.,.6)),smoothstep(.3,.7,f.a));
-  vec4 tp=textureLod(uTop,uv,1.5); col=mix(col,tp.rgb/max(tp.a,1e-3),smoothstep(.3,.7,tp.a)*.8);
-  for(int i=0;i<10;i++){ vec3 bl=uBlot[i]; if(bl.z<0.) continue;
-    float t=bl.z, R=16.+54.*sqrt(t)*(1.-exp(-t*1.4)), d=length(at-bl.xy)+(hash1(floor(at/5.))-.5)*14.;
-    vec3 paint=mix(vec3(.96,.86,.62),vec3(.93,.58,.66),step(.5,fract(bl.x*.37)));
-    col=mix(col,mix(paint,col,smoothstep(0.,7.,t)*.7),(1.-smoothstep(R*.6,R,d))*exp(-t*.12)); }
-  // winter: the ice in white and the palest blue, laid on thick
-  col=mix(col,mix(vec3(.86,.90,.95),vec3(.72,.80,.92),hash1(floor(at/6.)+seed)),gIce*.82);
-  return col;
-}
+// Monet: an oil painting of the pond's water is the bed (a picture, laid into one texture once). The water over
+// it is a wet surface: it bends the painting a little where it moves and catches a sheen, and the paint's
+// own ridges take a little light. The lilies and the koi are painted too (engine.js draws them from their
+// sheets onto the pads' and the fish's canvases), so here they are only laid over, with a soft shade under them.
 vec3 lookMonet(){
-  vec2 P=gP+gG*26.+vec2(sin(gP.y*.02+uTime*.3),0.)*1.5;
-  float c1,r1,c2,r2,c3,r3;
-  vec2 a1=dab(P,vec2(46.,17.),1.,c1,r1), a2=dab(P+vec2(13.,7.),vec2(34.,13.),5.,c2,r2), a3=dab(P.yx+vec2(5.,21.),vec2(40.,12.),9.,c3,r3);
-  vec3 col=pondOil(P,0.)*.92;
-  col=mix(col,pondOil(a1,1.),c1);
-  // reflections run downwards: upright strokes where the trees stand in the water
-  float up=smoothstep(.5,.7,fbm(gP*vec2(.006,.0018)+20.));
-  col=mix(col,pondOil(a3.yx-vec2(21.,5.)+vec2(0.,0.),9.)*vec3(.82,.9,.84),c3*up);
-  col=mix(col,pondOil(a2-vec2(13.,7.),5.),c2*.92);
-  // thick paint catches the light along a stroke's upper edge, and the canvas shows through its weave
-  float ridge=mix(r1*c1,r2*c2,c2);
-  col+=vec3(.10,.10,.09)*smoothstep(.2,.9,-ridge)-vec3(.07)*smoothstep(.3,.95,ridge);
-  col+=vec3(.9,.95,1.)*clamp(abs(gLap)*14.,0.,.5)*(1.-gCalm*.8)*step(.4,c2);
-  col*=.95+.05*sin(gP.x*2.6)*sin(gP.y*2.6);
-  col=mix(col,vec3(.27,.30,.42),gCalm*.5);
+  vec2 uv=gUv, P=gP, ruv=uv+gG*gIa*.05+gRef*.35;
+  vec4 bed=texture(uMural,ruv);
+  vec3 col=mix(vec3(.27,.38,.52)*(.85+.3*fbm(P*.004)),bed.rgb,bed.a);
+  float ridge=dot(col-texture(uMural,ruv-vec2(0.,1.6)/uCss).rgb,vec3(.333))*bed.a;
+  col+=vec3(.55,.54,.48)*clamp(ridge*3.,-.05,.09);
+  col+=vec3(.9,.95,1.)*clamp(abs(gLap)*5.+length(gG)*.3,0.,.13)*(1.-gCalm*.8);
+  vec4 pd=textureLod(uPads,uv+gG*gIa*.006,0.); float ps=textureLod(uPads,uv+vec2(.004,.007),2.).a;
+  col*=1.-.24*ps*(1.-pd.a); col=pd.rgb*.97+col*(1.-pd.a);
+  vec4 f=textureLod(uFish,uv+gRef*.3,.7); col*=1.-.2*textureLod(uFish,uv+vec2(.004,.007),3.).a*(1.-f.a); col=f.rgb+col*(1.-f.a);
+  vec4 tp=textureLod(uTop,uv,1.); col=tp.rgb*.92+col*(1.-tp.a);
+  // a press: a dab of paint, its edge soft and uneven, that spreads and blends into what is under it
+  for(int i=0;i<10;i++){ vec3 bl=uBlot[i]; if(bl.z<0.) continue;
+    float t=bl.z, R=14.+46.*sqrt(t)*(1.-exp(-t*1.4)), d=length(P-bl.xy)+(noise(P*.09+bl.x)-.5)*16.+(noise(P*.4)-.5)*5.;
+    vec3 paint=mix(vec3(.96,.88,.66),vec3(.93,.62,.70),step(.5,fract(bl.x*.37)));
+    col=mix(col,mix(paint,col,smoothstep(0.,6.,t)*.75),(1.-smoothstep(R*.55,R,d))*exp(-t*.14)); }
+  // winter: the ice in white and the palest blue, laid on thick
+  col=mix(col,mix(vec3(.88,.91,.95),vec3(.74,.81,.92),noise(P*.02)),gIce*.78);
+  col*=.97+.03*sin(P.x*2.6)*sin(P.y*2.6);
+  col=mix(col,col*vec3(.66,.70,.80),gCalm*.5);
   return col;
 }
 // 青花: white glaze with a soft gloss and a fine crackle; the koi, the lotus and the water in cobalt, in

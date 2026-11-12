@@ -231,7 +231,18 @@ adrift: riding the petals' wind would need them as sprites on the top layer, whi
 
 #### Monet
 
-In `public/pond/monet/`.
+In `public/pond/monet/`, and the look is built on them: the painted water is the bed (`paintBed()` in
+`engine.js` lays the upright one on a phone, the small one on a small window, the large one where the
+pond is drawn large, into the one texture a look's picture lies in, `uMural`), the water over it bends
+it a little and catches a sheen (`lookMonet()`), the pads and their flowers are drawn from `lilies`
+(`drawPads()`: a bud in spring, half open then open in summer, none in winter), and the koi from
+`koi` along their own spines (`Koi.drawSprite()`). Nothing is synthesised a stroke at a time any more.
+Not used yet: `strokes` and `canvas` (the press is a soft dab drawn in the shader, and the arrival's
+front is the shader's; both could take the stamps later).
+
+Still wanted for it: in `koi.webp`'s manner, a white koi with a single red spot on its head (the
+visitor's own koi; the white-and-red one stands in for it now), and two koi in greys with a mask of
+where a visitor's colour goes, as "Koi for each look" below asks of every look.
 
 | File | Size | What is in it |
 | --- | --- | --- |
@@ -359,8 +370,10 @@ visitors in their colours. One loader reads every look's sheet, so every sheet i
 - `public/pond/<look>/koi-mask.webp`, the same size and layout: white where a visitor's colour
   goes on rows 3 and 4 (the patches), black elsewhere; rows 1 and 2 black.
 
-Asked for one look first, as the proof of the method; the rest once it swims well, in case the
-method wants different numbers:
+The method is proved on Monet's koi (2026-11-12): 28 slices along the spine, the tail carried on
+past its end, swim, turn and curl cleanly, with no change to the numbers asked for here. Monet's
+sheet came as three rows of 256; a loader that takes the row height from the sheet reads both. So
+the rest can be made:
 
 - 青花's pair has come, as the proof (the table under "青花" above). The others wait for word that it
   swims well, and for any change to the numbers.
