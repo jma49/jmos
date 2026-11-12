@@ -22,3 +22,11 @@ export function underPainting(x, y, W, H, season) {
   const [hx, hy, size] = hang(W, H, season);
   return x > hx + size * 0.34 && x < hx + size && y > hy + size * 0.08 && y < hy + size * 0.92;
 }
+/**
+ * Whether a lily pad at a place would crowd the painting: anywhere from a little left of its ink to the
+ * pond's right edge, over the painting's whole height and a little more. Pads keep out of all of it.
+ */
+export function crowdsPainting(x, y, W, H, season) {
+  const [hx, hy, size] = hang(W, H, season);
+  return x > hx + size * 0.2 && y > hy - size * 0.06 && y < hy + size * 1.06;
+}

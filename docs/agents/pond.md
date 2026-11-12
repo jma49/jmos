@@ -525,6 +525,9 @@ is most of it.
    `#B8382A`). It replaces the drawn ones only if it is clearly better in motion.
 3. Seasons: delivered and in use (`willow`, `lotus`, `reeds`, `plum`). Composited by multiplying
    into the paper, faded at their outer edges.
+   P1 `stems.webp`, 1024 × 1024, withered lotus (残荷) in ink: a few dry bent stems, a curled brown
+   leaf, a seed-pod, entering from the right edge like the others; it joins the reeds in late autumn
+   and stands alone under the plum in winter.
 4. Ornaments: none; the inscription and the 锦程 seal are type.
 5. Press: the shader's blot. Nothing wanted.
 6. Dove and spider: P1, each as three ink-wash poses on one sheet `dove.webp` / `spider.webp`,
@@ -568,6 +571,8 @@ Everything else is ruled in the shader. Nothing more wanted.
 5. Delivered, not yet used: `strokes`, `canvas`. For the press and the arrival.
 6. Dove and spider: P1 `dove.webp`, `spider.webp`, 768 × 256, three poses each as a few loaded
    oil dabs, soft edges, no line.
+   P1 `dragonfly.webp`, 512 × 256, two dragonflies as a few thin dabs (the drawn one is only
+   dimmed for now).
 7. Seal: on the ink sheet.
 
 **青花.** Judge it by: a Yuan or early Ming blue-and-white dish seen from above: cobalt only, on

@@ -35,7 +35,7 @@ import {
 import { FPS, IDLE_AFTER, due, learnBeat, simSteps } from './clock.js';
 import { PERF, add, count, frameDone, span } from './perf.js';
 import { strokeLifted, strokeMoving, tapsLook } from './gestures';
-import { underPainting } from './hang.js';
+import { crowdsPainting, underPainting } from './hang.js';
 import { paintingOf, seasonAmounts } from './seasons.js';
 import {
   KOI_SHEETS,
@@ -386,8 +386,11 @@ class Koi {
       R.push([px - nx * HW * f, py - ny * HW * f]);
     }
     const ang = (i) => Math.atan2(P[i][3], P[i][2]);
+    // in ink a koi that crosses the season's painting passes under it: the painting is on the paper, the koi in
+    // the water, so its ink thins there
+    this.veil = (this.veil ?? 1) + ((inkOn && underPainting(this.x, this.y, W, H, inkSeason()) ? 0.3 : 1) - (this.veil ?? 1)) * 0.06;
     c.save();
-    c.globalAlpha = this.alpha * (1 - 0.34 * this.depth);
+    c.globalAlpha = this.alpha * (1 - 0.34 * this.depth) * this.veil;
     c.lineCap = 'round';
     c.lineJoin = 'round';
     // paired fins, under the body: a paddle of thin skin with rays through it
@@ -774,7 +777,7 @@ function drawPads() {
       r = r0 * (0.55 + 0.45 * AM.lush) * Math.sqrt(grow);
     if (grow < 0.03) continue;
     // in ink no pad lies under the season's painting: the painting has that part of the paper
-    if (inkOn && underPainting(x * W, y * H, W, H, inkSeason())) continue;
+    if (inkOn && crowdsPainting(x * W, y * H, W, H, inkSeason())) continue;
     // in Monet's pond the pads are painted ones, from their sheet (large, medium and small, by size)
     const lily = lilyPic && look === 'monet';
     if (lily) {
@@ -3170,7 +3173,7 @@ function drawAir() {
   for (const f of flies) {
     if (f.a2 < 0.02) continue;
     c.save();
-    c.globalAlpha = f.a2;
+    c.globalAlpha = f.a2 * (look === 'monet' ? 0.42 : 1);
     c.translate(f.x, f.y);
     c.rotate(f.a);
     c.lineCap = 'round';
@@ -3260,7 +3263,9 @@ let shadeK = 0.9;
 function shadeUniforms(dt) {
   const goal =
     PREVIEW && look in NEW_SHADE ? NEW_SHADE[look] : 'bare' in pond.dataset ? 0.25 : inkOn ? 0.35 : ({ night: 0.3, dawn: 0.6, dusk: 0.6 }[phase] ?? 0.9);
-  shadeK += clamp(goal - shadeK, -dt / 2.5, dt / 2.5);
+  // (a look with no shade at all loses it quickly, as its front passes)
+  const quick = PREVIEW && NEW_SHADE[look] === 0 ? 0.35 : 2.5;
+  shadeK += clamp(goal - shadeK, -dt / quick, dt / quick);
   let u = RM ? -1 : (performance.now() / 27000) % 2;
   u = u < 0 ? 0 : u > 1 ? 2 - u : u;
   u = 1 - u; // alternate-reverse: it starts at the far pose

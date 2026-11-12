@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { hang, underPainting } from './hang.js';
+import { crowdsPainting, hang, underPainting } from './hang.js';
 
 describe("where a season's painting hangs", () => {
   it('is flush with the right edge and inside the pond, at every size', () => {
@@ -25,6 +25,10 @@ describe("where a season's painting hangs", () => {
     expect(underPainting(x + size * 0.7, y + size * 0.5, 1280, 800, 1)).toBe(true);
     expect(underPainting(x + size * 0.2, y + size * 0.5, 1280, 800, 1)).toBe(false);
     expect(underPainting(200, 400, 1280, 800, 1)).toBe(false);
+    // a pad keeps further off than that: out of the painting's whole height, right to the pond's edge
+    expect(crowdsPainting(1270, y + size * 0.5, 1280, 800, 1)).toBe(true);
+    expect(crowdsPainting(x + size * 0.1, y + size * 0.5, 1280, 800, 1)).toBe(false);
+    expect(crowdsPainting(300, 400, 1280, 800, 1)).toBe(false);
   });
   it('hangs the willow from the top on a wide pond, and keeps every one low on a phone, clear of the type', () => {
     expect(hang(1280, 800, 0)[1]).toBe(0);

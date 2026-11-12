@@ -180,14 +180,16 @@ vec3 lookQinghua(){
   float wv=seigaiha(P+gG*36.); c=mix(c,wash,wv*(.16+clamp(abs(gLap)*30.+length(gG)*1.4,0.,.6))*(1.-gCalm*.97)*pool);
   // pads and lotus: a washed leaf inside a drawn line, veins from its heart
   vec4 pd=textureLod(uPads,uv,0.); float pe=textureLod(uPads,uv,1.6).a, pw=textureLod(uPads,uv,3.).a;
-  c=mix(c,wash,pw*.34*pool); c=mix(c,deep,clamp(abs(pd.a-pe)*3.2,0.,1.)*pool);
+  // (under the title's type the pads and the koi are only faintly there, as in the other looks)
+  float clr=1.-gCalm*.78;
+  c=mix(c,wash,pw*.34*pool*clr); c=mix(c,deep,clamp(abs(pd.a-pe)*3.2,0.,1.)*pool*clr);
   vec3 pc=pd.rgb/max(pd.a,1e-3); c=mix(c,deep,clamp((pc.r-pc.g)*2.2,0.,1.)*pd.a*.6);
   // koi: outline in the deep blue, the body a wash, their red patches filled dark
   vec4 f0; float fa,fb,fc,red; fishAt(f0,fa,fb,fc,red);
-  vec3 cd=mix(c,f0.rgb/max(f0.a,1e-3),f0.a*clamp(pool+.3,0.,1.));   // painted koi, as they are
+  vec3 c0=c, cd=mix(c,f0.rgb/max(f0.a,1e-3),f0.a*clamp(pool+.3,0.,1.));   // painted koi, as they are
   c=mix(c,wash,fb*.5*pool); c=mix(c,deep,clamp((fa-fb)*3.6,0.,1.)*clamp(pool,0.,1.)); c=mix(c,deep,smoothstep(.2,.6,red)*.85*pool);
   c=mix(c,mix(wash,deep,.4),step(.5,f0.a)*smoothstep(.34,.46,abs(fract((P.x+P.y)*.11)-.5))*.35);
-  c=mix(c,cd,uSprite);
+  c=mix(c0,mix(c,cd,uSprite),clr);
   vec4 tp=textureLod(uTop,uv,0.); float te=textureLod(uTop,uv,1.5).a; c=mix(c,deep,clamp(abs(tp.a-te)*3.,0.,1.)*.8*pool);
   // the rim: two lines and a row of petals between them
   float fs=mix(1.,.56,uCalm.x), e=min(min(P.x,uCss.x-P.x),min(P.y,uCss.y-P.y))/fs, along=((min(P.x,uCss.x-P.x)<min(P.y,uCss.y-P.y))?P.y:P.x)/fs;
