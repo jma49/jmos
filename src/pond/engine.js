@@ -2478,7 +2478,7 @@ function drawDims(c) {
     c.restore();
   }
   for (const b of blots) {
-    const t = T - b.at,
+    const t = wall() - b.at,
       R = 12 + 50 * Math.sqrt(t);
     if (t > 20) continue;
     c.beginPath();
@@ -2492,6 +2492,8 @@ function drawDims(c) {
 // Rain falls where a look can carry it: on the water, in ink (fine dry strokes, and soft blooms where it
 // lands), in the print (Hiroshige's straight lines) and in ASCII (falling | and /). Glow and blueprint
 // hold it off: the drops stop and the ripples settle, and it comes back with the water.
+// presses, splashes and blooms keep the clock on the wall, not the frames: a slow frame never stretches them
+const wall = () => performance.now() / 1000;
 const RAINY = { water: 1, ink: 1, ukiyo: 1, ascii: 1 },
   blooms = [],
   rainNow = () => raining && RAINY[look] === 1;
@@ -2501,7 +2503,7 @@ function drawRain(c) {
   c.save();
   if (look === 'ink') {
     for (const b of blooms) {
-      const a = T - b.at,
+      const a = wall() - b.at,
         r = b.r * (1 + Math.min(a, 3) * 0.6),
         o = 0.13 * Math.max(0, 1 - a / 5);
       if (o <= 0) continue;
@@ -4186,7 +4188,7 @@ pond.addEventListener('pointerdown', (e) => {
   }
   if (look !== 'water') {
     // on paper a press leaves a blot that spreads (in the other looks, rings or a burst), and the fish still come to it
-    blots.unshift({ x, y, at: T });
+    blots.unshift({ x, y, at: wall() });
     blots.length = Math.min(blots.length, 6);
     drop(x, y, 2, -0.5);
     feed(x, y);
@@ -4205,7 +4207,23 @@ pond.addEventListener('pointerdown', (e) => {
 // moon's, or the sun's glint). Blueprint: draw a long straight line. ASCII: type five letters. In a look,
 // the same gesture does nothing; pressing the gold koi (mine) brings the water back, from the koi. Each
 // builds up a cue first, so an ordinary press or stroke never surprises.
-const gest = { down: false, holdTimer: 0, pts: [], t0: 0, x0: 0, y0: 0, hold: 0, turn: 0, len: 0, glint: 0, near: false, keys: [], letters: [], typed: 0 };
+const gest = {
+  down: false,
+  strayed: false,
+  holdTimer: 0,
+  pts: [],
+  t0: 0,
+  x0: 0,
+  y0: 0,
+  hold: 0,
+  turn: 0,
+  len: 0,
+  glint: 0,
+  near: false,
+  keys: [],
+  letters: [],
+  typed: 0
+};
 const toggleLook = (name, at) => {
   gest.down = false;
   gest.pts = [];
@@ -4213,6 +4231,7 @@ const toggleLook = (name, at) => {
 };
 const glintAt = () => [W * (big ? 0.6 : 0.74), H * (big ? 0.1 : 0.12)];
 const HOLD = 1.2,
+  HOLD_PX = 8,
   KEYS_TO_TYPE = 5,
   KEYS_WITHIN = 3,
   SHORTCUT = /^[iglfm]$/i;
@@ -4221,12 +4240,18 @@ const HOLD = 1.2,
     if (e.target.closest(DRY) || e.button > 0) return;
     const [x, y] = spot(e);
     if (look !== 'water' && onHost(x, y)) return;
-    Object.assign(gest, { down: true, pts: [[x, y]], t0: performance.now() / 1000, x0: x, y0: y, hold: 0, turn: 0, len: 0 });
-    // held still long enough: the ink comes (a timer, so it doesn't wait on a slow frame)
+    Object.assign(gest, { down: true, pts: [[x, y]], t0: e.timeStamp / 1000, x0: x, y0: y, hold: 0, turn: 0, len: 0, strayed: false });
+    // A hold is decided by the pointer's own events: it must stay within HOLD_PX of where it went down for
+    // HOLD seconds, by the events' timestamps. When the time is up, the decision waits for the next frame,
+    // because pointer moves are delivered with frames: any move still queued from a busy frame comes first.
     clearTimeout(gest.holdTimer);
-    gest.holdTimer = setTimeout(() => {
-      if (gest.down && gest.len < 10) toggleLook('ink', [gest.x0, gest.y0]);
-    }, HOLD * 1000);
+    gest.holdTimer = setTimeout(
+      () =>
+        requestAnimationFrame(() => {
+          if (gest.down && !gest.strayed) toggleLook('ink', [gest.x0, gest.y0]);
+        }),
+      Math.max(0, HOLD * 1000 - (performance.now() - e.timeStamp))
+    );
   });
   pond.addEventListener('pointermove', (e) => {
     if (!gest.down) {
@@ -4237,7 +4262,15 @@ const HOLD = 1.2,
       return;
     }
     // every point the pointer passed, even those a busy frame folded into one event
-    for (const q of e.getCoalescedEvents?.() || [e]) if (gest.down) stroke(q);
+    for (const q of e.getCoalescedEvents?.() || [e]) {
+      if (!gest.down) break;
+      // (a move from before the press, delivered late with its frame, is no part of it)
+      if (q.timeStamp / 1000 < gest.t0) continue;
+      // past HOLD_PX within the hold's time, and this press is no longer a hold
+      const [x, y] = spot(q);
+      if (q.timeStamp / 1000 - gest.t0 < HOLD && Math.hypot(x - gest.x0, y - gest.y0) > HOLD_PX) gest.strayed = true;
+      stroke(q);
+    }
   });
   const stroke = (q) => {
     const [x, y] = spot(q),
@@ -4361,9 +4394,10 @@ function straightness() {
 function stepGesture() {
   const now = performance.now() / 1000;
   gest.glint += ((gest.near ? 1 : 0) - gest.glint) * 0.12;
-  if (gest.down && gest.len < 10) {
-    if (gest.hold < 0.3 && now - gest.t0 >= 0.3 && look !== 'ink') plip('cue-ink');
-    gest.hold = now - gest.t0;
+  if (gest.down && !gest.strayed) {
+    const held = performance.now() / 1000 - gest.t0;
+    if (gest.hold < 0.3 && held >= 0.3 && look !== 'ink') plip('cue-ink');
+    gest.hold = held;
   } else gest.hold = 0;
 }
 function drawGesture(c) {
@@ -4531,7 +4565,7 @@ function frame(now) {
           y = rnd(0, H);
         // on paper a drop doesn't ring: it blooms, a soft grey that spreads and dries
         if (look === 'ink') {
-          blooms.push({ x, y, at: T, r: rnd(5, 11) });
+          blooms.push({ x, y, at: wall(), r: rnd(5, 11) });
           if (blooms.length > 28) blooms.shift();
         } else drop(x, y, 1.1, -rnd(0.25, 0.7) * k);
       }
@@ -4611,7 +4645,7 @@ function frame(now) {
   gl.uniform1f(U.uGlint, 1 + gest.glint);
   for (let i = 0; i < 10; i++) {
     const b = blots[i];
-    blotU.set(b ? [b.x, b.y, T - b.at] : [0, 0, -1], i * 3);
+    blotU.set(b ? [b.x, b.y, wall() - b.at] : [0, 0, -1], i * 3);
   }
   gl.uniform3fv(U.uBlot, blotU);
   calmNow += (('clear' in pond.dataset ? 0 : 1) - calmNow) * Math.min(1, lifeDt * 3);
