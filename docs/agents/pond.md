@@ -229,6 +229,54 @@ ochre (`#CC8F38`) is read as gold leaf and made to glint, so anything meant as g
 colour and anything not meant as gold should avoid it. The loose flowers are fixed on the wall, not
 adrift: riding the petals' wind would need them as sprites on the top layer, which is a later step.
 
+#### Monet
+
+In `public/pond/monet/`.
+
+| File | Size | What is in it |
+| --- | --- | --- |
+| `strokes.webp` | 1024 × 1024, 162 KB | Sixteen brush strokes in a 4 × 4 grid of 256-pixel cells, each at least 18 pixels clear of its cell's edge, lying left to right with the loaded end at the left. Greyscale is the paint's height (white thickest), alpha its cover, broken at the dragged tail. Rows: long drags (about 220 pixels), curved medium strokes (150), short dabs (90), clusters. The height is how the image model lit thick paint, not a measured surface. In the last row the second and fourth clusters came out as small modelled water lilies, not loose dabs: use the first and third as dabs. |
+| `canvas.webp` | 512 × 512, 54 KB | A plain linen weave, greyscale, opaque, even in tone, about 43 threads across. It was cut on whole threads and tiles on all four sides; over a large flat area a very faint line can still be made out where tiles meet. |
+
+#### 青花
+
+In `public/pond/qinghua/`. Cobalt only, the porcelain left transparent.
+
+| File | Size | What is in it |
+| --- | --- | --- |
+| `rim.webp` | 1024 × 128, 106 KB | A lotus scroll between two lines, seamless left to right. The lines are 2 pixels, at the very top and bottom. One tile is one turn of the scroll: an open lotus and a lotus in profile with their leaves take about the middle 60% of it, and a plain stem at mid-height joins one tile to the next, so tiled it reads as flowers set apart, not a dense scroll. |
+| `corner.webp` | 256 × 256, 13 KB | The top-left corner: the outer lines along the top and left edges, the inner lines meeting at 128, 128, the stem turning at 64, 64 under a small lotus. Its right edge meets `rim.webp` and its bottom edge meets `rim.webp` turned a quarter, to the pixel. The lotus is small and pale beside the rim's flowers. |
+
+#### Ukiyo-e
+
+In `public/pond/ukiyo/`.
+
+| File | Size | What is in it |
+| --- | --- | --- |
+| `waves.webp` | 1024 × 512, 68 KB | Eight wave crests in a 4 × 2 grid of 256-pixel cells, all breaking to the left: four large ones with claw foam and spray dots in the top row, four low wavelets in the bottom. Exactly four colours: `#1F4A7A`, `#8FB4C8`, `#F6EDD8` and a keyline `#0C1B27`. The four large crests are much alike in outline. |
+
+#### Star chart
+
+In `public/pond/stars/`. One colour, `#C9D4F0`, its strength in the alpha.
+
+| File | Size | What is in it |
+| --- | --- | --- |
+| `plate.webp` | 2048 × 1024, 166 KB | A graticule without stars, figures or lettering: curved parallels and converging meridians, the equator and the ecliptic as arcs with tick marks, a thin frame with ticks (the paint: 85, 69, 1879, 885). It is constructed, not drawn by the image model (which kept adding numerals and stars), so it is more regular than an engraving and has little hatching. |
+| `koi-figures.webp` | 1024 × 512, 31 KB | Two koi from above in outline, heads to the left, in two 512-pixel cells: one straight (46, 184, 424, 163), one in a shallow S (in its own cell: 40, 185, 435, 167). A few scale arcs and fin rays, no fill. Plainer than an atlas figure. |
+
+#### Ink
+
+In `public/pond/ink/`. Each is 1024 × 1024, near-black ink whose darkness is in the alpha (the plum keeps
+its red), entering at the right edge and reaching left, the left third empty.
+
+| File | Size | What is in it (the paint, as x, y, width, height) |
+| --- | --- | --- |
+| `plum.webp` | 70 KB | An old plum branch rising from the lower right, two open blossoms and a few buds in soft red: 360, 148, 664, 727. The wood is heavier and more worked than the others. |
+| `willow.webp` | 56 KB | Willow fronds hanging from a branch at the upper right: 359, 73, 665, 820. |
+| `lotus.webp` | 77 KB | A lotus leaf in wet wash, a flower in line above it and a bud, on stems from the lower right: 358, 194, 666, 636. |
+| `reeds.webp` | 75 KB | Reeds bending from the right, a goose flying in at the top and one standing among them: 364, 90, 660, 840. |
+
+
 #### Wanted, by look
 
 A first small lot for each look: the two or three pictures that would lift it most. ★ marks the ones
@@ -240,28 +288,12 @@ middle of each, read left to right, top to bottom.
 **Monet** (`public/pond/monet/`). The strokes are procedural tiles now and read as scales; real
 brushwork to stamp the scene with is what the look most needs.
 
-- ★ `strokes.webp`, 1024 × 1024, a 4 × 4 sheet of single oil brush strokes as they look on canvas:
-  thick paint, bristle streaks along the stroke, a raised ridge at one side and a thinner, dragged
-  tail. In greyscale, where lightness is the paint's height (white the thickest) and alpha its
-  cover; no colour (the look colours them). Each stroke lies left to right. Row 1: four long loaded
-  drags, about 220 pixels long. Row 2: four medium strokes, slightly curved. Row 3: four short dabs,
-  about 90 pixels. Row 4: four clusters of three or four small dabs laid together, for lily pads and
-  flowers. Reference: the surface of Monet's late Water Lilies seen close.
-- ★ `canvas.webp`, 512 × 512, a primed linen canvas weave, greyscale, opaque, seamless on all four
-  sides, even in tone with no vignette. It shows between strokes.
 - `lilies.webp`, 1024 × 512, a 4 × 2 sheet of water lilies painted in oil, seen from above at a low
   angle: four pads (two with a notch, in different greens), four blossoms (white, pink, deep rose,
   a bud), each a few thick strokes, colour included. They replace the look's dabbed pads.
 
 **青花** (`public/pond/qinghua/`). The rim is beads between lines; a real pattern would make it porcelain.
 
-- ★ `rim.webp`, 1024 × 128, a band of 缠枝莲 (lotus scroll) between two thin lines, cobalt blue line
-  and wash with the blue pooling darker at line ends, on transparent. Seamless left to right (it is
-  tiled round all four sides). Reference: Yuan and early Ming blue-and-white dish rims. Palette:
-  deep cobalt `#0F2470`, wash `#5C80CC`.
-- ★ `corner.webp`, 256 × 256, the piece that turns the band through a corner: the two lines meeting
-  at a right angle with a 如意 cloud-head or a single lotus in the angle. Drawn for the top-left
-  corner (band along the top and down the left); it is mirrored for the others.
 - `medallion.webp`, 1024 × 1024, a round 开光 medallion for the bowl's centre: a double ring, and in
   it two koi among lotus and water-weed, line and wash, the same cobalt. It sits large and pale in
   the right half behind the swimming koi.
@@ -269,26 +301,11 @@ brushwork to stamp the scene with is what the look most needs.
 
 **Ukiyo-e** (`public/pond/ukiyo/`).
 
-- ★ `waves.webp`, 1024 × 512, a 4 × 2 sheet of wave crests in the manner of Hokusai: a curling crest
-  with claw-like foam fingers and scattered spray dots, a dark keyline, flat Prussian blue
-  (`#1F4A7A`), pale blue (`#8FB4C8`) and paper white (`#F6EDD8`). Four large crests breaking to the
-  left, four small wavelets. Used where the water is pressed and along the front as the print
-  arrives.
 - `paper.webp`, 512 × 512, washi paper grain with a few long fibres, greyscale, opaque, seamless.
 - No title cartouche: the cream block was taken out and nothing is asked for in its place.
 
 **Star chart** (`public/pond/stars/`).
 
-- ★ `plate.webp`, 2048 × 1024, an engraved celestial atlas plate without its stars or figures: a
-  curved grid of right ascension and declination, the ecliptic and the equator as graduated arcs,
-  small tick marks along the frame, in one pale line colour (`#C9D4F0`) on transparent, the line as
-  a copper engraving's (thin, a little uneven, hatching where two scales meet). No numerals or
-  letters. Reference: Bode's Uranographia, Hevelius. It lies still under the stars and turns with
-  them.
-- ★ `koi-figures.webp`, 1024 × 512, a 2 × 1 sheet: two koi drawn as constellation figures, the way
-  an atlas draws Pisces: outline and a few engraved scales and fin rays in the same pale line, no
-  fill, one fish straight and one curved, heads to the left. They sit faintly behind each koi's
-  stars.
 - `compass.webp`, 512 × 512, an ornamental compass rose in the same engraving, for a lower corner.
 
 **Ink** (`public/pond/ink/`). The look Jincheng is happiest with; these would finish it.
@@ -299,11 +316,9 @@ brushwork to stamp the scene with is what the look most needs.
   墨 (square, 白文), 浮世 (tall, 朱文), 莲 (round, 白文), 青花 (tall, 白文), 敦煌 (tall, 朱文), 光
   (round, 朱文), 图 (square, 白文), 字 (square, 朱文), 星 (round, 白文), 锦程 (tall, 白文, 锦 over
   程), then two cells left empty. Tall seals are 3 : 5. They replace the album's seals and the stamp.
-- ★ Seasonal motifs in ink, each 1024 × 1024, black and grey wash on transparent, painted from one
-  edge inward so it can hang at the pond's right edge: `plum.webp` (a plum branch in blossom, a
-  touch of red in the flowers), `willow.webp` (willow fronds hanging), `lotus.webp` (a lotus leaf
-  and flower on long stems), `reeds.webp` (reeds with two wild geese). Reference: Song and Yuan
-  flower-and-bird painting, Bada Shanren for economy.
+  Tried and not delivered: the image model draws shapes that look like seal script and are not the
+  characters, and no seal-script font is on the owner's machine to set them from. It needs such a font
+  (the owner's to choose, for its licence); the seals would then be set from it and carved in code.
 - Later: three washes of distant hills, 2048 × 512.
 
 **Glow, blueprint, ASCII:** nothing wanted. Each is made of light, ruled line or characters, which
