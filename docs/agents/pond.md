@@ -59,9 +59,12 @@ for; keep it true when the file changes.
   for someone with a stored session, otherwise once the pond has settled
   (`settled` in `engine.js`), as do the songs, three.js and the models.
 - **The loop's pace** (`clock.js`, `invalidate()` in `engine.js`):
-  - At most 30 frames a second while something happens, and 10 once nothing has for six seconds (no
-    input, the water settled, no look coming in, no rain).
-  - None while the tab is hidden. Under reduced motion it draws only for a moment after a change.
+  - At most 60 frames a second while something happens, and 30 once nothing has for six seconds (no
+    input, the water settled, no look coming in, no rain). The koi always swim, so quiet is never
+    still: at 10 they stepped visibly.
+  - Frames fall on the display's own beats, every nth (`due()`), so they come evenly; a timer that
+    waited and then caught the next beat made the koi judder.
+  - None while the tab is hidden. Under reduced motion the koi still swim, at the quiet pace.
   - The ripples step on time, 120 steps a second (scaled by ink's slow time), so they run at the same
     speed at 60 and 120 Hz.
   - A frame touches the page only when what it shows changes: the panes are read only while something

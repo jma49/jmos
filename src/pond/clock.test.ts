@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { FPS, IDLE_FPS, MAX_STEPS, SIM_RATE, frameGap, simSteps } from './clock.js';
+import { FPS, IDLE_FPS, MAX_STEPS, SIM_RATE, due, learnBeat, simSteps } from './clock.js';
 
 // Run `seconds` of frames at `hz`, as the loop does, and count the ripple steps taken.
 function stepsOver(hz: number, seconds: number, timeScale = 1) {
@@ -30,10 +30,34 @@ describe('the ripple clock', () => {
   });
 });
 
+// Run `seconds` of a display's beats at `hz`, drawing when due, and return the gaps between frames drawn.
+function drawn(hz: number, busy: boolean, seconds = 2) {
+  const beat = 1000 / hz,
+    gaps: number[] = [];
+  let at = 0;
+  for (let b = 1; b <= hz * seconds; b++) {
+    const now = b * beat;
+    if (due(now, at, beat, busy)) {
+      if (at) gaps.push(now - at);
+      at = now;
+    }
+  }
+  return gaps;
+}
+
 describe('the frame clock', () => {
-  it('waits a thirtieth of a second when busy, a tenth when quiet', () => {
-    expect(frameGap(0, 0, true)).toBeCloseTo(1000 / FPS);
-    expect(frameGap(0, 0, false)).toBeCloseTo(1000 / IDLE_FPS);
-    expect(frameGap(0, 50, true)).toBe(0);
+  it('draws on evenly spaced beats, at the busy and the quiet pace, on 60 and 120 Hz displays', () => {
+    for (const hz of [60, 120])
+      for (const busy of [true, false]) {
+        const gaps = drawn(hz, busy);
+        expect(Math.max(...gaps) - Math.min(...gaps)).toBeLessThan(0.01);
+        expect(1000 / gaps[0]).toBeCloseTo(Math.min(hz, busy ? FPS : IDLE_FPS), 0);
+      }
+  });
+  it('learns the beat and ignores a skipped one', () => {
+    let v = 1000 / 60;
+    for (let i = 0; i < 80; i++) v = learnBeat(v, 1000 / 120);
+    expect(v).toBeCloseTo(1000 / 120, 1);
+    expect(learnBeat(v, 40)).toBe(v);
   });
 });

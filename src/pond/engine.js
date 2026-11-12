@@ -13,7 +13,7 @@ import { report } from '../os/core/report';
 import { load, save } from '../os/core/storage';
 // the looks' type, as a stylesheet of its own: linked only once a look or 日 is chosen (loadType)
 import LOOKS_CSS from './looks.css?url';
-import { IDLE_AFTER, frameGap, simSteps } from './clock.js';
+import { IDLE_AFTER, due, learnBeat, simSteps } from './clock.js';
 import { SocialError } from '../os/social/errors';
 import { coverOf, loadSongs, music, onMusic, play as playSongAt, setMusicMuted, toggle as toggleSong } from './music';
 import * as people from './people';
@@ -4710,12 +4710,14 @@ function resize() {
   makeIce();
 }
 /* ================= the loop's pace =================
-   At most 30 frames a second while something happens, 10 once nothing has for a while (no input, the
-   water settled, no look coming in, no rain); none while the tab is hidden; under reduced motion, frames
-   only for a moment after something changes. invalidate() wakes it. */
+   At most 60 frames a second while something happens, 30 once nothing has for a while (no input, the
+   water settled, no look coming in, no rain), each on the display's own beat so they come evenly (clock.js);
+   none while the tab is hidden. Under reduced motion the koi still swim, at the quiet pace: a pond
+   that stopped a moment after the pointer did looked broken. invalidate() wakes it. A beat that isn't drawn on costs nothing but the callback. */
 let last = 0,
   running = false,
-  loopTimer = 0,
+  beatAt = 0,
+  vsync = 1000 / 60,
   wokeAt = 0,
   calmAt = 0,
   energyAt = 0,
@@ -4728,6 +4730,7 @@ function invalidate() {
   if (running || document.hidden) return;
   running = true;
   last = 0;
+  beatAt = 0;
   requestAnimationFrame(frame);
 }
 // how much the water is moving, looked at twice a second: a press's rings keep the pace up until they settle
@@ -4751,12 +4754,9 @@ function busy(now) {
     now < panesUntil
   );
 }
-function nextFrame(started) {
+function afterFrame(started) {
   const now = performance.now();
-  if (document.hidden) return (running = false);
-  // reduced motion: draw for a moment after a change, then stop until the next
-  if (RM && now - wokeAt > 1500 && now > panesUntil) return (running = false);
-  // frames that keep running long at the busy pace draw fewer pixels
+  // frames whose own work runs long draw fewer pixels
   if (now - started > 45) {
     if (++slow > 45 && quality > 0.7) {
       quality = Math.max(0.7, quality * 0.85);
@@ -4766,13 +4766,10 @@ function nextFrame(started) {
   } else slow = Math.max(0, slow - 1);
   // a minute with nothing happening, and the sound sleeps until the next touch
   if (AC && AC.state === 'running' && now - wokeAt > 60000 && !music().playing) AC.suspend();
-  clearTimeout(loopTimer);
-  loopTimer = setTimeout(() => requestAnimationFrame(frame), frameGap(started, now, busy(now)));
 }
 for (const ev of ['pointerdown', 'pointermove', 'keydown', 'wheel', 'touchstart']) addEventListener(ev, invalidate, { capture: true, passive: true });
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) {
-    clearTimeout(loopTimer);
     running = false;
     if (AC && AC.state === 'running') AC.suspend();
   } else {
@@ -4784,6 +4781,12 @@ new MutationObserver(invalidate).observe(pond, { attributes: true });
 // a pane shown, hidden or opened without a transition is read again too
 new MutationObserver(() => (panesLive(), invalidate())).observe(pond, { attributes: true, subtree: true, attributeFilter: ['hidden', 'class', 'data-open'] });
 function frame(now) {
+  if (beatAt) vsync = learnBeat(vsync, now - beatAt);
+  beatAt = now;
+  if (document.hidden) return void (running = false);
+  requestAnimationFrame(frame);
+  // reduced motion keeps the koi swimming (its other calming is elsewhere), at the quiet pace
+  if (!due(now, last, vsync, !RM && busy(now))) return;
   const started = performance.now();
   const raw = last ? Math.min(0.05, (now - last) / 1000) : 1 / 30;
   last = now;
@@ -4791,7 +4794,7 @@ function frame(now) {
   try {
     tick1(raw);
   } finally {
-    nextFrame(started);
+    afterFrame(started);
   }
 }
 function tick1(raw) {
