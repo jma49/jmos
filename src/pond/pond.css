@@ -3572,3 +3572,23 @@ button.more:hover {
     --s: 70px;
   }
 }
+
+/* with ?perf: the pond's numbers (perf.js) */
+.perf {
+  position: fixed;
+  z-index: 20;
+  left: 8px;
+  top: 8px;
+  margin: 0;
+  padding: 6px 8px;
+  border-radius: 6px;
+  font:
+    11px / 1.35 ui-monospace,
+    'SF Mono',
+    Menlo,
+    monospace;
+  color: #eef4f1;
+  background: rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+  white-space: pre;
+}
