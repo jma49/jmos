@@ -451,10 +451,38 @@ pads and flowers as these sets: spring (small young pads), summer (full pads, bu
   keep the spine dead straight and paint nothing that only makes sense straight (no long straight
   highlight down the back). 青花's sheet is the model of a correct one.
 
-**The dove and the spider** are modelled in Blender and rendered from straight above as sprite
-sheets (sitting, take-off, flight, landing; sitting, walk, crouch, jump), neutral in colour: delivered,
-under "Water" above. Each look below says how it wants them dressed; where a look only says "tinted",
-the neutral sheet is tinted in code and nothing more is needed.
+**The dove and the spider** (Blender; in `public/pond/water/`). **Status: revise.** The first sheets
+(`dove.webp`, `spider.webp`, under "Water" above) are clean and correct in outline, but Jincheng's
+review is that the dove is not detailed or lifelike enough and the spider needs more detail. They
+are used only as placeholders while the pond's sprite path is built; they are not final. Before
+rendering whole sheets again, send **one still of each at full size** for approval. Keep: straight
+above, the same facing, neutral even light with ambient occlusion only, no cast shadow, transparent
+ground, straight alpha; the same file names with `-v2`; and a note of the grid and frame order.
+
+- **The dove: a real dove, from life.** Work from real white doves and rock pigeons seen from above.
+  - Proportions: a small head, a full breast, a body that tapers, a fan tail.
+  - Plumage modelled so it reads from above: primaries, secondaries, the greater, median and lesser
+    coverts, the scapulars, and the tail feathers, overlapping, with soft edges. Soft white, with a
+    little warm and grey shading in the overlaps. Not a clay model.
+  - At rest: the wings folded properly, their tips crossing over the tail; feet tucked.
+  - The head: an eye with a dark iris and an eye-ring, a beak with its cere.
+  - Flight: a believable wingbeat (on the upstroke the primaries separate and the wrists flex; on the
+    downstroke the wing is fully spread), 12 frames or more; a take-off with a push and steep first
+    beats; a landing with the tail fanned and the wings braking.
+  - Also: an idle (preening, or a head-bob) and a short walk with the feet showing.
+  - Cells of 512 × 512, so it holds at the size it is drawn. Give the grid.
+- **The jumping spider: more detail.** It is ocra's jumping spider (Salticidae).
+  - From above: the large forward pair of eyes with a wet highlight, and the smaller eyes behind them.
+  - Dense short hair on the carapace and the abdomen, in a clear pattern: banding on the abdomen,
+    pale markings, and one touch of ocra's orange (`#E7603A`) as the accent, on the pedipalps or as a
+    mark on the abdomen.
+  - Legs with their segments and banding, bristles, the pedipalps in front; a low, compact stance.
+  - Animation: an alert turn towards movement; the walk, with its stop and start; a wind-up crouch;
+    a jump with the legs extended; a landing that settles.
+  - Larger cells too (384 × 384 or more). Give the grid.
+
+Each look below says how it wants them dressed; where a look only says "tinted", the neutral sheet
+is tinted in code and nothing more is needed.
 
 **The seals** are one sheet for all looks, in the ink kit below.
 
