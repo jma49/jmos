@@ -192,7 +192,7 @@ Wanted:
 - `feitian-pipa` again, larger: the same figure, pose and facing (flying left, ribbons right), 2560 ×
   1280. It is the centrepiece, drawn up to half the wall's width, and on a 2000-pixel window at 2× the
   1536 one is stretched past its sharpness. At this size it will pass 200 KB: `check-public-sizes.mjs`
-  would need a line for `pond/dunhuang/` (say 450 KB a picture), the reason being that these load
+  would need a line for `public/pond/dunhuang/` (say 450 KB a picture), the reason being that these load
   only when this one look is first chosen, never on a first visit.
 - A border strip for the top and bottom of the wall: a band of 卷草纹 (scrolling vine) between two rows
   of 连珠 beads, the same palette and line, 1024 × 128, transparent, and seamless where its left end
