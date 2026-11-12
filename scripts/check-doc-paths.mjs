@@ -48,6 +48,12 @@ const ALLOWED = new Map([
   ['CLAUDE.local.md', 'a personal tool file, kept out of git'],
   ['.cursor/', 'a personal tool folder, kept out of git'],
   ['public/og.png', 'named as what not to commit (the image is public/og.jpg)'],
+  // Folders a look's pictures will be delivered into (docs/agents/pond.md, "Pictures for the looks").
+  ['public/pond/monet/', 'asked for, not yet delivered'],
+  ['public/pond/qinghua/', 'asked for, not yet delivered'],
+  ['public/pond/ukiyo/', 'asked for, not yet delivered'],
+  ['public/pond/stars/', 'asked for, not yet delivered'],
+  ['public/pond/ink/', 'asked for, not yet delivered'],
   ['supabase/.temp/', 'the Supabase CLI’s local state, kept out of git'],
   // Named in docs/agents/pitfalls.md as history: where Astro's entry point
   // was and is, inside node_modules/astro.

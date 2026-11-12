@@ -147,7 +147,16 @@ commands; their seals are marked `preview` in `seals.ts`.
 - The gestures are rules apart from the pond (`gestures.ts`), with the table of all ten looks at the
   top; `gestures.test.ts` tries every pair. A new gesture goes in the table and gets its pairs.
 
-### Pictures for the Dunhuang look
+### Pictures for the looks
+
+Where a painted picture beats what a shader or canvas paths can draw, a look uses one. Each look's
+pictures are in `public/pond/<look>/`, load only when that look is first asked for, and stay within
+the size budget of `scripts/check-public-sizes.mjs` or have a stated exception there. A look is built
+to work without its pictures and to be better with them, so nothing waits on a delivery. What is
+asked for is under "Wanted, by look" at the end of this section; what has come is in a table under
+its look.
+
+#### Dunhuang
 
 The flying figures (飞天) can't be drawn well in a shader, so they are pictures, in
 `public/pond/dunhuang/`. They are in use: `muralLayout()` in `newlooks.js` places them for the wall's size, `paintMural()` in
@@ -194,7 +203,7 @@ tool, asked from there), not from an agent in the cloud. So the work is split:
   and 39), flat pigment inside an iron-wire line, the palette above, no shading, no background, no
   ageing, with a margin of at least 4% on every side.
 
-Wanted:
+Wanted for Dunhuang:
 
 - A ceiling medallion (藻井) with the three hares that share three ears (cave 407), square, for the
   quiet middle of the wall. One was made and turned down: the ears came out as three spindles
@@ -219,6 +228,91 @@ position (`faces` in `muralLayout()`): if a picture is redrawn with the head els
 ochre (`#CC8F38`) is read as gold leaf and made to glint, so anything meant as gold should keep that
 colour and anything not meant as gold should avoid it. The loose flowers are fixed on the wall, not
 adrift: riding the petals' wind would need them as sprites on the top layer, which is a later step.
+
+#### Wanted, by look
+
+A first small lot for each look: the two or three pictures that would lift it most. ★ marks the ones
+to make first. Unless a line says otherwise: WebP, transparent ground, straight alpha, a margin of at
+least 4% inside each picture or cell, nothing cropped, no text or signature, no ageing or paper
+texture baked in (the shader adds its own). Sheets are grids of equal cells with one motif in the
+middle of each, read left to right, top to bottom.
+
+**Monet** (`public/pond/monet/`). The strokes are procedural tiles now and read as scales; real
+brushwork to stamp the scene with is what the look most needs.
+
+- ★ `strokes.webp`, 1024 × 1024, a 4 × 4 sheet of single oil brush strokes as they look on canvas:
+  thick paint, bristle streaks along the stroke, a raised ridge at one side and a thinner, dragged
+  tail. In greyscale, where lightness is the paint's height (white the thickest) and alpha its
+  cover; no colour (the look colours them). Each stroke lies left to right. Row 1: four long loaded
+  drags, about 220 pixels long. Row 2: four medium strokes, slightly curved. Row 3: four short dabs,
+  about 90 pixels. Row 4: four clusters of three or four small dabs laid together, for lily pads and
+  flowers. Reference: the surface of Monet's late Water Lilies seen close.
+- ★ `canvas.webp`, 512 × 512, a primed linen canvas weave, greyscale, opaque, seamless on all four
+  sides, even in tone with no vignette. It shows between strokes.
+- `lilies.webp`, 1024 × 512, a 4 × 2 sheet of water lilies painted in oil, seen from above at a low
+  angle: four pads (two with a notch, in different greens), four blossoms (white, pink, deep rose,
+  a bud), each a few thick strokes, colour included. They replace the look's dabbed pads.
+
+**青花** (`public/pond/qinghua/`). The rim is beads between lines; a real pattern would make it porcelain.
+
+- ★ `rim.webp`, 1024 × 128, a band of 缠枝莲 (lotus scroll) between two thin lines, cobalt blue line
+  and wash with the blue pooling darker at line ends, on transparent. Seamless left to right (it is
+  tiled round all four sides). Reference: Yuan and early Ming blue-and-white dish rims. Palette:
+  deep cobalt `#0F2470`, wash `#5C80CC`.
+- ★ `corner.webp`, 256 × 256, the piece that turns the band through a corner: the two lines meeting
+  at a right angle with a 如意 cloud-head or a single lotus in the angle. Drawn for the top-left
+  corner (band along the top and down the left); it is mirrored for the others.
+- `medallion.webp`, 1024 × 1024, a round 开光 medallion for the bowl's centre: a double ring, and in
+  it two koi among lotus and water-weed, line and wash, the same cobalt. It sits large and pale in
+  the right half behind the swimming koi.
+- Later: three koi poses and two lotus as 青花 motifs, to replace the shader's outlines.
+
+**Ukiyo-e** (`public/pond/ukiyo/`).
+
+- ★ `waves.webp`, 1024 × 512, a 4 × 2 sheet of wave crests in the manner of Hokusai: a curling crest
+  with claw-like foam fingers and scattered spray dots, a dark keyline, flat Prussian blue
+  (`#1F4A7A`), pale blue (`#8FB4C8`) and paper white (`#F6EDD8`). Four large crests breaking to the
+  left, four small wavelets. Used where the water is pressed and along the front as the print
+  arrives.
+- `paper.webp`, 512 × 512, washi paper grain with a few long fibres, greyscale, opaque, seamless.
+- No title cartouche: the cream block was taken out and nothing is asked for in its place.
+
+**Star chart** (`public/pond/stars/`).
+
+- ★ `plate.webp`, 2048 × 1024, an engraved celestial atlas plate without its stars or figures: a
+  curved grid of right ascension and declination, the ecliptic and the equator as graduated arcs,
+  small tick marks along the frame, in one pale line colour (`#C9D4F0`) on transparent, the line as
+  a copper engraving's (thin, a little uneven, hatching where two scales meet). No numerals or
+  letters. Reference: Bode's Uranographia, Hevelius. It lies still under the stars and turns with
+  them.
+- ★ `koi-figures.webp`, 1024 × 512, a 2 × 1 sheet: two koi drawn as constellation figures, the way
+  an atlas draws Pisces: outline and a few engraved scales and fin rays in the same pale line, no
+  fill, one fish straight and one curved, heads to the left. They sit faintly behind each koi's
+  stars.
+- `compass.webp`, 512 × 512, an ornamental compass rose in the same engraving, for a lower corner.
+
+**Ink** (`public/pond/ink/`). The look Jincheng is happiest with; these would finish it.
+
+- ★ `seals.webp`, 1024 × 768, a 4 × 3 sheet of seals carved in true seal script (篆书), which the
+  brush face can't give: vermilion `#B8382A` and the stone's uneven edge, the cut either white
+  characters out of red (白文) or red characters and a red border on transparent (朱文). In order:
+  墨 (square, 白文), 浮世 (tall, 朱文), 莲 (round, 白文), 青花 (tall, 白文), 敦煌 (tall, 朱文), 光
+  (round, 朱文), 图 (square, 白文), 字 (square, 朱文), 星 (round, 白文), 锦程 (tall, 白文, 锦 over
+  程), then two cells left empty. Tall seals are 3 : 5. They replace the album's seals and the stamp.
+- ★ Seasonal motifs in ink, each 1024 × 1024, black and grey wash on transparent, painted from one
+  edge inward so it can hang at the pond's right edge: `plum.webp` (a plum branch in blossom, a
+  touch of red in the flowers), `willow.webp` (willow fronds hanging), `lotus.webp` (a lotus leaf
+  and flower on long stems), `reeds.webp` (reeds with two wild geese). Reference: Song and Yuan
+  flower-and-bird painting, Bada Shanren for economy.
+- Later: three washes of distant hills, 2048 × 512.
+
+**Glow, blueprint, ASCII:** nothing wanted. Each is made of light, ruled line or characters, which
+the shader and the type do better than a picture would.
+
+**The dove and the spider:** nothing yet. Their models are dressed for each look first; a look they
+can't be dressed for will ask for a small illustration of each here.
+
+**The look that replaces the blackboard:** held until it is chosen.
 
 ## Languages
 
