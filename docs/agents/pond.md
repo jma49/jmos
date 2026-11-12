@@ -174,6 +174,8 @@ The flying figures (飞天) can't be drawn well in a shader, so they are picture
 | `caisson.webp` | 1024 × 1024, 172 KB | A ceiling medallion (藻井): a lotus of two rings of petals round a white seed-pod, in a blue circle, a corner flower in each corner, then square bands of cinnabar triangles, white petals, blue and green: 42, 43, 939, 938. Opaque inside its square. No gold in it. Drawn by hand, so not exactly the same in its four quarters. |
 | `halo.webp` | 512 × 512, 51 KB | A halo (光环): a white disc, a blue ring, a ring of cinnabar and green petals, and a thin rim in the gold ochre: 23, 23, 466, 466, a circle about the middle. |
 | `cloud-trail.webp` | 1024 × 256, 36 KB | A long cloud (长云): three curled scrolls in white, blue and green at the left, thinning into one tail that ends in a point at the right: 57, 33, 916, 167. |
+| `koi.webp` | 1024 × 1536, 134 KB | The koi sheet to the common spec, as mural fish: an iron-wire line, rows of scale arcs, flat mineral colour. Four rows of 384 pixels, each from x 62 (the barbels) to a tail tip at 962, the spine on its row's middle line (y 192, 576, 960, 1344); one drawing mirrored about the spine. Row 1 in the gold ochre with white fins; row 2 the wall's white with one cinnabar spot on the head; rows 3 and 4 in greys with three and four grey patches. The ochre is on the gold koi only. Its fin rays taper a little, and it is close in drawing to the ukiyo-e sheet: the two differ mostly in line weight and colour. |
+| `koi-mask.webp` | 1024 × 1536, 11 KB | White over the patches of rows 3 and 4 (about 13% of each fish), soft by 2 to 3 pixels, black elsewhere. |
 
 - **How they are painted:** flat mineral colour inside a dark line, in the look's own palette (blue
   `#2B6385`, green `#4D856E`, cinnabar `#B34026`, white `#EDE0C2`, line `#2E1C12`, a little ochre
@@ -240,9 +242,7 @@ it a little and catches a sheen (`lookMonet()`), the pads and their flowers are 
 Not used yet: `strokes` and `canvas` (the press is a soft dab drawn in the shader, and the arrival's
 front is the shader's; both could take the stamps later).
 
-Still wanted for it: in `koi.webp`'s manner, a white koi with a single red spot on its head (the
-visitor's own koi; the white-and-red one stands in for it now), and two koi in greys with a mask of
-where a visitor's colour goes, as "Koi for each look" below asks of every look.
+The koi to the common spec have come as `koi-v2.webp` and `koi-mask.webp` (the table below).
 
 | File | Size | What is in it |
 | --- | --- | --- |
@@ -253,6 +253,8 @@ where a visitor's colour goes, as "Koi for each look" below asks of every look.
 | `bed-tall.webp` | 1080 × 1920, 95 KB | The same pond painted again upright, not a crop: the dark, plain passage across the top third (it averages `#3F6383`; the rest `#648699`), willow reflections and pale sky below. Quieter and softer than the wide one. |
 | `lilies.webp` | 1024 × 768, 137 KB | Twelve motifs in a 4 × 3 grid of 256-pixel cells, each at least 22 pixels clear of its cell's edge, no outline or shadow, soft bristle edges in the alpha. Row 1: three large pads (olive, grey-green with a notch, one catching the light) and a medium olive pad with a notch. Row 2: a medium grey-green pad, a small olive pad, a small light pad, an open white blossom. Row 3: a half-open white blossom, an open pink, a half-open pink, a bud. The large pads are about 210 pixels across, the medium 170, the small 120. |
 | `koi.webp` | 1024 × 768, 166 KB | Three koi from straight above, one to a 256-pixel row, heads to the left: orange (spine at y 128), white with red (384), gold (640). Each runs from a snout at x 62 (barbels to 55) to a tail tip at 958, the spine within 3 pixels of its row's middle. The tails and fins are not quite the same above and below the spine, there is more detail than a few loaded strokes, and the alpha has only 12 levels, so the bristle edges are coarser than the lilies'. If they don't sit well, keep the pond's own koi. |
+| `koi-v2.webp` | 1024 × 1536, 173 KB | The koi again, to the common spec: four rows of 384 pixels, heads to the left, each from x 62 (the barbels) to a tail tip at 962, the spine on its row's middle line (y 192, 576, 960, 1344), within 3 pixels (it is not mirrored, so the fins keep a small natural unevenness). The same fish in the same dabs four times: gold; white with one red dab on the head; two in greys with four darker dabs each, laid differently. The body is slimmer than in `koi.webp`. Smooth alpha (256 levels). `KOI_SHEETS.monet` still reads `koi.webp`, whose rows are 256 pixels: to change over, point it at this file with rows of 384, the tail tip at 962 and the mask, then delete `koi.webp`. |
+| `koi-mask.webp` | 1024 × 1536, 17 KB | White over the grey dabs of rows 3 and 4 of `koi-v2.webp` (about 30% of each fish), soft by 2 pixels, black elsewhere. |
 
 #### 青花
 
@@ -275,6 +277,8 @@ In `public/pond/ukiyo/`.
 | File | Size | What is in it |
 | --- | --- | --- |
 | `waves.webp` | 1024 × 512, 68 KB | Eight wave crests in a 4 × 2 grid of 256-pixel cells, all breaking to the left: four large ones with claw foam and spray dots in the top row, four low wavelets in the bottom. Exactly four colours: `#1F4A7A`, `#8FB4C8`, `#F6EDD8` and a keyline `#0C1B27`. The four large crests are much alike in outline. |
+| `koi.webp` | 1024 × 1536, 177 KB | The koi sheet to the common spec, as a carp print: a black key line, bold scale arcs, flat colour. Four rows of 384 pixels, each from x 62 (the barbels) to a tail tip at 962, the spine on its row's middle line (y 192, 576, 960, 1344); one drawing, its upper half mirrored onto the lower, so the spine is exact. Row 1 ochre `#E9B44C` with paper-white fins; row 2 paper white with one vermilion spot on the head; row 3 in greys with three grey patches, row 4 with four. The patches are irregular and not the same either side of the spine. The line is cleaner and more even than a cut block's. |
+| `koi-mask.webp` | 1024 × 1536, 11 KB | White over the patches of rows 3 and 4 (about 14% of each fish), soft by 2 to 3 pixels, black elsewhere. |
 
 #### Star chart
 
@@ -367,6 +371,13 @@ and rendered from straight above. Not used yet: `life.js` still draws them.
   little.
 - **To change them:** they are made by scripts kept on the owner's machine (one command a sheet,
   about two minutes), so a different facing, size, frame count or light is cheap to ask for.
+- **`lilies.webp`**, 1024 × 768, 157 KB: eleven motifs in a 4 × 3 grid of 256-pixel cells, from straight
+  above, like softened photographs, even light, no shadow. Row 1, summer: a large whole pad (215
+  pixels across), a large one with a notch, a medium one with a notch (170), a small young one (120).
+  Row 2, autumn, the same four withered: yellowing with a brown curled edge, brown and torn with a
+  notch, brown with a notch, small and yellow-brown. Row 3: a white flower and a pink one, open (150
+  across), a bud (98 × 120), and an empty cell. The leaves are closer to lotus leaves than to a water
+  lily's, their sheen is slight, and the flowers are a little cupped. Not used yet.
 
 
 #### What is drawn by code, and what should be a picture
@@ -497,11 +508,9 @@ like clear water over stones, nothing looks pasted on.
    a normal map `bed-n.webp`, 2048 × 1152, opaque, river pebbles from straight above in soft even
    light, seamless left to right, under 150 KB together.
 2. Koi: keep the pond's own. No sheet wanted.
-3. P0 `lilies.webp`, 1024 × 768, 4 × 3: lily pads from above in three sizes (two with a notch),
-   leaf veins and a wet sheen, natural greens; the same three as autumn pads (yellowing, a brown
-   curled edge); a white and a pink lotus flower, open; a bud. Photographic-painterly, soft edges.
-   Drawn under the water's light. P1 `afloat.webp`, 1024 × 512, 4 × 2: two cherry petals, three
-   autumn leaves (maple, ginkgo, oak), a folded paper boat from above in three tones.
+3. Delivered, to wire in: `lilies.webp` (summer pads, autumn pads, two flowers and a bud). P1
+   `afloat.webp`, 1024 × 512, 4 × 2: two cherry petals, three autumn leaves (maple, ginkgo, oak), a
+   folded paper boat from above in three tones.
 4. Ornaments: none.
 5. Press: none (it is the water itself).
 6. Dove and spider: the neutral sheets as rendered: delivered (`dove.webp`, `spider.webp`), to wire in.
@@ -531,8 +540,7 @@ is most of it.
 **Ukiyo-e.** Judge it by: a Hokusai or Hiroshige print at arm's length: flat colour, a key line,
 bokashi gradation, paper showing.
 1. P1 `paper.webp`, 512 × 512, washi grain with a few long fibres, greyscale, opaque, seamless.
-2. P0 `koi.webp` + mask: flat colour inside a black key line, as in a carp print (Kuniyoshi's and
-   Hiroshige's carp); gold as ochre `#E9B44C`, the spot in vermilion `#E2563A`.
+2. Delivered, to wire in: `koi.webp` + mask, as a carp print.
 3. P1 `lilies.webp`, 1024 × 512, 4 × 2: lotus leaves and flowers as a print draws them from above;
    maple leaves and cherry petals for the seasons.
 4. Ornaments: none (no cartouche: it was tried and taken out).
@@ -553,8 +561,8 @@ Everything else is ruled in the shader. Nothing more wanted.
 
 **Monet.** Judge it by: at thumbnail size it is a late Nymphéas panel.
 1. Delivered and in use: `bed`, `bed-1280`, `bed-tall`.
-2. Delivered and in use: `koi` (three). P0: redo it to the common spec, so that row 2 is white
-   with one red spot and rows 3 and 4 are tintable with a mask; the same loaded dabs.
+2. Delivered and in use: `koi` (three). Delivered, to change over to: `koi-v2` + mask, to the common
+   spec (the table above says how).
 3. Delivered and in use: `lilies`. P1: an autumn row for it (pads gone yellow-brown), 1024 × 256.
 4. Ornaments: none.
 5. Delivered, not yet used: `strokes`, `canvas`. For the press and the arrival.
@@ -579,9 +587,7 @@ white, the blue pooling at line ends.
 dark painted game mural.
 1. Delivered and in use: the figures, `sky-flowers`, `border`, `cloud-trail`; `halo` and `caisson`
    delivered, to be placed.
-2. P0 `koi.webp` + mask: mural fish, mineral colour inside an iron-wire line `#2E1C12`; gold in
-   the ochre `#CC8F38`, the spot in cinnabar `#B34026`, the tintable ones in the wall's white
-   `#EDE0C2` with grey patches.
+2. Delivered, to wire in: `koi.webp` + mask, as mural fish.
 3. P1 `lotus.webp`, 1024 × 512, 4 × 2: lotus leaves and flowers as cave ceilings paint them, flat
    mineral green, white and cinnabar in the same line.
 4. Delivered: `border`. 5. Press: the shader's flaking. Nothing wanted.
