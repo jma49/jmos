@@ -321,6 +321,51 @@ In `public/pond/relief/`, each picture as a pair that lines up to the pixel: `-c
   rays are fine for this size. The drawing is cleaner and more regular than a tomb wall's.
 
 
+#### Water
+
+In `public/pond/water/`: Devot's dove and ocra's jumping spider as sprite sheets, modelled in Blender
+and rendered from straight above. Not used yet: `life.js` still draws them.
+
+| File | Size | Cells | Rows, left-aligned, the rest of each row empty |
+| --- | --- | --- | --- |
+| `dove.webp` | 2048 × 1024, 132 KB | 256 × 256, 8 × 4 | 1 sitting (4), 2 take-off (6), 3 flight (8), 4 landing (6) |
+| `spider.webp` | 1536 × 768, 117 KB | 192 × 192, 8 × 4 | 1 sitting (2), 2 walking (8), 3 crouch (2), 4 jump (4) |
+
+- **Framing is `life.js`'s own**, so a cell drops in where the 3D picture was drawn, at the same
+  size: the creature faces the right of its cell (heading 0), its place on the ground is the cell's
+  centre (128, 128 for the dove, 96, 96 for the spider), and the cell spans 4 units either side of
+  it for the dove (32 pixels a unit) and 2.7 for the spider (35.6). The paint is not centred on that
+  point, as it was not before. The dove sitting still is 131 pixels from beak to tail (57, 105 to
+  188, 151); the spider is 124 pixels with its legs (22, 46 to 146, 146). Nothing comes within 18
+  pixels of a cell's edge.
+- **The dove's frames:** sitting 1 still, 2 head turned to its left (up in the cell), 3 to its
+  right, 4 preening with the head laid back on the left shoulder. Take-off 1 crouch, 2 wings
+  lifting, 3 wings high, 4 first downstroke, 5 its end, 6 upstroke, which leads into flight 1.
+  Flight is one wing-beat that loops, 1 at the top, 2 to 4 down, 5 at the bottom, 6 to 8 up; about
+  60 ms a frame. Landing 1 braking with the tail fanned, 2 the back-stroke (the widest frame, 220
+  pixels of span), 3 wings up and half folded, 4 touching down, 5 folding, 6 settled, close to
+  sitting 1.
+- **The spider's frames:** sitting 1 still, 2 looking up with the front legs and palps raised.
+  Walking is a loop of 8 in an alternating gait, about 70 ms a frame; one loop is a stride of half a
+  unit (18 pixels at the cell's scale), so move the sprite that far a loop or its feet slide. Crouch
+  1 lowering, 2 gathered. Jump 1 launch, 2 in the air and tucked, 3 front legs reaching, 4 landed
+  and splayed; the jump is drawn in place, for the pond to move.
+- **Light and colour:** one soft light from the upper left and a little fill, no ground and no
+  shadow on one, the dove white to pale grey, the spider in greys, for a look to tint or line. The
+  light is baked in at heading 0: turned with the creature, the shading turns too. Straight alpha;
+  the transparent pixels round the paint carry its edge colour, so a filtered read shows no dark
+  fringe.
+- **What is weak:** the sitting dove (the folded wing's front edge is a straight step at the
+  shoulder, and the four sitting frames differ little); its half-folded frames (take-off 2, landing
+  3 to 5) have stiff wings; its legs never show from above; on pale paper it has little contrast
+  without a line. The spider's looking-up frame is close to its still one, and its pale leg bands
+  read as knobs at the knees. The loops were judged from still frames laid side by side, not played.
+  Both are clearly better than the 3D ones in flight and for the spider; the sitting dove only a
+  little.
+- **To change them:** they are made by scripts kept on the owner's machine (one command a sheet,
+  about two minutes), so a different facing, size, frame count or light is cheap to ask for.
+
+
 #### What is drawn by code, and what should be a picture
 
 Painted pictures are the default wherever drawing in code falls short, in every look, the water
@@ -406,10 +451,10 @@ pads and flowers as these sets: spring (small young pads), summer (full pads, bu
   keep the spine dead straight and paint nothing that only makes sense straight (no long straight
   highlight down the back). 青花's sheet is the model of a correct one.
 
-**The dove and the spider** are being modelled in Blender and rendered from straight above as sprite
-sheets (sitting, take-off, flight, landing; sitting, walk, crouch, jump), neutral in colour. Each
-look below says how it wants them dressed; where a look only says "tinted", the neutral sheet is
-tinted in code and nothing more is needed.
+**The dove and the spider** are modelled in Blender and rendered from straight above as sprite
+sheets (sitting, take-off, flight, landing; sitting, walk, crouch, jump), neutral in colour: delivered,
+under "Water" above. Each look below says how it wants them dressed; where a look only says "tinted",
+the neutral sheet is tinted in code and nothing more is needed.
 
 **The seals** are one sheet for all looks, in the ink kit below.
 
@@ -428,7 +473,7 @@ like clear water over stones, nothing looks pasted on.
    autumn leaves (maple, ginkgo, oak), a folded paper boat from above in three tones.
 4. Ornaments: none.
 5. Press: none (it is the water itself).
-6. Dove and spider: the neutral sheets as rendered. P0 for both.
+6. Dove and spider: the neutral sheets as rendered: delivered (`dove.webp`, `spider.webp`), to wire in.
 7. P1 `dragonfly.webp`, 1024 × 256, four frames of a dragonfly from above, wings in four positions
    of a beat.
 

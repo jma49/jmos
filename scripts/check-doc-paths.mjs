@@ -48,7 +48,6 @@ const ALLOWED = new Map([
   ['CLAUDE.local.md', 'a personal tool file, kept out of git'],
   ['.cursor/', 'a personal tool folder, kept out of git'],
   ['public/og.png', 'named as what not to commit (the image is public/og.jpg)'],
-  ['public/pond/water/', 'asked for, not yet delivered'],
   ['supabase/.temp/', 'the Supabase CLI’s local state, kept out of git'],
   // Named in docs/agents/pitfalls.md as history: where Astro's entry point
   // was and is, inside node_modules/astro.
