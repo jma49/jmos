@@ -61,18 +61,33 @@ function wash(c, x, y, r, rgb, a, squash = 1, rot = 0) {
 const INK = '28,25,22',
   GREY = '70,72,66';
 
+// Far hills, as a reflection along the foot: two soft ranges across the whole width, their crests
+// rolling (a few long waves summed), faded out towards both edges so they never end on a hard line.
 function hills(c, W, H, s) {
   c.save();
-  c.filter = `blur(${Math.round(5 * s)}px)`;
-  for (const [y0, amp, a, x0] of [
-    [H * 0.93, 70 * s, 0.07, W * 0.38],
-    [H * 0.97, 46 * s, 0.1, W * 0.5]
+  c.filter = `blur(${Math.max(3, Math.round(6 * s))}px)`;
+  for (const [base, amp, a, k] of [
+    [0.9, 90, 0.11, 1],
+    [0.955, 56, 0.15, 1.7]
   ]) {
+    const y0 = H * base,
+      ph = rnd(0, TAU),
+      fade = c.createLinearGradient(0, 0, W, 0);
+    fade.addColorStop(0, `rgba(${GREY},0)`);
+    fade.addColorStop(0.18, `rgba(${GREY},${a})`);
+    fade.addColorStop(0.82, `rgba(${GREY},${a})`);
+    fade.addColorStop(1, `rgba(${GREY},0)`);
     c.beginPath();
-    c.moveTo(x0, H);
-    for (let x = x0; x <= W + 20; x += 8) c.lineTo(x, y0 - amp * (0.5 + 0.5 * Math.sin(x * 0.006 + y0) * Math.sin(x * 0.0021 + 1.3)));
-    c.lineTo(W + 20, H);
-    c.fillStyle = `rgba(${GREY},${a})`;
+    c.moveTo(-60, H + 20);
+    for (let x = -60; x <= W + 60; x += 6) {
+      const u = (x / 1280) * k;
+      // long swells and a few nearer peaks, always above the base
+      const h = 0.55 + 0.25 * Math.sin(u * 2.1 + ph) + 0.15 * Math.sin(u * 5.3 + ph * 1.7) + 0.08 * Math.sin(u * 11.9 + ph * 0.6);
+      c.lineTo(x, y0 - amp * s * Math.max(0.1, h));
+    }
+    c.lineTo(W + 60, H + 20);
+    c.closePath();
+    c.fillStyle = fade;
     c.fill();
   }
   c.restore();
@@ -227,5 +242,10 @@ export function paint(cv, W, H, season) {
   c.setTransform(dpr, 0, 0, dpr, 0, 0);
   c.clearRect(0, 0, W, H);
   hills(c, W, H, s);
+  // on a phone the motif shrinks into the lower right corner, clear of the type
+  if (W < 600) {
+    c.translate(W * 0.42, H * 0.42);
+    c.scale(0.58, 0.58);
+  }
   MOTIF[season](c, W, H, s);
 }

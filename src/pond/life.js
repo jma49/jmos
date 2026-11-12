@@ -890,11 +890,38 @@ export function makeLife() {
     bird = makeDove(dw.scene),
     jumper = makeSpider(sw.scene),
     warm = new T3.Color();
+  // Each look dresses the two its own way, by swapping materials once when the look changes (nothing
+  // more a frame): ink a flat wash, ukiyo-e flat bands of colour, glow a lit silhouette, blueprint a
+  // wire drawing, ASCII a pale shape the page sets like type. The water keeps them as they are.
+  const DRESS = {
+      ink: new T3.MeshBasicMaterial({ color: '#221e1a' }),
+      glow: new T3.MeshBasicMaterial({ color: '#4ff5e6' }),
+      blueprint: new T3.MeshBasicMaterial({ color: '#e8f3ff', wireframe: true }),
+      ascii: new T3.MeshBasicMaterial({ color: '#cfe6df' })
+    },
+    toon = new Map();
+  function dress(name) {
+    for (const w of [dw, sw]) {
+      w.scene.overrideMaterial = DRESS[name] || null;
+      w.ground.visible = !DRESS[name];
+      w.scene.traverse((o) => {
+        if (!o.isMesh || o === w.ground) return;
+        o.userData.orig ??= o.material;
+        const m = o.userData.orig;
+        if (name !== 'ukiyo' || Array.isArray(m)) o.material = m;
+        else {
+          if (!toon.has(m)) toon.set(m, new T3.MeshToonMaterial({ color: m.color ? m.color.clone() : 0xffffff, map: m.map || null }));
+          o.material = toon.get(m);
+        }
+      });
+    }
+  }
   return {
     canvas,
     size: N,
     DOVE,
     SPIDER,
+    dress,
     // each draws its creature into the picture; whoever asked lays the picture into the pond straight after
     dove(dt, o) {
       bird.step(dt, o);

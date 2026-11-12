@@ -2238,6 +2238,10 @@ function setLook(name, from) {
   lookTimer = setTimeout(
     () => {
       pond.toggleAttribute('data-ink', inkOn);
+      if (life) {
+        life.dress(name);
+        spiderSig = '';
+      }
       if (inkOn) {
         paintInk();
         placeKuan();
@@ -2384,7 +2388,7 @@ function drawSpider(c) {
     x.drawImage(life.canvas, 0, n, n, n, 0, 0, n, n);
   }
   c.globalAlpha = spider.alpha;
-  c.drawImage(spiderPic, spider.x - half, spider.y - half, half * 2, half * 2);
+  laidIn(c, () => c.drawImage(spiderPic, spider.x - half, spider.y - half, half * 2, half * 2));
   c.globalAlpha = 1;
 }
 
@@ -2517,7 +2521,18 @@ function drawDove(c) {
   const u = doveSize() * 0.34 * (1 + dove.h * 0.28),
     half = life.DOVE * u;
   life.dove(lifeDt, { a: dove.a, fly: dove.state !== 'sit', dip: dove.dip, h: dove.h, amb: cur ? cur.amb : 1, tint: cur ? cur.tint : [1, 1, 1] });
-  c.drawImage(life.canvas, dove.x - half, dove.y - half, half * 2, half * 2);
+  laidIn(c, () => c.drawImage(life.canvas, dove.x - half, dove.y - half, half * 2, half * 2));
+}
+// how the look lays the two into the air: ink soaks into the paper, glow adds light; the rest as they are
+const LAY = { ink: ['multiply', 0.8], glow: ['lighter', 0.65], ascii: ['source-over', 0.6] };
+function laidIn(c, draw) {
+  const l = LAY[look];
+  if (!l) return draw();
+  c.save();
+  c.globalCompositeOperation = l[0];
+  c.globalAlpha = l[1];
+  draw();
+  c.restore();
 }
 let dimsAt = 0,
   typeEdge = -1;
@@ -2578,6 +2593,10 @@ function drawDims(c) {
     c.stroke();
     c.fillText(`R ${(R / 100).toFixed(2)}`, b.x + R * 0.7071 + 4, b.y - R * 0.7071 - 4);
   }
+  // the two visitors, labelled as a drawing labels its parts
+  c.textAlign = 'left';
+  if (life && dove.state !== 'away') c.fillText('Devot · dove', dove.x + 26, dove.y + 30);
+  if (life && spider.alpha > 0.6 && spider.pad >= 0) c.fillText('ocra · jumping spider', spider.x + 22, spider.y + 26);
   c.restore();
 }
 // Rain falls where a look can carry it: on the water, in ink (fine dry strokes, and soft blooms where it
@@ -5013,6 +5032,7 @@ settled
     (L) => {
       try {
         life = L.makeLife();
+        life.dress(look);
       } catch (err) {
         report(err, 'pond models');
       }
