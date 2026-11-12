@@ -3299,14 +3299,23 @@ button.more:hover {
 .seal-m.blank[data-shape='round'] {
   border-radius: 50%;
 }
-/* the stamp: pressed into the corner above the sound, held a moment, then gone */
+/* the stamp: pressed into the corner above the controls (on a phone, above the sound, where there is
+   room), held a moment, then gone */
 .stamp {
   position: absolute;
-  left: calc(var(--edge) + 4px);
-  bottom: calc(max(22px, env(safe-area-inset-bottom, 0px)) + 62px);
+  right: calc(var(--edge) + 6px);
+  bottom: calc(max(22px, env(safe-area-inset-bottom, 0px)) + 66px);
   pointer-events: none;
   opacity: 0;
-  rotate: -4deg;
+  rotate: 4deg;
+}
+@media (max-width: 560px) {
+  .stamp {
+    right: auto;
+    left: calc(var(--edge) + 4px);
+    bottom: calc(max(22px, env(safe-area-inset-bottom, 0px)) + 62px);
+    rotate: -4deg;
+  }
 }
 .stamp .seal-m {
   --s: 64px;

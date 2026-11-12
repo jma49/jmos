@@ -114,7 +114,7 @@ paper; a new pane or control needs its ink colours there too.
 
 Each look has a seal (`seals.ts`: the seals, the volumes, the album's state and its words in the three
 languages). The first time a look comes in all the way (`reached()` in `engine.js`, from `stepInk`), by
-gesture, key or ⌘K, its seal is stamped in the corner above the sound, in the look's own manner
+gesture, key or ⌘K, its seal is stamped in the corner above the controls, in the look's own manner
 (`#pond[data-look] .stamp` in `pond.css`), with a soft thud; under reduced motion it only appears.
 
 - The album is a sheet (`#seals`, ⌘K "Seals"), not a numbered chapter: a leaf of paper for each volume
