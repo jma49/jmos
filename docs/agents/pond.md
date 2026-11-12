@@ -361,10 +361,17 @@ In `public/pond/relief/`, each picture as a pair that lines up to the pixel: `-c
   sand blown off in streaks; winter is frost; the gesture is a zigzag of three peaks or more, read when
   the finger lifts (`zigzag()` in `gestures.ts`: five sharp corners, so a wavy line is not one); the
   seal is 刻; the sounds are a chisel's knock and running sand. No inscription anywhere.
-- **Still drawn without a picture:** the koi (a relief of the pond's own, with scales cut in and flat
-  paint: the brief's `koi-h`, `koi-c` and mask would replace them through `KOI_SHEETS`), the stone's
-  face (the brief's `stone-h`), and the dove and the spider (the neutral sheets, in stone's tone inside
-  a dark line).
+- **The koi** are the carved sheet (`KOI_SHEETS.relief`). The fish's canvas holds one picture, so
+  `carved()` in `engine.js` makes one of the pair: the koi's whole shape from the height, the paint over
+  a colour that stands for bare stone. The shader shows stone where a koi is bare, cuts the sheet's
+  dark line into the surface, and raises the whole fish with a soft shoulder; a visitor's colour goes
+  into the grey patches through the mask, the pond's own koi take red ochre, blue, green or yellow.
+  Until the sheet has come the pond's own koi are raised and painted by the shader.
+- **The stone's face** (`stone-h`) is tiled under the carvings in the height's half of the texture, at
+  a third of its depth (at full depth a low light turns it to grit), each carving's height laid over it
+  in hard light, so the dressed stone runs up to a carving's edge.
+- **Still drawn without a picture:** the dove and the spider (the neutral sheets, in stone's tone
+  inside a dark line).
 
 | Pair | Size | What is in it (each motif within its cell, as left, top, right, bottom) |
 | --- | --- | --- |
@@ -701,8 +708,8 @@ tomb under a raking light: carved, pale, cool, nothing like the Dunhuang wall's 
 Every picture comes as a pair of the same size: `-h` the height (mid grey the stone's face,
 lighter raised, darker cut in; opaque) and `-c` the faded paint over it (Egyptian blue `#3F6FA8`,
 green `#5E8F6A`, red ochre `#A8482C`, yellow `#D6A23E`, black line; transparent where bare).
-1. Delivered, to wire in: `stone-h.webp`, the limestone face.
-2. Delivered, to wire in: `koi-h.webp`, `koi-c.webp` + `koi-mask.webp`, to the common spec.
+1. Delivered and in use: `stone-h.webp`, the limestone face.
+2. Delivered and in use: `koi-h.webp`, `koi-c.webp` + `koi-mask.webp`, to the common spec.
 3. Delivered and in use: `fish`, `lotus`, `frieze`. P1 `papyrus`, 512 × 1024, a papyrus clump; `duck`, 512 ×
    512, a duck in profile.
 4. P1 `cartouche`, 512 × 768, an empty cartouche ring, upright, for the solar term. Nothing in it.

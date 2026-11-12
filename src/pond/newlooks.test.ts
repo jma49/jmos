@@ -87,7 +87,7 @@ describe('the relief', () => {
 describe('the painted koi', () => {
   it('are sheets to the common measure, each with its mask', () => {
     for (const [look, sh] of Object.entries(KOI_SHEETS)) {
-      expect(sh.src, look).toBe(`/pond/${look}/${look === 'monet' ? 'koi-v2' : 'koi'}.webp`);
+      expect(sh.src, look).toBe(`/pond/${look}/${{ monet: 'koi-v2', relief: 'koi-c' }[look] ?? 'koi'}.webp`);
       expect(sh.mask, look).toBe(`/pond/${look}/koi-mask.webp`);
       expect([sh.rowH, sh.x1, sh.host, sh.you, sh.others], look).toEqual([384, 962, 0, 1, [2, 3]]);
     }

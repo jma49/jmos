@@ -39,6 +39,7 @@ export const QINGHUA = {
  * mine and which the visitor's, which rows the rest take, and how a colour is laid on: through the mask into
  * a grey koi's patches (a visitor's colour; for the pond's own koi the look's one `patch` colour, or with `own`
  * the koi's own, snapped to the look's `palette` if it has one), under a `wash` over the whole fish if any.
+ * A carved sheet also has its `height` and the colour that stands for `bare` stone (engine.js, carved()).
  */
 export const KOI_SHEETS = {
   ukiyo: { src: '/pond/ukiyo/koi.webp', mask: '/pond/ukiyo/koi-mask.webp', rowH: 384, x1: 962, host: 0, you: 1, others: [2, 3], own: true },
@@ -54,6 +55,21 @@ export const KOI_SHEETS = {
     own: true,
     // the wall's own cinnabar, blue and green, whichever is nearest a koi's colour, so no pigment is foreign to it
     palette: ['#b34026', '#2b6385', '#4d856e', '#cc8f38']
+  },
+  relief: {
+    src: '/pond/relief/koi-c.webp',
+    height: '/pond/relief/koi-h.webp',
+    mask: '/pond/relief/koi-mask.webp',
+    rowH: 384,
+    x1: 962,
+    host: 0,
+    you: 1,
+    others: [2, 3],
+    own: true,
+    // red ochre, Egyptian blue, green, yellow ochre
+    palette: ['#a8482c', '#3f6fa8', '#5e8f6a', '#d6a23e'],
+    // what stands for bare stone in the picture made of the paint and the height (lookRelief knows it)
+    bare: '#e2dccd'
   },
   qinghua: {
     src: '/pond/qinghua/koi.webp',
@@ -96,7 +112,8 @@ export const RELIEF = {
   lotusC: '/pond/relief/lotus-c.webp',
   lotusH: '/pond/relief/lotus-h.webp',
   friezeC: '/pond/relief/frieze-c.webp',
-  friezeH: '/pond/relief/frieze-h.webp'
+  friezeH: '/pond/relief/frieze-h.webp',
+  stoneH: '/pond/relief/stone-h.webp'
 };
 /**
  * Where the relief's carvings go on a wall of W by H: the frieze along the top and the foot; in the right
@@ -400,20 +417,22 @@ vec3 lookRelief(){
   // where the paint has held: less at the edges of the wall, and in patches
   float held=smoothstep(.34,.58,fbm(P*.017+7.))*(.75+.25*noise(P*.6));
   // the tomb's carvings
-  vec2 mv=vec2(uv.x,clamp(uv.y,.002,.998)*.5); vec4 pc=texture(uMural,mv)*uPic; float ph=(texture(uMural,mv+vec2(0.,.5)).r-.502)*uPic;
+  vec2 mv=vec2(uv.x,clamp(uv.y,.002,.998)*.5); vec4 pc=texture(uMural,mv)*uPic; float ph=(texture(uMural,mv+vec2(0.,.5)).r-.502)*uPic, carv=smoothstep(.03,.09,ph);
   // the koi and the pads, with a shoulder where they rise
+  // (a koi from the look's carved sheet, uSprite, brings its own line, cut in, and says where it is bare)
   vec4 f0; float fa,fb,fc,rd; fishAt(f0,fa,fb,fc,rd); vec3 fcol=f0.rgb/max(f0.a,1e-3);
+  float fbare=(1.-smoothstep(.05,.14,distance(fcol,vec3(.886,.863,.804))))*uSprite, fline=(1.-smoothstep(.22,.42,dot(fcol,vec3(.333))))*f0.a*uSprite;
   vec4 pd=textureLod(uPads,uv,0.); float pb=textureLod(uPads,uv,1.6).a; vec3 pcol=pd.rgb/max(pd.a,1e-3);
   vec4 tp=textureLod(uTop,uv,0.); float tb=textureLod(uTop,uv,1.5).a;
-  float proud=clamp(max(max(smoothstep(.08,.7,fb),pb),max(ph*9.,tb)),0.,1.);
+  float proud=clamp(max(max(smoothstep(.08,.7,fb),pb),max(carv,tb)),0.,1.);
   // the water: zigzags in rows, each row sliding a little, shaken where the water moves; none under the
   // type, nor in the plain band under the frieze, where the clock stands
   vec2 Q=P+gG*70.; float row=floor(Q.y/28.), zx=Q.x/30.+row*.37+uTime*.012*(mod(row,2.)<1.?1.:-1.)+gH*2.;
   float zig=abs((fract(Q.y/28.)-.5)*28.-(abs(fract(zx)-.5)*2.-.5)*11.), groove=(1.-smoothstep(.9,2.6,zig))*(1.-proud)*(1.-gCalm)*smoothstep(.15,.22,uv.y);
   // the surface: its height above the stone's face, in pixels
-  float h=ph*34.+smoothstep(.08,.7,fb)*4.6+pb*3.2+tb*2.2-groove*.75+(noise(P*.45)-.5)*.22+(noise(vec2(P.x+P.y,P.x-P.y)*vec2(.03,.16))-.5)*.16;
+  float h=ph*34.+smoothstep(.08,.7,fb)*4.6+pb*3.2+tb*2.2-groove*.75+((noise(P*.45)-.5)*.22+(noise(vec2(P.x+P.y,P.x-P.y)*vec2(.03,.16))-.5)*.16)*(1.-uPic);
   // (scales cut into the koi, veins into the pads)
-  h-=smoothstep(.5,.9,f0.a)*(1.-smoothstep(.5,1.5,abs(length(fract(P/7.+vec2(floor(P.y/7.)*.5,0.))-vec2(.5,1.))*7.-4.)))*.35;
+  h-=smoothstep(.5,.9,f0.a)*(1.-smoothstep(.5,1.5,abs(length(fract(P/7.+vec2(floor(P.y/7.)*.5,0.))-vec2(.5,1.))*7.-4.)))*.35*(1.-uSprite)+fline*1.3;
   h-=pd.a*(1.-smoothstep(.0,.12,abs(fract(atan(P.y-uCss.y*.5,P.x-uCss.x*.5)*4.)-.5)-.44))*.5;
   h*=flt;
   // a press is a chisel's strike: a chip out of the face, bare stone in it, and its dust thrown out
@@ -432,14 +451,14 @@ vec3 lookRelief(){
   float lit=dot(n,L)/L.z;
   // what stands proud throws a short shadow away from the light
   vec2 so=L.xy*7./uCss; float shade=clamp((max(max(smoothstep(.08,.7,textureLod(uFish,uv+so,1.5).a),textureLod(uPads,uv+so,1.6).a),
-    (texture(uMural,vec2(uv.x+so.x,clamp(uv.y+so.y,.002,.998)*.5+.5)).r-.502)*9.*uPic)-proud)*flt,0.,1.);
+    smoothstep(.03,.09,(texture(uMural,vec2(uv.x+so.x,clamp(uv.y+so.y,.002,.998)*.5+.5)).r-.502)*uPic))-proud)*flt,0.,1.);
   // the paint, flat and faded, over the stone
   vec3 c=stone;
   c=mix(c,blu,(.1*(1.-proud)+groove*.42)*held*flt*(1.-gCalm));
   c=mix(c,mix(pc.rgb/max(pc.a,1e-3),stone,.18),pc.a*.92);
   c=mix(c,mix(mix(grn,red,clamp((pcol.r-pcol.g)*2.5,0.,1.)),stone,.2),pd.a*(.35+.5*held));
   vec3 fp=mix(mix(vec3(.9,.87,.8),ylw,clamp((fcol.r-fcol.b)*1.7-.1,0.,1.)),red,smoothstep(.2,.5,rd));
-  c=mix(c,mix(fp,stone,.12),f0.a*(.6+.35*held));
+  c=mix(c,mix(mix(fp,fcol,uSprite),stone,.12),f0.a*mix(.6+.35*held,(1.-fbare)*.92,uSprite));
   c=mix(c,mix(tp.rgb/max(tp.a,1e-3),stone,.45),tp.a*.7);
   c=mix(c,dark,clamp(max(max((fa-fb)*3.4,abs(pd.a-pb)*2.6),abs(tp.a-tb)*2.4),0.,1.)*.7*flt);
   c=mix(c,stone*1.06,bare);

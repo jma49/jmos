@@ -67,7 +67,7 @@ pass, and the move from drawing things in code to painted pictures. How the pond
 | 青花 | Preview. Painted rim and corners; painted koi with visitors' colours through the mask; the frame is the page's margin. | `qinghua/rim`, `corner`, `koi` + mask | none | Lotus and the pads are still shader outlines. The tint through the mask has never been seen with a second visitor. |
 | Dunhuang | Preview. The flying figures are the wall; mural koi; nothing painted under the controls. | `dunhuang/feitian-pipa`, `feitian-flowers`, `feitian-far`, `sky-flowers`, `border`, `cloud-trail`, `halo`, `koi` + mask | `caisson`, `feitian-pipa-2560` (never fetched while the picture texture is at most 2048 across: see pond.md) | The caisson has no place. Seen at 1280 × 800, 1920 × 900 and a 390 × 844 phone; shorter phones are held by a test, not seen. |
 | Star chart | Preview. Koi drawn as constellations in code, the atlas's koi in outline behind each; the plate's grid in the sky. | `stars/plate`, `koi-figures` | none | Seen once, at 1280 × 800, a few seconds in. The grid repeats mirrored: where a mirror line crosses the window the meridians kink; not seen after minutes of turning. |
-| Egyptian relief | Preview. Built: carved and painted limestone under a light that goes round with the day; zigzag water; the frieze and a marsh of the delivered carvings; a chisel's strike for a press; sand blown off as it arrives; the zigzag gesture; the seal 刻. The blackboard is gone from the code. | `relief/fish`, `lotus`, `frieze` (each `-h` and `-c`) | none | Seen at 1280 × 800 (dawn, noon, night), 1440 × 900 (dusk), a phone in winter, and its arrival and a press in a 640 × 400 frame sequence. Its koi are the pond's own, raised and painted by the shader, until the brief's koi sheet comes. Chapters, the album's stamp, the dove and the spider in its dress, and a second language were not looked at. |
+| Egyptian relief | Preview. Built: carved and painted limestone under a light that goes round with the day; zigzag water; the frieze and a marsh of the delivered carvings; a chisel's strike for a press; sand blown off as it arrives; the zigzag gesture; the seal 刻. The blackboard is gone from the code. | `relief/fish`, `lotus`, `frieze` (each `-h` and `-c`), `koi-c`, `koi-h` + mask, `stone-h` | none | Seen at 1280 × 800 (dawn, noon, night), 1440 × 900 (dusk, and dawn with its own koi and stone), a phone in winter, and its arrival and a press in a 640 × 400 frame sequence. The carved koi are small on screen, so their cut scales are fine: to be judged on a real screen. Chapters, the album's stamp, the dove and the spider in its dress, and a second language were not looked at. |
 
 Jincheng's words that still stand:
 
@@ -131,10 +131,9 @@ koi moved to the common sheet. What is left of those:
    a performance trace for reflow (two rounds of `getBoundingClientRect` on seven elements, once a
    change of look).
 6. **Egyptian relief: built; to be finished.** How it is drawn is in pond.md ("Egyptian relief").
-   Left: its koi from the brief's `koi-h`, `koi-c` and mask when they come (through `KOI_SHEETS`; the
-   shader then lays the sheet's paint in and reads its height); the stone's face from `stone-h`; the
-   cartouche round the solar term; its chapters and stamp through the finish checklist (item 10); how
-   strong the light should be, which is a matter for a real screen.
+   Left: the cartouche round the solar term (not delivered); its chapters and stamp through the
+   finish checklist (item 10); how strong the light and the stone's dressing should be, which is a
+   matter for a real screen.
 7. **Exits designed** where the arrival run backwards looks wrong (only the stars have their own).
 8. **Reduced motion: seen once.** Every look was brought in and sent back under reduced motion
    (`RM=1` with `tools/pond/pol.cjs`): each cross-fades in and out with no error. Seen as stills at

@@ -4987,13 +4987,26 @@ function paintRelief() {
     half = cv.height / 2;
   c.fillStyle = 'rgb(128,128,128)';
   c.fillRect(0, half, cv.width, half);
+  // the stone's dressed face, tiled, is the ground of the height (640 pixels of the pond to a tile), at a
+  // third of its depth: under a low light the full depth reads as grit, not as dressing
+  if (reliefImgs.stoneH) {
+    // (whole pixels to a tile, so no two tiles overlap: laid in thinly, an overlap would show as a line)
+    const t = Math.round(640 * k);
+    c.globalAlpha = 0.3;
+    for (let x = 0; x < cv.width; x += t) for (let y = 0; y < half; y += t) c.drawImage(reliefImgs.stoneH, x, half + y, t, t);
+    c.globalAlpha = 1;
+  }
   for (const [pair, sx, sy, sw, sh, x, y, w, h] of reliefLayout(W, H, big)) {
     const paint = reliefImgs[`${pair}C`],
       height = reliefImgs[`${pair}H`];
     // a carving is drawn only whole: its paint without its height would be a flat picture on the stone
     if (!paint || !height) continue;
     c.drawImage(paint, sx, sy, sw, sh, x * k, y * k, w * k, h * k);
+    // (a height's mid grey is the face: laid in hard light it leaves the dressed stone as it is there, and
+    // raises or cuts it where the carving does)
+    c.globalCompositeOperation = 'hard-light';
     c.drawImage(height, sx, sy, sw, sh, x * k, half + y * k, w * k, h * k);
+    c.globalCompositeOperation = 'source-over';
   }
   sendPic(cv);
 }
@@ -5138,7 +5151,12 @@ function loadKoi(name) {
   if (!d || koiSheets[name]) return;
   const sh = (koiSheets[name] = { ...d, pic: null, maskA: null, made: new Map() }),
     pic = new Image();
-  pic.onload = () => ((sh.pic = pic), invalidate());
+  pic.onload = () => {
+    if (d.height) carved(pic, d).then((cv) => ((sh.pic = cv), sh.made.clear(), invalidate()));
+    else sh.pic = pic;
+    invalidate();
+  };
+  pic.onerror = () => report(new Error(`no picture at ${d.src}`), 'pond pictures');
   pic.src = d.src;
   if (!d.mask) return;
   const m = new Image();
@@ -5159,6 +5177,49 @@ function loadKoi(name) {
     sh.made.clear();
   };
   m.src = d.mask;
+}
+// A carved koi sheet comes as paint, bare where the stone shows, and a height. The fish's canvas holds one
+// picture, so the two are made into one: the koi's whole shape from the height (anything off the stone's
+// face), the paint laid over a colour that stands for bare stone (`bare`), which the look's shader knows.
+function carved(paint, d) {
+  return new Promise((done) => {
+    const hi = new Image();
+    hi.onerror = () => report(new Error(`no picture at ${d.height}`), 'pond pictures');
+    hi.onload = () => {
+      const w = paint.naturalWidth,
+        h = paint.naturalHeight,
+        shape = document.createElement('canvas'),
+        cv = document.createElement('canvas');
+      shape.width = cv.width = w;
+      shape.height = cv.height = h;
+      const x = shape.getContext('2d');
+      x.drawImage(hi, 0, 0, w, h);
+      const px = x.getImageData(0, 0, w, h);
+      for (let i = 0; i < px.data.length; i += 4) {
+        px.data[i + 3] = Math.min(255, Math.abs(px.data[i] - 128) * 40);
+        px.data[i] = px.data[i + 1] = px.data[i + 2] = 255;
+      }
+      x.putImageData(px, 0, 0);
+      const c = cv.getContext('2d');
+      // (a cut that passes through the face's own height on its way down leaves pinholes: the shape is
+      // laid a pixel each way to close them)
+      for (const [ox, oy] of [
+        [0, 0],
+        [1, 0],
+        [-1, 0],
+        [0, 1],
+        [0, -1]
+      ])
+        c.drawImage(shape, ox, oy);
+      c.globalCompositeOperation = 'source-in';
+      c.fillStyle = d.bare;
+      c.fillRect(0, 0, w, h);
+      c.globalCompositeOperation = 'source-atop';
+      c.drawImage(paint, 0, 0);
+      done(cv);
+    };
+    hi.src = d.height;
+  });
 }
 // the colour one of the pond's own koi carries in its patches (its first that isn't white), in the look's
 // palette if it keeps one
