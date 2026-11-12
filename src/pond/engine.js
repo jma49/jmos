@@ -51,6 +51,8 @@ import {
   NEW_SHADE,
   NEW_SID,
   QINGHUA,
+  STARS,
+  UKIYO,
   muralLayout
 } from './newlooks.js';
 import { SocialError } from '../os/social/errors';
@@ -259,6 +261,8 @@ class Koi {
         [s[N - 1].x + tx * S * 0.11 + (s[N - 1].x - s[N - 2].x) * 1.6, s[N - 1].y + ty * S * 0.11 + (s[N - 1].y - s[N - 2].y) * 1.6],
         [s[N - 1].x - tx * S * 0.11 + (s[N - 1].x - s[N - 2].x) * 1.6, s[N - 1].y - ty * S * 0.11 + (s[N - 1].y - s[N - 2].y) * 1.6]
       ];
+    // the atlas's figure behind the stars: a koi in outline, faint, bent along the same spine
+    if (starFigure) this.drawSprite(c, starFigure, 0, FIGURE, gold ? 0.42 : 0.3, false);
     c.save();
     c.globalAlpha = this.alpha * (1 - 0.3 * this.depth);
     c.strokeStyle = `rgba(${col},0.5)`;
@@ -293,8 +297,9 @@ class Koi {
   }
   // A painted koi: a straight picture seen from above, cut into slices along its length, each slice laid
   // along the koi's own spine as it is now, so the painting swims, turns and curls as the drawn koi does. The
-  // tail runs on past the spine's end and sways with the stroke. row picks which koi of the sheet.
-  drawSprite(c, pic, sy, sh) {
+  // tail runs on past the spine's end and sways with the stroke. sy is how far down the picture the koi's row
+  // starts; `strength` thins it, and `sealed` is whether it may wear the album's seal.
+  drawSprite(c, pic, sy, sh, strength = 1, sealed = true) {
     const s = this.spine,
       acc = [0];
     for (let i = 1; i < N; i++) acc.push(acc[i - 1] + Math.hypot(s[i].x - s[i - 1].x, s[i].y - s[i - 1].y));
@@ -322,8 +327,11 @@ class Koi {
       const t = (d - acc[j]) / (acc[j + 1] - acc[j] || 1);
       return [s[j].x + (s[j + 1].x - s[j].x) * t, s[j].y + (s[j + 1].y - s[j].y) * t];
     };
+    // drawn from the copy of the picture nearest the size it is drawn at, so fine lines don't shimmer
+    const m = k < 0.2 ? 0.25 : k < 0.4 ? 0.5 : 1,
+      src = shrunk(pic, m);
     c.save();
-    c.globalAlpha = this.alpha * (1 - 0.34 * this.depth);
+    c.globalAlpha = this.alpha * (1 - 0.34 * this.depth) * strength;
     let [x0, y0] = at(0);
     for (let i = 0; i < n; i++) {
       const [x1, y1] = at((total * (i + 1)) / n),
@@ -331,12 +339,12 @@ class Koi {
       c.save();
       c.translate(x0, y0);
       c.rotate(Math.atan2(y1 - y0, x1 - x0));
-      c.drawImage(pic, 62 + (span * i) / n, sy, span / n + 1.5, sh.rowH, -0.4, -h / 2, len + 1.2, h);
+      c.drawImage(src, (62 + (span * i) / n) * m, sy * m, (span / n + 1.5) * m, sh.rowH * m, -0.4, -h / 2, len + 1.2, h);
       c.restore();
       x0 = x1;
       y0 = y1;
     }
-    if (this.seal) {
+    if (this.seal && sealed) {
       const [qx, qy] = at(L * 0.62),
         q = this.size * 0.032;
       // the seal, as a small dab of vermilion in the painting's own hand
@@ -1062,10 +1070,10 @@ void main(){
 // of slow noise shared with the ripple simulation, so nothing moves under it.
 const FS_SRC = `#version 300 es
 precision highp float; in vec2 vUv; out vec4 o;
-uniform sampler2D uBed,uH,uFish,uPads,uTop,uIceN;
+uniform sampler2D uBed,uH,uFish,uPads,uTop,uIceN,uMural; uniform float uPic;
 uniform vec2 uRes,uGrid,uMoonPos,uCss; uniform float uTime,uAmb,uCaI,uMoon,uSwell,uFocus,uIce,uSnow,uFog,uStars; uniform vec3 uMoonPh; uniform vec2 uCalm;
 uniform vec3 uTint,uCaC,uSky,uSeason;
-uniform vec4 uBox[12]; uniform vec4 uBoxB[12]; uniform int uBoxN; uniform vec4 uCrack[6]; uniform float uBroke[6]; uniform vec4 uInk; uniform vec3 uBlot[10]; uniform int uStyle, uPrev; uniform float uGlint; uniform float uLookT,uLeave;
+uniform vec4 uBox[12]; uniform vec4 uBoxB[12]; uniform int uBoxN; uniform vec4 uCrack[6]; uniform float uBroke[6]; uniform vec4 uInk; uniform vec3 uBlot[10]; uniform int uStyle, uPrev; uniform float uGlint; uniform float uLookT,uLeave,uSprite;
 float hash1(vec2 p){ return fract(sin(dot(p,vec2(41.3,289.1)))*43758.5453); }
 vec2 hash2(vec2 p){ p=vec2(dot(p,vec2(127.1,311.7)),dot(p,vec2(269.5,183.3))); return fract(sin(p)*43758.5453); }
 float noise(vec2 p){ vec2 i=floor(p),f=fract(p); f=f*f*(3.-2.*f);
@@ -1187,13 +1195,21 @@ vec3 lookUkiyo(){
   vec4 f0; float fa,fb,fc,red; fishAt(f0,fa,fb,fc,red);
   vec3 fcl=f0.rgb/max(f0.a,1e-3); fcl=floor(fcl*4.+.5)/4.; fcl=mix(fcl,vec3(.96,.93,.84),step(.75,dot(fcl,vec3(.33))));
   fcl=mix(fcl,vec3(.82,.25,.16),step(.4,red/max(f0.a,1e-3)));
-  c=mix(c,fcl,step(.5,f0.a)); c=mix(c,vec3(.06,.05,.05),clamp((fa-fb)*3.,0.,1.));
+  // (koi from the print's own sheet, uSprite, are laid in as they are: they carry their key line)
+  c=mix(c,mix(fcl,f0.rgb/max(f0.a,1e-3),uSprite),step(.5,f0.a)); c=mix(c,vec3(.06,.05,.05),clamp((fa-fb)*3.,0.,1.)*(1.-uSprite));
   vec4 tp=textureLod(uTop,uv+gG*gIa*.004,0.); c=mix(c,floor(tp.rgb/max(tp.a,1e-3)*4.)/4.,step(.5,tp.a));
   for(int i=0;i<10;i++){ vec3 b=uBlot[i]; if(b.z<0.||b.z>3.) continue;   // a press: a carved splash, flat cream with a key line
     float t=b.z, life=1.-t/3.; vec2 v=P-b.xy; float d=length(v), an=atan(v.y,v.x), R=12.+64.*sqrt(t);
     // two swells behind the crest, thinning as they go out
     for(int j=1;j<3;j++){ float rj=R-18.*float(j), w=(4.-float(j))*life; if(rj<4.) continue;
       float q=abs(d-rj); c=mix(c,vec3(.05,.1,.2),step(q,w+1.3)); c=mix(c,vec3(.96,.93,.84),step(q,w)); }
+#ifdef CRESTS
+    // the crest, from the print's own carved wavelets (a picture, uPic once it has come): six round the
+    // ring, base to the middle, all breaking the same way, sinking as the splash dies
+    if(uPic>.5){ float sc=an*6./6.2832+b.x*.013, wd=6.2832*R/6., ht=wd*.39*(.5+.5*life), vv=(d-R+ht*.25)/max(ht,1.);
+      vec4 wv=texture(uMural,vec2((mod(floor(sc)+floor(b.y),4.)*256.+44.+fract(sc)*167.)/1024.,(416.-vv*65.)/512.))*step(0.,vv)*step(vv,1.)*step(.05,life);
+      c=wv.rgb+c*(1.-wv.a); continue; }
+#endif
     // the crest breaks into claws: a scalloped edge, each scallop curled forward
     float s=an*14./6.2832+b.x*.013, f=fract(s), jag=noise(vec2(floor(s)*3.1,b.y*.01))*.6+.4;
     float edge=R+11.*jag*f*f*life, inner=R-6.*life-5.*(1.-f)*life;
@@ -1413,6 +1429,15 @@ void main(){
     vec3 top=look(uStyle), base=m<.999?look(uPrev):top;
     col=mix(base,top,m);
     col=mix(col,edgeCol(uStyle),e);
+#ifdef CRESTS
+    // the print's front carries its great crests (the same picture), standing on the front and rising ahead of it
+    if(uStyle==2&&uPic>.5&&uInk.w>=.3&&uInk.w<.999&&uInk.x>1.){
+      float ft=(P.x-P.y)*.7071, fr=(P.x+P.y)*.7071+(noise(P*vec2(.02,.004))-.5)*26.+sin((P.x-P.y)*.012)*18.+sin((P.x-P.y)*.031)*6.;
+      float ht=min(210.,uCss.y*.28)*smoothstep(0.,320.,uInk.x), vv=(fr-uInk.x+ht*.12)/max(ht,1.), sc=ft/(ht*1.09+1.);
+      vec4 wv=texture(uMural,vec2((mod(floor(sc),4.)*256.+20.+fract(sc)*215.)/1024.,(227.-vv*198.)/512.))*step(0.,vv)*step(vv,1.);
+      col=wv.rgb+col*(1.-wv.a);
+    }
+#endif
     // the moon in a look, at night: a pale wash in ink, a cream disc in the print, a lit disc in glow,
     // a drawn circle in the blueprint, a bright round in ASCII
     if(uMoonPh.z>0.&&uMoon>.01&&uStyle>0){
@@ -1434,7 +1459,7 @@ const FS = FS_SRC.replace(
   'vec3 look(int s){',
   `${PREVIEW ? NEW_GLSL : ''}vec3 look(int s){\n#ifdef ONLY\n  s=ONLY;\n#endif\n${PREVIEW ? '  if(s>=6) return lookNew(s);\n' : ''}`
 );
-const fsPart = (n, only) => FS.replace('\n', `\n#define PART ${n}\n${only ? `#define ONLY ${only}\n` : ''}`);
+const fsPart = (n, only) => FS.replace('\n', `\n#define PART ${n}\n${PREVIEW ? '#define CRESTS\n' : ''}${only ? `#define ONLY ${only}\n` : ''}`);
 // The second pass. Inside a pane the picture is blurred and smoked; towards the rim it is
 // pulled sideways as through the edge of a lens, and the rim itself catches the light. In
 // the cold, frost gathers along the rim.
@@ -2635,9 +2660,9 @@ function alignInk(sel) {
 const setInk = (on, from) => setLook(on ? 'ink' : 'water', from || $('#inkBtn'));
 function setLook(name, from) {
   if (!LOOKS.includes(name) || name === look) return;
-  if (name === 'dunhuang' || name === 'monet' || name === 'qinghua') {
+  if (PREVIEW && name in PICTURED) {
     picLook = name;
-    name === 'monet' ? loadMonet() : name === 'qinghua' ? loadRim() : loadMural();
+    PICTURED[name]();
     paintPic();
   }
   loadKoi(name);
@@ -4872,6 +4897,69 @@ function paintPic() {
   if (picLook === 'dunhuang') paintMural();
   else if (picLook === 'monet') paintBed();
   else if (picLook === 'qinghua') paintRim();
+  else if (picLook === 'stars') paintPlate();
+  else if (picLook === 'ukiyo') paintWaves();
+}
+// which looks have a picture in that texture, and how each fetches its own
+const PICTURED = { dunhuang: () => loadMural(), monet: () => loadMonet(), qinghua: () => loadRim(), stars: () => loadStars(), ukiyo: () => loadWaves() };
+// Ukiyo-e's wave crests: the sheet itself is the texture (the shader picks a crest's cell), with smaller
+// copies, since a crest is drawn well under the size it was cut at.
+let waves = null;
+function loadWaves() {
+  if (waves) return;
+  waves = new Image();
+  waves.onload = () => {
+    paintPic();
+    invalidate();
+  };
+  waves.onerror = () => report(new Error(`no picture at ${UKIYO.waves}`), 'pond pictures');
+  waves.src = UKIYO.waves;
+}
+function paintWaves() {
+  if (glOK && waves && waves.complete && waves.naturalWidth) sendPic(waves, gl.CLAMP_TO_EDGE, true);
+}
+// The star chart's plate: its grid, cut inside the frame, laid to cover the pond; the texture repeats it
+// mirrored, so the grid runs on past every edge as the sky turns. The koi's figure is kept as one row to the
+// koi sheets' measure, for Koi.drawSprite to bend along a constellation.
+let starImgs = null,
+  starFigure = null;
+function loadStars() {
+  if (starImgs) return;
+  starImgs = {};
+  const get = (k, then) => {
+    const im = new Image();
+    im.onload = () => {
+      starImgs[k] = im;
+      then(im);
+      invalidate();
+    };
+    im.onerror = () => report(new Error(`no picture at ${STARS[k]}`), 'pond pictures');
+    im.src = STARS[k];
+  };
+  get('plate', () => paintPic());
+  get('figures', (im) => {
+    const [x, y, w, h] = STARS.figure,
+      k = 900 / w,
+      cv = document.createElement('canvas');
+    cv.width = 1024;
+    cv.height = FIGURE.rowH;
+    cv.getContext('2d').drawImage(im, x, y, w, h, 62, (FIGURE.rowH - h * k) / 2, 900, h * k);
+    starFigure = cv;
+  });
+}
+const FIGURE = { rowH: 384, x1: 962 };
+function paintPlate() {
+  if (!glOK || !starImgs || !starImgs.plate) return;
+  const [gx, gy, gw, gh] = STARS.grid,
+    k = Math.min(2048 / W, glc.width / W, 2),
+    cv = document.createElement('canvas');
+  cv.width = Math.max(1, Math.round(W * k));
+  cv.height = Math.max(1, Math.round(H * k));
+  const f = Math.max(cv.width / gw, cv.height / gh),
+    w = cv.width / f,
+    h = cv.height / f;
+  cv.getContext('2d').drawImage(starImgs.plate, gx + (gw - w) / 2, gy + (gh - h) / 2, w, h, 0, 0, cv.width, cv.height);
+  sendPic(cv, gl.MIRRORED_REPEAT);
 }
 // 青花's rim: the lotus scroll tiled along all four sides (as many whole turns as fit, stretched a little to
 // close), the corner piece in each corner, mirrored. It is the frame the page stands inside.
@@ -4930,13 +5018,17 @@ function paintRim() {
   }
   sendPic(cv);
 }
-function sendPic(cv) {
+function sendPic(cv, wrap = gl.CLAMP_TO_EDGE, copies = false) {
   picIn = picLook;
   const was = gl.getParameter(gl.ACTIVE_TEXTURE);
   gl.activeTexture(gl.TEXTURE10);
   gl.bindTexture(gl.TEXTURE_2D, texMural);
   gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, cv);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, wrap);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, wrap);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, copies ? gl.LINEAR_MIPMAP_LINEAR : gl.LINEAR);
+  if (copies) gl.generateMipmap(gl.TEXTURE_2D);
   gl.activeTexture(was);
 }
 // Monet's pictures: the painted water (upright on a phone, the small one on a small window, the large one
@@ -4973,13 +5065,47 @@ function loadKoi(name) {
   };
   m.src = d.mask;
 }
+// the colour one of the pond's own koi carries in its patches (its first that isn't white), in the look's
+// palette if it keeps one
+const rgbOf = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+function ownColour(k, palette) {
+  const own = (k.patches.find((q) => q[3] !== WHITE && /^#[0-9a-f]{6}$/i.test(q[3])) || [0, 0, 0, RED])[3];
+  if (!palette) return own;
+  const [r, g, b] = rgbOf(own);
+  let best = palette[0],
+    bd = 1e9;
+  for (const q of palette) {
+    const [pr, pg, pb] = rgbOf(q),
+      d = (pr - r) ** 2 + (pg - g) ** 2 + (pb - b) ** 2;
+    if (d < bd) {
+      bd = d;
+      best = q;
+    }
+  }
+  return best;
+}
+// a picture at half or a quarter of its size, made the first time it is asked for (each step a clean halving)
+const smaller = new WeakMap();
+function shrunk(pic, m) {
+  if (m === 1) return pic;
+  let set = smaller.get(pic);
+  if (!set) smaller.set(pic, (set = {}));
+  if (!set[m]) {
+    const from = m === 0.25 ? shrunk(pic, 0.5) : pic,
+      cv = document.createElement('canvas');
+    cv.width = Math.ceil((pic.naturalWidth || pic.width) * m);
+    cv.height = Math.ceil((pic.naturalHeight || pic.height) * m);
+    cv.getContext('2d').drawImage(from, 0, 0, cv.width, cv.height);
+    set[m] = cv;
+  }
+  return set[m];
+}
 // which picture a koi is drawn from, and how far down it its row starts
 function koiPicture(k, sh) {
   if (k === host) return [sh.pic, sh.host * sh.rowH];
   if (k === you) return [sh.pic, sh.you * sh.rowH];
-  if (sh.plain && !k.person) return [sh.pic, (k.base === WHITE ? 1 : 0) * sh.rowH];
   const row = sh.others[Math.floor(k.seed * 7) % sh.others.length],
-    colour = k.person ? k.dot : sh.patch,
+    colour = k.person ? k.dot : sh.own ? ownColour(k, sh.palette) : sh.patch,
     key = `${row}|${colour}`;
   let cv = sh.made.get(key);
   if (!cv) {
@@ -5005,12 +5131,8 @@ function koiPicture(k, sh) {
       y.drawImage(sh.maskA, 0, row * sh.rowH, 1024, sh.rowH, 0, 0, 1024, sh.rowH);
       x.globalAlpha = 0.86;
       x.drawImage(t, 0, 0);
-    } else if (colour && sh.tint) {
-      x.globalAlpha = sh.tint;
-      x.fillStyle = colour;
-      x.fillRect(0, 0, 1024, sh.rowH);
     }
-    if (sh.maskA || !sh.mask) sh.made.set(key, cv);
+    if (sh.maskA) sh.made.set(key, cv);
   }
   return [cv, 0];
 }
@@ -5082,8 +5204,10 @@ function paintMural() {
     } else c.drawImage(pic, sx * f, sy * f, sw * f, sh * f, x, y, w, h);
   }
   c.globalAlpha = 1;
-  // the centrepiece is fetched again, larger, where it is drawn wider than the first one is sharp
-  if (!muralLarge && big && W * k * 0.5 > 1100) {
+  // the centrepiece is fetched again, larger, only where it is drawn wider than the first one has pixels
+  // (while the picture's texture is at most 2048 across and she is half the wall, that is nowhere)
+  const drawn = draw.find((d) => d[0] === 'pipa');
+  if (!muralLarge && big && drawn && drawn[7] * k > 1536) {
     muralLarge = true;
     const im = new Image();
     im.onload = () => ((muralImgs.pipa = im), paintMural(), invalidate());
@@ -6117,8 +6241,8 @@ function tick1(raw) {
     gl.uniform1i(U.uMural, 10);
     gl.uniform3fv(U.uFace, muralFaces);
     gl.uniform1f(U.uPic, picIn === look ? 1 : 0);
-    gl.uniform1f(U.uSprite, koiSheets[look] && koiSheets[look].pic ? 1 : 0);
   }
+  gl.uniform1f(U.uSprite, koiSheets[look] && koiSheets[look].pic ? 1 : 0);
   gl.uniform2f(U.uRes, glc.width, glc.height);
   gl.uniform2f(U.uGrid, GW, GH);
   gl.uniform2f(U.uMoonPos, big ? 0.6 : 0.74, big ? 0.1 : 0.12);

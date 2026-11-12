@@ -108,6 +108,17 @@ const INIT = () => {
       at = n;
       await shot(`${l}-in-${i}`);
     }
+    if (process.env.PRESS) {
+      // a press on the open water, and what it leaves a little later (it may also end the look, on the gold koi)
+      const [x, y] = process.env.PRESS.split(',').map(Number);
+      await p.mouse.click(x, y);
+      at = 0;
+      for (const [i, n] of [4, 12, 24, 40].entries()) {
+        await step(n - at);
+        at = n;
+        await shot(`${l}-press-${i}`);
+      }
+    }
     await set('water');
     at = 0;
     for (const [i, n] of [5, 12].entries()) {

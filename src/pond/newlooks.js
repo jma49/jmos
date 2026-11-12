@@ -37,11 +37,25 @@ export const QINGHUA = {
 };
 /**
  * The painted koi of each look that has them: the sheet, how high a row is, where the tail ends, which row is
- * mine and which the visitor's, which rows the rest take, and how a colour is laid on (a wash over a grey koi,
- * its patches through the mask; or, with no mask, a tint over the whole fish).
+ * mine and which the visitor's, which rows the rest take, and how a colour is laid on: through the mask into
+ * a grey koi's patches (a visitor's colour; for the pond's own koi the look's one `patch` colour, or with `own`
+ * the koi's own, snapped to the look's `palette` if it has one), under a `wash` over the whole fish if any.
  */
 export const KOI_SHEETS = {
-  monet: { src: '/pond/monet/koi.webp', rowH: 256, x1: 958, host: 2, you: 1, others: [1], plain: true, tint: 0.38 },
+  ukiyo: { src: '/pond/ukiyo/koi.webp', mask: '/pond/ukiyo/koi-mask.webp', rowH: 384, x1: 962, host: 0, you: 1, others: [2, 3], own: true },
+  monet: { src: '/pond/monet/koi-v2.webp', mask: '/pond/monet/koi-mask.webp', rowH: 384, x1: 962, host: 0, you: 1, others: [2, 3], own: true },
+  dunhuang: {
+    src: '/pond/dunhuang/koi.webp',
+    mask: '/pond/dunhuang/koi-mask.webp',
+    rowH: 384,
+    x1: 962,
+    host: 0,
+    you: 1,
+    others: [2, 3],
+    own: true,
+    // the wall's own cinnabar, blue and green, whichever is nearest a koi's colour, so no pigment is foreign to it
+    palette: ['#b34026', '#2b6385', '#4d856e', '#cc8f38']
+  },
   qinghua: {
     src: '/pond/qinghua/koi.webp',
     mask: '/pond/qinghua/koi-mask.webp',
@@ -54,13 +68,24 @@ export const KOI_SHEETS = {
     patch: '#0f2470'
   }
 };
-/** Monet's pictures (public/pond/monet/): the painted water in three shapes, the lilies and the koi. */
+/** Monet's pictures (public/pond/monet/): the painted water in three shapes, and the lilies (the koi are in KOI_SHEETS). */
 export const MONET = {
   bed: '/pond/monet/bed.webp',
   bedSmall: '/pond/monet/bed-1280.webp',
   bedTall: '/pond/monet/bed-tall.webp',
-  lilies: '/pond/monet/lilies.webp',
-  koi: '/pond/monet/koi.webp'
+  lilies: '/pond/monet/lilies.webp'
+};
+/** Ukiyo-e's pictures (public/pond/ukiyo/): the wave crests of a press and of its arrival (the koi are in KOI_SHEETS). */
+export const UKIYO = { waves: '/pond/ukiyo/waves.webp' };
+/**
+ * The star chart's pictures (public/pond/stars/): the plate's engraved grid, and a koi in outline for the
+ * figure behind each constellation. `grid` is the plate inside its frame, `figure` the straight koi's paint.
+ */
+export const STARS = {
+  plate: '/pond/stars/plate.webp',
+  figures: '/pond/stars/koi-figures.webp',
+  grid: [100, 84, 1848, 856],
+  figure: [46, 184, 424, 163]
 };
 /** The Dunhuang wall's pictures (public/pond/dunhuang/), fetched the first time the look is asked for. */
 export const MURAL = {
@@ -69,8 +94,13 @@ export const MURAL = {
   sky: '/pond/dunhuang/sky-flowers.webp',
   far: '/pond/dunhuang/feitian-far.webp',
   border: '/pond/dunhuang/border.webp',
-  trail: '/pond/dunhuang/cloud-trail.webp'
+  trail: '/pond/dunhuang/cloud-trail.webp',
+  halo: '/pond/dunhuang/halo.webp'
 };
+/** How far up from the wall's foot the page's controls reach on a wide wall: nothing painted lies under them. */
+export const MURAL_FOOT = 76;
+/** The same on a narrow wall, where the languages sit over the row of controls. */
+export const MURAL_FOOT_NARROW = 116;
 /** The centrepiece again, larger: asked for in its place only where the wall is drawn wide enough to need it. */
 export const MURAL_LARGE = { pipa: '/pond/dunhuang/feitian-pipa-2560.webp' };
 /**
@@ -81,12 +111,14 @@ export const MURAL_LARGE = { pipa: '/pond/dunhuang/feitian-pipa-2560.webp' };
  */
 export function muralLayout(W, H, wide) {
   const cell = (i, j) => [i * 256 + 40, j * 256 + 40, 176, 176],
-    sky = (i, j, x, y, s) => ['sky', ...cell(i, j), x - s / 2, y - s / 2, s, s];
+    // (a wide wall's loose motifs stop above the controls)
+    sky = (i, j, x, y, s) => ['sky', ...cell(i, j), x - s / 2, (wide ? Math.min(y, H - MURAL_FOOT - s / 2) : y) - s / 2, s, s];
   if (!wide) {
     // (below the contents, in the open water: at the top she would lie under the greeting)
+    // (and clear of the controls: her paint ends 0.83 of the way down her picture)
     const w = W * 1.25,
       x = W * 0.03,
-      y = H * 0.615;
+      y = Math.min(H * 0.615, H - MURAL_FOOT_NARROW - (w / 2) * 0.83);
     return {
       draw: [sky(1, 0, W * 0.84, H * 0.6, W * 0.2), ['pipa', 0, 0, 1536, 768, x, y, w, w / 2]],
       faces: [
@@ -98,10 +130,13 @@ export function muralLayout(W, H, wide) {
   const w1 = Math.min(W * 0.5, H * 1.05),
     x1 = W * 0.965 - w1,
     y1 = H * 0.07,
-    w2 = Math.min(W * 0.43, H * 0.9),
-    x2 = W * 0.95 - w2,
     y2 = H * 0.5,
-    u = Math.min(W, H * 1.6) / 1280;
+    // (the lower figure and the cloud under her end above the controls: the cloud's foot is 0.585 of her width down)
+    w2 = Math.min(W * 0.43, H * 0.9, (H - MURAL_FOOT - y2) / 0.585),
+    x2 = W * 0.95 - w2,
+    u = Math.min(W, H * 1.6) / 1280,
+    // (her falling lotus come down no further than the controls either)
+    v = Math.min(u, Math.max(0, H - MURAL_FOOT - y2 - w2 * 0.5) / 119);
   return {
     draw: [
       sky(0, 0, x1 + w1 * 0.9, y1 + w1 * 0.44, 110 * u),
@@ -112,11 +147,13 @@ export function muralLayout(W, H, wide) {
       ...(W > 1100 ? [['far', 0, 0, 768, 384, W * 0.3, H * 0.085, W * 0.15, W * 0.075, 0.55]] : []),
       // a long cloud leading in under the lower figure, its tail towards the pond
       ['trail', 1024, 0, -1024, 256, x2 + w2 * 0.2, y2 + w2 * 0.43, w2 * 0.62, w2 * 0.155, 0.8],
+      // a halo behind the pipa player's head, as the figures of the caves wear
+      ['halo', 0, 0, 512, 512, x1 + w1 * 0.11 - w1 * 0.075, y1 + w1 * 0.2 - w1 * 0.075, w1 * 0.15, w1 * 0.15, 0.85],
       ['pipa', 0, 0, 1536, 768, x1, y1, w1, w1 / 2],
       ['flowers', 0, 0, 1536, 768, x2, y2, w2, w2 / 2],
       sky(3, 0, x2 - 70 * u, y2 + w2 * 0.47, 62 * u),
-      sky(1, 1, x2 - 150 * u, y2 + w2 * 0.5 + 50 * u, 54 * u),
-      sky(2, 1, x2 - 230 * u, y2 + w2 * 0.5 + 96 * u, 46 * u)
+      sky(1, 1, x2 - 150 * u, y2 + w2 * 0.5 + 50 * v, 54 * Math.min(u, v * 1.6)),
+      sky(2, 1, x2 - 230 * u, y2 + w2 * 0.5 + 96 * v, 46 * Math.min(u, v * 1.6))
     ],
     faces: [
       [x1 + w1 * 0.11, y1 + w1 * 0.2, w1 * 0.05],
@@ -136,7 +173,7 @@ export const NEW_COMMANDS = [
 /** The looks' functions, added to the water pass after the six that ship. */
 export const NEW_GLSL = `
 // ---------- the preview looks ----------
-uniform sampler2D uMural; uniform vec3 uFace[2]; uniform float uPic,uSprite;
+uniform vec3 uFace[2];
 float grain(vec2 P){ return .5+.5*noise(P*1.9)*(.6+.4*noise(P*.7+9.)); }
 // Monet: an oil painting of the pond's water is the bed (a picture, laid into one texture once). The water over
 // it is a wet surface: it bends the painting a little where it moves and catches a sheen, and the paint's
@@ -238,8 +275,9 @@ vec3 lookDunhuang(){
   c=mix(c,mix(lv*1.1,zhu,clamp((pc.r-pc.g)*2.5,0.,1.)),pd.a*.9*keep); c=mix(c,line,clamp(abs(pd.a-pe)*3.,0.,1.)*.85);
   // koi: flat colour inside a dark line, red where they are red
   vec4 f0; float fa,fb,fc,red; fishAt(f0,fa,fb,fc,red); vec3 fcol=f0.rgb/max(f0.a,1e-3);
-  c=mix(c,mix(mix(bai,vec3(.80,.56,.22),clamp((fcol.r-fcol.b)*1.6-.1,0.,1.)),zhu,smoothstep(.2,.5,red)),f0.a*mix(1.,keep,.5));
-  c=mix(c,line,clamp((fa-fb)*3.8,0.,1.));
+  // (painted koi, from the look's own sheet, are laid in as they are: they carry their line)
+  c=mix(c,mix(mix(mix(bai,vec3(.80,.56,.22),clamp((fcol.r-fcol.b)*1.6-.1,0.,1.)),zhu,smoothstep(.2,.5,red)),fcol,uSprite),f0.a*mix(1.,keep,.5));
+  c=mix(c,line,clamp((fa-fb)*3.8,0.,1.)*(1.-uSprite));
   c=mix(c,wall*1.14,gCalm*.62*(1.-mu.a*.75*uCalm.x));
   vec4 tp=textureLod(uTop,uv,0.); float te=textureLod(uTop,uv,1.5).a; c=mix(c,tp.rgb/max(tp.a,1e-3)*.8,tp.a*.8*keep*(1.-gCalm*.6)); c=mix(c,line,clamp(abs(tp.a-te)*3.,0.,1.)*.7);
   // a press: the pigment lifts off in a patch, and its dust drifts out and settles
@@ -262,6 +300,9 @@ vec3 lookStars(){
   // the sky turns, slowly, about a point off the top
   vec2 pole=vec2(uCss.x*.62,-uCss.y*.5); float an=uTime*.004; vec2 d0=P-pole; vec2 S=pole+vec2(d0.x*cos(an)-d0.y*sin(an),d0.x*sin(an)+d0.y*cos(an));
   vec3 c=vec3(.010,.016,.045)+vec3(.012,.02,.05)*fbm(S*.002);
+  // the atlas's engraved grid (a picture, laid into the one texture once, and repeated mirrored so it has
+  // no edge), faint, turning with the sky; it is ruled in after the first stars are out
+  c+=vec3(.79,.83,.94)*texture(uMural,S/uCss).a*uPic*.2*(1.-gCalm*.5)*smoothstep(1.2,3.2,uLookT);
   float band=exp(-pow(((S.x-pole.x)*.55+(S.y-pole.y)*.83-uCss.y*.95)/(uCss.y*.2),2.));
   c+=vec3(.16,.17,.24)*band*(.25+.75*fbm(S*.006+3.))*.55+vec3(.5,.52,.6)*band*pow(noise(S*.5),6.)*.5;
   // (the stars come out a few at a time as the dusk deepens, the brightest first)

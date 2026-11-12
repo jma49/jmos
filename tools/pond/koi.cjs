@@ -1,70 +1,7 @@
 // @ts-nocheck (a scratch tool kept from the session: see docs/agents/pond-handoff.md)
-// each look arriving and leaving, on a virtual clock: frames at fixed moments
+// a look's painted koi swimming, turning and curling, on a virtual clock: node koi.cjs <dist> [look]
 const { chromium } = require('playwright');
-const INIT = () => {
-  let s = 12345;
-  Math.random = () => {
-    s = (s + 0x6d2b79f5) | 0;
-    let t = Math.imul(s ^ (s >>> 15), 1 | s);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-  let vt = 1000;
-  const epoch = Date.UTC(2026, 5, 20, 2, 0, 0); // a June evening, local
-  performance.now = () => vt;
-  const RD = Date;
-  window.Date = class extends RD {
-    constructor(...a) {
-      super(...(a.length ? a : [epoch + vt]));
-    }
-    static now() {
-      return epoch + vt;
-    }
-  };
-  let q = [];
-  window.requestAnimationFrame = (f) => (q.push(f), q.length);
-  window.cancelAnimationFrame = () => {};
-  let tid = 1,
-    timers = new Map();
-  const later =
-    (rep) =>
-    (f, ms = 0, ...a) => {
-      const id = tid++;
-      timers.set(id, { at: vt + Math.max(0, +ms || 0), f, a, rep: rep ? Math.max(1, +ms || 0) : 0, id });
-      return id;
-    };
-  window.setTimeout = later(false);
-  window.setInterval = later(true);
-  window.clearTimeout = window.clearInterval = (id) => timers.delete(id);
-  const fire = () => {
-    for (let k = 0; k < 1000; k++) {
-      let t = null;
-      for (const x of timers.values()) if (x.at <= vt && (!t || x.at < t.at || (x.at === t.at && x.id < t.id))) t = x;
-      if (!t) return;
-      if (t.rep) t.at += t.rep;
-      else timers.delete(t.id);
-      try {
-        typeof t.f === 'function' ? t.f(...t.a) : 0;
-      } catch (e) {
-        console.error(e);
-      }
-    }
-  };
-  window.__step = (n) => {
-    for (let i = 0; i < n; i++) {
-      vt += 50;
-      fire();
-      const c = q;
-      q = [];
-      for (const f of c) f(vt);
-    }
-  };
-  window.requestIdleCallback = undefined;
-  window.AudioContext = undefined;
-  window.webkitAudioContext = undefined;
-  Object.defineProperty(navigator, 'getBattery', { value: undefined });
-};
-
+const { INIT } = require('./virtual.cjs');
 (async () => {
   const [, , dir, looks] = process.argv;
   const { serveDist } = await import(require('node:url').pathToFileURL(require('node:path').join(__dirname, '../../scripts/serve-dist.mjs')).href);
@@ -100,7 +37,7 @@ const INIT = () => {
     await p.screenshot({ path: `${__dirname}/tr/${name}.png`, timeout: 180000 });
   };
   await step(70);
-  await set('monet');
+  await set(looks || 'monet');
   await step(80);
   // the visitor's koi follows the pointer: lead it straight, then round a tight circle, then stop so it curls
   const pts = [
@@ -121,7 +58,11 @@ const INIT = () => {
     await p.mouse.move(x, y);
     await step(7);
     await p.waitForTimeout(300);
-    await p.screenshot({ path: `${__dirname}/tr/koi-${String(i).padStart(2, '0')}.png`, timeout: 180000, clip: { x: 140, y: 80, width: 420, height: 260 } });
+    await p.screenshot({
+      path: `${__dirname}/tr/koi-${looks || 'monet'}-${String(i).padStart(2, '0')}.png`,
+      timeout: 180000,
+      clip: { x: 140, y: 80, width: 420, height: 260 }
+    });
   }
   console.log('errors', errs);
   await b.close();
