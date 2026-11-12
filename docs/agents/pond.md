@@ -166,6 +166,35 @@ air) and ASCII (the pond in characters).
   first time a look other than ink, or 日, is chosen (`loadType()`). Even
   then, a face's file loads only when its characters show.
 
+## The weather where the visitor is
+
+Once the pond has settled, so it never holds up the title page, `weather.ts` finds the visitor's place
+from their IP (`api/geo.ts`, as the desktop does; San Jose when they can't be found) and asks
+Open-Meteo for the current weather, the wind, and the day's sunrise and sunset. It does so once a visit,
+then every half hour while the tab shows, and keeps the answer in this browser for half an hour, so a
+reload doesn't fetch again.
+
+What the conditions do (`effectsOf()`):
+
+| Condition | On the pond |
+| --- | --- |
+| Drizzle, rain, storm | Rain, drizzle lightest and a storm hardest. A storm also brings, over the water only, now and then a far flash and its thunder. |
+| Snow | Snowfall. |
+| Fog | A soft haze over the water; in ink, a thicker mist. |
+| Cloudy, overcast | Less light, and a dimmer glint and moon. |
+| Clear | The sun's glint by day and the moon by night, as before. |
+
+- The looks follow their own rain rules.
+- The time of day follows the place's own sun (`phaseAt()`).
+- South of the equator the season the pond shows is half a year on (`seasonOf()`). The solar term's
+  name stays the calendar's.
+- A visitor's own ⌘K rain wins until they reload.
+- ⌘K says the weather where they are.
+- If anything fails there is no weather, and nothing is said.
+
+**Privacy:** the place goes only to Open-Meteo, to ask for its weather, and is kept only in this
+browser's half-hour cache (`pond-weather`). Nothing about it is stored or sent anywhere else.
+
 ## Changing it
 
 - **Wording, a job, a school, a project's highlights:** `content.ts`; a

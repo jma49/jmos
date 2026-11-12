@@ -3244,3 +3244,7 @@ button.more:hover {
     bottom: 70px;
   }
 }
+/* fog where the visitor is: in ink, the mist comes thicker */
+#pond[data-ink][data-fog] .mist i {
+  background: linear-gradient(180deg, rgba(246, 242, 232, 0), rgba(246, 242, 232, 0.66), rgba(246, 242, 232, 0));
+}
