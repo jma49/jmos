@@ -495,6 +495,16 @@ ground, straight alpha; the same file names with `-v2`; and a note of the grid a
     a jump with the legs extended; a landing that settles.
   - Larger cells too (384 × 384 or more). Give the grid.
 
+Where the revision stands: one still of each has been made at full size (the dove at rest and
+spread, in 512-pixel cells; the spider at rest in a 384-pixel cell, with the orange on its palps and,
+as a second choice, on its abdomen) and shown to Jincheng on his machine; they are not in the
+repository. No `-v2` sheet is rendered until he has said yes. What he is choosing between: the
+spider is much closer (a coat of hair that carries the pattern, banded legs, eyes in sockets); the
+dove now has real feather tracts but is still stylised plumage, weakest at rest. The sheets as
+asked would not fit one file each: at these cell sizes the dove's 42 frames come to about 670 KB
+(five files under the budget) and the spider's 28 to about 670 KB (four files); 384-pixel cells for
+the dove would halve that. Which matters more, the size it holds at or the weight, is his to say.
+
 Each look below says how it wants them dressed; where a look only says "tinted", the neutral sheet
 is tinted in code and nothing more is needed.
 
