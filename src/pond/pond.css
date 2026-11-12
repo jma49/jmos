@@ -3108,34 +3108,65 @@ button.more:hover {
 .kuan {
   position: absolute;
   top: calc(100% + 14px);
-  right: 2px;
+  right: 0;
   display: none;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 #pond[data-ink] .kuan {
   display: flex;
 }
-.kuan span {
-  writing-mode: vertical-rl;
-  font:
-    400 15px / 1.1 'Zhi Mang Xing',
-    serif;
-  letter-spacing: 0.12em;
+.kuan > span {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
   color: rgba(27, 25, 22, 0.72);
 }
-.kuan .seal {
-  display: grid;
-  place-items: center;
-  width: 26px;
-  height: 26px;
-  border-radius: 3px;
-  writing-mode: vertical-rl;
+.kuan > span span {
+  display: block;
+  width: 16px;
+  height: 15px;
   font:
-    400 12px / 1 'Zhi Mang Xing',
+    400 15px / 1 'Zhi Mang Xing',
     serif;
-  color: #f1e9d8;
+  text-align: center;
+  translate: var(--dx, 0) var(--dy, 0);
+}
+.kuan > span span:nth-child(2) {
+  margin-bottom: 8px;
+}
+/* the seal: 锦 over 程, white cut out of vermilion, its edge a little uneven as a stone's is; each
+   character's ink is measured and centred in its half (alignInk) */
+.kuan .seal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  width: 26px;
+  height: 46px;
+  padding: 3px 0;
+  box-sizing: border-box;
   background: #b8382a;
-  box-shadow: inset 0 0 0 1.5px rgba(241, 233, 216, 0.35);
+  color: #f4ece0;
+  clip-path: polygon(3% 2%, 50% 0%, 97% 3%, 100% 50%, 98% 97%, 52% 100%, 2% 98%, 0% 48%);
+  box-shadow: inset 0 0 0 1.6px rgba(244, 236, 224, 0.5);
+}
+.kuan .seal span {
+  display: block;
+  width: 18px;
+  height: 17px;
+  font:
+    400 17px / 1 'Zhi Mang Xing',
+    serif;
+  text-align: center;
+  translate: var(--dx, 0) var(--dy, 0);
+}
+@media (max-width: 760px), (max-height: 700px) {
+  /* on a phone the term lies on its side, and on a short screen there's no room: the inscription and seal stay off */
+  #pond[data-ink] .kuan {
+    display: none;
+  }
 }

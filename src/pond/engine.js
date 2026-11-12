@@ -796,7 +796,9 @@ function setYear(y) {
 const TERM_JA = { 惊蛰: '啓蟄', 谷雨: '穀雨', 小满: '小満', 芒种: '芒種', 处暑: '処暑' };
 function showTerm() {
   const i = Math.floor(yearGoal) % 24;
-  $('#kuanTxt').textContent = `${TERMS[i][0]} 画池塘`;
+  // one character a cell, each centred by its ink (alignInk), so the column stands straight
+  $('#kuanTxt').innerHTML = [...`${TERMS[i][0]}画池塘`].map((ch) => `<span>${ch}</span>`).join('');
+  placeKuan();
   paintInk();
   $('#termV').innerHTML = [...((lang === 'ja' && TERM_JA[TERMS[i][0]]) || TERMS[i][0])].map((ch) => `<span>${ch}</span>`).join('');
   $('#termTxt').textContent = zhOn ? '' : TERMS[i][1];
@@ -2121,8 +2123,13 @@ function langBtn() {
 // Each label's ink, measured, set on the centre of its cell: line boxes centre the em box, not the glyph,
 // and 'En' in the sans and 中/日 in the brush each sit off it differently. Run once the faces have come.
 function alignSeg() {
+  alignInk('#langBtn button span');
+  alignInk('.kuan .seal span');
+  alignInk('#kuanTxt span');
+}
+function alignInk(sel) {
   const c = document.createElement('canvas').getContext('2d');
-  for (const s of $('#langBtn').querySelectorAll('button span')) {
+  for (const s of document.querySelectorAll(sel)) {
     const st = getComputedStyle(s),
       size = parseFloat(st.fontSize);
     c.font = `${st.fontWeight} ${st.fontSize} ${st.fontFamily}`;
@@ -2173,7 +2180,11 @@ function setLook(name, from) {
   lookTimer = setTimeout(
     () => {
       pond.toggleAttribute('data-ink', inkOn);
-      if (inkOn) paintInk();
+      if (inkOn) {
+        paintInk();
+        placeKuan();
+        alignSeg();
+      }
       if (name === 'water') delete pond.dataset.look;
       else pond.dataset.look = name;
       speak();
@@ -2219,6 +2230,28 @@ function atlas() {
   loadType()
     .then(() => document.fonts?.load(`500 40px 'JetBrains Mono'`))
     .then(draw, () => {});
+}
+// The inscription and the seal hang on the solar term's own axis, centred under its characters.
+function placeKuan() {
+  const k = $('.kuan');
+  if (!inkOn || !k) return;
+  const a = $('.alm').getBoundingClientRect(),
+    t = $('#termV').getBoundingClientRect(),
+    // a brushed character's ink sits off the middle of its box: the axis is the ink's, for both columns
+    off = (el) => {
+      const st = getComputedStyle(el),
+        c = document.createElement('canvas').getContext('2d');
+      c.font = `${st.fontWeight} ${st.fontSize} ${st.fontFamily}`;
+      const chars = [...el.textContent].filter((ch) => ch.trim());
+      return (
+        chars.reduce((sum, ch) => {
+          const m = c.measureText(ch);
+          return sum + (m.actualBoundingBoxRight - m.actualBoundingBoxLeft) / 2 - m.width / 2;
+        }, 0) / (chars.length || 1)
+      );
+    },
+    axis = t.left + t.width / 2 + off($('#termV'));
+  k.style.right = `${(a.right - axis - k.offsetWidth / 2).toFixed(2)}px`;
 }
 // Ink as a hanging painting: the season's motif (painting.js, loaded the first time ink comes) washes in
 // at one edge; a new season washes the old one out and the new one in, with a brush's breath.
