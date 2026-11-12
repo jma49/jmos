@@ -1,0 +1,291 @@
+// The seal album (集印册): each look has a seal, stamped the first time a visitor reaches it, kept in
+// volumes. What's here is the album's own state and words, apart from the pond that shows them
+// (engine.js): which seals there are, what has been found and when, what counts as a full volume.
+// It is kept in this browser only; nothing about it is sent anywhere.
+
+/** How a seal is cut: its characters, its outline, and whether they are white in red (白文) or red in paper (朱文). */
+export interface Seal {
+  id: string;
+  chars: string;
+  shape: 'square' | 'round' | 'tall';
+  cut: 'white' | 'red';
+  /** Only in a preview build: a look visitors can't reach yet. */
+  preview?: boolean;
+  /** A place kept in the album for a look that isn't chosen yet: shown as coming, never stamped. */
+  soon?: boolean;
+}
+export interface Volume {
+  id: string;
+  seals: Seal[];
+  /** places kept for looks still to come */
+  soon?: number;
+}
+/** The volumes in order. A new look's seal is added to a volume, or a volume added, here and nowhere else. */
+export const VOLUMES: Volume[] = [
+  {
+    id: 'painted',
+    seals: [
+      { id: 'ink', chars: '墨', shape: 'square', cut: 'white' },
+      { id: 'ukiyo', chars: '浮世', shape: 'tall', cut: 'red' },
+      { id: 'monet', chars: '莲', shape: 'round', cut: 'white', preview: true },
+      { id: 'qinghua', chars: '青花', shape: 'tall', cut: 'white', preview: true },
+      { id: 'dunhuang', chars: '敦煌', shape: 'tall', cut: 'red', preview: true }
+    ]
+  },
+  {
+    id: 'drawn',
+    seals: [
+      { id: 'glow', chars: '光', shape: 'round', cut: 'red' },
+      { id: 'blueprint', chars: '图', shape: 'square', cut: 'white' },
+      { id: 'ascii', chars: '字', shape: 'square', cut: 'red' },
+      { id: 'stars', chars: '星', shape: 'round', cut: 'white', preview: true },
+      { id: 'relief', chars: '刻', shape: 'square', cut: 'white', preview: true }
+    ]
+  }
+];
+
+/** The volumes as this build has them: without the looks that are only previews, unless it is one. */
+export const volumes = (preview: boolean): Volume[] =>
+  VOLUMES.map((v) => ({
+    ...v,
+    seals: v.seals.filter((s) => !s.soon && (preview || !s.preview)),
+    soon: preview ? v.seals.filter((s) => s.soon).length : 0
+  })).filter((v) => v.seals.length);
+
+export interface Album {
+  /** seal id → the day it was found (YYYY-MM-DD, the visitor's own date) */
+  found: Record<string, string>;
+  /** volumes whose large seal has been shown stamping */
+  sealed: string[];
+  /** the day the line on the water was shown, once */
+  hinted: string;
+  /** how many times the pond has been opened */
+  visits: number;
+}
+export const emptyAlbum = (): Album => ({ found: {}, sealed: [], hinted: '', visits: 0 });
+
+const DAY = /^\d{4}-\d{2}-\d{2}$/;
+/** The album as stored, whatever is there: anything missing or mangled is left out. */
+export function readAlbum(raw: string | null): Album {
+  const a = emptyAlbum();
+  if (!raw) return a;
+  try {
+    const o = JSON.parse(raw) as Partial<Album> | null;
+    if (!o || typeof o !== 'object') return a;
+    if (o.found && typeof o.found === 'object') for (const [k, v] of Object.entries(o.found)) if (typeof v === 'string' && DAY.test(v)) a.found[k] = v;
+    if (Array.isArray(o.sealed)) a.sealed = o.sealed.filter((x) => typeof x === 'string');
+    if (typeof o.hinted === 'string' && DAY.test(o.hinted)) a.hinted = o.hinted;
+    if (typeof o.visits === 'number' && o.visits > 0) a.visits = Math.floor(o.visits);
+  } catch {
+    /* not JSON: an empty album */
+  }
+  return a;
+}
+export const writeAlbum = (a: Album): string => JSON.stringify(a);
+
+/** YYYY-MM-DD where the visitor is. */
+export const dayOf = (d: Date): string => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+export const has = (a: Album, id: string): boolean => id in a.found;
+export const count = (a: Album): number => Object.keys(a.found).length;
+/** A volume is full when every seal this build has for it is found. */
+export const full = (a: Album, v: Volume): boolean => v.seals.length > 0 && v.seals.every((s) => has(a, s.id));
+export const allFull = (a: Album, vols: Volume[]): boolean => vols.length > 0 && vols.every((v) => full(a, v));
+
+/**
+ * Stamps a seal: the album with it, whether it is new (a seal is stamped once, and keeps its first day),
+ * and the volume it has just filled, if it has.
+ */
+export function stamp(a: Album, id: string, day: string, vols: Volume[]): { album: Album; fresh: boolean; filled: Volume | null } {
+  const vol = vols.find((v) => v.seals.some((s) => s.id === id));
+  if (!vol || has(a, id)) return { album: a, fresh: false, filled: null };
+  const album = { ...a, found: { ...a.found, [id]: day } };
+  return { album, fresh: true, filled: full(album, vol) ? vol : null };
+}
+/** The seals cleared, to find them again; that the line on the water was once shown, and the visits, stay. */
+export const clearSeals = (a: Album): Album => ({ ...a, found: {}, sealed: [] });
+/** A volume's large seal has been shown. */
+export const markSealed = (a: Album, vol: string): Album => (a.sealed.includes(vol) ? a : { ...a, sealed: [...a.sealed, vol] });
+
+/** Whether the album's small mark shows: once a seal is found, or on a later visit by someone the line didn't reach. */
+export const entryShows = (a: Album): boolean => count(a) > 0 || (a.hinted !== '' && a.visits > 1);
+/** Whether the line on the water may still be shown: once, and never after a seal. */
+export const mayHint = (a: Album): boolean => count(a) === 0 && a.hinted === '';
+
+export type Lang = 'en' | 'zh' | 'ja';
+/** The day a seal was found, as each language writes a date. */
+export function dayText(day: string, lang: Lang): string {
+  const [y, m, d] = day.split('-').map(Number);
+  if (lang === 'zh') return `${y}.${m}.${d}`;
+  if (lang === 'ja') return `${y}年${m}月${d}日`;
+  return `${d} ${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][m - 1]} ${y}`;
+}
+
+/** The album's words. A hint points at how a look is found without saying it outright. */
+export interface SealWords {
+  title: string;
+  lede: string;
+  volumes: Record<string, string>;
+  names: Record<string, string>;
+  hints: Record<string, string>;
+  thanks: Record<string, string>;
+  koi: string;
+  both: string;
+  soon: string;
+  line: string;
+  open: string;
+  openHint: string;
+  clear: string;
+  clearHint: string;
+}
+export const SEAL_WORDS: Record<Lang, SealWords> = {
+  en: {
+    title: 'Seals',
+    lede: 'The pond can look more than one way. Each look has a seal, stamped the first time you find it.',
+    volumes: { painted: 'Painted', drawn: 'Drawn' },
+    names: {
+      ink: 'Ink',
+      ukiyo: 'Ukiyo-e',
+      monet: 'Water lilies',
+      qinghua: 'Blue and white',
+      dunhuang: 'Dunhuang',
+      glow: 'Glow',
+      blueprint: 'Blueprint',
+      ascii: 'ASCII',
+      stars: 'Star chart',
+      relief: 'Relief'
+    },
+    hints: {
+      ink: 'Stillness leaves a mark.',
+      ukiyo: 'A full turn raises a wave.',
+      monet: 'A painter dabs, and dabs again.',
+      qinghua: 'Run a finger round the rim.',
+      dunhuang: 'Brush the dust from the wall.',
+      glow: 'The moon is nearer than it looks.',
+      blueprint: 'Every drawing starts with one straight line.',
+      ascii: 'Say something.',
+      stars: 'Three stars, far apart, make a figure.',
+      relief: 'Water is written as a zigzag.'
+    },
+    thanks: { painted: 'Every painted one. Thank you for looking so closely.', drawn: 'Every drawn one. Thank you for trying things.' },
+    koi: 'Your koi wears a seal from now on.',
+    both: 'Both volumes are full. The gold koi wears one too, to match.',
+    soon: 'Still to come.',
+    line: 'The water answers more than a tap.',
+    open: 'Seals',
+    openHint: 'The looks you have found',
+    clear: 'Clear my seals',
+    clearHint: 'Start the album again'
+  },
+  zh: {
+    title: '集印册',
+    lede: '池塘不止一种样子。每一种都有一方印，第一次遇见时盖上。',
+    volumes: { painted: '画', drawn: '线' },
+    names: {
+      ink: '水墨',
+      ukiyo: '浮世绘',
+      monet: '睡莲',
+      qinghua: '青花',
+      dunhuang: '敦煌',
+      glow: '夜光',
+      blueprint: '蓝图',
+      ascii: '字符',
+      stars: '星图',
+      relief: '浮雕'
+    },
+    hints: {
+      ink: '停一停，会留下痕迹。',
+      ukiyo: '转满一圈，起一道浪。',
+      monet: '画家总是点了又点。',
+      qinghua: '沿着碗沿，走一圈。',
+      dunhuang: '拂一拂墙上的尘。',
+      glow: '月亮比看上去近。',
+      blueprint: '每张图纸，都从一条直线开始。',
+      ascii: '说点什么。',
+      stars: '隔得远远的三颗星，连成一个形。',
+      relief: '古人画水，画成一道折线。'
+    },
+    thanks: { painted: '画的这一册集齐了。谢谢你看得这么仔细。', drawn: '线的这一册集齐了。谢谢你什么都试一试。' },
+    koi: '你的锦鲤，从此带着一方印。',
+    both: '两册都满了。金色的那条也盖了一方，和你作伴。',
+    soon: '还没画好。',
+    line: '水面不只会回应点击。',
+    open: '集印册',
+    openHint: '你遇见过的样子',
+    clear: '清空我的印',
+    clearHint: '从头再集一次'
+  },
+  ja: {
+    title: '集印帳',
+    lede: '池の姿はひとつではありません。姿ごとに印がひとつあり、初めて出会ったときに押されます。',
+    volumes: { painted: '絵', drawn: '線' },
+    names: {
+      ink: '水墨',
+      ukiyo: '浮世絵',
+      monet: '睡蓮',
+      qinghua: '染付',
+      dunhuang: '敦煌',
+      glow: '夜光',
+      blueprint: '青写真',
+      ascii: '文字',
+      stars: '星図',
+      relief: 'レリーフ'
+    },
+    hints: {
+      ink: 'じっとしていると、跡が残る。',
+      ukiyo: 'ひとまわりで、波が立つ。',
+      monet: '画家は、何度も筆を置く。',
+      qinghua: '器のふちを、ぐるりとなぞる。',
+      dunhuang: '壁のほこりを、はらってみる。',
+      glow: '月は、見た目より近い。',
+      blueprint: 'どの図面も、まっすぐな一本から。',
+      ascii: 'なにか言ってみて。',
+      stars: '離れた星みっつで、かたちになる。',
+      relief: '水は、ぎざぎざの線で書く。'
+    },
+    thanks: { painted: '絵の一冊がそろいました。じっくり見てくれて、ありがとう。', drawn: '線の一冊がそろいました。いろいろ試してくれて、ありがとう。' },
+    koi: 'あなたの鯉に、印がひとつ付きました。',
+    both: '二冊ともそろいました。金の鯉にも、おそろいの印を。',
+    soon: 'まだ準備中。',
+    line: '水面は、タップのほかにも応えます。',
+    open: '集印帳',
+    openHint: '出会った姿',
+    clear: '印を消す',
+    clearHint: 'はじめから集めなおす'
+  }
+};
+
+const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c] as string);
+/** A seal's markup: its characters, each in its own cell (pond.css cuts and colours it). */
+export const sealMark = (s: Seal, cls = ''): string =>
+  `<b class="seal-m${cls ? ' ' + cls : ''}" data-shape="${s.shape}" data-cut="${s.cut}" data-n="${[...s.chars].length}" lang="zh" aria-hidden="true">${[...s.chars].map((c) => `<span>${esc(c)}</span>`).join('')}</b>`;
+/** An empty place: the seal's outline and nothing in it. */
+export const sealBlank = (s: Seal): string => `<b class="seal-m blank" data-shape="${s.shape}" aria-hidden="true"></b>`;
+
+/**
+ * The album as a sheet: a leaf of paper for each volume, its seals in a row, found ones in vermilion with
+ * their day, the rest an outline and a hint; a full volume carries the large seal and a line of thanks.
+ * `fresh` names the volumes whose large seal is shown for the first time (it stamps as the sheet opens).
+ */
+export function albumHTML(a: Album, vols: Volume[], lang: Lang, fresh: string[] = []): string {
+  const w = SEAL_WORDS[lang],
+    roman = ['I', 'II', 'III', 'IV', 'V', 'VI'];
+  const leaf = (v: Volume, i: number) => {
+    const n = v.seals.filter((s) => has(a, s.id)).length,
+      done = full(a, v);
+    return `<section class="vol"${done ? ' data-done' : ''}><header><i>${lang === 'en' ? roman[i] : `第${'一二三四五六'[i]}${lang === 'ja' ? '冊' : '册'}`}</i><b>${esc(w.volumes[v.id])}</b><em>${n} / ${v.seals.length}</em></header><div class="leaf"><ol class="slots">${v.seals
+      .map((s) =>
+        has(a, s.id)
+          ? `<li data-found>${sealMark(s)}<span class="nm">${esc(w.names[s.id])}</span><time datetime="${a.found[s.id]}">${dayText(a.found[s.id], lang)}</time></li>`
+          : `<li>${sealBlank(s)}<span class="hint">${esc(w.hints[s.id])}</span></li>`
+      )
+      .join(
+        ''
+      )}${`<li class="soon"><b class="seal-m blank" data-shape="square" aria-hidden="true"></b><span class="hint">${esc(w.soon)}</span></li>`.repeat(v.soon ?? 0)}</ol>${
+      done
+        ? `<p class="grand"${fresh.includes(v.id) ? ' data-fresh' : ''}><span>${esc(w.thanks[v.id])}${v.id === 'painted' ? `<br>${esc(w.koi)}` : ''}${allFull(a, vols) && i === vols.length - 1 && vols.length > 1 ? `<br>${esc(w.both)}` : ''}</span><b class="seal-m own" data-shape="tall" data-cut="white" data-n="2" lang="zh" aria-hidden="true"><span>锦</span><span>程</span></b></p>`
+        : ''
+    }</div></section>`;
+  };
+  return `<h1>${esc(w.title)}</h1><p class="lede">${esc(w.lede)}</p>${vols.map(leaf).join('')}`;
+}

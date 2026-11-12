@@ -2592,6 +2592,10 @@ button.more:hover {
   opacity: 0;
   transition-duration: 0.3s;
 }
+/* the controls only dim: they stay where a hand can find them, and glide to the look's places (glide()) */
+#pond[data-inking] .hud {
+  opacity: 0.4;
+}
 /* the pond's own type takes its colour from the pond, so ink can turn it dark */
 #pond {
   color: var(--mist);
@@ -3242,6 +3246,351 @@ button.more:hover {
 #pond[data-ink][data-fog] .mist i {
   background: linear-gradient(180deg, rgba(246, 242, 232, 0), rgba(246, 242, 232, 0.66), rgba(246, 242, 232, 0));
 }
+
+/* ---------- the seal album (集印册; seals.ts): the seals, a stamp in the corner, the album's sheet,
+   its small mark by the solar term, and the one line on the water ---------- */
+/* A seal, cut the way the 锦程 seal is: white out of vermilion (白文) or vermilion lines on the ground
+   (朱文), square, round or two characters tall, the edge a little uneven as a stone's is. --s sets its size. */
+.seal-m {
+  --s: 56px;
+  --red: #b8382a;
+  --cut: #f4ece0;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  box-sizing: border-box;
+  width: var(--s);
+  height: var(--s);
+  font:
+    400 calc(var(--s) * 0.6) / 1 'Zhi Mang Xing',
+    serif;
+  background: var(--red);
+  color: var(--cut);
+  clip-path: polygon(2% 3%, 48% 0%, 97% 2%, 100% 47%, 98% 97%, 53% 100%, 3% 98%, 0% 52%);
+  box-shadow: inset 0 0 0 calc(var(--s) * 0.035) color-mix(in srgb, var(--cut) 50%, transparent);
+}
+.seal-m span {
+  display: block;
+  width: 1em;
+  height: 1em;
+  text-align: center;
+  translate: var(--dx, 0) var(--dy, 0);
+}
+.seal-m[data-shape='tall'] {
+  gap: calc(var(--s) * 0.03);
+  width: calc(var(--s) * 0.6);
+  font-size: calc(var(--s) * 0.38);
+  clip-path: polygon(3% 2%, 50% 0%, 97% 3%, 100% 50%, 98% 97%, 52% 100%, 2% 98%, 0% 48%);
+}
+.seal-m[data-shape='round'] {
+  border-radius: 48% 52% 50% 50% / 51% 49% 52% 48%;
+  clip-path: none;
+  font-size: calc(var(--s) * 0.56);
+}
+.seal-m[data-cut='red'] {
+  background: none;
+  color: var(--red);
+  box-shadow: inset 0 0 0 calc(var(--s) * 0.065) var(--red);
+}
+.seal-m.blank {
+  background: none;
+  clip-path: none;
+  border-radius: 2px;
+  box-shadow: inset 0 0 0 1px rgba(92, 58, 40, 0.3);
+}
+.seal-m.blank[data-shape='round'] {
+  border-radius: 50%;
+}
+/* the stamp: pressed into the corner above the controls (on a phone, above the sound, where there is
+   room), held a moment, then gone */
+.stamp {
+  position: absolute;
+  right: calc(var(--edge) + 6px);
+  bottom: calc(max(22px, env(safe-area-inset-bottom, 0px)) + 66px);
+  pointer-events: none;
+  opacity: 0;
+  rotate: 4deg;
+}
+@media (max-width: 560px) {
+  .stamp {
+    right: auto;
+    left: calc(var(--edge) + 4px);
+    bottom: calc(max(22px, env(safe-area-inset-bottom, 0px)) + 62px);
+    rotate: -4deg;
+  }
+}
+.stamp .seal-m {
+  --s: 64px;
+  filter: drop-shadow(0 2px 10px rgba(0, 10, 12, 0.35));
+}
+.stamp[data-on] {
+  animation: stamp 3.4s both;
+}
+@keyframes stamp {
+  0% {
+    opacity: 0;
+    scale: 1.5;
+  }
+  5% {
+    opacity: 1;
+    scale: 0.96;
+  }
+  8% {
+    scale: 1;
+  }
+  82% {
+    opacity: 1;
+    scale: 1;
+  }
+  100% {
+    opacity: 0;
+    scale: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .stamp[data-on] {
+    animation: none;
+    opacity: 1;
+  }
+}
+/* each look presses it in its own way: into paper, as a print's cartouche, in light, as a draughtsman's
+   stamp, in characters */
+#pond[data-look='ink'] .stamp .seal-m {
+  filter: none;
+  mix-blend-mode: multiply;
+}
+#pond[data-look='ukiyo'] .stamp .seal-m {
+  --red: #c4402c;
+  --cut: #f6edd8;
+  filter: drop-shadow(1.5px 1.5px 0 rgba(20, 30, 50, 0.55));
+}
+#pond[data-look='glow'] .stamp .seal-m {
+  --red: #ff5a8e;
+  background: none;
+  color: var(--red);
+  box-shadow:
+    inset 0 0 0 1.5px var(--red),
+    inset 0 0 14px rgba(255, 60, 172, 0.35);
+  filter: drop-shadow(0 0 8px rgba(255, 60, 172, 0.8));
+}
+#pond[data-look='blueprint'] .stamp .seal-m {
+  --red: #eaf3ff;
+  background: none;
+  color: var(--red);
+  box-shadow: inset 0 0 0 1.5px var(--red);
+  clip-path: none;
+  filter: none;
+}
+#pond[data-look='ascii'] .stamp .seal-m {
+  --red: #f0a04b;
+  background: none;
+  color: var(--red);
+  box-shadow: none;
+  outline: 1.5px dashed var(--red);
+  outline-offset: -3px;
+  clip-path: none;
+  filter: none;
+}
+.stamp-say {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+/* the album's mark: a small seal under the clock's lines, there once there is something to open */
+.seals-btn {
+  display: block;
+  margin: 3px 0 0;
+  padding: 6px;
+  translate: 6px 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  pointer-events: auto;
+  opacity: 0.86;
+  transition: opacity 0.2s;
+}
+.seals-btn[hidden] {
+  display: none;
+}
+.seals-btn:hover,
+.seals-btn:focus-visible {
+  opacity: 1;
+}
+.seals-btn i {
+  display: block;
+  width: 11px;
+  height: 11px;
+  box-sizing: border-box;
+  border: 1.5px solid #c9503f;
+  clip-path: polygon(2% 4%, 50% 0%, 97% 3%, 100% 50%, 97% 97%, 50% 100%, 3% 97%, 0% 50%);
+}
+.seals-btn[data-some] i {
+  background: linear-gradient(#c9503f, #c9503f) center / 3px 3px no-repeat;
+}
+.seals-btn[data-all] i {
+  background: #c9503f;
+}
+/* the one line on the water */
+.whisper {
+  position: absolute;
+  margin: 0;
+  max-width: calc(100% - 40px);
+  translate: -50% 0;
+  font: italic 500 clamp(17px, 1.5vw, 21px) / 1.3 var(--display);
+  color: rgba(238, 244, 241, 0.9);
+  text-shadow: 0 1px 12px rgba(0, 16, 18, 0.8);
+  text-align: center;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 1.4s ease;
+}
+.whisper[data-on] {
+  opacity: 1;
+}
+#pond:lang(zh) .whisper,
+#pond:lang(ja) .whisper {
+  font-style: normal;
+}
+/* the album: a leaf of paper for each volume */
+.album h1 + .lede {
+  margin-top: 12px;
+}
+.album .vol {
+  margin-top: 30px;
+}
+.album .vol > header {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font: 400 11.5px / 1 var(--mono);
+  color: var(--mist-dim);
+}
+.album .vol > header i {
+  font-style: normal;
+}
+.album .vol > header b {
+  font: 600 19px / 1 var(--display);
+  color: var(--mist);
+}
+.album .vol > header em {
+  margin-left: auto;
+  font-style: normal;
+  font-variant-numeric: tabular-nums;
+}
+.album .leaf {
+  margin-top: 12px;
+  padding: 24px 22px 22px;
+  border-radius: 6px;
+  color: #2a231c;
+  background: repeating-linear-gradient(90deg, rgba(120, 96, 60, 0.035) 0 1px, transparent 1px 7px), linear-gradient(180deg, #f3ebda, #ece2cd);
+  box-shadow:
+    inset 0 0 0 1px rgba(120, 96, 60, 0.18),
+    0 10px 30px rgba(0, 12, 14, 0.28);
+}
+.album .slots {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 22px 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.album .slots li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  text-align: center;
+}
+/* every seal stands in a box of one height, so the names under them share a line */
+.album .slots .seal-m {
+  --s: 54px;
+  margin: calc((62px - var(--s)) / 2) 0 calc((62px - var(--s)) / 2 + 8px);
+}
+.album .slots .seal-m[data-shape='tall'] {
+  --s: 62px;
+}
+.album .slots .soon .seal-m {
+  box-shadow: none;
+  outline: 1px dashed rgba(92, 58, 40, 0.3);
+  outline-offset: -1px;
+}
+.album .nm {
+  font: 600 14px / 1.2 var(--display);
+  color: #2a231c;
+}
+.album time {
+  font: 400 10.5px / 1.2 var(--mono);
+  font-variant-numeric: tabular-nums;
+  color: rgba(42, 35, 28, 0.6);
+}
+.album .hint {
+  max-width: 13em;
+  font: italic 400 13px / 1.35 var(--display);
+  color: rgba(42, 35, 28, 0.62);
+  text-wrap: balance;
+}
+#pond:lang(zh) .album .hint,
+#pond:lang(ja) .album .hint {
+  font-style: normal;
+  font-size: 12.5px;
+}
+.album .grand {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px;
+  max-width: none;
+  margin: 22px 0 0;
+  padding-top: 18px;
+  border-top: 1px solid rgba(120, 96, 60, 0.22);
+  font: 400 14px / 1.6 var(--display);
+  color: rgba(42, 35, 28, 0.82);
+}
+.album .grand .seal-m {
+  --s: 84px;
+  rotate: 2deg;
+}
+.album .grand[data-fresh] .seal-m {
+  animation: stamp-own 0.5s 0.7s both;
+}
+@keyframes stamp-own {
+  0% {
+    opacity: 0;
+    scale: 1.5;
+  }
+  60% {
+    opacity: 1;
+    scale: 0.96;
+  }
+  100% {
+    scale: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .album .grand[data-fresh] .seal-m {
+    animation: none;
+  }
+}
+@media (max-width: 560px) {
+  .album .slots {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .album .leaf {
+    padding: 20px 12px 18px;
+  }
+  .album .grand .seal-m {
+    --s: 70px;
+  }
+}
+
 /* with ?perf: the pond's numbers (perf.js) */
 .perf {
   position: fixed;
@@ -3260,4 +3609,78 @@ button.more:hover {
   background: rgba(0, 0, 0, 0.6);
   pointer-events: none;
   white-space: pre;
+}
+
+/* ---------- with ?preview: a small panel to force each state (preview.js) ---------- */
+.preview {
+  position: absolute;
+  z-index: 9;
+  bottom: 18px;
+  left: 50%;
+  translate: -50% 0;
+  display: flex;
+  flex-direction: column-reverse;
+  font:
+    500 12px / 1.3 -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    system-ui,
+    sans-serif;
+  color: #eef4f1;
+}
+.preview .pv-tog {
+  display: block;
+  margin: 0 auto;
+  height: 28px;
+  padding: 0 12px;
+  border-radius: 14px;
+  color: inherit;
+  background: rgba(8, 28, 30, 0.72);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+}
+.preview .pv-body {
+  display: grid;
+  gap: 8px;
+  width: 280px;
+  margin-bottom: 6px;
+  padding: 12px;
+  border-radius: 14px;
+  background: rgba(8, 28, 30, 0.82);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+}
+.preview .pv-body[hidden] {
+  display: none;
+}
+.preview label {
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  align-items: center;
+  gap: 8px;
+}
+.preview label span {
+  color: rgba(238, 244, 241, 0.7);
+}
+.preview select,
+.preview input {
+  width: 100%;
+  font: inherit;
+  color: inherit;
+  background: rgba(255, 255, 255, 0.08);
+  border: 0;
+  border-radius: 6px;
+  padding: 3px 6px;
+}
+.preview label input + input {
+  grid-column: 2;
+}
+.preview .pv-acts {
+  display: flex;
+  gap: 6px;
+}
+.preview .pv-acts button {
+  flex: 1;
+  padding: 6px;
+  border-radius: 8px;
+  color: inherit;
+  background: rgba(255, 255, 255, 0.1);
 }

@@ -2,6 +2,7 @@
    (loadType() in engine.js), so a first visit downloads none of it. @font-face only: a face's file
    loads when its characters show. */
 @import './kana.css';
+@import './newlooks.css';
 @import '@fontsource/orbitron/latin-500.css';
 @import '@fontsource/orbitron/latin-700.css';
 @import '@fontsource/rajdhani/latin-500.css';

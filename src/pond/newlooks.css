@@ -1,0 +1,378 @@
+/* The preview looks' pages (newlooks.js draws their water): each sets the pond's palette and pairs two
+   faces the pond already has, and the chapters, the controls and the album's stamp follow. Loaded with
+   the other looks' type (looks.css), the first time a look is chosen. */
+
+/* Water lilies: dusk colours off the paint, a garden's serif */
+#pond[data-look='monet'] {
+  --deep: #2a3152;
+  --mist: #f7f1e6;
+  --mist-dim: rgba(247, 241, 230, 0.84);
+  --mist-faint: rgba(247, 241, 230, 0.56);
+  --hair: rgba(247, 241, 230, 0.3);
+  --lift: rgba(247, 241, 230, 0.1);
+  --koi: #f2a0a8;
+  --gold: #f0d58a;
+  --latin-d: 'Cormorant Garamond';
+  --latin-b: 'Cormorant Garamond';
+  font-size: 106%;
+  font-weight: 500;
+}
+#pond[data-look='monet'] .hero {
+  font-style: italic;
+  font-weight: 500;
+}
+#pond[data-look='monet'] .say {
+  font-size: clamp(18px, 1.5vw, 21px);
+  color: rgba(247, 241, 230, 0.94);
+}
+#pond[data-look='monet'] .home * {
+  text-shadow: 0 1px 12px rgba(22, 26, 56, 0.6);
+}
+#pond[data-look='monet'] .term-v {
+  color: #f6c1c6;
+}
+#pond[data-look='monet'] .sheet {
+  background: rgba(38, 44, 74, 0.6) !important;
+}
+
+/* 青花: cobalt on white glaze, a fine serif */
+#pond[data-look='qinghua'] {
+  --deep: #f1f4f6;
+  --mist: #0f2a6b;
+  --mist-dim: rgba(15, 42, 107, 0.78);
+  --mist-faint: rgba(15, 42, 107, 0.52);
+  --hair: rgba(15, 42, 107, 0.2);
+  --lift: rgba(15, 42, 107, 0.07);
+  --koi: #1c3f9a;
+  --gold: #1c3f9a;
+  --latin-d: 'Shippori Mincho Latin';
+  --latin-b: 'Shippori Mincho Latin';
+}
+/* 敦煌: lamp-black on earth, cinnabar where it matters */
+#pond[data-look='dunhuang'] {
+  --deep: #c9a26a;
+  --mist: #2a1a10;
+  --mist-dim: rgba(42, 26, 16, 0.8);
+  --mist-faint: rgba(42, 26, 16, 0.54);
+  --hair: rgba(42, 26, 16, 0.24);
+  --lift: rgba(42, 26, 16, 0.08);
+  --koi: #a8321c;
+  --gold: #1f5a6e;
+  --latin-d: 'Cormorant Garamond';
+  --latin-b: 'Shippori Mincho Latin';
+}
+#pond[data-look='dunhuang'] .hero {
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+/* the two on a light ground: nothing glows, and what was dark glass is glaze or plaster */
+#pond[data-look='qinghua'] .home *,
+#pond[data-look='qinghua'] .hud *,
+#pond[data-look='qinghua'] .sheet *,
+#pond[data-look='dunhuang'] .home *,
+#pond[data-look='dunhuang'] .hud *,
+#pond[data-look='dunhuang'] .sheet * {
+  text-shadow: none !important;
+}
+#pond[data-look='qinghua'] .say,
+#pond[data-look='qinghua'] .alm .txt,
+#pond[data-look='qinghua'] .alm .txt b {
+  color: rgba(15, 42, 107, 0.82);
+}
+#pond[data-look='dunhuang'] .say,
+#pond[data-look='dunhuang'] .alm .txt,
+#pond[data-look='dunhuang'] .alm .txt b {
+  color: rgba(42, 26, 16, 0.84);
+}
+#pond[data-look='qinghua'] .sheet {
+  background: rgba(244, 247, 249, 0.62) !important;
+}
+#pond[data-look='dunhuang'] .sheet {
+  background: rgba(214, 180, 128, 0.62) !important;
+}
+#pond[data-look='qinghua'] .veil {
+  background: rgba(20, 40, 90, 0.08);
+}
+#pond[data-look='dunhuang'] .veil {
+  background: rgba(60, 36, 16, 0.14);
+}
+#pond[data-look='qinghua'] .shade,
+#pond[data-look='dunhuang'] .shade {
+  opacity: 0.3;
+}
+#pond[data-look='qinghua'] .link,
+#pond[data-look='dunhuang'] .link {
+  background: var(--lift);
+}
+#pond[data-look='qinghua'] .filt,
+#pond[data-look='dunhuang'] .filt {
+  background: color-mix(in srgb, var(--deep) 94%, transparent);
+  box-shadow: inset 0 0 0 1px var(--hair);
+}
+#pond[data-look='qinghua'] .filt button[aria-pressed='true'],
+#pond[data-look='qinghua'] .sheet .chap button[aria-current],
+#pond[data-look='qinghua'] .rooms button[aria-selected='true'],
+#pond[data-look='qinghua'] .seg-on,
+#pond[data-look='dunhuang'] .filt button[aria-pressed='true'],
+#pond[data-look='dunhuang'] .sheet .chap button[aria-current],
+#pond[data-look='dunhuang'] .rooms button[aria-selected='true'],
+#pond[data-look='dunhuang'] .seg-on {
+  background: var(--mist);
+  color: var(--deep);
+}
+#pond[data-look='qinghua'] .seg button[aria-pressed='true'],
+#pond[data-look='dunhuang'] .seg button[aria-pressed='true'] {
+  color: var(--deep);
+}
+#pond[data-look='qinghua'] .term-v {
+  color: #1c3f9a;
+}
+#pond[data-look='dunhuang'] .term-v {
+  color: #a8321c;
+}
+#pond[data-look='qinghua'] .tag,
+#pond[data-look='dunhuang'] .tag {
+  color: var(--mist);
+  background: color-mix(in srgb, var(--deep) 78%, transparent);
+  box-shadow: inset 0 0 0 1px var(--hair);
+}
+
+/* 星图: an atlas's fine serif in small capitals, the plate's pale ink */
+#pond[data-look='stars'] {
+  --deep: #03061a;
+  --mist: #e9edf8;
+  --mist-dim: rgba(214, 224, 248, 0.78);
+  --mist-faint: rgba(214, 224, 248, 0.5);
+  --hair: rgba(170, 190, 240, 0.26);
+  --lift: rgba(170, 190, 240, 0.08);
+  --koi: #f0cf8a;
+  --gold: #f0cf8a;
+  --latin-d: 'Cormorant Garamond';
+  --latin-b: 'Shippori Mincho Latin';
+}
+#pond[data-look='stars'] .hero,
+#pond[data-look='stars'] .toc .go b,
+#pond[data-look='stars'] .sheet h1 {
+  font-variant-caps: small-caps;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+}
+#pond[data-look='stars'] .term-v {
+  color: #f0cf8a;
+}
+#pond[data-look='stars'] .tag {
+  font-style: italic;
+  letter-spacing: 0.04em;
+}
+
+#pond[data-look='monet'] .stamp .seal-m {
+  --red: #c8473f;
+  --cut: #f6ead6;
+  filter: drop-shadow(0 1px 0 rgba(255, 220, 200, 0.5)) drop-shadow(0 3px 6px rgba(20, 20, 50, 0.4));
+}
+#pond[data-look='qinghua'] .stamp .seal-m {
+  --red: #1c3f9a;
+  --cut: #f3f6f8;
+  filter: none;
+  outline: 1.5px solid #1c3f9a;
+  outline-offset: 4px;
+}
+#pond[data-look='dunhuang'] .stamp .seal-m {
+  --red: #a8321c;
+  --cut: #e7d2a8;
+  filter: none;
+  opacity: 0.9;
+  mix-blend-mode: multiply;
+}
+#pond[data-look='stars'] .stamp .seal-m {
+  --red: #f0cf8a;
+  background: none;
+  color: var(--red);
+  box-shadow: inset 0 0 0 1px var(--red);
+  filter: drop-shadow(0 0 6px rgba(240, 207, 138, 0.7));
+}
+/* A look with a border round the whole pond (the bowl's rim): the border is the page's
+   margin in that look, and the title page, the clock and every control stand inside it, clear by the same
+   gap on every side. --frame is how far the border reaches in (newlooks.js draws it at this scale). */
+#pond[data-look='qinghua'] {
+  --frame: 48px;
+  --edge: max(clamp(20px, 4.2vw, 68px), calc(var(--frame) + 14px));
+}
+#pond[data-look='qinghua'] .alm {
+  top: calc(var(--frame) + 10px);
+}
+#pond[data-look='qinghua'] .hud .bl,
+#pond[data-look='qinghua'] .hud .br,
+#pond[data-look='qinghua'] .hud .cmd {
+  bottom: calc(var(--frame) + 10px);
+}
+#pond[data-look='qinghua'] .preview {
+  bottom: calc(var(--frame) + 10px);
+}
+#pond[data-look='qinghua'] .stamp {
+  bottom: calc(var(--frame) + 58px);
+}
+#pond[data-look='qinghua'] .veil {
+  padding: calc(var(--frame) + 6px);
+}
+@media (max-width: 860px) {
+  #pond[data-look='qinghua'] {
+    --frame: 27px;
+  }
+  #pond[data-look='qinghua'] .home {
+    padding-inline: calc(var(--frame) + 8px);
+  }
+  #pond[data-look='qinghua'] .lead {
+    padding-top: calc(var(--frame) + 4px);
+  }
+  #pond[data-look='qinghua'] .hud {
+    padding-inline: calc(var(--frame) + 6px);
+  }
+  #pond[data-look='qinghua'] .veil {
+    padding: calc(var(--frame) + 2px);
+  }
+}
+/* the Dunhuang wall has a band along its top and bottom: the clock and the controls stand clear of it */
+#pond[data-look='dunhuang'] .alm {
+  top: 44px;
+}
+#pond[data-look='dunhuang'] .hud .bl,
+#pond[data-look='dunhuang'] .hud .br,
+#pond[data-look='dunhuang'] .hud .cmd,
+#pond[data-look='dunhuang'] .preview {
+  bottom: 44px;
+}
+#pond[data-look='dunhuang'] .stamp {
+  bottom: 92px;
+}
+@media (max-width: 860px) {
+  #pond[data-look='dunhuang'] .alm {
+    top: 28px;
+  }
+  #pond[data-look='dunhuang'] .lead {
+    padding-top: 12px;
+  }
+  #pond[data-look='dunhuang'] .hud .bl,
+  #pond[data-look='dunhuang'] .hud .br,
+  #pond[data-look='dunhuang'] .hud .cmd,
+  #pond[data-look='dunhuang'] .preview {
+    bottom: 30px;
+  }
+}
+/* the clock stands in the soot at the top of the wall: its lines in the wall's white, not in umber */
+#pond[data-look='dunhuang'] .alm .txt,
+#pond[data-look='dunhuang'] .alm .txt b {
+  color: rgba(237, 224, 194, 0.92);
+}
+#pond[data-look='dunhuang'] .term-v {
+  color: #e2603f;
+}
+
+/* in Monet's pond a name is written on the painting, not pinned to it */
+#pond[data-look='monet'] .tag {
+  padding: 0;
+  background: none;
+  box-shadow: none;
+  font:
+    italic 500 14px / 1 'Cormorant Garamond',
+    serif;
+  color: rgba(247, 241, 230, 0.9);
+  text-shadow: 0 1px 8px rgba(22, 26, 56, 0.7);
+}
+
+/* Egyptian relief: dark umber on pale limestone, red ochre where it matters, Egyptian blue for what is live.
+   The stone is light, so nothing glows; the frieze runs along the top and the foot, and the clock and the
+   controls stand clear of it. */
+#pond[data-look='relief'] {
+  --deep: #ded7c6;
+  --mist: #2b2620;
+  --mist-dim: rgba(43, 38, 32, 0.8);
+  --mist-faint: rgba(43, 38, 32, 0.54);
+  --hair: rgba(43, 38, 32, 0.22);
+  --lift: rgba(43, 38, 32, 0.07);
+  --koi: #a8482c;
+  --gold: #3f6fa8;
+  --latin-d: 'Cormorant Garamond';
+  --latin-b: 'Shippori Mincho Latin';
+}
+#pond[data-look='relief'] .hero {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+#pond[data-look='relief'] .home *,
+#pond[data-look='relief'] .hud *,
+#pond[data-look='relief'] .sheet * {
+  text-shadow: none !important;
+}
+#pond[data-look='relief'] .say,
+#pond[data-look='relief'] .alm .txt,
+#pond[data-look='relief'] .alm .txt b {
+  color: rgba(43, 38, 32, 0.84);
+}
+#pond[data-look='relief'] .sheet {
+  background: rgba(226, 219, 204, 0.64) !important;
+}
+#pond[data-look='relief'] .veil {
+  background: rgba(50, 42, 30, 0.12);
+}
+#pond[data-look='relief'] .shade {
+  opacity: 0.3;
+}
+#pond[data-look='relief'] .link {
+  background: var(--lift);
+}
+#pond[data-look='relief'] .filt {
+  background: color-mix(in srgb, var(--deep) 94%, transparent);
+  box-shadow: inset 0 0 0 1px var(--hair);
+}
+#pond[data-look='relief'] .filt button[aria-pressed='true'],
+#pond[data-look='relief'] .sheet .chap button[aria-current],
+#pond[data-look='relief'] .rooms button[aria-selected='true'],
+#pond[data-look='relief'] .seg-on {
+  background: var(--mist);
+  color: var(--deep);
+}
+#pond[data-look='relief'] .seg button[aria-pressed='true'] {
+  color: var(--deep);
+}
+#pond[data-look='relief'] .term-v {
+  color: #a8482c;
+}
+#pond[data-look='relief'] .tag {
+  color: var(--mist);
+  background: color-mix(in srgb, var(--deep) 78%, transparent);
+  box-shadow: inset 0 0 0 1px var(--hair);
+}
+#pond[data-look='relief'] .stamp .seal-m {
+  --red: #a8482c;
+  --cut: #e6dfcf;
+  filter: none;
+  opacity: 0.9;
+  mix-blend-mode: multiply;
+}
+#pond[data-look='relief'] .alm {
+  top: 54px;
+}
+#pond[data-look='relief'] .hud .bl,
+#pond[data-look='relief'] .hud .br,
+#pond[data-look='relief'] .hud .cmd,
+#pond[data-look='relief'] .preview {
+  bottom: 54px;
+}
+#pond[data-look='relief'] .stamp {
+  bottom: 102px;
+}
+@media (max-width: 860px) {
+  #pond[data-look='relief'] .alm {
+    top: 34px;
+  }
+  #pond[data-look='relief'] .lead {
+    padding-top: 16px;
+  }
+  #pond[data-look='relief'] .hud .bl,
+  #pond[data-look='relief'] .hud .br,
+  #pond[data-look='relief'] .hud .cmd,
+  #pond[data-look='relief'] .preview {
+    bottom: 36px;
+  }
+}

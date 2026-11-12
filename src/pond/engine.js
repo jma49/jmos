@@ -12,10 +12,51 @@
 import { report } from '../os/core/report';
 import { load, save } from '../os/core/storage';
 import { effectsOf, loadWeather, minutesAt, phaseAt, seasonOf } from './weather';
+import { SHEETS as SPRITES, doveFrame, lit as litLook, loadSprites, spiderFrame } from './sprites.js';
+import { PREVIEW, WELCOME_BACK, festivalDate, festivalOn, moonAge, moonLit, panel, returning } from './preview.js';
 // the looks' type, as a stylesheet of its own: linked only once a look or 日 is chosen (loadType)
 import LOOKS_CSS from './looks.css?url';
+import {
+  SEAL_WORDS,
+  albumHTML,
+  allFull,
+  clearSeals,
+  count as sealCount,
+  dayOf,
+  entryShows,
+  full,
+  markSealed,
+  mayHint,
+  readAlbum,
+  sealMark,
+  stamp,
+  volumes,
+  writeAlbum
+} from './seals';
 import { FPS, IDLE_AFTER, due, learnBeat, simSteps } from './clock.js';
 import { PERF, add, count, frameDone, span } from './perf.js';
+import { strokeLifted, strokeMoving, tapsLook } from './gestures';
+import { crowdsPainting, underPainting } from './hang.js';
+import { paintingOf, seasonAmounts } from './seasons.js';
+import {
+  KOI_SHEETS,
+  MONET,
+  MURAL,
+  MURAL_LARGE,
+  NEW_COMMANDS,
+  NEW_GLASS,
+  NEW_GLSL,
+  NEW_LAY,
+  NEW_LOOKS,
+  NEW_SHADE,
+  NEW_SID,
+  QINGHUA,
+  RELIEF,
+  STARS,
+  UKIYO,
+  muralLayout,
+  reliefLayout
+} from './newlooks.js';
 import { SocialError } from '../os/social/errors';
 import { coverOf, loadSongs, music, onMusic, play as playSongAt, setMusicMuted, toggle as toggleSong } from './music';
 import * as people from './people';
@@ -24,6 +65,8 @@ const $ = (s) => document.querySelector(s);
 /** What the page gathered at build time: the timeline, the photos, the About chapter. */
 const D = JSON.parse($('#pond-data').textContent);
 const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+// With ?preview: the real moon, the wind, the festivals, fireflies, stars, a welcome back (preview.js)
+const pv = { age: moonAge(), fest: PREVIEW ? festivalOn() : null, flies: [], fliesOn: false, windX: 13, windY: 6, boatAt: -1e9, lanterns: [] };
 const MAC = /Mac|iPhone|iPad/.test(navigator.userAgent);
 const pond = $('#pond'),
   glc = $('#gl');
@@ -121,6 +164,12 @@ class Koi {
   update(dt) {
     if (this.mode === 'wander' && (T > this.next || Math.hypot(this.tx - this.x, this.ty - this.y) < 110)) this.wander();
     // Round the pointer, not at it: the point made for is always a little further along a circle about it.
+    if (this.mode === 'greet') {
+      // swims over to the visitor's koi and round it once
+      const a = T * 0.9;
+      this.tx = you.x + Math.cos(a) * 80;
+      this.ty = you.y + Math.sin(a) * 80;
+    }
     if (this.mode === 'you' || this.mode === 'visit') {
       const R = this.mode === 'you' ? 74 : 124,
         ang = Math.atan2(this.y - ptr.y, this.x - ptr.x) + (this.mode === 'you' ? 0.9 : -0.9);
@@ -190,8 +239,130 @@ class Koi {
       this.wake = T + 0.22;
     }
   }
+  // In the star chart a koi is a constellation: a few stars along its back and at its fins, joined by thin
+  // lines that bend as it swims, the brightest lettered as an atlas letters them.
+  drawStars(c) {
+    const s = this.spine,
+      S = this.size,
+      at = [0, 2, 4, 7, 9, N - 1],
+      gold = this === host,
+      col = gold ? '255,214,140' : '214,228,255';
+    const nrm = (i) => {
+      const a = s[Math.max(0, i - 1)],
+        b = s[Math.min(N - 1, i + 1)],
+        l = Math.hypot(a.x - b.x, a.y - b.y) || 1;
+      return [-(a.y - b.y) / l, (a.x - b.x) / l];
+    };
+    const [nx, ny] = nrm(3),
+      [tx, ty] = nrm(N - 2),
+      fins = [
+        [s[3].x + nx * S * 0.2, s[3].y + ny * S * 0.2],
+        [s[3].x - nx * S * 0.2, s[3].y - ny * S * 0.2]
+      ],
+      tail = [
+        [s[N - 1].x + tx * S * 0.11 + (s[N - 1].x - s[N - 2].x) * 1.6, s[N - 1].y + ty * S * 0.11 + (s[N - 1].y - s[N - 2].y) * 1.6],
+        [s[N - 1].x - tx * S * 0.11 + (s[N - 1].x - s[N - 2].x) * 1.6, s[N - 1].y - ty * S * 0.11 + (s[N - 1].y - s[N - 2].y) * 1.6]
+      ];
+    // the atlas's figure behind the stars: a koi in outline, faint, bent along the same spine
+    if (starFigure) this.drawSprite(c, starFigure, 0, FIGURE, gold ? 0.42 : 0.3, false);
+    c.save();
+    c.globalAlpha = this.alpha * (1 - 0.3 * this.depth);
+    c.strokeStyle = `rgba(${col},0.5)`;
+    c.lineWidth = 0.9;
+    c.beginPath();
+    at.forEach((i, k) => (k ? c.lineTo(s[i].x, s[i].y) : c.moveTo(s[i].x, s[i].y)));
+    for (const f of fins) {
+      c.moveTo(s[2].x, s[2].y);
+      c.lineTo(f[0], f[1]);
+      c.lineTo(s[4].x, s[4].y);
+    }
+    c.moveTo(tail[0][0], tail[0][1]);
+    c.lineTo(s[N - 1].x, s[N - 1].y);
+    c.lineTo(tail[1][0], tail[1][1]);
+    c.stroke();
+    const dot = (x, y, r, fill) => {
+      c.fillStyle = fill;
+      c.beginPath();
+      c.arc(x, y, r, 0, 6.2832);
+      c.fill();
+    };
+    at.forEach((i, k) => {
+      const r = (k === 0 ? 2.6 : k % 2 ? 1.5 : 2) * (S / 100) * 0.9 + 0.6;
+      dot(s[i].x, s[i].y, r * 2.6, `rgba(${col},0.16)`);
+      dot(s[i].x, s[i].y, r, k === 0 && this === you ? 'rgb(255,120,110)' : `rgb(${col})`);
+    });
+    for (const q of [...fins, ...tail]) dot(q[0], q[1], 1.2, `rgba(${col},0.9)`);
+    c.font = "italic 10px 'Cormorant Garamond', Georgia, serif";
+    c.fillStyle = `rgba(${col},0.75)`;
+    ['α', 'β', 'γ'].forEach((g, k) => c.fillText(g, s[at[k]].x + 6, s[at[k]].y - 5));
+    c.restore();
+  }
+  // A painted koi: a straight picture seen from above, cut into slices along its length, each slice laid
+  // along the koi's own spine as it is now, so the painting swims, turns and curls as the drawn koi does. The
+  // tail runs on past the spine's end and sways with the stroke. sy is how far down the picture the koi's row
+  // starts; `strength` thins it, and `sealed` is whether it may wear the album's seal.
+  drawSprite(c, pic, sy, sh, strength = 1, sealed = true) {
+    const s = this.spine,
+      acc = [0];
+    for (let i = 1; i < N; i++) acc.push(acc[i - 1] + Math.hypot(s[i].x - s[i - 1].x, s[i].y - s[i - 1].y));
+    const L = acc[N - 1],
+      tail = L * 0.27,
+      total = L + tail,
+      n = 28,
+      span = sh.x1 - 62,
+      k = total / span,
+      h = sh.rowH * k,
+      live = (0.5 + clamp(this.sp / this.cruise, 0, 2.4) * 0.6) * (0.74 + 0.26 * Math.sin(T * 0.7 + this.seed)),
+      sway = Math.sin(this.ph - 3.6) * 0.42 * live,
+      ex = s[N - 1].x - s[N - 2].x,
+      ey = s[N - 1].y - s[N - 2].y,
+      ea = Math.atan2(ey, ex);
+    let j = 0;
+    const at = (d) => {
+      if (d >= L) {
+        // the tail: on from the last joint, bending with the stroke
+        const u = (d - L) / tail,
+          a = ea + sway * u;
+        return [s[N - 1].x + Math.cos(a) * (d - L), s[N - 1].y + Math.sin(a) * (d - L)];
+      }
+      while (j < N - 2 && acc[j + 1] < d) j++;
+      const t = (d - acc[j]) / (acc[j + 1] - acc[j] || 1);
+      return [s[j].x + (s[j + 1].x - s[j].x) * t, s[j].y + (s[j + 1].y - s[j].y) * t];
+    };
+    // drawn from the copy of the picture nearest the size it is drawn at, so fine lines don't shimmer
+    const m = k < 0.2 ? 0.25 : k < 0.4 ? 0.5 : 1,
+      src = shrunk(pic, m);
+    c.save();
+    c.globalAlpha = this.alpha * (1 - 0.34 * this.depth) * strength;
+    let [x0, y0] = at(0);
+    for (let i = 0; i < n; i++) {
+      const [x1, y1] = at((total * (i + 1)) / n),
+        len = Math.hypot(x1 - x0, y1 - y0);
+      c.save();
+      c.translate(x0, y0);
+      c.rotate(Math.atan2(y1 - y0, x1 - x0));
+      c.drawImage(src, (62 + (span * i) / n) * m, sy * m, (span / n + 1.5) * m, sh.rowH * m, -0.4, -h / 2, len + 1.2, h);
+      c.restore();
+      x0 = x1;
+      y0 = y1;
+    }
+    if (this.seal && sealed) {
+      const [qx, qy] = at(L * 0.62),
+        q = this.size * 0.032;
+      // the seal, as a small dab of vermilion in the painting's own hand
+      c.fillStyle = 'rgba(190,52,40,0.88)';
+      c.beginPath();
+      c.ellipse(qx, qy, q * 1.15, q * 0.9, 0.5, 0, 6.2832);
+      c.fill();
+    }
+    c.restore();
+  }
   draw(c) {
     if (this.alpha <= 0.01) return;
+    if (look === 'stars' && inkR > inkMax * 0.45) return this.drawStars(c);
+    // a look with painted koi draws them from its sheet, once it has come
+    const sh = koiSheets[look];
+    if (sh && sh.pic && inkR > inkMax * 0.45) return this.drawSprite(c, ...koiPicture(this, sh), sh);
     const s = this.spine,
       S = this.size,
       HW = S * 0.13,
@@ -226,8 +397,11 @@ class Koi {
       R.push([px - nx * HW * f, py - ny * HW * f]);
     }
     const ang = (i) => Math.atan2(P[i][3], P[i][2]);
+    // in ink a koi that crosses the season's painting passes under it: the painting is on the paper, the koi in
+    // the water, so its ink thins there
+    this.veil = (this.veil ?? 1) + ((inkOn && underPainting(this.x, this.y, W, H, inkSeason()) ? 0.3 : 1) - (this.veil ?? 1)) * 0.06;
     c.save();
-    c.globalAlpha = this.alpha * (1 - 0.34 * this.depth);
+    c.globalAlpha = this.alpha * (1 - 0.34 * this.depth) * this.veil;
     c.lineCap = 'round';
     c.lineJoin = 'round';
     // paired fins, under the body: a paddle of thin skin with rays through it
@@ -331,6 +505,16 @@ class Koi {
         6.2832
       );
       c.fill();
+    }
+    // a small seal on the back of a koi that has earned one (the seal album)
+    if (this.seal) {
+      const q = S * 0.046;
+      c.save();
+      c.translate(P[7][0], P[7][1]);
+      c.rotate(ang(7));
+      c.fillStyle = '#b8382a';
+      c.fillRect(-q, -q, q * 2, q * 2);
+      c.restore();
     }
     // roundness: light gathers along the back and falls off towards the flanks
     for (const [w, al] of [
@@ -493,6 +677,7 @@ function makeKoi() {
       })
   );
   kois = [...v, host, you];
+  koiSeals();
   for (const k of kois) nameTag(k);
   ptr.x = W * 0.5;
   ptr.y = H * 0.62;
@@ -591,6 +776,9 @@ const mixHex = (a, b, t) => {
     y = n(b);
   return `rgb(${x.map((v, i) => Math.round(v + (y[i] - v) * t)).join(',')})`;
 };
+// The water's own lily pads and flowers as pictures (public/pond/water/lilies-768.webp, cells of 192): a preview build
+// fetches the sheet once the pond has settled, never on the first screen, and the drawn pads stand until then.
+let waterLily = null;
 function drawPads() {
   const c = padCv.getContext('2d'),
     s = padCv.width / W;
@@ -602,8 +790,51 @@ function drawPads() {
     const grow = kind === 2 ? sstep(0.55, 0.95, AM.lush) : sstep(0.02, 0.45, AM.lush),
       r = r0 * (0.55 + 0.45 * AM.lush) * Math.sqrt(grow);
     if (grow < 0.03) continue;
+    // in ink no pad lies under the season's painting: the painting has that part of the paper
+    if (inkOn && crowdsPainting(x * W, y * H, W, H, inkSeason())) continue;
+    // on the water (a preview build) the pads are pictures of real ones, from their sheet: whole or
+    // notched, by size, the withered ones laid over the green as autumn comes
+    const real = waterLily && look === 'water';
+    if (real) {
+      const n = Math.floor(r0 * 7 + rot * 3),
+        [ci, d] = r > 58 ? [n % 2, r * 2.42] : r > 34 ? [2, r * 3.08] : [3, r * 4.38];
+      c.save();
+      c.translate(x * W, y * H);
+      c.rotate(rot);
+      c.globalAlpha = Math.min(1, grow * 1.6);
+      c.drawImage(waterLily, ci * 192, 0, 192, 192, -d / 2, -d / 2, d, d);
+      if (AM.brown > 0.02) {
+        c.globalAlpha = Math.min(1, grow * 1.6) * Math.min(1, AM.brown * 1.25);
+        c.drawImage(waterLily, ci * 192, 192, 192, 192, -d / 2, -d / 2, d, d);
+      }
+      c.restore();
+    }
+    // in Monet's pond the pads are painted ones, from their sheet (large, medium and small, by size)
+    const lily = (lilyPic && look === 'monet') || real;
+    if (lilyPic && look === 'monet') {
+      const n = Math.floor(r0 * 7 + rot * 3),
+        [ci, cj] =
+          r > 58
+            ? [n % 3, 0]
+            : r > 34
+              ? [
+                  [3, 0],
+                  [0, 1]
+                ][n % 2]
+              : [
+                  [1, 1],
+                  [2, 1]
+                ][n % 2],
+        d = r * 2.75;
+      c.save();
+      c.globalAlpha = Math.min(1, grow * 1.6) * (1 - 0.35 * AM.brown);
+      c.translate(x * W, y * H);
+      c.rotate(rot);
+      c.drawImage(lilyPic, ci * 256, cj * 256, 256, 256, -d / 2, -d / 2, d, d);
+      c.restore();
+    }
     c.save();
-    c.globalAlpha = Math.min(1, grow * 1.6);
+    c.globalAlpha = lily ? 0 : Math.min(1, grow * 1.6);
     c.translate(x * W, y * H);
     c.rotate(rot);
     const g = c.createRadialGradient(-r * 0.25, -r * 0.3, r * 0.1, 0, 0, r);
@@ -676,7 +907,21 @@ function drawPads() {
     const px = cx + (ax / al) * r * off,
       py = cy + (ay / al) * r * off;
     if (r > 26 && Math.hypot(px - x * W, py - y * H) < r * 0.8) padSpots.push({ x: px, y: py, r: r * 0.36 });
-    if (kind === 1 && AM.bloom > 0.05) {
+    // and their flowers: a bud in spring, half open as summer comes, open at its height, in white or pink
+    if (real && kind === 1 && AM.bloom > 0.05) {
+      // (in bud as summer comes, open at its height, in white or pink)
+      const open = AM.bloom > 0.55,
+        ci = open ? Math.floor(r0 * 5) % 2 : 2,
+        d = (big ? 92 : 72) * (0.6 + 0.4 * AM.bloom) * (open ? 1 : 0.8);
+      c.drawImage(waterLily, ci * 192, 384, 192, 192, clamp(x * W, d / 2, W - d / 2) - d / 2 + Math.cos(rot) * r * 0.1, y * H - r * 0.12 - d / 2, d, d);
+    } else if (real) {
+      // (no flower out of its season)
+    } else if (lily && kind === 1 && (AM.bloom > 0.05 || AM.petals > 0.3)) {
+      const pink = Math.floor(r0 * 5) % 2,
+        [ci, cj] = AM.bloom > 0.55 ? (pink ? [1, 2] : [3, 1]) : AM.bloom > 0.05 ? (pink ? [2, 2] : [0, 2]) : [3, 2],
+        d = (big ? 96 : 76) * (0.6 + 0.4 * Math.max(AM.bloom, 0.3));
+      c.drawImage(lilyPic, ci * 256, cj * 256, 256, 256, clamp(x * W, d / 2, W - d / 2) - d / 2 + Math.cos(rot) * r * 0.1, y * H - r * 0.12 - d / 2, d, d);
+    } else if (kind === 1 && AM.bloom > 0.05) {
       const fr = 34 * (0.35 + 0.65 * AM.bloom) * (big ? 1 : 0.8),
         fx = clamp(x * W, fr, W - fr) + Math.cos(rot) * r * 0.1,
         fy = y * H - r * 0.12;
@@ -708,7 +953,7 @@ function drawPads() {
   }
 }
 function padsNow() {
-  const key = `${Math.round(AM.lush * 30)}|${Math.round(AM.brown * 20)}|${Math.round(AM.bloom * 20)}`;
+  const key = `${Math.round(AM.lush * 30)}|${Math.round(AM.brown * 20)}|${Math.round(AM.bloom * 20)}|${lilyPic && look === 'monet' ? Math.round(AM.petals * 4) + 1 : 0}|${waterLily && look === 'water' ? 1 : 0}|${inkOn ? inkSeason() + 1 : 0}`;
   if (key === padKey) return;
   padKey = key;
   drawPads();
@@ -747,9 +992,8 @@ const TERMS = [
   ['大寒', 'Major Cold', 1, 20]
 ];
 // where today falls among the terms: the term's index, and how far through it
-function yearToday() {
+function yearToday(now = new Date()) {
   const doy = (m, d) => Math.round((Date.UTC(2001, m - 1, d) - Date.UTC(2001, 0, 1)) / 864e5),
-    now = new Date(),
     t = doy(now.getMonth() + 1, now.getDate()),
     at = TERMS.map(([, , m, d]) => doy(m, d));
   for (let i = 0; i < 24; i++) {
@@ -763,11 +1007,6 @@ const sstep = (a, b, x) => {
   const t = clamp((x - a) / (b - a), 0, 1);
   return t * t * (3 - 2 * t);
 };
-const hump = (x, c, w) => {
-  let d = Math.abs(x - c);
-  d = Math.min(d, 24 - d);
-  return 1 - sstep(w * 0.45, w, d);
-};
 let yearAuto = true,
   yearGoal = yearToday(),
   year = yearGoal;
@@ -776,21 +1015,8 @@ const AM = { petals: 0, lush: 0, bloom: 0, flies: 0, leaves: 0, brown: 0, ice: 0
 // south of the equator the season the pond shows is half a year on (the term's name stays the calendar's)
 let south = false;
 function amounts(term) {
-  const y = seasonOf(term, south ? -1 : 1);
-  AM.petals = hump(y, 3.5, 4.2);
-  AM.bloom = hump(y, 11, 3);
-  AM.flies = hump(y, 10.5, 3.6);
-  AM.leaves = hump(y, 16.6, 3.8);
-  AM.lush = y < 19.5 ? sstep(-0.5, 7, y) * (1 - 0.6 * sstep(13.5, 17.5, y)) * (1 - sstep(17.5, 19.5, y)) : 0;
-  AM.brown = y < 20 ? sstep(13.5, 18, y) : 0;
-  const w = y < 3 ? y + 24 : y;
-  AM.ice = sstep(18.7, 21.6, w) * (1 - sstep(24.2, 25.8, w));
-  AM.snow = hump(y, 22.3, 2.6);
-  const su = hump(y, 10, 5),
-    au = hump(y, 16.5, 4),
-    wi = hump(y, 22, 4.5);
-  AM.tint = [1 + 0.02 * su + 0.1 * au - 0.1 * wi, 1 + 0.02 * su - 0.03 * au - 0.02 * wi, 1 - 0.03 * su - 0.17 * au + 0.07 * wi];
-  AM.light = 1 + 0.25 * su - 0.4 * wi;
+  // (what belongs to which season is in seasons.js, with its tests)
+  Object.assign(AM, seasonAmounts(seasonOf(term, south ? -1 : 1)));
 }
 amounts(year);
 function setYear(y) {
@@ -872,12 +1098,12 @@ void main(){
 // The pond. Three layers lie at three depths (what floats, the koi, the bed) and each is
 // sharp or soft by how far it is from the focus. Ice grows in from the banks over a field
 // of slow noise shared with the ripple simulation, so nothing moves under it.
-const FS = `#version 300 es
+const FS_SRC = `#version 300 es
 precision highp float; in vec2 vUv; out vec4 o;
-uniform sampler2D uBed,uH,uFish,uPads,uTop,uIceN;
-uniform vec2 uRes,uGrid,uMoonPos,uCss; uniform float uTime,uAmb,uCaI,uMoon,uSwell,uFocus,uIce,uSnow,uFog; uniform vec2 uCalm;
+uniform sampler2D uBed,uH,uFish,uPads,uTop,uIceN,uMural; uniform float uPic;
+uniform vec2 uRes,uGrid,uMoonPos,uCss; uniform float uTime,uAmb,uCaI,uMoon,uSwell,uFocus,uIce,uSnow,uFog,uStars; uniform vec3 uMoonPh; uniform vec2 uCalm;
 uniform vec3 uTint,uCaC,uSky,uSeason;
-uniform vec4 uBox[12]; uniform vec4 uBoxB[12]; uniform int uBoxN; uniform vec4 uCrack[6]; uniform float uBroke[6]; uniform vec4 uInk; uniform vec3 uBlot[10]; uniform int uStyle, uPrev; uniform float uGlint;
+uniform vec4 uBox[12]; uniform vec4 uBoxB[12]; uniform int uBoxN; uniform vec4 uCrack[6]; uniform float uBroke[6]; uniform vec4 uInk; uniform vec3 uBlot[10]; uniform int uStyle, uPrev; uniform float uGlint; uniform float uLookT,uLeave,uSprite,uDay;
 float hash1(vec2 p){ return fract(sin(dot(p,vec2(41.3,289.1)))*43758.5453); }
 vec2 hash2(vec2 p){ p=vec2(dot(p,vec2(127.1,311.7)),dot(p,vec2(269.5,183.3))); return fract(sin(p)*43758.5453); }
 float noise(vec2 p){ vec2 i=floor(p),f=fract(p); f=f*f*(3.-2.*f);
@@ -999,13 +1225,21 @@ vec3 lookUkiyo(){
   vec4 f0; float fa,fb,fc,red; fishAt(f0,fa,fb,fc,red);
   vec3 fcl=f0.rgb/max(f0.a,1e-3); fcl=floor(fcl*4.+.5)/4.; fcl=mix(fcl,vec3(.96,.93,.84),step(.75,dot(fcl,vec3(.33))));
   fcl=mix(fcl,vec3(.82,.25,.16),step(.4,red/max(f0.a,1e-3)));
-  c=mix(c,fcl,step(.5,f0.a)); c=mix(c,vec3(.06,.05,.05),clamp((fa-fb)*3.,0.,1.));
+  // (koi from the print's own sheet, uSprite, are laid in as they are: they carry their key line)
+  c=mix(c,mix(fcl,f0.rgb/max(f0.a,1e-3),uSprite),step(.5,f0.a)); c=mix(c,vec3(.06,.05,.05),clamp((fa-fb)*3.,0.,1.)*(1.-uSprite));
   vec4 tp=textureLod(uTop,uv+gG*gIa*.004,0.); c=mix(c,floor(tp.rgb/max(tp.a,1e-3)*4.)/4.,step(.5,tp.a));
   for(int i=0;i<10;i++){ vec3 b=uBlot[i]; if(b.z<0.||b.z>3.) continue;   // a press: a carved splash, flat cream with a key line
     float t=b.z, life=1.-t/3.; vec2 v=P-b.xy; float d=length(v), an=atan(v.y,v.x), R=12.+64.*sqrt(t);
     // two swells behind the crest, thinning as they go out
     for(int j=1;j<3;j++){ float rj=R-18.*float(j), w=(4.-float(j))*life; if(rj<4.) continue;
       float q=abs(d-rj); c=mix(c,vec3(.05,.1,.2),step(q,w+1.3)); c=mix(c,vec3(.96,.93,.84),step(q,w)); }
+#ifdef CRESTS
+    // the crest, from the print's own carved wavelets (a picture, uPic once it has come): six round the
+    // ring, base to the middle, all breaking the same way, sinking as the splash dies
+    if(uPic>.5){ float sc=an*6./6.2832+b.x*.013, wd=6.2832*R/6., ht=wd*.39*(.5+.5*life), vv=(d-R+ht*.25)/max(ht,1.);
+      vec4 wv=texture(uMural,vec2((mod(floor(sc)+floor(b.y),4.)*256.+44.+fract(sc)*167.)/1024.,(416.-vv*65.)/512.))*step(0.,vv)*step(vv,1.)*step(.05,life);
+      c=wv.rgb+c*(1.-wv.a); continue; }
+#endif
     // the crest breaks into claws: a scalloped edge, each scallop curled forward
     float s=an*14./6.2832+b.x*.013, f=fract(s), jag=noise(vec2(floor(s)*3.1,b.y*.01))*.6+.4;
     float edge=R+11.*jag*f*f*life, inner=R-6.*life-5.*(1.-f)*life;
@@ -1028,9 +1262,10 @@ vec3 lookGlow(){
   vec2 P=gP, uv=gUv;
   vec3 c=vec3(.003,.006,.018)+vec3(.0,.015,.04)*fbm(P*.003);
   float rip=clamp(abs(gLap)*26.+length(gG)*.7,0.,.6)*(1.-gCalm*.8);
-  c+=mix(vec3(.05,.55,1.),vec3(.2,1.,.85),.5+.5*sin(P.x*.004+uTime*.2))*rip*.55;
+  float lit=1.-smoothstep(-90.,90.,length(P-uInk.yz)-(uLookT-.7)*620.); lit*=.55+.45*step(.5,fract(length(P-uInk.yz)/140.-uLookT*1.2))*step(uLookT,3.)+.45*step(3.,uLookT);
+  c+=mix(vec3(.05,.55,1.),vec3(.2,1.,.85),.5+.5*sin(P.x*.004+uTime*.2))*rip*.55*lit;
   vec4 f0; float fa,fb,fc,red; fishAt(f0,fa,fb,fc,red);
-  c+=vec3(.05,.9,.85)*fc*.4+vec3(.2,1.,.9)*fb*.55+vec3(.75,1.,.97)*fa*.35;
+  c+=(vec3(.05,.9,.85)*fc*.4+vec3(.2,1.,.9)*fb*.55+vec3(.75,1.,.97)*fa*.35)*lit;
   c+=vec3(1.,.12,.65)*red*1.2+vec3(1.,.2,.7)*smoothstep(.1,.5,red)*fb*.3;
   vec4 pd=textureLod(uPads,uv,0.); float pe=textureLod(uPads,uv,2.).a;
   c+=vec3(.2,1.,.4)*clamp(abs(pd.a-pe)*2.,0.,1.)*.35+vec3(.0,.05,.03)*pd.a;
@@ -1067,6 +1302,10 @@ vec3 lookBlueprint(){
     c=mix(c,vec3(.85,.92,1.),step(abs(gHit.w-6.),.5)*step(.5,fract((gP.x+gP.y)*.09))*.7);
     vec2 cc=fract(gP/16.)-.5; float cr=clamp(step(abs(cc.x),.03)*step(abs(cc.y),.18)+step(abs(cc.y),.03)*step(abs(cc.x),.18),0.,1.);
     c=mix(c,vec3(.95,.98,1.),cr*step(1.-.35*uSnow,hash1(floor(gP/16.)))*step(.5,gIce)); }
+  // the drawing is plotted in line first, over what was there, a row at a time behind the rule; the paper's
+  // blue floods in after
+  float fill=smoothstep(.25,.9,uLookT-gP.y/uCss.y*1.5);
+  if(fill<1.){ float ln=smoothstep(.1,.32,dot(c-vec3(.07,.22,.47),vec3(.333))); c=mix(mix(gWater*.3,vec3(.92,.96,1.),ln),c,fill); }
   return c;
 }
 // ASCII: the picture the characters are made from (the glass pass turns it into text). The bed is
@@ -1095,12 +1334,29 @@ vec3 look(int s){
 }
 // How far the front has come over this pixel (1 inside), and how bright its leading edge is here.
 float reveal(int s,out float e){
+  if(uInk.w<.3){ e=0.; return smoothstep(0.,1.,uInk.x); }
   vec2 P=gP; float R=uInk.x, r, w=40.;
   if(s==1){ float fib=fbm(P*.03)*.55+noise(P*.21)*.25+noise(P*vec2(1.1,.06))*.12+noise(P*vec2(.05,1.3))*.08;
     r=length(P-uInk.yz)+(fib-.5)*150.+(noise(P*.012+R*.003)-.5)*120.; }
-  else if(s==2){ r=(P.x+P.y)*.7071+(noise(P*vec2(.02,.004))-.5)*30.; w=6.; }   // peeled off the block from the top left
+  // the print: a carved wave sweeps across from the top left as it is pulled off the block
+  else if(s==2){ float t=P.x-P.y; r=(P.x+P.y)*.7071+(noise(P*vec2(.02,.004))-.5)*26.+sin(t*.012)*18.+sin(t*.031)*6.; w=6.; }
   else if(s==4){ r=P.y; w=2.; }                                                 // a scan from the top
-  else { r=length(P-uInk.yz)+(noise(P*.01)-.5)*30.; w=s==3?12.:30.; }
+  // glow: the lights go out in a long soft falloff
+  else if(s==3){ r=length(P-uInk.yz)+(noise(P*.006)-.5)*60.; w=90.; }
+  // ASCII: the picture turns to characters a cell at a time, scattering out from where the typing was
+  else if(s==5){ vec2 q=floor(P/vec2(9.,18.)); r=length(q*vec2(9.,18.)-uInk.yz)+(hash1(q)-.5)*190.; w=1.; }
+  // oil: broad strokes laid across the scene a few at a time, nearest first, until it is covered
+  else if(s==6){ vec2 q=(P+vec2(noise(P*.021)*70.,noise(P*.027+5.)*34.))/vec2(170.,44.); q.x+=step(1.,mod(floor(q.y),2.))*.5; vec2 f=fract(q)-.5;
+    r=length(P-uInk.yz)*.8+(hash1(floor(q))-.5)*320.+dot(f*f,vec2(150.,170.))+(noise(P*.2)-.5)*26.; w=18.; }
+  // 青花: the glaze flows in from the rim towards the middle
+  else if(s==7){ float ed=min(min(P.x,uCss.x-P.x),min(P.y,uCss.y-P.y)); r=ed/(.5*min(uCss.x,uCss.y))*length(uCss)*.5+(fbm(P*.008)-.5)*90.; w=46.; }
+  // 敦煌: dust brushed away from where the wall was rubbed, raggedly
+  else if(s==8){ r=length(P-uInk.yz)+(fbm(P*.018)-.5)*190.+(noise(P*.22)-.5)*34.; w=22.; }
+  // the stars: dusk falls from the top of the sky
+  else if(s==9){ r=P.y/uCss.y*length(uCss)*.5+(noise(P*.004)-.5)*50.; w=170.; }
+  // the relief: sand blown off the stone, in long streaks down the wind
+  else if(s==10){ r=length(P-uInk.yz)+(fbm(P*vec2(.004,.045)+3.)-.5)*300.+(noise(P*vec2(.03,.5))-.5)*46.; w=34.; }
+  else { r=length(P-uInk.yz)+(noise(P*.01)-.5)*30.; w=30.; }
   e=exp(-pow((r-R)/(s==1?38.:s==4?3.:s==2?10.:14.),2.))*step(1.,R)*(1.-step(.999,uInk.w));
   return 1.-smoothstep(R-w,R+w,r);
 }
@@ -1109,6 +1365,11 @@ vec3 edgeCol(int s){
   if(s==2) return vec3(1.,.97,.88);
   if(s==3) return vec3(.3,1.,.95)*1.4;
   if(s==4) return vec3(.7,.95,1.)*1.3;
+  if(s==6) return vec3(.95,.9,.8)*.25;      // wet paint at a stroke's edge
+  if(s==7) return vec3(.12,.25,.7);         // the cobalt blooming into the glaze
+  if(s==8) return vec3(.86,.74,.52);        // dust
+  if(s==9) return vec3(.3,.25,.45)*.5;      // the last of the dusk
+  if(s==10) return vec3(.88,.80,.62);       // sand
   return vec3(.85,.95,1.)*.6;
 }
 void main(){
@@ -1161,7 +1422,12 @@ void main(){
   vec2 md=(uv-uMoonPos)*vec2(asp,1.)+g*2.4;
   // the sun's glint by day where the moon's light lies at night: pressed, the lights go out (glow)
   col+=uGlint*(1.-uMoon)*(1.-ice*.7)*(vec3(1.,.98,.92)*smoothstep(.022,.006,length(md))*.55+vec3(1.,.95,.85)*exp(-dot(md,md)*160.)*.22);
-  col+=uMoon*(1.-ice*.7)*(vec3(.95,.97,1.)*smoothstep(.05,.018,length(md))*.6+vec3(.5,.62,.85)*exp(-dot(md,md)*60.)*.3);
+  // the moon's phase (uMoonPh: how much is lit, and which side): the dark part of the disc is cut away
+  float mlit=smoothstep(-.12,.12,uMoonPh.y*md.x/.034-(1.-2.*uMoonPh.x));
+  col+=uMoon*(1.-ice*.7)*(vec3(.95,.97,1.)*smoothstep(.05,.018,length(md))*.6*mlit+vec3(.5,.62,.85)*exp(-dot(md,md)*60.)*.3*(.2+.8*uMoonPh.x));
+  // stars on a clear night, a few, shaken by the ripples
+  if(uStars>0.){ vec2 sp=(P+g*40.)/6., sc=floor(sp); float st=step(.9965,hash1(sc+7.1))*(.55+.45*sin(uTime*2.3+hash1(sc)*40.));
+    col+=vec3(.82,.88,1.)*st*smoothstep(1.,.25,length(fract(sp)-.5)*6.)*uStars*(1.-ice)*(1.-calm*.8)*.9; }
   if(ice>0.){
     vec3 ic=mix(col,vec3(.8,.89,.94),.2+.16*noise(p*9.));
     ic+=vec3(.9,.97,1.)*(seams(p*1.7)*.2*smoothstep(.35,.7,noise(p*1.1+2.))+seams(p*4.6+4.)*.05);
@@ -1196,6 +1462,24 @@ void main(){
     vec3 top=look(uStyle), base=m<.999?look(uPrev):top;
     col=mix(base,top,m);
     col=mix(col,edgeCol(uStyle),e);
+#ifdef CRESTS
+    // the print's front carries its great crests (the same picture), standing on the front and rising ahead of it
+    if(uStyle==2&&uPic>.5&&uInk.w>=.3&&uInk.w<.999&&uInk.x>1.){
+      float ft=(P.x-P.y)*.7071, fr=(P.x+P.y)*.7071+(noise(P*vec2(.02,.004))-.5)*26.+sin((P.x-P.y)*.012)*18.+sin((P.x-P.y)*.031)*6.;
+      float ht=min(210.,uCss.y*.28)*smoothstep(0.,320.,uInk.x), vv=(fr-uInk.x+ht*.12)/max(ht,1.), sc=ft/(ht*1.09+1.);
+      vec4 wv=texture(uMural,vec2((mod(floor(sc),4.)*256.+20.+fract(sc)*215.)/1024.,(227.-vv*198.)/512.))*step(0.,vv)*step(vv,1.);
+      col=wv.rgb+col*(1.-wv.a);
+    }
+#endif
+    // the moon in a look, at night: a pale wash in ink, a cream disc in the print, a lit disc in glow,
+    // a drawn circle in the blueprint, a bright round in ASCII
+    if(uMoonPh.z>0.&&uMoon>.01&&uStyle>0){
+      float dm=length(md), disc=smoothstep(.036,.03,dm)*mlit;
+      if(uStyle==4) disc=smoothstep(.0016,0.,abs(dm-.033));
+      vec3 mc=uStyle==1?vec3(.82,.8,.74):uStyle==2?vec3(.96,.93,.84):uStyle==3?vec3(.7,1.,.98):uStyle==4?vec3(.95,.98,1.):vec3(.9);
+      col=mix(col,mc,disc*uMoon*m);
+      if(uStyle==3) col+=vec3(.2,.6,.6)*exp(-dm*dm*900.)*uMoon*m*uMoonPh.x;
+    }
   }
 #endif
   o=vec4(col,1.);
@@ -1203,7 +1487,12 @@ void main(){
 // The water pass is built three ways from the one source: all of it (PART 0), for while a look comes in or
 // goes; the water alone (1), with no look shown; and a look alone (2), once one has come in all the way and
 // covers the water. Each draws exactly what the whole would, without the work that wouldn't be seen.
-const fsPart = (n) => FS.replace('\n', `\n#define PART ${n}\n`);
+// A look alone is built for that one look (ONLY), so each is a pass of its own with none of the others in it.
+const FS = FS_SRC.replace(
+  'vec3 look(int s){',
+  `${PREVIEW ? NEW_GLSL : ''}vec3 look(int s){\n#ifdef ONLY\n  s=ONLY;\n#endif\n${PREVIEW ? '  if(s>=6) return lookNew(s);\n' : ''}`
+);
+const fsPart = (n, only) => FS.replace('\n', `\n#define PART ${n}\n${PREVIEW ? '#define CRESTS\n' : ''}${only ? `#define ONLY ${only}\n` : ''}`);
 // The second pass. Inside a pane the picture is blurred and smoked; towards the rim it is
 // pulled sideways as through the edge of a lens, and the rim itself catches the light. In
 // the cold, frost gathers along the rim.
@@ -1260,6 +1549,7 @@ let gl,
   progU = new Map(),
   pcx = null,
   progAt = 0,
+  progAts = [],
   passNow = 0,
   UG = {},
   texH,
@@ -1330,16 +1620,30 @@ const FS_U = [
   'uStyle',
   'uPrev',
   'uGlint',
-  'uFog'
+  'uFog',
+  'uLookT',
+  'uLeave',
+  'uMural',
+  'uFace',
+  'uPic',
+  'uSprite',
+  'uDay',
+  'uStars',
+  'uMoonPh'
 ];
 const locs = (p) => Object.fromEntries(FS_U.map((n) => [n, gl.getUniformLocation(p, n)]));
 // Which build of the water pass draws this frame: a part is used once it has been built (asked without
 // waiting where the browser can say, else after a few seconds); one that failed is never used.
 function waterProg(part) {
+  // a look's own pass is asked for the first time the look is
+  if (part > 1 && !progs[part]) {
+    progs[part] = mk(fsPart(2, part - 1), true);
+    progAts[part] = performance.now();
+  }
   const p = progs[part];
   if (!part || !p) return prog;
   if (progOK[part] === undefined) {
-    if (pcx ? !gl.getProgramParameter(p, pcx.COMPLETION_STATUS_KHR) : performance.now() - progAt < 4000) return prog;
+    if (pcx ? !gl.getProgramParameter(p, pcx.COMPLETION_STATUS_KHR) : performance.now() - (progAts[part] || progAt) < 4000) return prog;
     progOK[part] = !!gl.getProgramParameter(p, gl.LINK_STATUS);
     if (progOK[part]) progU.set(p, locs(p));
   }
@@ -1369,8 +1673,8 @@ function initGL() {
   prog = mk(fsPart(0));
   bedProg = mk(BED);
   glassProg = mk(GLASS);
-  // the water alone and a look alone are built in the background, and used once they're ready
-  progs = [prog, mk(fsPart(1), true), mk(fsPart(2), true)];
+  // the water alone is built in the background now, and each look alone when it is first asked for
+  progs = [prog, mk(fsPart(1), true)];
   pcx = gl.getExtension('KHR_parallel_shader_compile');
   progAt = performance.now();
   const vb = gl.createBuffer();
@@ -1414,6 +1718,13 @@ function initGL() {
   blurFbo = gl.createFramebuffer();
   glOK = true;
   tq = gl.getExtension('EXT_disjoint_timer_query_webgl2');
+  if (PREVIEW) {
+    // the Dunhuang wall's painting: empty until the look is asked for
+    gl.activeTexture(gl.TEXTURE10);
+    texMural = tex(gl.LINEAR);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(4));
+    gl.activeTexture(gl.TEXTURE0);
+  }
 }
 function sizeGL() {
   // at most 1.5 pixels to a CSS pixel, at most about two megapixels in all, and less if frames run slow
@@ -1431,6 +1742,7 @@ function sizeGL() {
   padKey = '';
   padsNow();
   if (!glOK) return;
+  paintPic();
   // the pebble bed never changes, so it's drawn once into a texture
   gl.bindTexture(gl.TEXTURE_2D, texBed);
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, glc.width, glc.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
@@ -1563,7 +1875,8 @@ let paneN = 0,
 // The panes are read from the page only while something there is moving (a transition, an animation,
 // a resize or a scroll); otherwise the last reading stands, and the frame touches no style or layout.
 let panesUntil = 0;
-const panesLive = () => (panesUntil = performance.now() + 700);
+const panesLive = () => (panesUntil = performance.now() + 700),
+  panesFor = (ms) => (panesUntil = Math.max(panesUntil, performance.now() + ms));
 for (const ev of ['transitionrun', 'transitionend', 'animationstart', 'animationend', 'scroll'])
   addEventListener(
     ev,
@@ -1617,6 +1930,11 @@ let phaseChoice = 'auto',
   fx = effectsOf('clear'),
   rainChosen = false,
   flashAt = -99;
+// how far through the day it is where the visitor is, 0 to 1 (a time of day chosen by hand stands for its hour)
+const dayNow = () =>
+  phaseChoice !== 'auto'
+    ? { dawn: 0.27, day: 0.5, dusk: 0.73, night: 0 }[phase]
+    : (wx ? minutesAt(wx.timeZone) : new Date().getHours() * 60 + new Date().getMinutes()) / 1440;
 const autoPhase = () => {
   if (wx) return phaseAt(minutesAt(wx.timeZone), wx.sunrise, wx.sunset);
   const h = new Date().getHours();
@@ -1687,6 +2005,7 @@ function launchBoat(text, by, from) {
   return b;
 }
 function feed(x, y) {
+  hintSoon(1800);
   for (let i = 0; i < 4 && food.length < 28; i++)
     food.push({ x: clamp(x + rnd(-24, 24), 10, W - 10), y: clamp(y + rnd(-24, 24), 10, H - 10), vx: rnd(-22, 22), vy: rnd(-22, 22), born: T });
 }
@@ -1728,8 +2047,8 @@ function drift(list, amount, dt) {
       [gx, gy] = slopeAt(clamp(q.x, 2, W - 2), clamp(q.y, 2, H - 2)),
       wind = RM ? 0 : 1 - frozen;
     q.a += ((q.i < amount ? 1 : 0) - q.a) * Math.min(1, dt * 1.5);
-    q.vx += (-gx * 1100 + 13 * wind - q.vx * 1.2) * dt;
-    q.vy += (-gy * 1100 + 6 * wind - q.vy * 1.2) * dt;
+    q.vx += (-gx * 1100 + pv.windX * wind - q.vx * 1.2) * dt;
+    q.vy += (-gy * 1100 + pv.windY * wind - q.vy * 1.2) * dt;
     q.x += q.vx * dt * (1 - frozen);
     q.y += q.vy * dt * (1 - frozen);
     q.r += (q.vr * wind + gx * 9) * dt;
@@ -1856,8 +2175,100 @@ function drawTop() {
     c.arc(q.x - 0.9, q.y - 1, 1.3, 0, TAU);
     c.fill();
   }
+  if (PREVIEW) drawFestival(c);
   drawBugs(c);
   drawSpider(c);
+}
+// The festivals, on the water: a few red lanterns at the Spring Festival, river lanterns at Mid-Autumn,
+// a dragon boat far off now and then at Dragon Boat. Drawn with the top layer, ten times a second.
+let festAt = 0;
+function drawFestival(c) {
+  const now = performance.now() / 1000,
+    dt = Math.min(0.5, now - (festAt || now));
+  festAt = now;
+  const f = pv.fest;
+  if ((f === 'spring' || f === 'midautumn') && pv.lanterns.length === 0)
+    pv.lanterns = Array.from({ length: f === 'spring' ? 4 : 6 }, () => ({ x: rnd(0.5, 0.95) * W, y: rnd(0.15, 0.85) * H, p: rnd(0, TAU) }));
+  if (f !== 'spring' && f !== 'midautumn') pv.lanterns = [];
+  for (const q of pv.lanterns) {
+    q.x += (pv.windX * 0.35 + Math.sin(now * 0.3 + q.p) * 3) * dt;
+    q.y += (pv.windY * 0.35 + Math.cos(now * 0.25 + q.p) * 2) * dt;
+    if (q.x > W + 30) q.x = W * 0.45;
+    if (q.y > H + 30) q.y = H * 0.1;
+    c.save();
+    c.translate(q.x, q.y);
+    c.scale(1.5, 1.5);
+    if (f === 'spring') {
+      // a red paper lantern seen from above: a round with gold at its top and a tassel
+      c.fillStyle = 'rgba(206,40,32,0.92)';
+      c.beginPath();
+      c.ellipse(0, 0, 9, 8, 0, 0, TAU);
+      c.fill();
+      c.strokeStyle = 'rgba(120,20,16,0.6)';
+      c.lineWidth = 0.8;
+      for (const k of [-4, 0, 4]) {
+        c.beginPath();
+        c.ellipse(k * 0.6, 0, Math.abs(k) ? 6 : 1, 8, 0, 0, TAU);
+        c.stroke();
+      }
+      c.fillStyle = '#e8b04a';
+      c.fillRect(-4, -9.5, 8, 2.5);
+      c.fillRect(-4, 7.2, 8, 2.5);
+    } else {
+      // a river lantern: a little paper lotus with a warm light in it
+      const g = c.createRadialGradient(0, 0, 0, 0, 0, 16);
+      g.addColorStop(0, 'rgba(255,214,140,0.7)');
+      g.addColorStop(1, 'rgba(255,170,80,0)');
+      c.fillStyle = g;
+      c.beginPath();
+      c.arc(0, 0, 16, 0, TAU);
+      c.fill();
+      c.fillStyle = 'rgba(250,236,214,0.95)';
+      for (let i = 0; i < 6; i++) {
+        c.rotate(TAU / 6);
+        c.beginPath();
+        c.ellipse(0, -5, 2.6, 5, 0, 0, TAU);
+        c.fill();
+      }
+      c.fillStyle = '#ffcf6e';
+      c.beginPath();
+      c.arc(0, 0, 2.2, 0, TAU);
+      c.fill();
+    }
+    c.restore();
+  }
+  if (f === 'dragon') {
+    // far off near the top: once every few minutes, a slow crossing of some forty seconds
+    if (now - pv.boatAt > 200) pv.boatAt = now;
+    const k = (now - pv.boatAt) / 40;
+    if (k < 1) {
+      c.save();
+      c.translate(-160 + k * (W + 320), H * 0.16);
+      c.scale(1.7, 1.7);
+      c.fillStyle = 'rgba(178,34,30,0.9)';
+      c.beginPath();
+      c.moveTo(-70, 0);
+      c.quadraticCurveTo(0, -9, 70, -2);
+      c.quadraticCurveTo(0, 9, -70, 0);
+      c.fill();
+      // the dragon's head at the bow and the tail at the stern, in gold
+      c.fillStyle = '#d9a640';
+      c.beginPath();
+      c.moveTo(70, -2);
+      c.lineTo(84, -7);
+      c.lineTo(80, 2);
+      c.closePath();
+      c.fill();
+      c.fillRect(-76, -2, 7, 3);
+      c.fillStyle = 'rgba(40,24,18,0.75)';
+      for (let i = -50; i <= 50; i += 12) {
+        c.beginPath();
+        c.arc(i, 0, 1.8, 0, TAU);
+        c.fill();
+      }
+      c.restore();
+    }
+  }
 }
 // what flies over the pond throws its shadow down through the water: soft, and further off the higher it is
 function drawShades(c) {
@@ -1895,11 +2306,34 @@ function showBoat(b) {
   tip.style.transform = `translate3d(${clamp(b.x - tip.offsetWidth / 2, 8, W - tip.offsetWidth - 8)}px,${Math.max(8, b.y - tip.offsetHeight - 26)}px,0)`;
 }
 
-/* ================= Devot's dove and ocra's spider, as models ================= */
+/* ================= Devot's dove and ocra's spider, as models or as sprites ================= */
 // three.js and the models (life.js) arrive once the pond has settled; until then, and where they can't run,
-// the pond does without them.
+// the pond does without them. A preview build draws the two from rendered sprite sheets instead
+// (sprites.js), and never fetches three.js or the models: `life.pic` is then how a sheet is had.
 let life = null,
   lifeDt = 0.016;
+// the light the time of day gives a sprite, in steps coarse enough that a sheet is dressed again only now and then
+const spriteLight = () => {
+  const q = (i) => Math.round((0.5 + 0.5 * (cur ? cur.tint[i] : 1)) * (0.3 + 0.7 * (cur ? cur.amb : 1)) * 16) * 16;
+  return `rgb(${Math.min(255, q(0))},${Math.min(255, q(1))},${Math.min(255, q(2))})`;
+};
+// one cell of a creature's sheet, laid where it stands and turned to its heading, on the soft shadow the
+// ground gave the model where the look keeps its light
+function drawCell(c, which, [row, i], x, y, a, half, shadow) {
+  const n = SPRITES[which].cell;
+  c.save();
+  c.translate(x, y);
+  if (shadow > 0 && litLook(look)) {
+    const g = c.createRadialGradient(half * 0.05, half * 0.08, 0, half * 0.05, half * 0.08, half * 0.5);
+    g.addColorStop(0, `rgba(8,20,22,${0.42 * shadow})`);
+    g.addColorStop(1, 'rgba(8,20,22,0)');
+    c.fillStyle = g;
+    c.fillRect(-half, -half, half * 2, half * 2);
+  }
+  c.rotate(a);
+  laidIn(c, () => c.drawImage(life.pic(which, look, spriteLight()), i * n, row * n, n, n, -half, -half, half * 2, half * 2));
+  c.restore();
+}
 
 /* ================= ocra's spider: a jumping spider that keeps to the lily pads ================= */
 // It reads before it moves. Its eyes follow a pointer nearby and anything that lands; then it
@@ -2027,6 +2461,8 @@ function stepSpider(dt) {
       }
   }
   const look = spider.prey || (ptr.moved && Math.hypot(ptr.x - spider.x, ptr.y - spider.y) < 340 ? ptr : null);
+  // what has its eye: prey, or a pointer that has just moved close by
+  spider.alert = !!spider.prey || (ptr.moved && T - ptr.at < 1.5 && Math.hypot(ptr.x - spider.x, ptr.y - spider.y) < 160);
   const face = (x, y, rate) => {
     let da = Math.atan2(y - spider.y, x - spider.x) - spider.a;
     da = Math.atan2(Math.sin(da), Math.cos(da));
@@ -2071,6 +2507,8 @@ function stepSpider(dt) {
     } else if (face(spider.wx, spider.wy, 6) < 0.6) {
       spider.x += Math.cos(spider.a) * 44 * dt;
       spider.y += Math.sin(spider.a) * 44 * dt;
+      // in strides: the sprite's walk is one loop to half a unit of the spider's own size
+      spider.gone = ((spider.gone || 0) + (44 * dt) / (S * 0.23)) % 1;
     }
   } else if (spider.state === 'crouch') {
     face(spider.tx, spider.ty, 9);
@@ -2149,8 +2587,8 @@ function drawBugs(c) {
 // A front brings a look in over the one before (`top` over `base`); going back to the water, the front
 // draws in again. Ink: a drop from the switch spreads and turns the pond to paper, and time slows.
 // The other looks are found by gestures on the water (`gest`, below) or by searching ⌘K.
-const LOOKS = ['water', 'ink', 'ukiyo', 'glow', 'blueprint', 'ascii'],
-  SID = { water: 0, ink: 1, ukiyo: 2, glow: 3, blueprint: 4, ascii: 5 };
+const LOOKS = ['water', 'ink', 'ukiyo', 'glow', 'blueprint', 'ascii', ...(PREVIEW ? NEW_LOOKS : [])],
+  SID = { water: 0, ink: 1, ukiyo: 2, glow: 3, blueprint: 4, ascii: 5, ...(PREVIEW ? NEW_SID : {}) };
 // The looks' own type and Japanese (looks.css: kana.css and the looks' faces) load the first time a
 // look or 日 is chosen, so a first visit costs no more than the water and the brush.
 let typeLoad = null;
@@ -2205,6 +2643,7 @@ function speak() {
   showTerm();
   tick();
   fillNotes();
+  sealsEntry();
   if (sheetOpen() && sheetId) openSheet(sheetId);
 }
 // En / 中 / 日: the page's words fade, turn to the other language and come back; the look is left as it is.
@@ -2258,12 +2697,49 @@ function alignInk(sel) {
     s.style.setProperty('--dy', `${dy.toFixed(2)}px`);
   }
 }
+// A look may put the page's blocks elsewhere (青花's rim insets them, the Dunhuang wall's bands lift the clock
+// and the controls, each face sets the title a little differently). They glide from where they stood to
+// where the look puts them, as they come back into view: measured before and after the change, then eased
+// from the old place by a transform laid over whatever transform they have. Under reduced motion they just change.
+const GLIDES = ['#lead', '.alm', '.hud .bl', '.hud .cmd', '.hud .br', '.gauge', '.preview'];
+function glide(change) {
+  const els = RM ? [] : GLIDES.map((q) => $(q)).filter((el) => el && el.animate),
+    was = els.map((el) => el.getBoundingClientRect());
+  change();
+  let moved = false;
+  els.forEach((el, i) => {
+    const a = was[i],
+      b = el.getBoundingClientRect();
+    if (!a.width || !b.width) return;
+    // by the corner the block hangs from: whichever side of the pond it is nearer
+    const dx = a.left + a.width / 2 < W / 2 ? a.left - b.left : a.right - b.right,
+      dy = a.top + a.height / 2 < H / 2 ? a.top - b.top : a.bottom - b.bottom;
+    if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) return;
+    moved = true;
+    el.animate([{ transform: `translate(${dx.toFixed(2)}px,${dy.toFixed(2)}px)` }, { transform: 'translate(0,0)' }], {
+      duration: GLIDE_MS,
+      easing: 'cubic-bezier(0.22, 0.8, 0.2, 1)',
+      composite: 'add'
+    });
+  });
+  // the glass under a gliding control is drawn where the control is, all the way
+  if (moved) panesFor(GLIDE_MS + 80);
+}
+const GLIDE_MS = 640;
 const setInk = (on, from) => setLook(on ? 'ink' : 'water', from || $('#inkBtn'));
 function setLook(name, from) {
   if (!LOOKS.includes(name) || name === look) return;
+  if (PREVIEW && name in PICTURED) {
+    picLook = name;
+    PICTURED[name]();
+    paintPic();
+  }
+  loadKoi(name);
   if (name !== 'water' && name !== 'ink') loadType();
   const was = look;
   look = name;
+  // (the pads are painted ones in Monet's pond, and none lie under ink's painting)
+  setTimeout(padsNow, 0);
   inkOn = name === 'ink';
   inkAt = performance.now() / 1000;
   actx.setTransform(1, 0, 0, 1, 0, 0);
@@ -2293,22 +2769,23 @@ function setLook(name, from) {
   $('#inkBtn').setAttribute('aria-pressed', String(inkOn));
   clearTimeout(lookTimer);
   lookTimer = setTimeout(
-    () => {
-      pond.toggleAttribute('data-ink', inkOn);
-      if (life) {
-        life.dress(name);
-        spiderSig = '';
-      }
-      if (inkOn) {
-        paintInk();
-        placeKuan();
-        alignSeg();
-      }
-      if (name === 'water') delete pond.dataset.look;
-      else pond.dataset.look = name;
-      speak();
-      delete pond.dataset.inking;
-    },
+    () =>
+      glide(() => {
+        pond.toggleAttribute('data-ink', inkOn);
+        if (life && life.dress) {
+          life.dress(name);
+          spiderSig = '';
+        }
+        if (name === 'water') delete pond.dataset.look;
+        else pond.dataset.look = name;
+        speak();
+        if (inkOn) {
+          paintInk();
+          placeKuan();
+          alignSeg();
+        }
+        delete pond.dataset.inking;
+      }),
     name === 'water' ? 900 : 700
   );
   audio();
@@ -2375,9 +2852,10 @@ function placeKuan() {
 // Ink as a hanging painting: the season's motif (painting.js, loaded the first time ink comes) washes in
 // at one edge; a new season washes the old one out and the new one in, with a brush's breath.
 let painted = '';
+const inkSeason = () => paintingOf(seasonOf(yearGoal, south ? -1 : 1));
 function paintInk() {
   if (!inkOn) return;
-  const season = Math.floor((Math.floor(seasonOf(yearGoal, south ? -1 : 1)) % 24) / 6),
+  const season = inkSeason(),
     key = `${season} ${Math.round(W)} ${Math.round(H)}`;
   if (key === painted) return;
   const first = !painted;
@@ -2386,11 +2864,11 @@ function paintInk() {
   delete cv.dataset.on;
   import('./painting.js').then(({ paint }) =>
     setTimeout(
-      () => {
-        paint(cv, W, H, season);
-        cv.dataset.on = '';
-        if (!first) plip('cue-ink', 0.8);
-      },
+      () =>
+        paint(cv, W, H, season).then(() => {
+          cv.dataset.on = '';
+          if (!first) plip('cue-ink', 0.8);
+        }),
       first ? 0 : 900
     )
   );
@@ -2404,7 +2882,10 @@ function stepInk(raw) {
     if (top === 'blueprint') inkR = inkMax * Math.min(1, k / 1.5);
     else inkR = inkMax * (1 - Math.exp(-k * ({ ink: 1.25, ukiyo: 1.1, glow: 1.6, ascii: 1.4 }[top] || 1.6))) * Math.min(1, 0.2 + k * 3);
     if (k > 4.5) inkR = inkMax;
-    if (inkR >= inkMax) base = top;
+    if (inkR >= inkMax && base !== top) {
+      base = top;
+      reached(top);
+    }
   } else if (inkR > 0) {
     inkR = Math.max(0, inkR - raw * inkMax * (0.4 + k * 1.3));
     if (inkR <= 0) top = 'water';
@@ -2422,6 +2903,12 @@ function drawSpider(c) {
     up = spider.state === 'jump' ? Math.sin(spider.jump * Math.PI) : 0,
     half = life.SPIDER * u * (1 + up * 0.3),
     n = life.size / 2;
+  if (life.pic) {
+    c.globalAlpha = spider.alpha;
+    drawCell(c, 'spider', spiderFrame(spider), spider.x, spider.y, spider.a, half, spider.state === 'jump' ? 0 : 0.9);
+    c.globalAlpha = 1;
+    return;
+  }
   const sig = `${spider.state} ${spider.a.toFixed(2)} ${spider.crouch.toFixed(2)} ${up.toFixed(2)} ${spider.feet.map((f) => Math.round(f.x - spider.x) + ',' + Math.round(f.y - spider.y)).join(' ')}`;
   if (!spiderPic) {
     spiderPic = document.createElement('canvas');
@@ -2459,6 +2946,9 @@ const dove = { state: 'away', x: 0, y: 0, a: 0, h: 1, spread: 1, ph: 0, dip: 0, 
 const flies = [0, 1].map((i) => ({ x: -50, y: -50, a: 0, tx: 0, ty: 0, next: 0, tone: i ? '#d6503a' : '#3aa7c9', a2: 0 })),
   flakes = Array.from({ length: 60 }, (_, i) => ({ x: Math.random(), y: Math.random(), z: Math.random(), i: i / 60, s: rnd(0.7, 1.4) }));
 const doveSize = () => (big ? 64 : 48);
+// with ?perf, for the tools that picture the pond (tools/pond/): where the two are and what they are doing,
+// and a way to show visitors who are not there (it changes this browser's picture only)
+if (PERF) window.__pond = { dove, spider, visitors: (list) => seeVisitors(list) };
 function callDove() {
   if (!life || dove.state !== 'away') return;
   const spots = padSpots.filter((_, i) => i !== spider.pad),
@@ -2522,6 +3012,7 @@ function stepAir(dt) {
       }
       if ((dove.sips >= 4 && dove.t > 11) || (ptr.moved && T - ptr.at < 0.3 && Math.hypot(ptr.x - dove.x, ptr.y - dove.y) < 46)) {
         dove.state = 'out';
+        dove.t = 0;
         dove.tx = dove.x < W / 2 ? -170 : W + 170;
         dove.ty = rnd(-110, H * 0.4);
         drop(dove.x, dove.y, 3, -0.7);
@@ -2564,8 +3055,8 @@ function stepAir(dt) {
   });
   for (const q of flakes) {
     q.z -= dt * 0.35 * q.s;
-    q.x += dt * 0.012;
-    q.y += dt * 0.02;
+    q.x += dt * 0.012 * (pv.windX / 13);
+    q.y += dt * 0.02 * (pv.windY / 6);
     if (q.z <= 0) {
       q.z = 1;
       q.x = Math.random();
@@ -2586,6 +3077,20 @@ function drawDove(c) {
     n = life.size,
     now = performance.now(),
     sits = dove.state === 'sit';
+  if (life.pic) {
+    count('dove');
+    drawCell(
+      c,
+      'dove',
+      doveFrame({ state: dove.state, t: dove.t, h: dove.h, ph: dove.ph, idle: dove.sips >= 4 }),
+      dove.x,
+      dove.y,
+      dove.a,
+      half,
+      1 - clamp(dove.h * 4, 0, 1)
+    );
+    return;
+  }
   doveOwed += lifeDt;
   if (!dovePic) {
     dovePic = document.createElement('canvas');
@@ -2605,7 +3110,7 @@ function drawDove(c) {
   laidIn(c, () => c.drawImage(sits && doveAt ? dovePic : life.canvas, dove.x - half, dove.y - half, half * 2, half * 2));
 }
 // how the look lays the two into the air: ink soaks into the paper, glow adds light; the rest as they are
-const LAY = { ink: ['multiply', 0.8], glow: ['lighter', 0.65], ascii: ['source-over', 0.6] };
+const LAY = { ink: ['multiply', 0.8], glow: ['lighter', 0.65], ascii: ['source-over', 0.6], ...(PREVIEW ? NEW_LAY : {}) };
 function laidIn(c, draw) {
   const l = LAY[look];
   if (!l) return draw();
@@ -2716,7 +3221,7 @@ function drawRain(c) {
       c.lineWidth = rnd(0.6, 1.4);
       c.beginPath();
       c.moveTo(x, y);
-      c.lineTo(x + l * 0.26, y + l);
+      c.lineTo(x + l * 0.26 * (pv.windX / 13), y + l);
       c.stroke();
     }
   } else if (look === 'ukiyo') {
@@ -2728,7 +3233,7 @@ function drawRain(c) {
         y = rnd(-H * 0.3, H),
         l = rnd(H * 0.12, H * 0.32);
       c.moveTo(x, y);
-      c.lineTo(x + l * 0.09, y + l);
+      c.lineTo(x + l * 0.09 * (pv.windX / 13), y + l);
     }
     c.stroke();
   } else if (look === 'ascii') {
@@ -2740,6 +3245,29 @@ function drawRain(c) {
   }
   c.restore();
 }
+// Summer nights: a handful of soft lights that drift and blink; a press near them sends them off.
+const fireflies = () => pv.fliesOn || (AM.flies > 0.3 && phase === 'night' && look !== 'blueprint');
+function drawFireflies(c) {
+  if (!fireflies()) return (pv.flies.length = 0);
+  if (!pv.flies.length) pv.flies = Array.from({ length: big ? 9 : 5 }, () => ({ x: rnd(0.45, 0.95) * W, y: rnd(0.1, 0.9) * H, vx: 0, vy: 0, p: rnd(0, TAU) }));
+  const now = performance.now() / 1000;
+  for (const q of pv.flies) {
+    q.vx += (Math.sin(now * 0.7 + q.p) * 6 - q.vx * 0.6) * lifeRaw;
+    q.vy += (Math.cos(now * 0.55 + q.p * 1.3) * 6 - q.vy * 0.6) * lifeRaw;
+    q.x = clamp(q.x + q.vx * lifeRaw, 10, W - 10);
+    q.y = clamp(q.y + q.vy * lifeRaw, 10, H - 10);
+    const a = Math.max(0, Math.sin(now * 1.3 + q.p * 5)) ** 2;
+    if (a < 0.03) continue;
+    const g = c.createRadialGradient(q.x, q.y, 0, q.x, q.y, 13);
+    g.addColorStop(0, `rgba(240,255,180,${a})`);
+    g.addColorStop(0.25, `rgba(220,255,150,${0.6 * a})`);
+    g.addColorStop(1, 'rgba(200,255,140,0)');
+    c.fillStyle = g;
+    c.beginPath();
+    c.arc(q.x, q.y, 13, 0, TAU);
+    c.fill();
+  }
+}
 // Whether anything is in the air this frame; when nothing is, the canvas is cleared once and hidden.
 let airShown = true;
 const airWanted = () =>
@@ -2747,11 +3275,13 @@ const airWanted = () =>
   (look !== 'water' && rainNow()) ||
   gest.down ||
   gest.letters.length > 0 ||
+  (PREVIEW && gest.taps && gest.taps.length > 0) ||
   gest.glint > 0.05 ||
   AM.snow > 0.02 ||
   fx.snow > 0.02 ||
   (rainNow() && AM.ice > 0.3) ||
   flies.some((f) => f.a2 >= 0.02) ||
+  (PREVIEW && fireflies()) ||
   (life && dove.state !== 'away');
 function drawAir() {
   const c = actx;
@@ -2773,6 +3303,7 @@ function drawAir() {
   c.clearRect(0, 0, W, H);
   if (look === 'blueprint' && inkR >= inkMax * 0.9) drawDims(c);
   drawRain(c);
+  if (PREVIEW) drawFireflies(c);
   drawGesture(c);
   if (Math.max(AM.snow, fx.snow) > 0.02 || (rainNow() && AM.ice > 0.3)) {
     const n = Math.max(AM.snow, fx.snow, rainNow() && AM.ice > 0.3 ? 0.7 : 0);
@@ -2789,7 +3320,7 @@ function drawAir() {
   for (const f of flies) {
     if (f.a2 < 0.02) continue;
     c.save();
-    c.globalAlpha = f.a2;
+    c.globalAlpha = f.a2 * (look === 'monet' ? 0.42 : 1);
     c.translate(f.x, f.y);
     c.rotate(f.a);
     c.lineCap = 'round';
@@ -2877,8 +3408,11 @@ function shadeTex() {
 // shade's strength, eased over 2.5 s as its opacity was, by the time of day and the look.
 let shadeK = 0.9;
 function shadeUniforms(dt) {
-  const goal = 'bare' in pond.dataset ? 0.25 : inkOn ? 0.35 : ({ night: 0.3, dawn: 0.6, dusk: 0.6 }[phase] ?? 0.9);
-  shadeK += clamp(goal - shadeK, -dt / 2.5, dt / 2.5);
+  const goal =
+    PREVIEW && look in NEW_SHADE ? NEW_SHADE[look] : 'bare' in pond.dataset ? 0.25 : inkOn ? 0.35 : ({ night: 0.3, dawn: 0.6, dusk: 0.6 }[phase] ?? 0.9);
+  // (a look with no shade at all loses it quickly, as its front passes)
+  const quick = PREVIEW && NEW_SHADE[look] === 0 ? 0.35 : 2.5;
+  shadeK += clamp(goal - shadeK, -dt / quick, dt / quick);
   let u = RM ? -1 : (performance.now() / 27000) % 2;
   u = u < 0 ? 0 : u > 1 ? 2 - u : u;
   u = 1 - u; // alternate-reverse: it starts at the far pose
@@ -3071,6 +3605,7 @@ const KINDS = [
 let logKind = 'all',
   logCompact = false;
 const SHEETS = {
+  seals: () => `<div class="album">${albumHTML(album, VOLS, lang, freshVols())}</div>`,
   career:
     () => `<h1>${L('Soundings', ZH.career.title)}</h1><p class="lede">${L("Work, projects and school on one line, newest at the surface. Scroll, and the pond's focus sinks with you to the bed.", ZH.career.lede)}</p>
     <div class="filt" role="toolbar" aria-label="Show">${KINDS.map(([k, l]) => `<button data-kind="${k}">${L(l, ZH.career.kinds[k])}<em>${k === 'all' ? LOG.length : LOG.filter((e) => e.kind === k).length}</em></button>`).join('')}<span class="gap"></span>
@@ -3135,7 +3670,8 @@ const CHAPTERS = {
   music: ['03', 'Music'],
   notes: ['04', 'Notes'],
   chat: ['05', 'Chat'],
-  account: ['', 'Account']
+  account: ['', 'Account'],
+  seals: ['', 'Seals']
 };
 // Which entries show, and which of them is the first of its year (it carries the year on the staff).
 function applyLog() {
@@ -3198,7 +3734,7 @@ function openSheet(id, at) {
   if (log) logKind = id === 'resume' ? 'role' : id === 'work' && !at ? 'project' : 'all';
   viewAt = -1;
   $('#sheet').innerHTML =
-    `<header class="head"><p class="eyebrow">${L(name, ZH.chapters[id])}</p><span class="read" id="readout"></span><nav class="chap" aria-label="Chapters">${ORDER.map((k) => `<button data-sheet="${k}" aria-label="${L(CHAPTERS[k][1], ZH.chapters[k])}" ${CHAPTERS[k][0] === no ? 'aria-current="true"' : ''}>${+CHAPTERS[k][0]}</button>`).join('')}</nav><button class="x" aria-label="Close"><svg width="12" height="12" viewBox="0 0 12 12" stroke-width="1.6" stroke-linecap="round"><path d="M2 2l8 8M10 2l-8 8"/></svg></button></header><div class="scroll" id="scroll">${SHEETS[log ? 'career' : id]()}</div>` +
+    `<header class="head"><p class="eyebrow">${id === 'seals' ? SEAL_WORDS[lang].title : L(name, ZH.chapters[id])}</p><span class="read" id="readout"></span><nav class="chap" aria-label="Chapters">${ORDER.map((k) => `<button data-sheet="${k}" aria-label="${L(CHAPTERS[k][1], ZH.chapters[k])}" ${CHAPTERS[k][0] === no ? 'aria-current="true"' : ''}>${+CHAPTERS[k][0]}</button>`).join('')}</nav><button class="x" aria-label="Close"><svg width="12" height="12" viewBox="0 0 12 12" stroke-width="1.6" stroke-linecap="round"><path d="M2 2l8 8M10 2l-8 8"/></svg></button></header><div class="scroll" id="scroll">${SHEETS[log ? 'career' : id]()}</div>` +
     (id === 'photos'
       ? '<div class="view" id="view" hidden><button class="vx" aria-label="Close the photograph"><svg width="12" height="12" viewBox="0 0 12 12" stroke-width="1.6" stroke-linecap="round"><path d="M2 2l8 8M10 2l-8 8"/></svg></button><button class="vs" data-step="-1" aria-label="Previous">‹</button><img id="viewImg" alt="Photo by Jincheng Ma"><button class="vs" data-step="1" aria-label="Next">›</button><p><span id="viewCap"></span><a class="link" id="viewLink" target="_blank" rel="noopener">' +
         L('Open on Unsplash ↗', ZH.photos.open) +
@@ -3229,6 +3765,7 @@ function openSheet(id, at) {
   else if (id === 'chat') openChat();
   else if (id === 'notes') void people.readNotes();
   else if (id === 'music') void loadSongs();
+  else if (id === 'seals') albumShown();
   if (id !== 'chat') closeChat();
   if (log || id === 'work') showRow(at);
 }
@@ -3729,7 +4266,8 @@ function commands() {
       ['ukiyo', '浮世絵 Ukiyo-e', 'A woodblock print; or stir the water once round', 'ukiyo ukiyo-e woodblock print hokusai wave japan 浮世絵'],
       ['glow', 'Glow', 'The lights go out; or press the light on the water', 'glow night neon dark light'],
       ['blueprint', 'Blueprint', 'A drawing on blue paper; or draw a long straight line', 'blueprint drawing plan draft ruler'],
-      ['ascii', 'ASCII', 'The pond in characters; or type a few letters', 'ascii text characters terminal type']
+      ['ascii', 'ASCII', 'The pond in characters; or type a few letters', 'ascii text characters terminal type'],
+      ...(PREVIEW ? NEW_COMMANDS : [])
     ].map(([id, label, hint, kw]) => ({
       sec: 'Pond',
       icon: 'brush',
@@ -3823,6 +4361,44 @@ function commands() {
         setMuted(!muted);
       }
     },
+    // the seal album: listed once its mark shows, found by name before that; clearing it once a volume is full
+    {
+      sec: 'Pond',
+      icon: 'brush',
+      label: SEAL_WORDS[lang].open,
+      hint: SEAL_WORDS[lang].openHint,
+      kw: 'seals stamps album collection looks 集印册 集印帳 印 御朱印',
+      hidden: !entryShows(album),
+      cmd: true,
+      run: () => openSheet('seals')
+    },
+    ...(VOLS.some((v) => full(album, v)) || PREVIEW
+      ? [
+          {
+            sec: 'Pond',
+            icon: 'again',
+            label: SEAL_WORDS[lang].clear,
+            hint: SEAL_WORDS[lang].clearHint,
+            kw: 'seals clear reset again 清空 印 消す',
+            hidden: !PREVIEW,
+            cmd: true,
+            run: () => setAlbum(clearSeals(album))
+          }
+        ]
+      : []),
+    ...(PREVIEW
+      ? [
+          {
+            sec: 'Pond',
+            icon: 'brush',
+            label: 'Preview: stamp all seals',
+            hint: 'Fills the album, a seal at a time',
+            kw: 'preview seals stamp all',
+            cmd: true,
+            run: () => VOLS.flatMap((v) => v.seals).forEach((x, i) => setTimeout(() => reached(x.id), i * 3400))
+          }
+        ]
+      : []),
     { sec: 'Pond', icon: 'again', label: 'Replay the opening', hint: 'The greeting and the gold koi', kw: 'intro again restart', cmd: true, run: () => intro() }
   ];
 }
@@ -4215,6 +4791,58 @@ function lookSound(name, what, t, vol) {
     if (what === 'in') for (let i = 0; i < 6; i++) key(t + i * 0.055 + Math.random() * 0.02, v * 0.6);
     else if (what === 'crack') for (let i = 0; i < 3; i++) key(t + i * 0.035, v * 0.7);
     else key(t, v * 0.6);
+  } else if (name === 'monet') {
+    // oil: a loaded brush laid down, soft and short; coming in, three of them
+    if (what === 'in') [0, 0.16, 0.3].forEach((d, i) => (hiss(t + d, 0.16, 700 + i * 160, 0.8, v * 0.5), bubble(t + d, rnd(150, 190), v * 0.5, 0.12)));
+    else if (what === 'crack') hiss(t, 0.1, 1800, 1, v * 0.8);
+    else {
+      hiss(t, 0.14, rnd(650, 900), 0.8, v * 0.5);
+      bubble(t + 0.01, rnd(160, 210), v * 0.6, 0.14);
+    }
+  } else if (name === 'qinghua') {
+    // porcelain rings: a struck bowl coming in, a small clear ting for a press
+    const ting = (at, f, len, k) => {
+      tone('sine', f, at, len, v * k, f * 0.998, 0.002);
+      tone('sine', f * 2.76, at, len * 0.5, v * k * 0.35, undefined, 0.002);
+    };
+    if (what === 'in') {
+      ting(t, 1174.66, 1.6, 0.6);
+      ting(t + 0.22, 1567.98, 1.2, 0.35);
+    } else if (what === 'crack') {
+      hiss(t, 0.03, 5200, 2, v);
+      ting(t + 0.01, 2093, 0.5, 0.4);
+    } else ting(t, rnd(1900, 2300), 0.6, 0.45);
+  } else if (name === 'dunhuang') {
+    // a cave: a low drum far off coming in; a press is dust, dry and brief
+    if (what === 'in') {
+      bubble(t, 82, v * 1.4, 0.5);
+      bubble(t + 0.34, 98, v, 0.4);
+      hiss(t + 0.05, 0.7, 900, 0.5, v * 0.2);
+    } else if (what === 'crack') hiss(t, 0.12, 1400, 0.8, v);
+    else {
+      hiss(t, 0.22, rnd(1500, 2100), 0.6, v * 0.4);
+      bubble(t, rnd(105, 125), v * 0.6, 0.12);
+    }
+  } else if (name === 'stars') {
+    // the sky: thin high lights, far apart
+    if (what === 'in') [987.77, 1318.5, 1975.5].forEach((f, i) => shimmer(t + i * 0.2, f, v * 0.2, 1.8));
+    else if (what === 'crack') shimmer(t, 1760, v * 0.3, 0.8);
+    else {
+      shimmer(t, note() * 4, v * 0.22, 1.2);
+      tone('sine', 2600, t, 0.5, v * 0.12, 900);
+    }
+  } else if (name === 'relief') {
+    // stone: a chisel's dry knock, and sand running off as the look comes in
+    const knock = (at, k) => (
+      hiss(at, 0.02, 2600, 2.2, v * k), tone('triangle', rnd(300, 360), at, 0.05, v * k * 0.4), bubble(at, rnd(150, 170), v * k * 0.5, 0.06)
+    );
+    if (what === 'in') {
+      hiss(t, 1.1, 1700, 0.5, v * 0.3);
+      knock(t + 0.5, 0.7);
+    } else if (what === 'crack') {
+      knock(t, 1);
+      knock(t + 0.07, 0.6);
+    } else knock(t, 0.9);
   }
 }
 function plip(kind, vol) {
@@ -4241,6 +4869,13 @@ function plip(kind, vol) {
     const v = 0.07 * (vol || 1);
     hiss(t, 0.5, 900, 0.6, v * 0.35);
     bubble(t, rnd(180, 220), v, 0.4);
+    return;
+  }
+  if (kind === 'stamp') {
+    // a seal pressed down: a soft low thud, and the paper's small breath under it
+    const v = 0.09 * (vol || 1);
+    hiss(t, 0.06, 420, 0.7, v * 0.5);
+    bubble(t + 0.004, rnd(96, 112), v, 0.16);
     return;
   }
   if (kind === 'drop') {
@@ -4302,6 +4937,583 @@ $('#snd').addEventListener('click', () => {
   setMuted(!muted);
 });
 
+/* ================= the Dunhuang wall's painting (a preview look) =================
+   The flying figures are pictures. They are fetched the first time the look is asked for, laid out for
+   the wall's size into one canvas, and sent to the GPU once (and again only when the pond is resized);
+   lookDunhuang() draws them under its own wear. Nothing here runs in the frame. */
+let muralImgs = null,
+  muralLarge = false,
+  texMural = null;
+const muralFaces = new Float32Array(6);
+function loadMural() {
+  if (muralImgs) return;
+  muralImgs = {};
+  Promise.all(
+    Object.entries(MURAL).map(
+      ([k, src]) =>
+        new Promise((done) => {
+          const im = new Image();
+          im.onload = () => ((muralImgs[k] = im), done());
+          im.onerror = done;
+          im.src = src;
+        })
+    )
+  ).then(() => {
+    paintPic();
+    invalidate();
+  });
+}
+// The one texture a look's picture lies in holds the picture of the look last asked for.
+let picLook = '',
+  picIn = '';
+function paintPic() {
+  if (picLook === 'dunhuang') paintMural();
+  else if (picLook === 'monet') paintBed();
+  else if (picLook === 'qinghua') paintRim();
+  else if (picLook === 'stars') paintPlate();
+  else if (picLook === 'ukiyo') paintWaves();
+  else if (picLook === 'relief') paintRelief();
+}
+// which looks have a picture in that texture, and how each fetches its own
+const PICTURED = {
+  dunhuang: () => loadMural(),
+  monet: () => loadMonet(),
+  qinghua: () => loadRim(),
+  stars: () => loadStars(),
+  ukiyo: () => loadWaves(),
+  relief: () => loadRelief()
+};
+// The relief's carvings: each picture is a pair, its paint and its height. The paint is laid into the top
+// half of the look's texture and the height into the bottom half, at the same places, so the shader reads
+// both from one picture; where nothing is carved the height is the stone's face (mid grey).
+let reliefImgs = null;
+function loadRelief() {
+  if (reliefImgs) return;
+  reliefImgs = {};
+  Promise.all(
+    Object.entries(RELIEF).map(
+      ([k, src]) =>
+        new Promise((done) => {
+          const im = new Image();
+          im.onload = () => ((reliefImgs[k] = im), done());
+          im.onerror = () => (report(new Error(`no picture at ${src}`), 'pond pictures'), done());
+          im.src = src;
+        })
+    )
+  ).then(() => {
+    paintPic();
+    invalidate();
+  });
+}
+function paintRelief() {
+  if (!glOK || !reliefImgs || !reliefImgs.friezeH) return;
+  const k = Math.min(2048 / W, glc.width / W, 2),
+    cv = document.createElement('canvas');
+  cv.width = Math.max(1, Math.round(W * k));
+  cv.height = Math.max(2, Math.round(H * k) * 2);
+  const c = cv.getContext('2d'),
+    half = cv.height / 2;
+  c.fillStyle = 'rgb(128,128,128)';
+  c.fillRect(0, half, cv.width, half);
+  // the stone's dressed face, tiled, is the ground of the height (640 pixels of the pond to a tile), at a
+  // third of its depth: under a low light the full depth reads as grit, not as dressing
+  if (reliefImgs.stoneH) {
+    // (whole pixels to a tile, so no two tiles overlap: laid in thinly, an overlap would show as a line)
+    const t = Math.round(640 * k);
+    c.globalAlpha = 0.3;
+    for (let x = 0; x < cv.width; x += t) for (let y = 0; y < half; y += t) c.drawImage(reliefImgs.stoneH, x, half + y, t, t);
+    c.globalAlpha = 1;
+  }
+  for (const [pair, sx, sy, sw, sh, x, y, w, h] of reliefLayout(W, H, big)) {
+    const paint = reliefImgs[`${pair}C`],
+      height = reliefImgs[`${pair}H`];
+    // a carving is drawn only whole: its paint without its height would be a flat picture on the stone
+    if (!paint || !height) continue;
+    c.drawImage(paint, sx, sy, sw, sh, x * k, y * k, w * k, h * k);
+    // (a height's mid grey is the face: laid in hard light it leaves the dressed stone as it is there, and
+    // raises or cuts it where the carving does)
+    c.globalCompositeOperation = 'hard-light';
+    c.drawImage(height, sx, sy, sw, sh, x * k, half + y * k, w * k, h * k);
+    c.globalCompositeOperation = 'source-over';
+  }
+  sendPic(cv);
+}
+// Ukiyo-e's wave crests: the sheet itself is the texture (the shader picks a crest's cell), with smaller
+// copies, since a crest is drawn well under the size it was cut at.
+let waves = null;
+function loadWaves() {
+  if (waves) return;
+  waves = new Image();
+  waves.onload = () => {
+    paintPic();
+    invalidate();
+  };
+  waves.onerror = () => report(new Error(`no picture at ${UKIYO.waves}`), 'pond pictures');
+  waves.src = UKIYO.waves;
+}
+function paintWaves() {
+  if (glOK && waves && waves.complete && waves.naturalWidth) sendPic(waves, gl.CLAMP_TO_EDGE, true);
+}
+// The star chart's grid: a picture that tiles on all four sides is the look's texture as it is, repeated,
+// with smaller copies (lookStars lays a tile over 520 pixels of the pond), so the grid runs on past every
+// edge as the sky turns. The koi's figure is kept as one row to the koi sheets' measure, for
+// Koi.drawSprite to bend along a constellation.
+let starImgs = null,
+  starFigure = null;
+function loadStars() {
+  if (starImgs) return;
+  starImgs = {};
+  const get = (k, then) => {
+    const im = new Image();
+    im.onload = () => {
+      starImgs[k] = im;
+      then(im);
+      invalidate();
+    };
+    im.onerror = () => report(new Error(`no picture at ${STARS[k]}`), 'pond pictures');
+    im.src = STARS[k];
+  };
+  get('grid', () => paintPic());
+  get('figures', (im) => {
+    const [x, y, w, h] = STARS.figure,
+      k = 900 / w,
+      cv = document.createElement('canvas');
+    cv.width = 1024;
+    cv.height = FIGURE.rowH;
+    cv.getContext('2d').drawImage(im, x, y, w, h, 62, (FIGURE.rowH - h * k) / 2, 900, h * k);
+    starFigure = cv;
+  });
+}
+const FIGURE = { rowH: 384, x1: 962 };
+function paintPlate() {
+  if (glOK && starImgs && starImgs.grid) sendPic(starImgs.grid, gl.REPEAT, true);
+}
+// 青花's rim: the lotus scroll tiled along all four sides (as many whole turns as fit, stretched a little to
+// close), the corner piece in each corner, mirrored. It is the frame the page stands inside.
+let rimImgs = null;
+function loadRim() {
+  if (rimImgs) return;
+  rimImgs = {};
+  for (const k of ['rim', 'corner']) {
+    const im = new Image();
+    im.onload = () => {
+      rimImgs[k] = im;
+      paintPic();
+      invalidate();
+    };
+    im.src = QINGHUA[k];
+  }
+}
+function paintRim() {
+  if (!glOK || !rimImgs || !rimImgs.rim || !rimImgs.corner) return;
+  const k = Math.min(2048 / W, glc.width / W, 2),
+    cv = document.createElement('canvas'),
+    b = big ? 41 : 23;
+  cv.width = Math.max(1, Math.round(W * k));
+  cv.height = Math.max(1, Math.round(H * k));
+  const c = cv.getContext('2d');
+  c.scale(k, k);
+  // one side: tiles from a corner piece to the next, drawn along x from the origin
+  const side = (len) => {
+    const n = Math.max(1, Math.round(len / (b * 8))),
+      tw = len / n;
+    for (let i = 0; i < n; i++) c.drawImage(rimImgs.rim, i * tw, 0, tw + 0.5, b);
+  };
+  const place = (x, y, a, sx, len) => {
+    c.save();
+    c.translate(x, y);
+    c.rotate(a);
+    c.scale(1, sx);
+    side(len);
+    c.restore();
+  };
+  place(b * 2, 0, 0, 1, W - b * 4);
+  place(b * 2, H, 0, -1, W - b * 4);
+  place(0, H - b * 2, -Math.PI / 2, 1, H - b * 4);
+  place(W, H - b * 2, -Math.PI / 2, -1, H - b * 4);
+  for (const [x, y, sx, sy] of [
+    [0, 0, 1, 1],
+    [W, 0, -1, 1],
+    [0, H, 1, -1],
+    [W, H, -1, -1]
+  ]) {
+    c.save();
+    c.translate(x, y);
+    c.scale(sx, sy);
+    c.drawImage(rimImgs.corner, 0, 0, b * 2, b * 2);
+    c.restore();
+  }
+  sendPic(cv);
+}
+function sendPic(cv, wrap = gl.CLAMP_TO_EDGE, copies = false) {
+  picIn = picLook;
+  const was = gl.getParameter(gl.ACTIVE_TEXTURE);
+  gl.activeTexture(gl.TEXTURE10);
+  gl.bindTexture(gl.TEXTURE_2D, texMural);
+  gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, cv);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, wrap);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, wrap);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, copies ? gl.LINEAR_MIPMAP_LINEAR : gl.LINEAR);
+  if (copies) gl.generateMipmap(gl.TEXTURE_2D);
+  gl.activeTexture(was);
+}
+// Monet's pictures: the painted water (upright on a phone, the small one on a small window, the large one
+// where the pond is drawn large), the lilies and the koi. Fetched the first time the look is asked for.
+let monetImgs = null,
+  lilyPic = null;
+// The painted koi of the looks that have them (newlooks.js, KOI_SHEETS), fetched with the look. A visitor's
+// koi is one of the sheet's plain ones with their colour laid on, made once for each colour and kept.
+const koiSheets = {};
+function loadKoi(name) {
+  const d = PREVIEW && KOI_SHEETS[name];
+  if (!d || koiSheets[name]) return;
+  const sh = (koiSheets[name] = { ...d, pic: null, maskA: null, made: new Map() }),
+    pic = new Image();
+  pic.onload = () => {
+    if (d.height) carved(pic, d).then((cv) => ((sh.pic = cv), sh.made.clear(), invalidate()));
+    else sh.pic = pic;
+    invalidate();
+  };
+  pic.onerror = () => report(new Error(`no picture at ${d.src}`), 'pond pictures');
+  pic.src = d.src;
+  if (!d.mask) return;
+  const m = new Image();
+  m.onload = () => {
+    // the mask comes as white on black: its whiteness becomes its cover
+    const cv = document.createElement('canvas');
+    cv.width = m.naturalWidth;
+    cv.height = m.naturalHeight;
+    const x = cv.getContext('2d');
+    x.drawImage(m, 0, 0);
+    const px = x.getImageData(0, 0, cv.width, cv.height);
+    for (let i = 0; i < px.data.length; i += 4) {
+      px.data[i + 3] = px.data[i];
+      px.data[i] = px.data[i + 1] = px.data[i + 2] = 255;
+    }
+    x.putImageData(px, 0, 0);
+    sh.maskA = cv;
+    sh.made.clear();
+  };
+  m.src = d.mask;
+}
+// A carved koi sheet comes as paint, bare where the stone shows, and a height. The fish's canvas holds one
+// picture, so the two are made into one: the koi's whole shape from the height (anything off the stone's
+// face), the paint laid over a colour that stands for bare stone (`bare`), which the look's shader knows.
+function carved(paint, d) {
+  return new Promise((done) => {
+    const hi = new Image();
+    hi.onerror = () => report(new Error(`no picture at ${d.height}`), 'pond pictures');
+    hi.onload = () => {
+      const w = paint.naturalWidth,
+        h = paint.naturalHeight,
+        shape = document.createElement('canvas'),
+        cv = document.createElement('canvas');
+      shape.width = cv.width = w;
+      shape.height = cv.height = h;
+      const x = shape.getContext('2d');
+      x.drawImage(hi, 0, 0, w, h);
+      const px = x.getImageData(0, 0, w, h);
+      for (let i = 0; i < px.data.length; i += 4) {
+        px.data[i + 3] = Math.min(255, Math.abs(px.data[i] - 128) * 40);
+        px.data[i] = px.data[i + 1] = px.data[i + 2] = 255;
+      }
+      x.putImageData(px, 0, 0);
+      const c = cv.getContext('2d');
+      // (a cut that passes through the face's own height on its way down leaves pinholes: the shape is
+      // laid a pixel each way to close them)
+      for (const [ox, oy] of [
+        [0, 0],
+        [1, 0],
+        [-1, 0],
+        [0, 1],
+        [0, -1]
+      ])
+        c.drawImage(shape, ox, oy);
+      c.globalCompositeOperation = 'source-in';
+      c.fillStyle = d.bare;
+      c.fillRect(0, 0, w, h);
+      c.globalCompositeOperation = 'source-atop';
+      c.drawImage(paint, 0, 0);
+      done(cv);
+    };
+    hi.src = d.height;
+  });
+}
+// the colour one of the pond's own koi carries in its patches (its first that isn't white), in the look's
+// palette if it keeps one
+const rgbOf = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+function ownColour(k, palette) {
+  const own = (k.patches.find((q) => q[3] !== WHITE && /^#[0-9a-f]{6}$/i.test(q[3])) || [0, 0, 0, RED])[3];
+  if (!palette) return own;
+  const [r, g, b] = rgbOf(own);
+  let best = palette[0],
+    bd = 1e9;
+  for (const q of palette) {
+    const [pr, pg, pb] = rgbOf(q),
+      d = (pr - r) ** 2 + (pg - g) ** 2 + (pb - b) ** 2;
+    if (d < bd) {
+      bd = d;
+      best = q;
+    }
+  }
+  return best;
+}
+// a picture at half or a quarter of its size, made the first time it is asked for (each step a clean halving)
+const smaller = new WeakMap();
+function shrunk(pic, m) {
+  if (m === 1) return pic;
+  let set = smaller.get(pic);
+  if (!set) smaller.set(pic, (set = {}));
+  if (!set[m]) {
+    const from = m === 0.25 ? shrunk(pic, 0.5) : pic,
+      cv = document.createElement('canvas');
+    cv.width = Math.ceil((pic.naturalWidth || pic.width) * m);
+    cv.height = Math.ceil((pic.naturalHeight || pic.height) * m);
+    cv.getContext('2d').drawImage(from, 0, 0, cv.width, cv.height);
+    set[m] = cv;
+  }
+  return set[m];
+}
+// which picture a koi is drawn from, and how far down it its row starts
+function koiPicture(k, sh) {
+  if (k === host) return [sh.pic, sh.host * sh.rowH];
+  if (k === you) return [sh.pic, sh.you * sh.rowH];
+  const row = sh.others[Math.floor(k.seed * 7) % sh.others.length],
+    colour = k.person ? k.dot : sh.own ? ownColour(k, sh.palette) : sh.patch,
+    key = `${row}|${colour}`;
+  let cv = sh.made.get(key);
+  if (!cv) {
+    cv = document.createElement('canvas');
+    cv.width = 1024;
+    cv.height = sh.rowH;
+    const x = cv.getContext('2d');
+    x.drawImage(sh.pic, 0, row * sh.rowH, 1024, sh.rowH, 0, 0, 1024, sh.rowH);
+    x.globalCompositeOperation = 'source-atop';
+    if (sh.wash) {
+      x.globalAlpha = 0.55;
+      x.fillStyle = sh.wash;
+      x.fillRect(0, 0, 1024, sh.rowH);
+    }
+    if (sh.maskA && colour) {
+      const t = document.createElement('canvas');
+      t.width = 1024;
+      t.height = sh.rowH;
+      const y = t.getContext('2d');
+      y.fillStyle = colour;
+      y.fillRect(0, 0, 1024, sh.rowH);
+      y.globalCompositeOperation = 'destination-in';
+      y.drawImage(sh.maskA, 0, row * sh.rowH, 1024, sh.rowH, 0, 0, 1024, sh.rowH);
+      x.globalAlpha = 0.86;
+      x.drawImage(t, 0, 0);
+    }
+    if (sh.maskA) sh.made.set(key, cv);
+  }
+  return [cv, 0];
+}
+function loadMonet() {
+  if (monetImgs) return;
+  monetImgs = {};
+  const get = (k, src, then) => {
+    const im = new Image();
+    im.onload = () => {
+      monetImgs[k] = im;
+      then(im);
+      invalidate();
+    };
+    im.src = src;
+  };
+  get('bed', H > W * 1.15 ? MONET.bedTall : W * glDpr > 1500 ? MONET.bed : MONET.bedSmall, () => paintPic());
+  get('lilies', MONET.lilies, (im) => {
+    lilyPic = im;
+    padsNow();
+  });
+}
+function paintBed() {
+  if (!glOK || !monetImgs || !monetImgs.bed) return;
+  const im = monetImgs.bed,
+    k = Math.min(2048 / W, glc.width / W, 2),
+    cv = document.createElement('canvas');
+  cv.width = Math.max(1, Math.round(W * k));
+  cv.height = Math.max(1, Math.round(H * k));
+  // the painting covers the pond, cut at the sides or at top and bottom as the pond's shape needs
+  const f = Math.max(cv.width / im.naturalWidth, cv.height / im.naturalHeight),
+    w = im.naturalWidth * f,
+    h = im.naturalHeight * f;
+  cv.getContext('2d').drawImage(im, (cv.width - w) / 2, (cv.height - h) / 2, w, h);
+  sendPic(cv);
+}
+function paintMural() {
+  if (!glOK || !muralImgs || !muralImgs.pipa) return;
+  const k = Math.min(2048 / W, glc.width / W, 2),
+    cv = document.createElement('canvas'),
+    { draw, faces } = muralLayout(W, H, big);
+  cv.width = Math.max(1, Math.round(W * k));
+  cv.height = Math.max(1, Math.round(H * k));
+  const c = cv.getContext('2d');
+  c.scale(k, k);
+  // a band across the very top and bottom of the wall, tiled
+  if (muralImgs.border) {
+    const bh = big ? 30 : 18,
+      bw = bh * 8;
+    c.globalAlpha = 0.85;
+    for (let x = 0; x < W; x += bw) {
+      c.drawImage(muralImgs.border, x, 0, bw, bh);
+      c.drawImage(muralImgs.border, x, H - bh, bw, bh);
+    }
+    c.globalAlpha = 1;
+  }
+  for (const [im, sx, sy, sw, sh, x, y, w, h, strength = 1] of draw) {
+    const pic = muralImgs[im];
+    if (!pic) continue;
+    // a picture that came larger than the layout's numbers is the same picture, scaled; a source drawn
+    // from its right edge back (a negative width) is mirrored; a fainter one is further off, or more worn
+    const f = pic.naturalWidth / (im === 'pipa' ? 1536 : pic.naturalWidth);
+    c.globalAlpha = strength;
+    if (sw < 0) {
+      c.save();
+      c.translate(x + w, y);
+      c.scale(-1, 1);
+      c.drawImage(pic, (sx + sw) * f, sy * f, -sw * f, sh * f, 0, 0, w, h);
+      c.restore();
+    } else c.drawImage(pic, sx * f, sy * f, sw * f, sh * f, x, y, w, h);
+  }
+  c.globalAlpha = 1;
+  // the centrepiece is fetched again, larger, only where it is drawn wider than the first one has pixels
+  // (while the picture's texture is at most 2048 across and she is half the wall, that is nowhere)
+  const drawn = draw.find((d) => d[0] === 'pipa');
+  if (!muralLarge && big && drawn && drawn[7] * k > 1536) {
+    muralLarge = true;
+    const im = new Image();
+    im.onload = () => ((muralImgs.pipa = im), paintMural(), invalidate());
+    im.src = MURAL_LARGE.pipa;
+  }
+  faces.forEach((f, i) => muralFaces.set(f, i * 3));
+  sendPic(cv);
+}
+
+/* ================= the seal album (集印册) =================
+   Each look has a seal (seals.ts). The first time a look comes in all the way, by whatever route, its seal is
+   stamped in the corner and kept in this browser; the album is a sheet, opened from the command bar or from
+   the small mark by the solar term, which shows once there is a seal to see. Someone who has found none is
+   shown one quiet line on the water, once. None of it runs in the frame: a stamp is a CSS animation, and
+   the line a timer. */
+const VOLS = volumes(PREVIEW);
+let album = readAlbum(load('pond-seals'));
+album = { ...album, visits: album.visits + 1 };
+save('pond-seals', writeAlbum(album));
+function setAlbum(a) {
+  album = a;
+  save('pond-seals', writeAlbum(a));
+  koiSeals();
+  sealsEntry();
+  if (sheetOpen() && sheetId === 'seals') openSheet('seals');
+}
+// the visitor's koi wears a seal once the first volume is full, and the gold one once every volume is
+function koiSeals() {
+  if (you) you.seal = full(album, VOLS[0]);
+  if (host) host.seal = allFull(album, VOLS);
+}
+function sealsEntry() {
+  const b = $('#sealsBtn');
+  b.hidden = !entryShows(album);
+  b.toggleAttribute('data-some', sealCount(album) > 0);
+  b.toggleAttribute('data-all', allFull(album, VOLS));
+  b.setAttribute('aria-label', SEAL_WORDS[lang].title);
+}
+// the volumes whose large seal hasn't been seen yet: it stamps as the album opens, once
+const freshVols = () => VOLS.filter((v) => full(album, v) && !album.sealed.includes(v.id)).map((v) => v.id);
+// a seal's characters are centred by their own ink, measured once the brush has come for them
+function alignSeals(sel) {
+  alignInk(sel);
+  const chars = [...document.querySelectorAll(sel)].map((x) => x.textContent).join('');
+  if (chars && document.fonts?.load)
+    document.fonts.load("40px 'Zhi Mang Xing'", chars).then(
+      () => alignInk(sel),
+      () => {}
+    );
+}
+function albumShown() {
+  alignSeals('#sheet .seal-m span');
+  const fresh = freshVols();
+  if (!fresh.length) return;
+  if (!RM) setTimeout(() => sheetOpen() && sheetId === 'seals' && plip('stamp'), 700);
+  let a = album;
+  for (const v of fresh) a = markSealed(a, v);
+  album = a;
+  save('pond-seals', writeAlbum(a));
+}
+let stampTimer = 0;
+// a look has come in all the way: its seal, if this is the first time
+function reached(id) {
+  const r = stamp(album, id, dayOf(new Date()), VOLS);
+  if (!r.fresh) return;
+  album = r.album;
+  save('pond-seals', writeAlbum(album));
+  koiSeals();
+  const seal = VOLS.flatMap((v) => v.seals).find((x) => x.id === id),
+    el = $('#stamp');
+  clearTimeout(stampTimer);
+  delete el.dataset.on;
+  stampTimer = setTimeout(
+    () => {
+      el.innerHTML = sealMark(seal);
+      alignSeals('#stamp .seal-m span');
+      $('#stampSay').textContent = `${SEAL_WORDS[lang].title}: ${SEAL_WORDS[lang].names[id]}`;
+      el.dataset.on = '';
+      plip('stamp');
+      // the water takes the press
+      const b = el.getBoundingClientRect(),
+        pr = pond.getBoundingClientRect();
+      if (!RM) drop(b.left - pr.left + b.width / 2, b.top - pr.top + b.height / 2, 2.4, 0.5);
+      sealsEntry();
+      invalidate();
+      stampTimer = setTimeout(() => delete el.dataset.on, 3400);
+    },
+    RM ? 0 : 600
+  );
+}
+// One line on the water for someone who has found no look: once the pond has settled and they have been
+// here a while, or a moment after their first press. The gold koi comes over as it does at the opening.
+// Never over a chapter, the command bar or the title's type; shown once, and not at all after a seal.
+sealsEntry();
+let hintTimer = 0;
+function hintSoon(ms) {
+  if (!mayHint(album)) return;
+  clearTimeout(hintTimer);
+  hintTimer = setTimeout(hint, ms);
+}
+function hint() {
+  if (!mayHint(album)) return;
+  if (sheetOpen() || palOpen() || look !== 'water' || !arrived || host.mode !== 'wander' || document.hidden) return void hintSoon(6000);
+  const el = $('#whisper'),
+    toc = $('#toc').getBoundingClientRect(),
+    pr = pond.getBoundingClientRect(),
+    wide = toc.width && toc.right - pr.left < W * 0.8;
+  el.textContent = SEAL_WORDS[lang].line;
+  // beside the title on a wide pond, under it on a narrow one; near the visitor's koi where that is open water
+  const half = Math.min(W - 40, el.offsetWidth) / 2,
+    left = wide ? toc.right - pr.left + 40 : 20,
+    x = clamp(you.x, left + half, W - 20 - half),
+    y = clamp(you.y + 54, wide ? 90 : toc.bottom - pr.top + 34, H - 130);
+  el.style.left = `${Math.round(x)}px`;
+  el.style.top = `${Math.round(y)}px`;
+  el.dataset.on = '';
+  album = { ...album, hinted: dayOf(new Date()) };
+  save('pond-seals', writeAlbum(album));
+  {
+    host.mode = 'visit';
+    setTimeout(() => {
+      if (host.mode === 'visit') {
+        host.mode = 'wander';
+        host.wander();
+      }
+    }, 7000);
+  }
+  invalidate();
+  setTimeout(() => delete el.dataset.on, 6500);
+}
+
 /* ================= the opening ================= */
 function place() {
   let tz = '';
@@ -4312,6 +5524,21 @@ function place() {
   }
   return /\//.test(tz) && !/^Etc/.test(tz) ? tz.split('/').pop().replace(/_/g, ' ') : '';
 }
+// With ?preview, a visitor who has been before is welcomed back, and my koi comes over once.
+const backGreeting = () => {
+  const pool = WELCOME_BACK[lang] || WELCOME_BACK.en;
+  return pool[(Math.random() * pool.length) | 0];
+};
+function greetVisitor() {
+  host.mode = 'greet';
+  setTimeout(() => {
+    if (host.mode === 'greet') {
+      host.mode = 'wander';
+      host.wander();
+    }
+  }, 7000);
+}
+if (PREVIEW) pv.back = returning();
 // A word for whoever came: some for the hour, some for any hour, one picked each time.
 function salute() {
   const h = new Date().getHours();
@@ -4391,7 +5618,8 @@ function arrival() {
     [hello, sub] = salute(),
     el = $('#greet'),
     cards = [...document.querySelectorAll('.home .rise')];
-  $('#hero').textContent = hello;
+  $('#hero').textContent = PREVIEW && pv.back ? backGreeting() : hello;
+  if (PREVIEW && pv.back) later(1800, greetVisitor, id);
   el.innerHTML = sub;
   const words = [...el.querySelectorAll('w')];
   if (RM) {
@@ -4472,6 +5700,14 @@ pond.addEventListener('pointerdown', (e) => {
     setLook('water', [host.x, host.y]);
     plip('drop', 0.8);
     return;
+  }
+  // fireflies near a press take off
+  for (const q of pv.flies) {
+    const d = Math.hypot(q.x - x, q.y - y);
+    if (d < 160) {
+      q.vx += ((q.x - x) / (d || 1)) * 90;
+      q.vy += ((q.y - y) / (d || 1)) * 90;
+    }
   }
   if (iceAt(x, y) > 0.5) {
     crack(x, y);
@@ -4579,6 +5815,15 @@ const HOLD = 1.2,
     gest.len += d;
     P.push([x, y]);
     if (P.length > 400) P.splice(1, 1);
+    // the preview looks' strokes (gestures.ts): a rub over one spot, or once round the rim of the screen
+    if (PREVIEW) {
+      const m = strokeMoving(P, W, H);
+      if (m === 'dunhuang' || m === 'qinghua') {
+        const xs = P.map((p) => p[0]),
+          ys = P.map((p) => p[1]);
+        return void toggleLook(m, m === 'qinghua' ? [x, y] : [(Math.max(...xs) + Math.min(...xs)) / 2, (Math.max(...ys) + Math.min(...ys)) / 2]);
+      }
+    }
     // stirred once round, wide enough to be meant
     if (Math.abs(gest.turn) > Math.PI * 1.9 && gest.len > 260) {
       let xs = P.map((p) => p[0]),
@@ -4599,11 +5844,23 @@ const HOLD = 1.2,
       ln = straightness();
     gest.down = false;
     clearTimeout(gest.holdTimer);
+    const drawn = gest.pts;
     if (ln && ln.chord > 320) toggleLook('blueprint', [x, y]);
     else if (dt < 0.4 && gest.len < 10) {
       const [gx, gy] = glintAt();
       if (Math.hypot(x - gx, y - gy) < 46) toggleLook('glow', [gx, gy]);
-    }
+      else if (PREVIEW) {
+        // taps: three far apart join as a triangle of stars; four in one place are dabs of paint
+        const now = performance.now() / 1000;
+        gest.taps = [...(gest.taps || []).filter((q) => now - q.t < 2), { t: now, x, y }];
+        const t = tapsLook(gest.taps);
+        if (t) {
+          const at = t === 'stars' ? gest.taps.slice(-3) : gest.taps.slice(-4);
+          gest.taps = [];
+          toggleLook(t, [at.reduce((a, q) => a + q.x, 0) / at.length, at.reduce((a, q) => a + q.y, 0) / at.length]);
+        }
+      }
+    } else if (PREVIEW && strokeLifted(drawn) === 'relief') toggleLook('relief', [x, y]);
     gest.pts = [];
   };
   pond.addEventListener('pointerup', lift);
@@ -4683,7 +5940,6 @@ function straightness() {
 }
 // the cues, drawn in the air: ink gathering under a held finger, the stirred path, a ruler, the typed letters
 function stepGesture() {
-  const now = performance.now() / 1000;
   gest.glint += ((gest.near ? 1 : 0) - gest.glint) * Math.min(1, lifeRaw * 7);
   if (gest.down && !gest.strayed) {
     const held = performance.now() / 1000 - gest.t0;
@@ -4775,7 +6031,49 @@ function drawGesture(c) {
       c.stroke();
     }
   }
+  if (PREVIEW) drawNewCues(c, now);
   c.restore();
+}
+// The preview looks' cues: the taps so far (dabs of paint where they are close, stars joined by a line
+// where they are far apart), and a stroke that is neither round nor ruled, drawn as it goes: a rub's
+// passes, or a tick once it has turned its corner.
+function drawNewCues(c, now) {
+  const taps = (gest.taps = (gest.taps || []).filter((q) => now - q.t < 1.8));
+  if (taps.length && look === 'water') {
+    const close = taps.length > 1 && taps.every((q) => Math.hypot(q.x - taps[0].x, q.y - taps[0].y) < 90);
+    c.lineWidth = 1;
+    taps.forEach((q, i) => {
+      const f = 1 - (now - q.t) / 1.8;
+      if (close) {
+        c.fillStyle = `rgba(${['242,160,168', '150,170,230', '240,213,138', '140,190,150'][i % 4]},${0.7 * f})`;
+        c.beginPath();
+        c.ellipse(q.x, q.y, 9, 5, i * 0.7, 0, TAU);
+        c.fill();
+      } else {
+        c.fillStyle = `rgba(233,237,248,${0.9 * f})`;
+        c.beginPath();
+        c.arc(q.x, q.y, 2.4, 0, TAU);
+        c.fill();
+        if (i) {
+          c.strokeStyle = `rgba(214,224,248,${0.45 * f})`;
+          c.beginPath();
+          c.moveTo(taps[i - 1].x, taps[i - 1].y);
+          c.lineTo(q.x, q.y);
+          c.stroke();
+        }
+      }
+    });
+  }
+  const P = gest.pts;
+  if (gest.down && P.length > 8 && gest.len > 70 && Math.abs(gest.turn) < Math.PI * 0.6 && !straightness()) {
+    c.lineCap = c.lineJoin = 'round';
+    c.lineWidth = 2;
+    // (a stroke that is neither a turn nor a ruled line leaves its trace: a zigzag is read when it lifts)
+    c.strokeStyle = 'rgba(236,222,190,0.5)';
+    c.beginPath();
+    P.forEach((q, i) => (i ? c.lineTo(q[0], q[1]) : c.moveTo(q[0], q[1])));
+    c.stroke();
+  }
 }
 
 /* ================= the clock and who is here ================= */
@@ -4979,7 +6277,7 @@ function frame(now) {
     span('frame', () => tick1(raw));
   } finally {
     afterFrame(started);
-    if (PERF) frameDone(now, { gpu: gpuMs, scale: `${glc.width}×${glc.height}`, quality, pass: ['whole', 'water', 'look'][passNow] });
+    if (PERF) frameDone(now, { gpu: gpuMs, scale: `${glc.width}×${glc.height}`, quality, pass: ['whole', 'water'][passNow] || 'look' });
   }
 }
 function tick1(raw) {
@@ -5077,7 +6375,7 @@ function tick1(raw) {
   // with no look shown the water alone is drawn, and a look alone once it covers the water
   const shown = top !== 'water' && SID[top] !== SID[base] ? inkR : SID[top] ? inkMax : 0,
     inkW = shown > 0 ? (look !== 'water' && inkR >= inkMax ? 1 : 0.5) : 0,
-    wp = waterProg(inkW === 0 ? 1 : inkW === 1 ? 2 : 0);
+    wp = waterProg(inkW === 0 ? 1 : inkW === 1 ? 1 + SID[top] : 0);
   U = progU.get(wp);
   passNow = progs.indexOf(wp);
   gl.useProgram(wp);
@@ -5115,10 +6413,23 @@ function tick1(raw) {
   gl.uniform1i(U.uPads, 3);
   gl.uniform1i(U.uTop, 5);
   gl.uniform1i(U.uIceN, 6);
+  if (U.uMural) {
+    gl.uniform1i(U.uMural, 10);
+    gl.uniform3fv(U.uFace, muralFaces);
+    gl.uniform1f(U.uPic, picIn === look ? 1 : 0);
+  }
+  gl.uniform1f(U.uSprite, koiSheets[look] && koiSheets[look].pic ? 1 : 0);
   gl.uniform2f(U.uRes, glc.width, glc.height);
   gl.uniform2f(U.uGrid, GW, GH);
   gl.uniform2f(U.uMoonPos, big ? 0.6 : 0.74, big ? 0.1 : 0.12);
-  gl.uniform4f(U.uInk, shown, inkO[0], inkO[1], inkW);
+  // under reduced motion a look comes and goes as a plain cross-fade (the front's place is its progress)
+  const fade = RM && inkW === 0.5,
+    since = performance.now() / 1000 - inkAt;
+  gl.uniform4f(U.uInk, fade ? shown / inkMax : shown, inkO[0], inkO[1], fade ? 0.25 : inkW);
+  // how long the look on show has been arriving (what each builds up after its front), or leaving
+  gl.uniform1f(U.uLookT, look === 'water' || RM ? 99 : since);
+  gl.uniform1f(U.uDay, dayNow());
+  gl.uniform1f(U.uLeave, look === 'water' && inkR > 0 && !RM ? since : -1);
   gl.uniform1i(U.uStyle, SID[top]);
   gl.uniform1i(U.uPrev, SID[base]);
   gl.uniform1f(U.uGlint, (1 + gest.glint) * fx.glint);
@@ -5137,8 +6448,12 @@ function tick1(raw) {
   const flash = Math.exp(-(T - flashAt) * 7) * 0.9;
   gl.uniform1f(U.uAmb, cur.amb * fx.light + flash);
   gl.uniform1f(U.uCaI, cur.cai * AM.light * fx.light);
-  gl.uniform1f(U.uMoon, cur.moon * Math.max(0.15, fx.glint));
+  gl.uniform1f(U.uMoon, cur.moon * Math.max(0.15, fx.glint) * (pv.fest === 'midautumn' ? 1.35 : 1));
   gl.uniform1f(U.uFog, fx.fog);
+  // the moon as it is tonight (full, and brighter, at Mid-Autumn); stars on a clear night
+  const age = pv.fest === 'midautumn' ? 0.5 : pv.age;
+  gl.uniform3f(U.uMoonPh, PREVIEW ? moonLit(age) : 1, age < 0.5 ? 1 : -1, PREVIEW ? 1 : 0);
+  gl.uniform1f(U.uStars, PREVIEW && phase === 'night' && fx.glint > 0.9 ? Math.min(1, cur.moon) : 0);
   gl.uniform4fv(U.uBox, boxA);
   gl.uniform4fv(U.uBoxB, boxB);
   gl.uniform1i(U.uBoxN, boxN);
@@ -5185,7 +6500,7 @@ function tick1(raw) {
   // the glass turns to paper with the pond
   const pk = clamp(inkR / inkMax, 0, 1),
     gs = [0.03 + cur.tint[0] * 0.03, 0.09 + cur.tint[1] * 0.04, 0.1 + cur.tint[2] * 0.045],
-    GT = { ink: [0.95, 0.92, 0.85], ukiyo: [0.07, 0.17, 0.32], glow: [0.01, 0.02, 0.05], blueprint: [0.08, 0.24, 0.5] },
+    GT = { ink: [0.95, 0.92, 0.85], ukiyo: [0.07, 0.17, 0.32], glow: [0.01, 0.02, 0.05], blueprint: [0.08, 0.24, 0.5], ...(PREVIEW ? NEW_GLASS : {}) },
     gt = GT[top] || gs,
     gf = GT[base] || gs;
   gl.uniform3f(UG.uGlass, lerpN(gf[0], gt[0], pk), lerpN(gf[1], gt[1], pk), lerpN(gf[2], gt[2], pk));
@@ -5217,20 +6532,40 @@ const crackU = new Float32Array(24),
 $('#tags').append(doveTag, spiderTag);
 // Settled: the opening has played and the browser is idle. What isn't on the first screen loads then.
 const settled = new Promise((resolve) => setTimeout(() => (window.requestIdleCallback || ((f) => setTimeout(f, 1)))(() => resolve()), 2600));
-settled
-  .then(() => import('./life.js'))
-  .then(
-    (L) => {
-      try {
-        life = L.makeLife();
-        life.dress(look);
-      } catch (err) {
-        report(err, 'pond models');
-      }
+if (PREVIEW)
+  settled.then(() => {
+    const im = new Image();
+    im.onload = () => {
+      waterLily = im;
+      padsNow();
+      invalidate();
+    };
+    im.onerror = () => report(new Error('no picture at /pond/water/lilies-768.webp'), 'pond pictures');
+    im.src = '/pond/water/lilies-768.webp';
+  });
+if (PREVIEW)
+  settled.then(loadSprites).then(
+    (sprites) => {
+      life = { DOVE: SPRITES.dove.half, SPIDER: SPRITES.spider.half, size: 0, pic: sprites.pic };
     },
-    (err) => report(err, 'pond models')
+    (err) => report(err, 'pond sprites')
   );
+else
+  settled
+    .then(() => import('./life.js'))
+    .then(
+      (L) => {
+        try {
+          life = L.makeLife();
+          life.dress(look);
+        } catch (err) {
+          report(err, 'pond models');
+        }
+      },
+      (err) => report(err, 'pond models')
+    );
 settled.then(loadSongs);
+settled.then(() => hintSoon(20000));
 // The weather where the visitor is: once the pond has settled, so it never holds up the title page; again
 // every half hour while it's shown (weather.ts keeps it for half an hour, so a reload doesn't fetch).
 function weatherLine() {
@@ -5253,6 +6588,15 @@ function weatherIn(w) {
   if (!w) return;
   wx = w;
   fx = effectsOf(w.condition);
+  if (PREVIEW) {
+    // the wind, gently: its direction is where it blows from, so the drift goes the other way
+    const k = (Math.min(40, w.windSpeed) / 40) * 26 + 3,
+      th = (w.windFrom * Math.PI) / 180;
+    pv.windX = -Math.sin(th) * k;
+    pv.windY = Math.cos(th) * k;
+    // Qingming: softer light, and a drizzle if the sky allows
+    if (pv.fest === 'qingming') fx = { ...fx, rain: Math.max(fx.rain, w.condition === 'clear' ? 0 : 0.5), light: fx.light * 0.9 };
+  }
   if (!rainChosen) raining = fx.rain > 0;
   pond.toggleAttribute('data-fog', fx.fog > 0);
   if (south !== w.latitude < 0) {
@@ -5266,6 +6610,143 @@ function weatherIn(w) {
   invalidate();
 }
 settled.then(() => loadWeather().then(weatherIn));
+// With ?preview, quiet ambience under the sound switch: cicadas on summer days, crickets on summer and
+// autumn nights, soft rain on the water. Each a short loop made once in code; looked at every two seconds.
+const amb = {};
+function ambLoop(name, secs, fill, gainTo) {
+  if (!amb[name]) {
+    const buf = AC.createBuffer(1, Math.round(AC.sampleRate * secs), AC.sampleRate),
+      d = buf.getChannelData(0);
+    fill(d, AC.sampleRate);
+    const src = AC.createBufferSource(),
+      g = AC.createGain();
+    src.buffer = buf;
+    src.loop = true;
+    g.gain.value = 0;
+    src.connect(g);
+    g.connect(sfx);
+    src.start();
+    amb[name] = g;
+  }
+  amb[name].gain.setTargetAtTime(gainTo, AC.currentTime, 1.5);
+}
+function ambience() {
+  if (!PREVIEW || !AC || muted || document.hidden) return;
+  const summer = AM.flies > 0.3,
+    autumn = AM.leaves > 0.3;
+  ambLoop(
+    'cicadas',
+    3,
+    (d, sr) => {
+      for (let i = 0; i < d.length; i++) {
+        const t = i / sr,
+          buzz = 0.5 + 0.5 * Math.sin(t * 2 * Math.PI * 140);
+        d[i] = (Math.random() * 2 - 1) * buzz * buzz * (0.6 + 0.4 * Math.sin(t * 2 * Math.PI * 0.33)) * 0.5;
+      }
+      // pushed up into the cicadas' range by a simple high pass
+      let p = 0;
+      for (let i = 0; i < d.length; i++) {
+        const x = d[i];
+        d[i] = x - p;
+        p = x;
+      }
+    },
+    summer && phase === 'day' ? 0.006 : 0
+  );
+  ambLoop(
+    'crickets',
+    2,
+    (d, sr) => {
+      for (let i = 0; i < d.length; i++) {
+        const t = i / sr,
+          beat = t % 0.8,
+          on = beat < 0.21 && beat % 0.07 < 0.035;
+        d[i] = on ? Math.sin(t * 2 * Math.PI * 4300) * 0.5 * Math.sin(((beat % 0.07) * Math.PI) / 0.035) : 0;
+      }
+    },
+    (summer || autumn) && phase === 'night' ? 0.008 : 0
+  );
+  ambLoop(
+    'rain',
+    4,
+    (d) => {
+      let v = 0;
+      for (let i = 0; i < d.length; i++) {
+        v = v * 0.86 + (Math.random() * 2 - 1) * 0.14;
+        d[i] = v * Math.min(1, i / 4000, (d.length - i) / 4000);
+      }
+    },
+    raining && look === 'water' ? 0.025 * Math.max(0.5, fx.rain || 1) : 0
+  );
+}
+if (PREVIEW) setInterval(ambience, 2000);
+// The preview panel: force each state, to see it now
+if (PREVIEW)
+  pond.append(
+    panel({
+      looks: LOOKS,
+      album: () => openSheet('seals'),
+      stampAll: () => VOLS.flatMap((v) => v.seals).forEach((x, i) => setTimeout(() => reached(x.id), i * 3400)),
+      clearSeals: () => setAlbum(clearSeals(album)),
+      festival(name) {
+        pv.fest = name;
+        pv.lanterns = [];
+        pv.boatAt = -1e9;
+        setYear(name ? yearToday(festivalDate(name)) : undefined);
+        if (name === 'midautumn') setPhase('night');
+        if (wx) weatherIn(wx);
+        invalidate();
+      },
+      phase(v) {
+        setPhase(v);
+        invalidate();
+      },
+      moon(v) {
+        if (v === undefined) return pv.age;
+        pv.age = v;
+        invalidate();
+      },
+      weather(v) {
+        rainChosen = false;
+        if (!v) return loadWeather().then(weatherIn);
+        weatherIn({
+          ...(wx || {
+            temp: 12,
+            unit: 'C',
+            city: 'San Jose',
+            latitude: 37.3,
+            timeZone: 'America/Los_Angeles',
+            sunrise: 400,
+            sunset: 1020,
+            windSpeed: 10,
+            windFrom: 250
+          }),
+          condition: v
+        });
+      },
+      wind(from, speed) {
+        weatherIn({
+          ...(wx || { condition: 'clear', temp: 12, unit: 'C', city: 'San Jose', latitude: 37.3, timeZone: 'America/Los_Angeles', sunrise: 400, sunset: 1020 }),
+          windFrom: from,
+          windSpeed: speed
+        });
+      },
+      look(v) {
+        setLook(v);
+      },
+      fireflies() {
+        pv.fliesOn = true;
+        setYear(11.2);
+        setPhase('night');
+        invalidate();
+      },
+      welcomeBack() {
+        $('#hero').textContent = backGreeting();
+        greetVisitor();
+        invalidate();
+      }
+    })
+  );
 setInterval(() => document.hidden || loadWeather().then(weatherIn), 30 * 60_000);
 people.startPeople(
   {

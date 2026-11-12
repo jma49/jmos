@@ -3,6 +3,8 @@
 // along the foot, and the centre and the title page left empty (留白). Drawn once per season and size
 // into a canvas that the page lays over the water, multiplied, only in ink.
 const rnd = (a, b) => a + Math.random() * (b - a);
+import { hang } from './hang.js';
+
 const TAU = Math.PI * 2;
 
 // a stroke of the brush along a path: tapering, then a few dry passes that break up along it
@@ -232,16 +234,55 @@ function plum(c, W, H, s) {
 }
 const MOTIF = [willow, lotus, reeds, plum];
 
+// The season's motif is a painting (public/pond/ink/): fetched the first time its season is shown in ink,
+// and kept. Each enters at its right edge and reaches left, so it hangs at the pond's right edge. If one
+// can't be had, the motif is brushed in code as it used to be.
+const PICTURE = ['/pond/ink/willow.webp', '/pond/ink/lotus.webp', '/pond/ink/reeds.webp', '/pond/ink/plum.webp'],
+  pictures = [];
+const picture = (season) =>
+  (pictures[season] ??= new Promise((done) => {
+    const im = new Image();
+    im.onload = () => done(im);
+    im.onerror = () => done(null);
+    im.src = PICTURE[season];
+  }));
 /** Paints the season's picture (0 spring … 3 winter) into a canvas of the pond's size. */
-export function paint(cv, W, H, season) {
+export async function paint(cv, W, H, season) {
   const dpr = Math.min(window.devicePixelRatio || 1, 2),
-    s = Math.min(1, Math.max(0.55, W / 1280));
+    s = Math.min(1, Math.max(0.55, W / 1280)),
+    im = await picture(season);
   cv.width = Math.round(W * dpr);
   cv.height = Math.round(H * dpr);
   const c = cv.getContext('2d');
   c.setTransform(dpr, 0, 0, dpr, 0, 0);
   c.clearRect(0, 0, W, H);
   hills(c, W, H, s);
+  if (im) {
+    const [x, y, size] = hang(W, H, season);
+    // the painting thins out towards its outer edges, as ink does where the brush leaves the paper, so it is
+    // never cut off square by the pond's edge
+    const px = Math.round(size * dpr),
+      one = document.createElement('canvas');
+    one.width = one.height = px;
+    const o = one.getContext('2d');
+    o.drawImage(im, 0, 0, px, px);
+    o.globalCompositeOperation = 'destination-in';
+    for (const [x0, y0, x1, y1] of [
+      [px, 0, px * 0.9, 0],
+      [0, 0, 0, px * 0.06],
+      [0, px, 0, px * 0.94]
+    ]) {
+      const g = o.createLinearGradient(x0, y0, x1, y1);
+      g.addColorStop(0, 'rgba(0,0,0,0)');
+      g.addColorStop(1, '#000');
+      o.fillStyle = g;
+      o.fillRect(0, 0, px, px);
+    }
+    c.globalAlpha = 0.92;
+    c.drawImage(one, x, y, size, size);
+    c.globalAlpha = 1;
+    return;
+  }
   // on a phone the motif shrinks into the lower right corner, clear of the type
   if (W < 600) {
     c.translate(W * 0.42, H * 0.42);
