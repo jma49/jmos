@@ -8,8 +8,7 @@
 // catalog (and a project, the Dashboard and the screen saver) in a fresh
 // page and fails on an uncaught error, a console error, an app showing
 // AppBoundary's crash panel, or anything the Content Security Policy
-// (vercel.json, which serve-dist.mjs sends) refuses or would refuse: the
-// Report-Only policy counts, though the site doesn't enforce it yet.
+// (vercel.json, which serve-dist.mjs sends) refuses.
 // Errors logged by third-party frames (the YouTube player) don't count.
 // Network failures are ignored: dist/ is served without the /api functions
 // or Supabase, and third parties can be slow.

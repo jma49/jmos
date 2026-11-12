@@ -40,6 +40,10 @@ with every smoke target opened and none reported. Once it has run
 without surprises, the same value moves to `Content-Security-Policy` and
 the Report-Only header goes.
 
+Enforced on 2026-11-12 (issue #239): the policy had run in Report-Only
+since 2026-10-03, every smoke target, the pond and its looks included,
+reported nothing, and it is now the site's one `Content-Security-Policy`.
+
 ## Consequences
 
 - What visitors write renders as text, and the database enforces every
