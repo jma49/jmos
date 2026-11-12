@@ -38,3 +38,4 @@ replaces; don't delete the old one.
 | [0023](0023-about-me-is-the-profile.md) | About Me is the profile | 2026-10-08 |
 | [0024](0024-the-browser-opens-on-ocras-page-here.md) | The Browser opens on ocra's page here | 2026-10-26 |
 | [0025](0025-the-pond.md) | The pond | 2026-11-11 |
+| [0026](0026-looks-and-gestures.md) | Looks, found by gestures | 2026-11-12 |

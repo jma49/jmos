@@ -9,8 +9,12 @@ Jincheng Ma's own place on the web: a hideout rather than a portfolio.
 **The pond** is the home page: a pond seen from above, where every
 visitor is a koi, with a title page on the water and chapters (a timeline
 of work, projects and school; photos; music; the guestbook; the chat)
-that open as a sheet of glass drawn with the water; the 墨 switch turns
-it into an ink painting on xuan paper, in slow motion. It keeps the
+that open as a sheet of glass drawn with the water. It reads in
+English, 中文 or 日本語, and turns into other looks, each found by a
+gesture on the water: an ink painting on xuan paper (hold still), a
+woodblock print (stir the water), the pond at night lit by what moves
+(press the light on it), a blueprint (draw a straight line) and text
+(type). Pressing the gold koi brings the water back. It keeps the
 desktop's accounts, chat and guestbook.
 
 **JM/OS** ([`/os`](https://www.majincheng.com/os)), the old home page,

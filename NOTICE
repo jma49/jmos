@@ -36,6 +36,12 @@ Xing, Copyright 2018 The ZhiMangXing Project Authors
 (https://github.com/googlefonts/zhimangxing), shipped by the
 @fontsource/zhi-mang-xing package with its license.
 
+With ?looks, the pond's other looks and its Japanese use more fonts
+under the same license, each shipped by its @fontsource package with
+its license: Yuji Syuku, Shippori Mincho, M PLUS 1 Code, Klee One,
+Orbitron, Rajdhani, Architects Daughter, IBM Plex Mono and JetBrains
+Mono.
+
 The reset at the top of src/styles/global.css is adapted from Preflight,
 part of Tailwind CSS (https://github.com/tailwindlabs/tailwindcss),
 distributed under the MIT License:

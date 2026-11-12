@@ -11,6 +11,8 @@
 
 import { report } from '../os/core/report';
 import { load, save } from '../os/core/storage';
+// the looks' type, as a stylesheet of its own: linked only once a look or 日 is chosen (loadType)
+import LOOKS_CSS from './looks.css?url';
 import { SocialError } from '../os/social/errors';
 import { coverOf, loadSongs, music, onMusic, play as playSongAt, setMusicMuted, toggle as toggleSong } from './music';
 import * as people from './people';
@@ -790,9 +792,13 @@ function setYear(y) {
   yearGoal = yearAuto ? yearToday() : y;
   showTerm();
 }
+// the terms as Japan writes them, where the forms differ
+const TERM_JA = { 惊蛰: '啓蟄', 谷雨: '穀雨', 小满: '小満', 芒种: '芒種', 处暑: '処暑' };
 function showTerm() {
   const i = Math.floor(yearGoal) % 24;
-  $('#termV').innerHTML = [...TERMS[i][0]].map((ch) => `<span>${ch}</span>`).join('');
+  $('#kuanTxt').textContent = `${TERMS[i][0]} 画池塘`;
+  paintInk();
+  $('#termV').innerHTML = [...((lang === 'ja' && TERM_JA[TERMS[i][0]]) || TERMS[i][0])].map((ch) => `<span>${ch}</span>`).join('');
   $('#termTxt').textContent = zhOn ? '' : TERMS[i][1];
 }
 function stepYear(dt) {
@@ -863,7 +869,7 @@ precision highp float; in vec2 vUv; out vec4 o;
 uniform sampler2D uBed,uH,uFish,uPads,uTop,uIceN;
 uniform vec2 uRes,uGrid,uMoonPos,uCss; uniform float uTime,uAmb,uCaI,uMoon,uSwell,uFocus,uIce,uSnow; uniform vec2 uCalm;
 uniform vec3 uTint,uCaC,uSky,uSeason;
-uniform vec4 uBox[12]; uniform vec4 uBoxB[12]; uniform int uBoxN; uniform vec4 uCrack[6]; uniform float uBroke[6]; uniform vec4 uInk; uniform vec3 uBlot[10];
+uniform vec4 uBox[12]; uniform vec4 uBoxB[12]; uniform int uBoxN; uniform vec4 uCrack[6]; uniform float uBroke[6]; uniform vec4 uInk; uniform vec3 uBlot[10]; uniform int uStyle, uPrev; uniform float uGlint;
 float hash1(vec2 p){ return fract(sin(dot(p,vec2(41.3,289.1)))*43758.5453); }
 vec2 hash2(vec2 p){ p=vec2(dot(p,vec2(127.1,311.7)),dot(p,vec2(269.5,183.3))); return fract(sin(p)*43758.5453); }
 float noise(vec2 p){ vec2 i=floor(p),f=fract(p); f=f*f*(3.-2.*f);
@@ -915,6 +921,188 @@ vec4 struck(vec2 P, vec4 c, float broke){
   }
   return vec4(line*fade*(1.-open),open,floe,rim);
 }
+// ---------- the looks, each drawn from what the water pass has worked out ----------
+vec2 gP,gUv,gG,gIa,gRef,gp; float gLap,gH,gLs,gCalm,gIce; vec3 gWater; vec4 gHit;
+// winter in a look: how much ice is here (plates afloat included), and where the snow lies on it
+float snowOn(){ return smoothstep(.48,.78,fbm(gp*4.+7.))*uSnow*gIce; }
+// the fish texture at three blurs: sharp, edge, halo; its colour; and how red it is (the koi's patches)
+void fishAt(out vec4 f0,out float fa,out float fb,out float fc,out float red){
+  vec2 fuv=gUv+gRef*.25; f0=textureLod(uFish,fuv,0.); fa=textureLod(uFish,fuv,1.).a; fb=textureLod(uFish,fuv,3.2).a; fc=textureLod(uFish,fuv,5.).a;
+  vec3 c=f0.rgb/max(f0.a,1e-3); red=clamp((c.r-max(c.g,c.b))*2.2-.4,0.,1.)*f0.a;
+}
+float blotT(int i){ return uBlot[i].z; }
+vec3 lookInk(){
+    // the paper: warm, uneven, with fibres
+  vec3 paper=vec3(.925,.885,.8)*(.95+.07*fbm(gP*.012))-vec3(.04,.045,.05)*smoothstep(.62,.95,noise(gP*vec2(.9,.04)))-vec3(.025)*smoothstep(.7,1.,noise(gP*vec2(.03,.7)));
+  paper*=1.-.18*dot(gUv-.5,gUv-.5);
+  vec3 INK=vec3(.075,.07,.065);
+  // the fish: a pale wash for the body, dark where the body ends, the scales' patches as darker strokes, red kept as cinnabar
+  vec2 fuv=gUv+gRef*.25;
+  vec4 f0=textureLod(uFish,fuv,.0); float fa=textureLod(uFish,fuv,1.).a, fb=textureLod(uFish,fuv,3.2).a, fc2=textureLod(uFish,fuv+vec2(.004,.006),4.5).a;
+  vec3 fcol=f0.rgb/max(f0.a,1e-3); float lum=dot(fcol,vec3(.3,.59,.11)), red=clamp((fcol.r-max(fcol.g,fcol.b))*2.2-.4,0.,1.)*f0.a;
+  float bleed=fbm(gP*.08+3.)*.5+.5;
+  float wash=fb*(.32+.2*bleed)+fa*(.18+.55*(1.-lum))*(1.-red);
+  float edge=clamp((fa-fb)*2.6,0.,1.)*(.6+.4*bleed);
+  float shadow=fc2*.12;
+  vec3 ink=paper*(1.-shadow);
+  ink=mix(ink,INK,clamp(wash*.8+edge*.75,0.,.95));
+  ink=mix(ink,vec3(.72,.2,.13),red*.75);
+  // the water: only where it moves, a few grey rings
+  ink=mix(ink,INK,smoothstep(.02,.05,-gLap)*.16*(1.-gCalm));
+  // pads as broad pale washes with a darker rim; petals, leaves and boats as small strokes
+  vec4 pd2=textureLod(uPads,gUv+gG*gIa*.006,gLs+.5); float pr=textureLod(uPads,gUv,gLs+3.).a;
+  ink=mix(ink,vec3(.35,.38,.33),pd2.a*(.28+.25*fbm(gP*.05))); ink=mix(ink,INK,clamp((pd2.a-pr)*1.8,0.,.5));
+  vec4 tp2=textureLod(uTop,gUv+gG*gIa*.004,gLs); float tl=dot(tp2.rgb/max(tp2.a,1e-3),vec3(.3,.59,.11));
+  ink=mix(ink,INK,tp2.a*(.35+.5*(1.-tl)));
+  // blots where the paper was touched: ink spreading, fastest at first, the rim darker as it dries
+  for(int i=0;i<10;i++){ vec3 b=uBlot[i]; if(b.z<0.) continue;
+    float t=b.z, R2=10.+70.*sqrt(t)*(1.-exp(-t*.9))+18.*t, d=length(gP-b.xy)+(fbm((gP-b.xy)*.06+b.x*.01)-.5)*R2*.55;
+    float core=1.-smoothstep(R2*.25,R2,d), rim=exp(-pow((d-R2*.9)/(5.+R2*.08),2.)), halo=1.-smoothstep(R2,R2*1.6,d);
+    float dens=exp(-t*.22)*(.5+.5*exp(-t*.5));
+    ink=mix(ink,INK,clamp(core*dens*.7+rim*dens*.3+halo*dens*.08,0.,.9));
+  }
+  // winter: the ice a pale wash, its cracks dry strokes of the brush, the snow paper left white
+  if(gIce>0.){ ink=mix(ink,vec3(.95,.93,.88),gIce*.35);
+    ink=mix(ink,INK,clamp(gHit.x*(.55+.45*noise(gP*vec2(.5,.08))),0.,.85));
+    ink=mix(ink,vec3(.985,.975,.95),snowOn()*.9); }
+  return ink;
+}
+// Ukiyo-e: a woodblock print. Flat Prussian blue in a few bands, the swell as carved contour lines,
+// crests as cream foam with a dark rim, everything in flat colour with black key lines, on grained paper.
+vec3 lookUkiyo(){
+  vec2 P=gP, uv=gUv;
+  vec3 paper=vec3(.93,.87,.74)*(.96+.05*fbm(P*.01));
+  // the swell bands and their carved lines follow the slow swell, and the water's height only gently, so
+  // small ripples (rain, a fish turning) never cut them up; under the type they lie still
+  float hs=clamp(gH,-.04,.04)*(1.-gCalm);
+  float w=fbm(P*.0022+vec2(uTime*.004,0.))*1.2+hs*4.;
+  float band=floor(clamp(w,0.,.999)*3.)/2.;
+  vec3 c=mix(vec3(.09,.21,.38),vec3(.2,.39,.55),band);
+  float f=fbm(P*.0028+vec2(0.,uTime*.008))*4.+hs*6.;
+  float ln=1.-smoothstep(.0,.035,abs(fract(f)-.5)-.44);
+  c=mix(c,vec3(.04,.1,.21),ln*.75);
+  c=mix(c,vec3(.12,.25,.42),gCalm*.6);
+  // foam only on a big crest (a press, a koi breaking the surface), never on the rain's small rings, nor under the type
+  float big=(1.-gCalm)*(1.-gCalm), cr=smoothstep(.07,.1,-gLap)*big, rim=clamp(smoothstep(.05,.07,-gLap)*big-cr,0.,1.);
+  c=mix(c,vec3(.05,.1,.2),rim*.85); c=mix(c,vec3(.96,.93,.84),cr);
+  vec4 pd=textureLod(uPads,uv+gG*gIa*.006,0.); float pe=textureLod(uPads,uv,2.5).a;
+  vec3 pc=pd.rgb/max(pd.a,1e-3); pc=vec3(.3,.45,.3)+vec3(.08)*floor(dot(pc,vec3(.33))*3.)/3.;
+  c=mix(c,pc,step(.5,pd.a)); c=mix(c,vec3(.07,.07,.08),clamp(abs(pd.a-pe)*2.4,0.,1.)*.85);
+  vec4 f0; float fa,fb,fc,red; fishAt(f0,fa,fb,fc,red);
+  vec3 fcl=f0.rgb/max(f0.a,1e-3); fcl=floor(fcl*4.+.5)/4.; fcl=mix(fcl,vec3(.96,.93,.84),step(.75,dot(fcl,vec3(.33))));
+  fcl=mix(fcl,vec3(.82,.25,.16),step(.4,red/max(f0.a,1e-3)));
+  c=mix(c,fcl,step(.5,f0.a)); c=mix(c,vec3(.06,.05,.05),clamp((fa-fb)*3.,0.,1.));
+  vec4 tp=textureLod(uTop,uv+gG*gIa*.004,0.); c=mix(c,floor(tp.rgb/max(tp.a,1e-3)*4.)/4.,step(.5,tp.a));
+  for(int i=0;i<10;i++){ vec3 b=uBlot[i]; if(b.z<0.||b.z>3.) continue;   // a press: a carved splash, flat cream with a key line
+    float t=b.z, life=1.-t/3.; vec2 v=P-b.xy; float d=length(v), an=atan(v.y,v.x), R=12.+64.*sqrt(t);
+    // two swells behind the crest, thinning as they go out
+    for(int j=1;j<3;j++){ float rj=R-18.*float(j), w=(4.-float(j))*life; if(rj<4.) continue;
+      float q=abs(d-rj); c=mix(c,vec3(.05,.1,.2),step(q,w+1.3)); c=mix(c,vec3(.96,.93,.84),step(q,w)); }
+    // the crest breaks into claws: a scalloped edge, each scallop curled forward
+    float s=an*14./6.2832+b.x*.013, f=fract(s), jag=noise(vec2(floor(s)*3.1,b.y*.01))*.6+.4;
+    float edge=R+11.*jag*f*f*life, inner=R-6.*life-5.*(1.-f)*life;
+    c=mix(c,vec3(.05,.1,.2),step(inner-1.4,d)*step(d,edge+1.4)*step(.05,life));
+    c=mix(c,vec3(.96,.93,.84),step(inner,d)*step(d,edge)*step(.05,life));
+    // spray: a few flecks thrown past the crest
+    vec2 cl=vec2(floor(s*2.),floor((d-edge)/6.)); float hh=fract(sin(dot(cl,vec2(12.9898,78.233))+b.x)*43758.5453);
+    vec2 fp=vec2((fract(s*2.)-.5)*R*.22,fract((d-edge)/6.)*6.-3.);
+    c=mix(c,vec3(.96,.93,.84),step(.8,hh)*step(edge+2.,d)*step(d,edge+18.*life)*step(length(fp),1.9*life+.3)); }
+  // winter: flat pale-blue ice with dark key-line cracks, the snow as cream flecks
+  if(gIce>0.){ c=mix(c,mix(vec3(.46,.62,.74),vec3(.2,.33,.5),gCalm),step(.5,gIce)); c=mix(c,vec3(.05,.1,.2),step(.3,gHit.x));
+    c=mix(c,vec3(.96,.93,.84),step(1.-.1*uSnow,hash1(floor(gP/9.)))*step(.5,gIce)*(1.-gCalm)*step(length(fract(gP/9.)-.5),.24)); }
+  c=mix(paper,c,.93);
+  c*=.93+.09*noise(P*vec2(.012,.45))+.03*noise(P*vec2(.4,.01));
+  return c;
+}
+// Glow: the pond at night, lit only by what moves. Every ripple glows and fades; the fish are
+// bioluminescent, cyan, magenta where they were red; a press bursts into light; faint scan lines.
+vec3 lookGlow(){
+  vec2 P=gP, uv=gUv;
+  vec3 c=vec3(.003,.006,.018)+vec3(.0,.015,.04)*fbm(P*.003);
+  float rip=clamp(abs(gLap)*26.+length(gG)*.7,0.,.6)*(1.-gCalm*.8);
+  c+=mix(vec3(.05,.55,1.),vec3(.2,1.,.85),.5+.5*sin(P.x*.004+uTime*.2))*rip*.55;
+  vec4 f0; float fa,fb,fc,red; fishAt(f0,fa,fb,fc,red);
+  c+=vec3(.05,.9,.85)*fc*.4+vec3(.2,1.,.9)*fb*.55+vec3(.75,1.,.97)*fa*.35;
+  c+=vec3(1.,.12,.65)*red*1.2+vec3(1.,.2,.7)*smoothstep(.1,.5,red)*fb*.3;
+  vec4 pd=textureLod(uPads,uv,0.); float pe=textureLod(uPads,uv,2.).a;
+  c+=vec3(.2,1.,.4)*clamp(abs(pd.a-pe)*2.,0.,1.)*.35+vec3(.0,.05,.03)*pd.a;
+  vec4 tp=textureLod(uTop,uv,1.); c+=vec3(.6,.8,1.)*tp.a*.18;
+  for(int i=0;i<10;i++){ vec3 b=uBlot[i]; if(b.z<0.) continue;
+    float t=b.z, R=20.+160.*sqrt(t), d=length(P-b.xy), k=exp(-t*.9);
+    c+=vec3(.2,1.,.95)*exp(-pow((d-R)/(5.+t*6.),2.))*k*1.2+vec3(1.,.25,.8)*exp(-d*d/(600.+t*900.))*k*.9; }
+  // winter: the ice as faint cyan sheets whose cracks glow, the snow as dim sparks
+  if(gIce>0.){ c+=vec3(.02,.12,.15)*gIce+vec3(.08,.4,.45)*gIce*(1.-gIce)*2.; c+=vec3(.35,1.,.95)*gHit.x*1.3;
+    c+=vec3(.6,.9,1.)*step(.9985-.0015*uSnow,hash1(floor(gP/5.)+floor(uTime*2.)))*uSnow*gIce*(1.-gCalm)*.7; }
+  c*=.9+.1*step(.5,fract(P.y*.5));
+  return c;
+}
+// Blueprint: a drawing on blue paper. A grid, the fish and the pads as white key lines, the swell as
+// contour lines; the dimensions are written on in the air above (drawAir).
+vec3 lookBlueprint(){
+  vec2 P=gP, uv=gUv;
+  vec3 c=vec3(.07,.22,.47)*(.95+.08*fbm(P*.008));
+  vec2 q=abs(fract(P/20.)-.5)*20., Q=abs(fract(P/100.)-.5)*100.;
+  c=mix(c,vec3(.75,.85,1.),(1.-smoothstep(.0,.8,min(q.x,q.y)))*.08+(1.-smoothstep(.0,.9,min(Q.x,Q.y)))*.16);
+  float cl=1.-smoothstep(.0,.05,abs(fract(gH*16.)-.5)-.45); c=mix(c,vec3(.85,.92,1.),cl*smoothstep(.02,.06,abs(gLap)*4.+abs(gH)*.6)*.14*(1.-gCalm*.9));
+  vec4 pd=textureLod(uPads,uv,0.); float pe=textureLod(uPads,uv,1.5).a;
+  c=mix(c,vec3(.92,.96,1.),clamp(abs(pd.a-pe)*3.,0.,1.)*.8);
+  vec4 f0; float fa,fb,fc,red; fishAt(f0,fa,fb,fc,red);
+  float fe=clamp((fa-fb)*3.4,0.,1.); c=mix(c,vec3(.96,.98,1.),fe); c=mix(c,vec3(.85,.92,1.),fb*.06);
+  vec4 tp=textureLod(uTop,uv,0.); float te=textureLod(uTop,uv,1.5).a; c=mix(c,vec3(.92,.96,1.),clamp(abs(tp.a-te)*3.,0.,1.)*.7);
+  for(int i=0;i<10;i++){ vec3 b=uBlot[i]; if(b.z<0.) continue;
+    float t=b.z, R=12.+50.*sqrt(t), d=length(P-b.xy), k=exp(-t*.4);
+    vec2 v=abs(P-b.xy);
+    c=mix(c,vec3(.95,.98,1.),(exp(-pow((d-R)/1.,2.))+ (1.-smoothstep(.5,1.,min(v.x,v.y)))*step(max(v.x,v.y),R*1.25)*.8)*k); }
+  // winter: the ice hatched, its cracks drawn with a dashed line beside them as a dimension is, the snow as small crosses
+  if(gIce>0.){ c=mix(c,vec3(.85,.92,1.),step(abs(fract((gP.x+gP.y)/10.)-.5),.06)*gIce*.35);
+    c=mix(c,vec3(.96,.98,1.),clamp(gHit.x*1.2,0.,1.));
+    c=mix(c,vec3(.85,.92,1.),step(abs(gHit.w-6.),.5)*step(.5,fract((gP.x+gP.y)*.09))*.7);
+    vec2 cc=fract(gP/16.)-.5; float cr=clamp(step(abs(cc.x),.03)*step(abs(cc.y),.18)+step(abs(cc.y),.03)*step(abs(cc.x),.18),0.,1.);
+    c=mix(c,vec3(.95,.98,1.),cr*step(1.-.35*uSnow,hash1(floor(gP/16.)))*step(.5,gIce)); }
+  return c;
+}
+// ASCII: the picture the characters are made from (the glass pass turns it into text). The bed is
+// flat and dark, so it reads as blank; what moves carries the picture: ripples, koi, pads and petals.
+vec3 lookAscii(){
+  vec2 uv=gUv;
+  vec3 c=vec3(.01,.016,.018)+vec3(.0,.012,.012)*gCalm;
+  float rip=clamp(abs(gLap)*30.+length(gG)*.8,0.,.8)*(1.-gCalm*.85);
+  c+=vec3(.32,.5,.52)*rip*.55;
+  vec4 pd=textureLod(uPads,uv+gG*gIa*.006,0.); c=mix(c,pd.rgb/max(pd.a,1e-3)*.5,pd.a*.85);
+  vec4 f=textureLod(uFish,uv+gRef*.3,0.); c=mix(c,f.rgb/max(f.a,1e-3),f.a);
+  vec4 tp=textureLod(uTop,uv,0.); c=mix(c,tp.rgb/max(tp.a,1e-3)*.9,tp.a*.9);
+  for(int i=0;i<10;i++){ vec3 b=uBlot[i]; if(b.z<0.) continue;
+    float t=b.z, R=10.+90.*sqrt(t), d=length(gP-b.xy); c+=vec3(.55,.8,.8)*exp(-pow((d-R)/6.,2.))*exp(-t*.8); }
+  // winter: the ice a grey field that types as dots, its cracks bright, the snow dense
+  if(gIce>0.){ float k=1.-gCalm*.9; c=mix(c,vec3(.1,.13,.15),gIce*.5*k); c+=vec3(.7,.85,.9)*gHit.x; c=mix(c,vec3(.6,.66,.66),step(.993,hash1(floor(gP/17.)))*uSnow*gIce*k); }
+  return c;
+}
+vec3 look(int s){
+  if(s==1) return lookInk();
+  if(s==2) return lookUkiyo();
+  if(s==3) return lookGlow();
+  if(s==4) return lookBlueprint();
+  if(s==5) return lookAscii();
+  return gWater;
+}
+// How far the front has come over this pixel (1 inside), and how bright its leading edge is here.
+float reveal(int s,out float e){
+  vec2 P=gP; float R=uInk.x, r, w=40.;
+  if(s==1){ float fib=fbm(P*.03)*.55+noise(P*.21)*.25+noise(P*vec2(1.1,.06))*.12+noise(P*vec2(.05,1.3))*.08;
+    r=length(P-uInk.yz)+(fib-.5)*150.+(noise(P*.012+R*.003)-.5)*120.; }
+  else if(s==2){ r=(P.x+P.y)*.7071+(noise(P*vec2(.02,.004))-.5)*30.; w=6.; }   // peeled off the block from the top left
+  else if(s==4){ r=P.y; w=2.; }                                                 // a scan from the top
+  else { r=length(P-uInk.yz)+(noise(P*.01)-.5)*30.; w=s==3?12.:30.; }
+  e=exp(-pow((r-R)/(s==1?38.:s==4?3.:s==2?10.:14.),2.))*step(1.,R)*(1.-step(.999,uInk.w));
+  return 1.-smoothstep(R-w,R+w,r);
+}
+vec3 edgeCol(int s){
+  if(s==1) return vec3(.075,.07,.065)*.55;
+  if(s==2) return vec3(1.,.97,.88);
+  if(s==3) return vec3(.3,1.,.95)*1.4;
+  if(s==4) return vec3(.7,.95,1.)*1.3;
+  return vec3(.85,.95,1.)*.6;
+}
 void main(){
   vec2 uv=vUv, px=1./uGrid; float asp=uRes.x/uRes.y; vec2 ia=vec2(1./asp,1.); vec2 p=vec2(uv.x*asp,uv.y), P=uv*uCss;
   float h=texture(uH,uv).r, hl=texture(uH,uv-vec2(px.x,0.)).r, hr=texture(uH,uv+vec2(px.x,0.)).r, hu=texture(uH,uv-vec2(0.,px.y)).r, hd=texture(uH,uv+vec2(0.,px.y)).r;
@@ -952,6 +1140,8 @@ void main(){
   col=mix(col,uSky,clamp(length(g)*2.2,0.,1.)*.26*(1.-ice));
   col+=uSky*spec*.85;
   vec2 md=(uv-uMoonPos)*vec2(asp,1.)+g*2.4;
+  // the sun's glint by day where the moon's light lies at night: pressed, the lights go out (glow)
+  col+=uGlint*(1.-uMoon)*(1.-ice*.7)*(vec3(1.,.98,.92)*smoothstep(.022,.006,length(md))*.55+vec3(1.,.95,.85)*exp(-dot(md,md)*160.)*.22);
   col+=uMoon*(1.-ice*.7)*(vec3(.95,.97,1.)*smoothstep(.05,.018,length(md))*.6+vec3(.5,.62,.85)*exp(-dot(md,md)*60.)*.3);
   if(ice>0.){
     vec3 ic=mix(col,vec3(.8,.89,.94),.2+.16*noise(p*9.));
@@ -976,43 +1166,14 @@ void main(){
   col=tp.rgb*(uAmb*.74+.26)*mix(vec3(1.),uTint*uSeason,.22)+col*(1.-tp.a);
   vec2 q=uv-.5; col*=1.-dot(q,q)*.6;
   col=mix(col*(1.-.5*calm),vec3(.02,.09,.1),calm*.3);
-  // ---------- ink and paper: what the ink front has passed over is a painting on xuan paper ----------
+  // ---------- the looks: a front brings one look in over another (ink, ukiyo-e, glow, blueprint) ----------
   if(uInk.w>0.){
-    float fib=fbm(P*.03)*.55+noise(P*.21)*.25+noise(P*vec2(1.1,.06))*.12+noise(P*vec2(.05,1.3))*.08;
-    float r=length(P-uInk.yz)+(fib-.5)*150.+(noise(P*.012+uInk.x*.003)-.5)*120.;
-    float inside=1.-smoothstep(uInk.x-40.,uInk.x+40.,r);
-    float wetEdge=exp(-pow((r-uInk.x)/38.,2.))*step(1.,uInk.x)*(1.-step(.999,uInk.w));
-    // the paper: warm, uneven, with fibres
-    vec3 paper=vec3(.925,.885,.8)*(.95+.07*fbm(P*.012))-vec3(.04,.045,.05)*smoothstep(.62,.95,noise(P*vec2(.9,.04)))-vec3(.025)*smoothstep(.7,1.,noise(P*vec2(.03,.7)));
-    paper*=1.-.18*dot(uv-.5,uv-.5);
-    vec3 INK=vec3(.075,.07,.065);
-    // the fish: a pale wash for the body, dark where the body ends, the scales' patches as darker strokes, red kept as cinnabar
-    vec2 fuv=uv+ref*.25;
-    vec4 f0=textureLod(uFish,fuv,.0); float fa=textureLod(uFish,fuv,1.).a, fb=textureLod(uFish,fuv,3.2).a, fc2=textureLod(uFish,fuv+vec2(.004,.006),4.5).a;
-    vec3 fcol=f0.rgb/max(f0.a,1e-3); float lum=dot(fcol,vec3(.3,.59,.11)), red=clamp((fcol.r-max(fcol.g,fcol.b))*2.2-.4,0.,1.)*f0.a;
-    float bleed=fbm(P*.08+3.)*.5+.5;
-    float wash=fb*(.32+.2*bleed)+fa*(.18+.55*(1.-lum))*(1.-red);
-    float edge=clamp((fa-fb)*2.6,0.,1.)*(.6+.4*bleed);
-    float shadow=fc2*.12;
-    vec3 ink=paper*(1.-shadow);
-    ink=mix(ink,INK,clamp(wash*.8+edge*.75,0.,.95));
-    ink=mix(ink,vec3(.72,.2,.13),red*.75);
-    // the water: only where it moves, a few grey rings
-    ink=mix(ink,INK,smoothstep(.006,.02,-lap)*.16);
-    // pads as broad pale washes with a darker rim; petals, leaves and boats as small strokes
-    vec4 pd2=textureLod(uPads,uv+g*ia*.006,ls+.5); float pr=textureLod(uPads,uv,ls+3.).a;
-    ink=mix(ink,vec3(.35,.38,.33),pd2.a*(.28+.25*fbm(P*.05))); ink=mix(ink,INK,clamp((pd2.a-pr)*1.8,0.,.5));
-    vec4 tp2=textureLod(uTop,uv+g*ia*.004,ls); float tl=dot(tp2.rgb/max(tp2.a,1e-3),vec3(.3,.59,.11));
-    ink=mix(ink,INK,tp2.a*(.35+.5*(1.-tl)));
-    // blots where the paper was touched: ink spreading, fastest at first, the rim darker as it dries
-    for(int i=0;i<10;i++){ vec3 b=uBlot[i]; if(b.z<0.) continue;
-      float t=b.z, R2=10.+70.*sqrt(t)*(1.-exp(-t*.9))+18.*t, d=length(P-b.xy)+(fbm((P-b.xy)*.06+b.x*.01)-.5)*R2*.55;
-      float core=1.-smoothstep(R2*.25,R2,d), rim=exp(-pow((d-R2*.9)/(5.+R2*.08),2.)), halo=1.-smoothstep(R2,R2*1.6,d);
-      float dens=exp(-t*.05)*(.5+.5*exp(-t*.5));
-      ink=mix(ink,INK,clamp(core*dens*.7+rim*dens*.3+halo*dens*.08,0.,.9));
-    }
-    col=mix(col,ink,inside);
-    col=mix(col,INK,wetEdge*.55);
+    gP=P; gUv=uv; gG=g; gIa=ia; gRef=ref; gLap=lap; gH=h; gLs=ls; gCalm=calm; gWater=col; gp=p; gHit=hit;
+    gIce=max(ice,hit.y>0.?smoothstep(0.,.25,hit.z)*hit.y:0.);
+    float e; float m=reveal(uStyle,e);
+    vec3 top=look(uStyle), base=m<.999?look(uPrev):top;
+    col=mix(base,top,m);
+    col=mix(col,edgeCol(uStyle),e);
   }
   o=vec4(col,1.);
 }`;
@@ -1021,13 +1182,26 @@ void main(){
 // the cold, frost gathers along the rim.
 const GLASS = `#version 300 es
 precision highp float; in vec2 vUv; out vec4 o;
-uniform sampler2D uScene; uniform vec2 uCss; uniform float uLod,uFrost; uniform vec3 uGlass;
+uniform sampler2D uScene,uAtlas; uniform vec2 uCss,uCell; uniform float uLod,uFrost; uniform vec4 uAscii; uniform vec3 uGlass;
 uniform vec4 uPane[12]; uniform vec4 uPaneB[12]; uniform int uPaneN;
 float sd(vec2 p,vec4 b,float r){ vec2 q=abs(p-b.xy)-b.zw+r; return length(max(q,0.))+min(max(q.x,q.y),0.)-r; }
 vec3 scene(vec2 P,float lod){ return textureLod(uScene,vec2(P.x/uCss.x,1.-P.y/uCss.y),lod).rgb; }
 float grain(vec2 P){ return fract(sin(dot(floor(P),vec2(12.9898,78.233)))*43758.5453); }
 void main(){
   vec2 P=vUv*uCss; vec3 col=scene(P,0.);
+  // ASCII: each cell a character, picked by how bright the picture is there, in its colour; inside the
+  // front coming in (w 1), outside the one going (w -1)
+  if(uAscii.w!=0.){
+    float inF=1.-smoothstep(uAscii.x-30.,uAscii.x+30.,length(P-uAscii.yz)), m=uAscii.w>0.?inF:1.-inF;
+    if(m>0.){
+      vec2 id=floor(P/uCell), cp=(id+.5)*uCell;
+      vec3 sc=(scene(cp,0.)*2.+scene(cp+uCell*vec2(.25,.25),0.)+scene(cp-uCell*vec2(.25,.25),0.))/4.;
+      float l=dot(sc,vec3(.3,.59,.11)), g=floor(clamp(pow(l*1.25,.85),0.,.999)*10.);
+      vec2 fq=fract(P/uCell); float a=texture(uAtlas,vec2((g+fq.x)/10.,fq.y)).a;
+      vec3 tint=sc/max(max(sc.r,max(sc.g,sc.b)),.08); tint=mix(vec3(.72,.86,.82),tint,.7);
+      col=mix(col,vec3(.01,.016,.018)+tint*a*(.5+.7*clamp(l*1.6,0.,1.)),m);
+    }
+  }
   for(int i=0;i<12;i++){ if(i>=uPaneN) break; vec4 b=uPane[i]; float r=uPaneB[i].x,a=uPaneB[i].y;
     float d=sd(P,b,r); if(d>1.||a<.004) continue;
     vec2 n=vec2(sd(P+vec2(1.,0.),b,r)-sd(P-vec2(1.,0.),b,r),sd(P+vec2(0.,1.),b,r)-sd(P-vec2(0.,1.),b,r)); n/=max(length(n),1e-4);
@@ -1137,10 +1311,14 @@ function initGL() {
     'uBroke',
     'uCalm',
     'uInk',
-    'uBlot'
+    'uBlot',
+    'uStyle',
+    'uPrev',
+    'uGlint'
   ])
     U[n] = gl.getUniformLocation(prog, n);
-  for (const n of ['uScene', 'uCss', 'uLod', 'uFrost', 'uGlass', 'uPane', 'uPaneB', 'uPaneN']) UG[n] = gl.getUniformLocation(glassProg, n);
+  for (const n of ['uScene', 'uCss', 'uLod', 'uFrost', 'uGlass', 'uPane', 'uPaneB', 'uPaneN', 'uAscii', 'uCell', 'uAtlas'])
+    UG[n] = gl.getUniformLocation(glassProg, n);
   texH = tex(gl.LINEAR);
   texIce = tex(gl.LINEAR);
   texFish = deep();
@@ -1850,14 +2028,38 @@ function drawBugs(c) {
 }
 // The model stands on the feet the pond gives it, which step as it turns and walks; sitting, it tilts
 // its face up at whoever is looking down. It is drawn larger at the top of a jump.
-// ---------- the ink world: a drop from the switch spreads over the pond and turns it to paper; time slows ----------
-let inkTimer = 0,
+// ---------- the looks: water, ink (墨), ukiyo-e, glow, blueprint and ASCII ----------
+// A front brings a look in over the one before (`top` over `base`); going back to the water, the front
+// draws in again. Ink: a drop from the switch spreads and turns the pond to paper, and time slows.
+// The other looks are found by gestures on the water (`gest`, below) or by searching ⌘K.
+const LOOKS = ['water', 'ink', 'ukiyo', 'glow', 'blueprint', 'ascii'],
+  SID = { water: 0, ink: 1, ukiyo: 2, glow: 3, blueprint: 4, ascii: 5 };
+// The looks' own type and Japanese (looks.css: kana.css and the looks' faces) load the first time a
+// look or 日 is chosen, so a first visit costs no more than the water and the brush.
+let typeLoad = null;
+const loadType = () =>
+  (typeLoad ??= new Promise((done) => {
+    const l = document.createElement('link');
+    l.rel = 'stylesheet';
+    l.href = LOOKS_CSS;
+    l.onload = l.onerror = done;
+    document.head.append(l);
+  }));
+let look = 'water',
+  top = 'water',
+  base = 'water',
   inkOn = false,
+  lookTimer = 0,
   // the language is the visitor's own choice, apart from the look: remembered, else the browser's
-  zhOn = (load('pond-lang') ?? (navigator.languages || [navigator.language]).find((l) => /^(zh|en)/i.test(l)) ?? 'en').toLowerCase().startsWith('zh'),
+  // (English, Chinese or Japanese); zhOn means the words come from a dictionary (ZH, or JA) rather than the markup
+  lang = (() => {
+    const l = (load('pond-lang') ?? (navigator.languages || [navigator.language]).find((x) => /^(zh|en|ja)/i.test(x)) ?? 'en').toLowerCase().slice(0, 2);
+    return l === 'zh' || l === 'ja' ? l : 'en';
+  })(),
+  zhOn = lang !== 'en',
   langTimer = 0,
   inkR = 0,
-  inkMax = 0,
+  inkMax = 1,
   inkO = [0, 0],
   timeScale = 1,
   simAcc = 0,
@@ -1874,7 +2076,8 @@ const HOME = {
   talk: $('#talk > span:last-child').textContent
 };
 function speak() {
-  pond.lang = zhOn ? 'zh' : 'en';
+  pond.lang = lang;
+  $('#termV').lang = lang === 'ja' ? 'ja' : 'zh';
   $('.say').innerHTML = zhOn ? `${esc(ZH.say)} <button class="tlink" data-sheet="about">${esc(ZH.more)}</button>` : HOME.say;
   document.querySelectorAll('.toc .go b').forEach((b, i) => (b.textContent = zhOn ? ZH.toc[i] : HOME.toc[i]));
   $('#cmdBtn .long').textContent = zhOn ? ZH.search[0] : HOME.long;
@@ -1887,11 +2090,16 @@ function speak() {
   fillNotes();
   if (sheetOpen() && sheetId) openSheet(sheetId);
 }
-// 中 / En: the page's words fade, turn to the other language and come back; the look is left as it is.
-function setLang(zh) {
-  if (zh === zhOn) return;
-  zhOn = zh;
-  save('pond-lang', zh ? 'zh' : 'en');
+// En / 中 / 日: the page's words fade, turn to the other language and come back; the look is left as it is.
+const LANGS = ['en', 'zh', 'ja'];
+const nextLang = () => LANGS[(LANGS.indexOf(lang) + 1) % LANGS.length];
+function setLang(to) {
+  if (to === lang || !LANGS.includes(to)) return;
+  lang = to;
+  zhOn = to !== 'en';
+  ZH = to === 'ja' ? D.ja : D.zh;
+  if (to === 'ja') loadType();
+  save('pond-lang', to);
   langBtn();
   pond.dataset.speaking = '';
   clearTimeout(langTimer);
@@ -1903,47 +2111,153 @@ function setLang(zh) {
     RM ? 0 : 260
   );
 }
+const LANG_NAME = { en: ['En', 'English'], zh: ['中', '中文'], ja: ['日', '日本語'] };
+// three languages, each its own segment, the one in use lit
 function langBtn() {
-  const b = $('#langBtn');
-  b.innerHTML = zhOn ? '<span lang="en">En</span>' : '<span lang="zh">中</span>';
-  b.setAttribute('aria-label', zhOn ? 'English (L)' : '中文 (L)');
+  const seg = $('#langBtn');
+  for (const x of seg.querySelectorAll('[data-lang]')) x.setAttribute('aria-pressed', String(x.dataset.lang === lang));
+  seg.style.setProperty('--i', LANGS.indexOf(lang));
 }
-function setInk(on, from) {
-  if (on === inkOn) return;
-  inkOn = on;
+// Each label's ink, measured, set on the centre of its cell: line boxes centre the em box, not the glyph,
+// and 'En' in the sans and 中/日 in the brush each sit off it differently. Run once the faces have come.
+function alignSeg() {
+  const c = document.createElement('canvas').getContext('2d');
+  for (const s of $('#langBtn').querySelectorAll('button span')) {
+    const st = getComputedStyle(s),
+      size = parseFloat(st.fontSize);
+    c.font = `${st.fontWeight} ${st.fontSize} ${st.fontFamily}`;
+    const m = c.measureText(s.textContent),
+      A = m.fontBoundingBoxAscent,
+      D = m.fontBoundingBoxDescent,
+      base = (size - (A + D)) / 2 + A, // where the baseline sits in a line box of line-height 1
+      dy = size / 2 - (base + (m.actualBoundingBoxDescent - m.actualBoundingBoxAscent) / 2),
+      dx = m.width / 2 - (m.actualBoundingBoxRight - m.actualBoundingBoxLeft) / 2;
+    s.style.setProperty('--dx', `${dx.toFixed(2)}px`);
+    s.style.setProperty('--dy', `${dy.toFixed(2)}px`);
+  }
+}
+const setInk = (on, from) => setLook(on ? 'ink' : 'water', from || $('#inkBtn'));
+function setLook(name, from) {
+  if (!LOOKS.includes(name) || name === look) return;
+  if (name !== 'water' && name !== 'ink') loadType();
+  const was = look;
+  look = name;
+  inkOn = name === 'ink';
   inkAt = performance.now() / 1000;
-  const r = (from || $('#inkBtn')).getBoundingClientRect(),
-    pr = pond.getBoundingClientRect();
-  inkO = [r.left - pr.left + r.width / 2, r.top - pr.top + r.height / 2];
-  inkMax = Math.hypot(Math.max(inkO[0], W - inkO[0]), Math.max(inkO[1], H - inkO[1])) + 220;
+  actx.setTransform(1, 0, 0, 1, 0, 0);
+  actx.clearRect(0, 0, air.width, air.height);
+  blots = [];
+  if (name === 'water') {
+    // back to the water: the look on show draws in to where it was asked from
+    if (top === 'water') top = was;
+    base = 'water';
+  } else {
+    // over what shows now: the last look if it had come in fully, else what was under it
+    base = top === 'water' || inkR >= inkMax * 0.999 ? top : base;
+    top = name;
+    inkR = 0;
+  }
+  // from a control, or from a place on the water (a gesture)
+  if (Array.isArray(from)) inkO = from.slice();
+  else {
+    const r = (from || $('#termV')).getBoundingClientRect(),
+      pr = pond.getBoundingClientRect();
+    inkO = [r.left - pr.left + r.width / 2, r.top - pr.top + r.height / 2];
+  }
+  const far = Math.hypot(Math.max(inkO[0], W - inkO[0]), Math.max(inkO[1], H - inkO[1])) + 220;
+  inkMax = top === 'blueprint' ? H + 40 : top === 'ukiyo' ? (W + H) * 0.7072 + 40 : far;
+  if (name === 'water' && inkR > inkMax) inkR = inkMax;
   pond.dataset.inking = '';
-  $('#inkBtn').setAttribute('aria-pressed', String(on));
-  clearTimeout(inkTimer);
-  inkTimer = setTimeout(
+  $('#inkBtn').setAttribute('aria-pressed', String(inkOn));
+  clearTimeout(lookTimer);
+  lookTimer = setTimeout(
     () => {
-      pond.toggleAttribute('data-ink', on);
+      pond.toggleAttribute('data-ink', inkOn);
+      if (inkOn) paintInk();
+      if (name === 'water') delete pond.dataset.look;
+      else pond.dataset.look = name;
       speak();
       delete pond.dataset.inking;
     },
-    on ? 700 : 900
+    name === 'water' ? 900 : 700
   );
-  if (on) {
-    drop(inkO[0], inkO[1], 7, -3.2);
-    audio();
-    plip('ink');
-  } else blots = [];
+  audio();
+  if (name === 'water') return;
+  drop(inkO[0], inkO[1], { ink: 7, blueprint: 1.6 }[name] || 4, -3.2);
+  plip(`look-${name}`);
+}
+// ASCII's characters, drawn once into a strip the glass pass reads by brightness: blank to dense.
+const RAMP = ' .:-=+*#%@',
+  CELL = [9, 17];
+let atlasOn = false;
+function atlas() {
+  if (atlasOn) return;
+  atlasOn = true;
+  const draw = () => {
+    const S = 3,
+      cv = document.createElement('canvas'),
+      c = cv.getContext('2d');
+    cv.width = CELL[0] * S * RAMP.length;
+    cv.height = CELL[1] * S;
+    c.fillStyle = '#fff';
+    c.font = `500 ${Math.round(CELL[1] * S * 0.8)}px 'JetBrains Mono', ui-monospace, monospace`;
+    c.textAlign = 'center';
+    c.textBaseline = 'middle';
+    [...RAMP].forEach((ch, i) => c.fillText(ch, (i + 0.5) * CELL[0] * S, CELL[1] * S * 0.54));
+    gl.activeTexture(gl.TEXTURE7);
+    gl.bindTexture(gl.TEXTURE_2D, gl.createTexture());
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, cv);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.activeTexture(gl.TEXTURE0);
+  };
+  draw();
+  // drawn again once the face has come (it loads with the looks' type)
+  loadType()
+    .then(() => document.fonts?.load(`500 40px 'JetBrains Mono'`))
+    .then(draw, () => {});
+}
+// Ink as a hanging painting: the season's motif (painting.js, loaded the first time ink comes) washes in
+// at one edge; a new season washes the old one out and the new one in, with a brush's breath.
+let painted = '';
+function paintInk() {
+  if (!inkOn) return;
+  const season = Math.floor((Math.floor(yearGoal) % 24) / 6),
+    key = `${season} ${Math.round(W)} ${Math.round(H)}`;
+  if (key === painted) return;
+  const first = !painted;
+  painted = key;
+  const cv = $('#inkArt');
+  delete cv.dataset.on;
+  import('./painting.js').then(({ paint }) =>
+    setTimeout(
+      () => {
+        paint(cv, W, H, season);
+        cv.dataset.on = '';
+        if (!first) plip('cue-ink', 0.8);
+      },
+      first ? 0 : 900
+    )
+  );
 }
 // The front runs out fast and then slows, as ink does in wet paper; time all but stops as the drop lands
-// and comes back slow; going back, the paper draws in to the switch and time runs up again.
+// and comes back slow; going back, the look draws in to where it came from and time runs up again.
+// The print is peeled off from the top left, the blueprint scanned from the top; the text spreads as a drop does.
 function stepInk(raw) {
   const k = performance.now() / 1000 - inkAt;
-  if (inkOn) {
-    inkR = inkMax * (1 - Math.exp(-k * 1.25)) * Math.min(1, 0.2 + k * 3);
+  if (look !== 'water') {
+    if (top === 'blueprint') inkR = inkMax * Math.min(1, k / 1.5);
+    else inkR = inkMax * (1 - Math.exp(-k * ({ ink: 1.25, ukiyo: 1.1, glow: 1.6, ascii: 1.4 }[top] || 1.6))) * Math.min(1, 0.2 + k * 3);
     if (k > 4.5) inkR = inkMax;
+    if (inkR >= inkMax) base = top;
   } else if (inkR > 0) {
     inkR = Math.max(0, inkR - raw * inkMax * (0.4 + k * 1.3));
+    if (inkR <= 0) top = 'water';
   }
-  const goal = inkOn ? (k < 0.5 ? 0.06 : 0.32) : inkR > 0 ? 0.25 : 1;
+  const goal = inkOn ? (k < 0.5 ? 0.06 : 0.32) : look === 'glow' ? 0.7 : top === 'ink' && inkR > 0 ? 0.25 : 1;
   timeScale += (goal - timeScale) * Math.min(1, raw * (inkOn && k < 0.5 ? 9 : 1.6));
 }
 let calmNow = 1,
@@ -2114,12 +2428,135 @@ function drawDove(c) {
   life.dove(lifeDt, { a: dove.a, fly: dove.state !== 'sit', dip: dove.dip, h: dove.h, amb: cur ? cur.amb : 1, tint: cur ? cur.tint : [1, 1, 1] });
   c.drawImage(life.canvas, dove.x - half, dove.y - half, half * 2, half * 2);
 }
+let dimsAt = 0,
+  typeEdge = -1;
+// Blueprint: each koi measured along its back, each press a radius, in a draughtsman's hand.
+function drawDims(c) {
+  // not over the title page's type: the measures keep to the open water
+  if (!(dimsAt++ % 30)) {
+    const r = $('#toc').getBoundingClientRect();
+    typeEdge = r.width && r.right < W * 0.8 ? r.right + 30 : -1;
+  }
+  c.save();
+  c.strokeStyle = 'rgba(225,240,255,0.75)';
+  c.fillStyle = 'rgba(225,240,255,0.9)';
+  c.lineWidth = 1;
+  c.font = "11px 'IBM Plex Mono', ui-monospace, monospace";
+  for (const k of kois) {
+    if (k.alpha < 0.5 || underGlass(k.x, k.y) || (k.x < typeEdge && !sheetOpen())) continue;
+    const h = k.spine[0],
+      t = k.spine[N - 1],
+      a = Math.atan2(t.y - h.y, t.x - h.x),
+      nx = -Math.sin(a) * 22,
+      ny = Math.cos(a) * 22,
+      A = [h.x + nx, h.y + ny],
+      B = [t.x + nx, t.y + ny];
+    c.beginPath();
+    c.moveTo(h.x + nx * 0.3, h.y + ny * 0.3);
+    c.lineTo(A[0] + nx * 0.2, A[1] + ny * 0.2);
+    c.moveTo(t.x + nx * 0.3, t.y + ny * 0.3);
+    c.lineTo(B[0] + nx * 0.2, B[1] + ny * 0.2);
+    c.moveTo(A[0], A[1]);
+    c.lineTo(B[0], B[1]);
+    c.stroke();
+    for (const [P, d] of [
+      [A, 1],
+      [B, -1]
+    ]) {
+      c.beginPath();
+      c.moveTo(P[0], P[1]);
+      c.lineTo(P[0] + Math.cos(a + 0.35) * 7 * d, P[1] + Math.sin(a + 0.35) * 7 * d);
+      c.moveTo(P[0], P[1]);
+      c.lineTo(P[0] + Math.cos(a - 0.35) * 7 * d, P[1] + Math.sin(a - 0.35) * 7 * d);
+      c.stroke();
+    }
+    c.save();
+    c.translate((A[0] + B[0]) / 2 + nx * 0.5, (A[1] + B[1]) / 2 + ny * 0.5);
+    c.rotate(Math.cos(a) < 0 ? a + Math.PI : a);
+    c.textAlign = 'center';
+    c.fillText(`L ${(k.size / 100).toFixed(2)} m · v ${(k.sp / 100).toFixed(2)} m/s`, 0, 4);
+    c.restore();
+  }
+  for (const b of blots) {
+    const t = T - b.at,
+      R = 12 + 50 * Math.sqrt(t);
+    if (t > 20) continue;
+    c.beginPath();
+    c.moveTo(b.x, b.y);
+    c.lineTo(b.x + R * 0.7071, b.y - R * 0.7071);
+    c.stroke();
+    c.fillText(`R ${(R / 100).toFixed(2)}`, b.x + R * 0.7071 + 4, b.y - R * 0.7071 - 4);
+  }
+  c.restore();
+}
+// Rain falls where a look can carry it: on the water, in ink (fine dry strokes, and soft blooms where it
+// lands), in the print (Hiroshige's straight lines) and in ASCII (falling | and /). Glow and blueprint
+// hold it off: the drops stop and the ripples settle, and it comes back with the water.
+const RAINY = { water: 1, ink: 1, ukiyo: 1, ascii: 1 },
+  blooms = [],
+  rainNow = () => raining && RAINY[look] === 1;
+// the rain itself, drawn in the air in the look's own hand, once the look has come in
+function drawRain(c) {
+  if (!rainNow() || look === 'water' || inkR < inkMax * 0.9 || AM.ice > 0.3) return;
+  c.save();
+  if (look === 'ink') {
+    for (const b of blooms) {
+      const a = T - b.at,
+        r = b.r * (1 + Math.min(a, 3) * 0.6),
+        o = 0.13 * Math.max(0, 1 - a / 5);
+      if (o <= 0) continue;
+      const g = c.createRadialGradient(b.x, b.y, 0, b.x, b.y, r);
+      g.addColorStop(0, `rgba(40,36,32,${o})`);
+      g.addColorStop(0.75, `rgba(40,36,32,${o * 0.6})`);
+      g.addColorStop(1, 'rgba(40,36,32,0)');
+      c.fillStyle = g;
+      c.beginPath();
+      c.arc(b.x, b.y, r, 0, TAU);
+      c.fill();
+    }
+    c.strokeStyle = 'rgba(30,27,24,0.2)';
+    c.lineCap = 'round';
+    for (let i = 0; i < (big ? 46 : 20); i++) {
+      const x = rnd(-40, W),
+        y = rnd(-40, H),
+        l = rnd(18, 46);
+      c.lineWidth = rnd(0.6, 1.4);
+      c.beginPath();
+      c.moveTo(x, y);
+      c.lineTo(x + l * 0.26, y + l);
+      c.stroke();
+    }
+  } else if (look === 'ukiyo') {
+    c.strokeStyle = 'rgba(12,26,52,0.42)';
+    c.lineWidth = 1;
+    c.beginPath();
+    for (let i = 0; i < (big ? 140 : 60); i++) {
+      const x = rnd(-80, W),
+        y = rnd(-H * 0.3, H),
+        l = rnd(H * 0.12, H * 0.32);
+      c.moveTo(x, y);
+      c.lineTo(x + l * 0.09, y + l);
+    }
+    c.stroke();
+  } else if (look === 'ascii') {
+    c.fillStyle = 'rgba(150,200,205,0.5)';
+    c.font = "500 14px 'JetBrains Mono', ui-monospace, monospace";
+    c.textAlign = 'center';
+    for (let i = 0; i < (big ? 70 : 30); i++)
+      c.fillText(Math.random() < 0.7 ? '|' : '/', Math.floor(rnd(0, W) / CELL[0]) * CELL[0], Math.floor(rnd(0, H) / CELL[1]) * CELL[1]);
+  }
+  c.restore();
+}
 function drawAir() {
   const c = actx;
   c.setTransform(adpr, 0, 0, adpr, 0, 0);
   c.clearRect(0, 0, W, H);
-  if (AM.snow > 0.02 || (raining && AM.ice > 0.3)) {
-    const n = Math.max(AM.snow, raining && AM.ice > 0.3 ? 0.7 : 0);
+  if (look === 'blueprint' && inkR >= inkMax * 0.9) drawDims(c);
+  drawRain(c);
+  stepGesture();
+  drawGesture(c);
+  if (AM.snow > 0.02 || (rainNow() && AM.ice > 0.3)) {
+    const n = Math.max(AM.snow, rainNow() && AM.ice > 0.3 ? 0.7 : 0);
     c.fillStyle = '#fff';
     for (const q of flakes)
       if (q.i < n) {
@@ -2245,11 +2682,11 @@ const PHOTOS = D.photos;
 let NOTES = [];
 const PLAY = '<svg width="10" height="10" viewBox="0 0 12 12"><path d="M2.5 1v10l8-5z"/></svg>';
 const markSrc = (m) => `/pond/marks/${m}.png`;
-// The pond speaks English or, chosen with 中, Chinese (content.ts, ZH): L(en, zh) picks the words for now.
-const ZH = D.zh;
+// The pond speaks English, Chinese or Japanese, chosen with En / 中 / 日 (content.ts, ZH and JA): L(en, zh) picks the words for now.
+let ZH = lang === 'ja' ? D.ja : D.zh;
 const L = (en, zh) => (zhOn ? zh : en);
 const CN_MONTH = { Jan: 1, Feb: 2, Mar: 3, Apr: 4, May: 5, Jun: 6, Jul: 7, Aug: 8, Sep: 9, Oct: 10, Nov: 11, Dec: 12 };
-const zhWhen = (w) => w.replace(/([A-Z][a-z]{2}) (\d{4})/g, (_, m, y) => `${y}.${CN_MONTH[m]}`);
+const zhWhen = (w) => w.replace(/([A-Z][a-z]{2}) (\d{4})/g, (_, m, y) => (lang === 'ja' ? `${y}年${CN_MONTH[m]}月` : `${y}.${CN_MONTH[m]}`));
 // an entry of the timeline as it reads now: in Chinese, what ZH gives for it over the English
 const tr = (e) => {
   if (!zhOn) return e;
@@ -2274,6 +2711,14 @@ const notesHtml = () =>
   `<li class="empty">${L('No boats yet.', ZH.notes.empty)}</li>`;
 function ago(iso) {
   const m = Math.max(0, (Date.now() - Date.parse(iso)) / 60000);
+  if (lang === 'ja')
+    return m < 1
+      ? 'たった今'
+      : m < 60
+        ? `${Math.round(m)} 分前`
+        : m < 1440
+          ? `${Math.round(m / 60)} 時間前`
+          : `${new Date(iso).getMonth() + 1}月${new Date(iso).getDate()}日`;
   if (zhOn)
     return m < 1
       ? '刚刚'
@@ -2782,7 +3227,10 @@ const letterOpen = () => false,
   openLetter = () => openSheet('about');
 let arrived = false;
 $('#inkBtn').addEventListener('click', (e) => setInk(!inkOn, e.currentTarget));
-$('#langBtn').addEventListener('click', () => setLang(!zhOn));
+$('#langBtn').addEventListener('click', (e) => {
+  const seg = e.target.closest('[data-lang]');
+  setLang(seg ? seg.dataset.lang : nextLang());
+});
 function setClear(on) {
   pond.toggleAttribute('data-clear', on);
   $('#clear').setAttribute('aria-pressed', String(!on));
@@ -3001,32 +3449,53 @@ function commands() {
       hint: 'The pond as an ink painting, in slow motion',
       key: 'I',
       kw: 'ink paper painting chinese brush black white slow 水墨',
-      top: true,
+      hidden: true,
       cmd: true,
       run: () => setInk(!inkOn)
     },
+    // the other looks: found only when searched for, never listed
+    ...[
+      ['ukiyo', '浮世絵 Ukiyo-e', 'A woodblock print; or stir the water once round', 'ukiyo ukiyo-e woodblock print hokusai wave japan 浮世絵'],
+      ['glow', 'Glow', 'The lights go out; or press the light on the water', 'glow night neon dark light'],
+      ['blueprint', 'Blueprint', 'A drawing on blue paper; or draw a long straight line', 'blueprint drawing plan draft ruler'],
+      ['ascii', 'ASCII', 'The pond in characters; or type a few letters', 'ascii text characters terminal type']
+    ].map(([id, label, hint, kw]) => ({
+      sec: 'Pond',
+      icon: 'brush',
+      label: look === id ? 'Back to the water' : label,
+      hint,
+      kw,
+      hidden: true,
+      cmd: true,
+      run: () => setLook(look === id ? 'water' : id)
+    })),
     {
       sec: 'Pond',
       icon: 'brush',
-      label: zhOn ? 'English' : '中文',
-      hint: zhOn ? 'The pond in English' : 'The pond in Chinese',
+      label: LANG_NAME[nextLang()][1],
+      hint: `The pond in ${{ en: 'English', zh: 'Chinese', ja: 'Japanese' }[nextLang()]}`,
       key: 'L',
-      kw: 'language chinese english 中文 语言 lang',
+      kw: 'language chinese english japanese 中文 语言 日本語 lang',
       cmd: true,
-      run: () => setLang(!zhOn)
+      run: () => setLang(nextLang())
     },
-    {
-      sec: 'Pond',
-      icon: 'rain',
-      label: raining ? 'Stop the rain' : 'Make it rain',
-      hint: 'Weather',
-      kw: 'rain weather storm',
-      cmd: true,
-      run: () => {
-        raining = !raining;
-        tick();
-      }
-    },
+    // it rains only on the water: in a look the rain waits, and the command with it
+    ...(look === 'water'
+      ? [
+          {
+            sec: 'Pond',
+            icon: 'rain',
+            label: raining ? 'Stop the rain' : 'Make it rain',
+            hint: 'Weather',
+            kw: 'rain weather storm',
+            cmd: true,
+            run: () => {
+              raining = !raining;
+              tick();
+            }
+          }
+        ]
+      : []),
     ...[
       ['dawn', 'Dawn', 'sun'],
       ['day', 'Day', 'sun'],
@@ -3116,8 +3585,11 @@ function drawPal() {
   let html = '';
   if (!q) {
     const groups = only
-      ? [['Commands', all]]
-      : [['Suggested', all.filter((c) => c.top)], ...['Go to', 'People', 'Music', 'Year', 'Pond'].map((s) => [s, all.filter((c) => c.sec === s && !c.top)])];
+      ? [['Commands', all.filter((c) => !c.hidden)]]
+      : [
+          ['Suggested', all.filter((c) => c.top)],
+          ...['Go to', 'People', 'Music', 'Year', 'Pond'].map((s) => [s, all.filter((c) => c.sec === s && !c.top && !c.hidden)])
+        ];
     hits = groups.flatMap(([, list]) => list);
     let i = 0;
     for (const [name, list] of groups)
@@ -3176,6 +3648,12 @@ function runPal(i) {
 $('#cmdBtn').addEventListener('click', () => openPal());
 $('#palIn').addEventListener('input', () => {
   sel = 0;
+  // "ascii" or "text" typed here is the same as typing on the page (a phone has no other keyboard)
+  if (look !== 'ascii' && /^(ascii|text)$/i.test($('#palIn').value.trim())) {
+    closePal();
+    setLook('ascii', [W * (big ? 0.7 : 0.5), H * 0.6]);
+    return;
+  }
   drawPal();
 });
 $('#palIn').addEventListener('keydown', (e) => {
@@ -3252,7 +3730,7 @@ addEventListener('keydown', (e) => {
     e.preventDefault();
     openPal('/');
   } else if (e.key === 'i' || e.key === 'I') setInk(!inkOn);
-  else if (e.key === 'l' || e.key === 'L') setLang(!zhOn);
+  else if (e.key === 'l' || e.key === 'L') setLang(nextLang());
   else if (e.key === 'g' || e.key === 'G') {
     if (letterOpen()) putDown();
     setClear(!('clear' in pond.dataset));
@@ -3359,9 +3837,114 @@ function bubble(t, f0, peak, dur) {
 }
 // The sound switch is remembered in this browser.
 const saveMuted = (on) => save('pond-sound', on ? 'off' : null);
+// ---------- each look's sounds: its medium, quiet and short, all at about one loudness ----------
+// ink: brush and paper; ukiyo-e: wood and koto; glow: a soft shimmer; blueprint: pencil and a ruler's click;
+// ASCII: soft keys. What each does: a press, ice cracking, the look coming in, and a gesture's cue.
+const KOTO = [293.66, 329.63, 349.23, 440, 466.16, 587.33, 659.25, 698.46];
+function tone(type, f, at, len, peak, f2, attack) {
+  const o = AC.createOscillator(),
+    g = AC.createGain();
+  o.type = type;
+  o.frequency.setValueAtTime(f, at);
+  if (f2) o.frequency.exponentialRampToValueAtTime(f2, at + len * 0.6);
+  g.gain.setValueAtTime(0.0001, at);
+  g.gain.linearRampToValueAtTime(peak, at + (attack ?? Math.min(0.01, len * 0.2)));
+  g.gain.exponentialRampToValueAtTime(0.0001, at + len);
+  o.connect(g);
+  g.connect(sfx);
+  o.start(at);
+  o.stop(at + len + 0.05);
+}
+const brush = (t, dur, v) => hiss(t, dur, 1100, 0.7, v);
+const wood = (t, v) => {
+  tone('sine', rnd(760, 860), t, 0.06, v);
+  hiss(t, 0.02, 1600, 4, v * 0.5);
+};
+const pluck = (t, f, v) => {
+  tone('triangle', f, t, 0.9, v, null, 0.004);
+  tone('sine', f * 2, t, 0.35, v * 0.35, null, 0.004);
+};
+const shimmer = (t, f, v, len = 1.1) => {
+  for (const [m, k] of [
+    [1, 1],
+    [1.5, 0.5],
+    [2.003, 0.35]
+  ])
+    tone('sine', f * m, t, len, v * k, null, 0.09);
+};
+const pencil = (t, dur, v) => hiss(t, dur, 5200, 1.4, v);
+const ruler = (t, v) => {
+  hiss(t, 0.008, 2400, 6, v);
+  tone('sine', 190, t, 0.05, v * 0.6);
+};
+const key = (t, v) => {
+  hiss(t, 0.01, rnd(2800, 3600), 5, v);
+  tone('square', rnd(1700, 1900), t, 0.012, v * 0.12);
+};
+function lookSound(name, what, t, vol) {
+  const v = 0.06 * vol,
+    note = () => KOTO[(Math.random() * KOTO.length) | 0];
+  if (name === 'ink') {
+    if (what === 'in') {
+      brush(t, 0.5, v * 0.35);
+      bubble(t, rnd(180, 220), v * 1.1, 0.4);
+    } else if (what === 'crack') {
+      // a dry stroke snapping across the paper
+      hiss(t, 0.09, 2200, 1.2, v);
+      brush(t + 0.03, 0.18, v * 0.5);
+    } else if (what === 'cue') brush(t, 0.35, v * 0.3);
+    else {
+      brush(t, 0.3, v * 0.3);
+      bubble(t, rnd(190, 230), v * 0.8, 0.3);
+    }
+  } else if (name === 'ukiyo') {
+    if (what === 'in') {
+      wood(t, v);
+      [0, 2, 4].forEach((n, i) => pluck(t + 0.08 + i * 0.11, KOTO[n + 1], v * 0.7));
+    } else if (what === 'crack') {
+      wood(t, v);
+      wood(t + 0.07, v * 0.7);
+      pluck(t + 0.02, KOTO[0], v * 0.5);
+    } else if (what === 'cue') pluck(t, note(), v * 0.35);
+    else {
+      wood(t, v * 0.6);
+      pluck(t + 0.01, note(), v * 0.55);
+    }
+  } else if (name === 'glow') {
+    if (what === 'in') [440, 554.37, 659.25].forEach((f, i) => shimmer(t + i * 0.09, f, v * 0.3, 1.4));
+    else if (what === 'crack') {
+      shimmer(t, 880, v * 0.35, 0.7);
+      shimmer(t + 0.12, 587.33, v * 0.3, 0.9);
+    } else if (what === 'cue') shimmer(t, 1318.5, v * 0.12, 0.6);
+    else shimmer(t, note() * 2, v * 0.3, 0.8);
+  } else if (name === 'blueprint') {
+    if (what === 'in') {
+      pencil(t, 0.28, v * 0.5);
+      ruler(t + 0.3, v);
+    } else if (what === 'crack') {
+      ruler(t, v);
+      pencil(t + 0.04, 0.12, v * 0.5);
+    } else if (what === 'cue') pencil(t, 0.04, v * 0.4);
+    else pencil(t, 0.05, v * 0.6);
+  } else if (name === 'ascii') {
+    if (what === 'in') for (let i = 0; i < 6; i++) key(t + i * 0.055 + Math.random() * 0.02, v * 0.6);
+    else if (what === 'crack') for (let i = 0; i < 3; i++) key(t + i * 0.035, v * 0.7);
+    else key(t, v * 0.6);
+  }
+}
 function plip(kind, vol) {
   if (!AC || muted) return;
   const t = AC.currentTime;
+  // look-<name> comes in; press-, crack- and cue- are the look on show doing so
+  const [what, name] = kind.split('-');
+  if (name) {
+    lookSound(name, what === 'look' ? 'in' : what, t, vol || 1);
+    return;
+  }
+  if (kind === 'crack' && look !== 'water') {
+    lookSound(look, 'crack', t, vol || 1);
+    return;
+  }
   if (kind === 'ink') {
     // a drop of ink: a soft low touch and a long breath of the brush
     const v = 0.07 * (vol || 1);
@@ -3568,7 +4151,7 @@ const spot = (e) => {
 pond.addEventListener('pointermove', (e) => {
   const [x, y] = spot(e),
     wet = !e.target.closest(DRY);
-  if (ptr.moved && wet && !inkOn) {
+  if (ptr.moved && wet && look !== 'ink' && look !== 'blueprint') {
     const d = Math.hypot(x - ptr.lx, y - ptr.ly),
       n = Math.min(6, Math.ceil(d / 14));
     for (let i = 1; i <= n; i++) drop(ptr.lx + ((x - ptr.lx) * i) / n, ptr.ly + ((y - ptr.ly) * i) / n, 1.5, -clamp(d * 0.012, 0.03, 0.3) / n);
@@ -3592,17 +4175,22 @@ pond.addEventListener('pointerdown', (e) => {
     return;
   }
   audio();
+  if (look !== 'water' && onHost(x, y)) {
+    setLook('water', [host.x, host.y]);
+    plip('drop', 0.8);
+    return;
+  }
   if (iceAt(x, y) > 0.5) {
     crack(x, y);
     return;
   }
-  if (inkOn) {
-    // on paper a press leaves a blot that spreads, and the fish still come to it
+  if (look !== 'water') {
+    // on paper a press leaves a blot that spreads (in the other looks, rings or a burst), and the fish still come to it
     blots.unshift({ x, y, at: T });
-    blots.length = Math.min(blots.length, 10);
-    drop(x, y, 2.4, -0.9);
+    blots.length = Math.min(blots.length, 6);
+    drop(x, y, 2, -0.5);
     feed(x, y);
-    plip('ink', 0.7);
+    plip(`press-${look}`, 0.8);
     for (const k of kois) if (k !== you && Math.hypot(k.x - x, k.y - y) < 130) k.burst = 0.5;
     return;
   }
@@ -3611,6 +4199,259 @@ pond.addEventListener('pointerdown', (e) => {
   plip('drop');
   for (const k of kois) if (k !== you && Math.hypot(k.x - x, k.y - y) < 130) k.burst = 0.7;
 });
+
+/* ================= the looks are found on the water itself ================= */
+// Ink: press and hold still. Ukiyo-e: stir the water, round once. Glow: press the light on the water (the
+// moon's, or the sun's glint). Blueprint: draw a long straight line. ASCII: type five letters. In a look,
+// the same gesture does nothing; pressing the gold koi (mine) brings the water back, from the koi. Each
+// builds up a cue first, so an ordinary press or stroke never surprises.
+const gest = { down: false, holdTimer: 0, pts: [], t0: 0, x0: 0, y0: 0, hold: 0, turn: 0, len: 0, glint: 0, near: false, keys: [], letters: [], typed: 0 };
+const toggleLook = (name, at) => {
+  gest.down = false;
+  gest.pts = [];
+  if (look !== name) setLook(name, at);
+};
+const glintAt = () => [W * (big ? 0.6 : 0.74), H * (big ? 0.1 : 0.12)];
+const HOLD = 1.2,
+  KEYS_TO_TYPE = 5,
+  KEYS_WITHIN = 3,
+  SHORTCUT = /^[iglfm]$/i;
+{
+  pond.addEventListener('pointerdown', (e) => {
+    if (e.target.closest(DRY) || e.button > 0) return;
+    const [x, y] = spot(e);
+    if (look !== 'water' && onHost(x, y)) return;
+    Object.assign(gest, { down: true, pts: [[x, y]], t0: performance.now() / 1000, x0: x, y0: y, hold: 0, turn: 0, len: 0 });
+    // held still long enough: the ink comes (a timer, so it doesn't wait on a slow frame)
+    clearTimeout(gest.holdTimer);
+    gest.holdTimer = setTimeout(() => {
+      if (gest.down && gest.len < 10) toggleLook('ink', [gest.x0, gest.y0]);
+    }, HOLD * 1000);
+  });
+  pond.addEventListener('pointermove', (e) => {
+    if (!gest.down) {
+      // a mouse over the light: it brightens a little, to be found
+      const [x, y] = spot(e),
+        [gx, gy] = glintAt();
+      gest.near = Math.hypot(x - gx, y - gy) < 46;
+      return;
+    }
+    // every point the pointer passed, even those a busy frame folded into one event
+    for (const q of e.getCoalescedEvents?.() || [e]) if (gest.down) stroke(q);
+  });
+  const stroke = (q) => {
+    const [x, y] = spot(q),
+      P = gest.pts,
+      [px, py] = P[P.length - 1],
+      d = Math.hypot(x - px, y - py);
+    if (d < 3) return;
+    // the heading turned since the last step, signed: a circle sums to a full turn, a line or a zigzag doesn't
+    if (P.length > 1) {
+      const [qx, qy] = P[P.length - 2];
+      let da = Math.atan2(y - py, x - px) - Math.atan2(py - qy, px - qx);
+      da = ((da + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
+      gest.turn += da;
+    }
+    gest.len += d;
+    P.push([x, y]);
+    if (P.length > 400) P.splice(1, 1);
+    // stirred once round, wide enough to be meant
+    if (Math.abs(gest.turn) > Math.PI * 1.9 && gest.len > 260) {
+      let xs = P.map((p) => p[0]),
+        ys = P.map((p) => p[1]);
+      const w = Math.max(...xs) - Math.min(...xs),
+        h = Math.max(...ys) - Math.min(...ys);
+      if (Math.min(w, h) > 50) {
+        xs = (Math.max(...xs) + Math.min(...xs)) / 2;
+        ys = (Math.max(...ys) + Math.min(...ys)) / 2;
+        toggleLook('ukiyo', [xs, ys]);
+      }
+    }
+  };
+  const lift = (e) => {
+    if (!gest.down) return;
+    const [x, y] = spot(e),
+      dt = performance.now() / 1000 - gest.t0,
+      ln = straightness();
+    gest.down = false;
+    clearTimeout(gest.holdTimer);
+    if (ln && ln.chord > 320) toggleLook('blueprint', [x, y]);
+    else if (dt < 0.4 && gest.len < 10) {
+      const [gx, gy] = glintAt();
+      if (Math.hypot(x - gx, y - gy) < 46) toggleLook('glow', [gx, gy]);
+    }
+    gest.pts = [];
+  };
+  pond.addEventListener('pointerup', lift);
+  pond.addEventListener('pointercancel', () => {
+    clearTimeout(gest.holdTimer);
+    gest.down = false;
+    gest.pts = [];
+  });
+  // a stroke on the water never selects the type it passes over
+  document.addEventListener('selectstart', (e) => {
+    if (gest.down) e.preventDefault();
+  });
+  // a long press is ours on the water, not the browser's menu
+  pond.addEventListener('contextmenu', (e) => {
+    if (!e.target.closest(DRY)) e.preventDefault();
+  });
+  addEventListener('keydown', (e) => {
+    const typing = /INPUT|TEXTAREA/.test((document.activeElement || {}).tagName || '');
+    if (typing || e.metaKey || e.ctrlKey || e.altKey || palOpen() || sheetOpen() || !/^[a-z]$/i.test(e.key) || SHORTCUT.test(e.key)) return;
+    const now = performance.now() / 1000;
+    // each letter floats onto the water where the pointer is, and ripples away
+    const x = ptr.x || W * (big ? 0.7 : 0.5),
+      y = ptr.y || H * 0.6,
+      k = { ch: e.key, at: now, x: x + rnd(-14, 14), y: y + rnd(-10, 10) };
+    gest.keys = gest.keys.filter((q) => now - q.at < KEYS_WITHIN);
+    gest.keys.push(k);
+    gest.typed = gest.keys.length;
+    gest.letters.push(k);
+    drop(k.x, k.y, 1.6, -0.5);
+    audio();
+    plip('cue-ascii', 0.8);
+    if (look !== 'ascii' && gest.keys.length >= KEYS_TO_TYPE) {
+      gest.keys = [];
+      toggleLook('ascii', [x, y]);
+    }
+  });
+}
+// how straight the stroke so far is: its chord, if every point keeps close to it
+// In a look, a press on my koi comes before whatever lies over it (the contents, a control's glass), but
+// not an open chapter, the search or a field: the water comes back, and the click goes nowhere else.
+addEventListener(
+  'pointerdown',
+  (e) => {
+    if (look === 'water' || sheetOpen() || palOpen() || e.button > 0 || e.target.closest('input, textarea, .veil, .pal-wrap')) return;
+    const [x, y] = spot(e);
+    if (x < 0 || y < 0 || x > W || y > H || !onHost(x, y)) return;
+    e.preventDefault();
+    e.stopPropagation();
+    audio();
+    setLook('water', [host.x, host.y]);
+    plip('drop', 0.8);
+    const swallow = (c) => {
+      c.preventDefault();
+      c.stopPropagation();
+    };
+    addEventListener('click', swallow, { capture: true, once: true });
+    setTimeout(() => removeEventListener('click', swallow, { capture: true }), 600);
+  },
+  { capture: true }
+);
+// my koi, pressed in a look, brings the water back; it moves, so it is given room
+function onHost(x, y) {
+  if (!host || host.alpha < 0.3) return false;
+  if (Math.hypot(x - host.x, y - host.y) < 70) return true;
+  return (host.spine || []).some((p) => Math.hypot(x - p.x, y - p.y) < 46);
+}
+function straightness() {
+  const P = gest.pts;
+  if (P.length < 2) return null;
+  const [ax, ay] = P[0],
+    [bx, by] = P[P.length - 1],
+    chord = Math.hypot(bx - ax, by - ay);
+  if (chord < 60 || gest.len > chord * 1.08) return null;
+  let off = 0;
+  for (const [x, y] of P) off = Math.max(off, Math.abs((bx - ax) * (ay - y) - (ax - x) * (by - ay)) / chord);
+  return off < Math.max(9, chord * 0.035) ? { chord, ax, ay, bx, by } : null;
+}
+// the cues, drawn in the air: ink gathering under a held finger, the stirred path, a ruler, the typed letters
+function stepGesture() {
+  const now = performance.now() / 1000;
+  gest.glint += ((gest.near ? 1 : 0) - gest.glint) * 0.12;
+  if (gest.down && gest.len < 10) {
+    if (gest.hold < 0.3 && now - gest.t0 >= 0.3 && look !== 'ink') plip('cue-ink');
+    gest.hold = now - gest.t0;
+  } else gest.hold = 0;
+}
+function drawGesture(c) {
+  const now = performance.now() / 1000,
+    back = (name) => look === name;
+  c.save();
+  // ink gathering: a drop swelling under the finger, ragged at its edge (going back, a pale one)
+  if (gest.down && gest.hold > 0.25) {
+    const k = clamp((gest.hold - 0.25) / (HOLD - 0.25), 0, 1),
+      r = 6 + 34 * k * k;
+    c.fillStyle = back('ink') ? `rgba(240,233,216,${0.85 * k})` : `rgba(20,18,16,${0.8 * k})`;
+    c.beginPath();
+    for (let i = 0; i <= 24; i++) {
+      const a = (i / 24) * TAU,
+        rr = r * (1 + 0.12 * Math.sin(a * 5 + now * 3) * k);
+      c.lineTo(gest.x0 + Math.cos(a) * rr, gest.y0 + Math.sin(a) * rr);
+    }
+    c.fill();
+  }
+  // the stir: the path traced so far, fainter at its tail, firmer as it comes round
+  if (gest.down && gest.pts.length > 6 && Math.abs(gest.turn) > Math.PI * 0.6) {
+    const k = clamp(Math.abs(gest.turn) / (Math.PI * 1.9), 0, 1),
+      P = gest.pts;
+    c.lineCap = 'round';
+    c.lineWidth = 2.5;
+    for (let i = 1; i < P.length; i++) {
+      c.strokeStyle = `rgba(246,237,216,${0.6 * k * (i / P.length)})`;
+      c.beginPath();
+      c.moveTo(P[i - 1][0], P[i - 1][1]);
+      c.lineTo(P[i][0], P[i][1]);
+      c.stroke();
+    }
+  }
+  // the ruler: once the stroke is straight and long enough to mean it, a faint line with ticks
+  const ln = gest.down && straightness();
+  if (ln && ln.chord > 80) {
+    const k = clamp((ln.chord - 80) / 240, 0, 1),
+      ux = (ln.bx - ln.ax) / ln.chord,
+      uy = (ln.by - ln.ay) / ln.chord;
+    c.strokeStyle = `rgba(225,240,255,${0.25 + 0.55 * k})`;
+    c.lineWidth = 1;
+    c.beginPath();
+    c.moveTo(ln.ax, ln.ay);
+    c.lineTo(ln.bx, ln.by);
+    for (let d = 0; d <= ln.chord; d += 20) {
+      const t = d % 100 ? 4 : 9;
+      c.moveTo(ln.ax + ux * d - uy * t, ln.ay + uy * d + ux * t);
+      c.lineTo(ln.ax + ux * d, ln.ay + uy * d);
+    }
+    c.stroke();
+    c.fillStyle = `rgba(225,240,255,${0.35 + 0.55 * k})`;
+    c.font = "11px 'IBM Plex Mono', ui-monospace, monospace";
+    c.fillText(`${(ln.chord / 100).toFixed(2)} m`, ln.bx + 8, ln.by - 8);
+  }
+  // the light on the water, found: a thin ring around it
+  if (gest.glint > 0.05) {
+    const [gx, gy] = glintAt();
+    c.lineWidth = 1;
+    for (const [r, o] of [
+      [20, 0.85],
+      [34, 0.4]
+    ]) {
+      c.strokeStyle = `rgba(255,250,235,${o * gest.glint})`;
+      c.beginPath();
+      c.arc(gx, gy, r + 3 * Math.sin(now * 3 + r), 0, TAU);
+      c.stroke();
+    }
+  }
+  // the letters typed: each lands on the water as a glyph, and a ring goes out from it as it sinks
+  gest.letters = gest.letters.filter((q) => now - q.at < 2.2);
+  if (gest.letters.length) {
+    c.textAlign = 'center';
+    c.textBaseline = 'middle';
+    for (const q of gest.letters) {
+      const a = now - q.at,
+        f = Math.max(0, 1 - a / 2.2);
+      c.font = `500 ${Math.round(24 + a * 6)}px 'JetBrains Mono', ui-monospace, monospace`;
+      c.fillStyle = `rgba(225,242,236,${0.95 * f})`;
+      c.fillText(q.ch, q.x, q.y);
+      c.strokeStyle = `rgba(225,242,236,${0.35 * f})`;
+      c.lineWidth = 1;
+      c.beginPath();
+      c.arc(q.x, q.y, 10 + a * 46, 0, TAU);
+      c.stroke();
+    }
+  }
+  c.restore();
+}
 
 /* ================= the clock and who is here ================= */
 function tick() {
@@ -3681,7 +4522,20 @@ function frame(now) {
   $('#knob').style.top = focus * 100 + '%';
   $('#gauge').toggleAttribute('data-live', T < focusLive);
   // rain over open water; over ice it comes as snow instead
-  if (raining && AM.ice < 0.3) for (let i = 0; i < (big ? 3 : 1); i++) if (Math.random() < 0.55) drop(rnd(0, W), rnd(0, H), 1.1, -rnd(0.25, 0.7));
+  // in a look the drops are smaller and fewer: a soft bloom in ink, a small ring in the print, a dot in ASCII
+  if (rainNow() && AM.ice < 0.3) {
+    const k = { water: 1, ukiyo: 0.2 }[look] ?? 0.35;
+    for (let i = 0; i < (big ? 3 : 1); i++)
+      if (Math.random() < 0.55 * (look === 'water' ? 1 : 0.5)) {
+        const x = rnd(0, W),
+          y = rnd(0, H);
+        // on paper a drop doesn't ring: it blooms, a soft grey that spreads and dries
+        if (look === 'ink') {
+          blooms.push({ x, y, at: T, r: rnd(5, 11) });
+          if (blooms.length > 28) blooms.shift();
+        } else drop(x, y, 1.1, -rnd(0.25, 0.7) * k);
+      }
+  }
   for (const k of kois) k.update(dt);
   simAcc += 2 * timeScale;
   while (simAcc >= 1) {
@@ -3750,7 +4604,11 @@ function frame(now) {
   gl.uniform2f(U.uRes, glc.width, glc.height);
   gl.uniform2f(U.uGrid, GW, GH);
   gl.uniform2f(U.uMoonPos, big ? 0.6 : 0.74, big ? 0.1 : 0.12);
-  gl.uniform4f(U.uInk, inkR, inkO[0], inkO[1], inkR > 0 ? (inkOn && inkR >= inkMax ? 1 : 0.5) : 0);
+  const shown = top !== 'water' && SID[top] !== SID[base] ? inkR : SID[top] ? inkMax : 0;
+  gl.uniform4f(U.uInk, shown, inkO[0], inkO[1], shown > 0 ? (look !== 'water' && inkR >= inkMax ? 1 : 0.5) : 0);
+  gl.uniform1i(U.uStyle, SID[top]);
+  gl.uniform1i(U.uPrev, SID[base]);
+  gl.uniform1f(U.uGlint, 1 + gest.glint);
   for (let i = 0; i < 10; i++) {
     const b = blots[i];
     blotU.set(b ? [b.x, b.y, T - b.at] : [0, 0, -1], i * 3);
@@ -3794,9 +4652,18 @@ function frame(now) {
   gl.uniform1f(UG.uLod, 2.4 + Math.log2(glDpr));
   gl.uniform1f(UG.uFrost, Math.max(AM.ice, AM.snow * 0.8));
   // the glass turns to paper with the pond
-  const pk = inkMax ? clamp(inkR / inkMax, 0, 1) : 0,
-    gs = [0.03 + cur.tint[0] * 0.03, 0.09 + cur.tint[1] * 0.04, 0.1 + cur.tint[2] * 0.045];
-  gl.uniform3f(UG.uGlass, lerpN(gs[0], 0.95, pk), lerpN(gs[1], 0.92, pk), lerpN(gs[2], 0.85, pk));
+  const pk = clamp(inkR / inkMax, 0, 1),
+    gs = [0.03 + cur.tint[0] * 0.03, 0.09 + cur.tint[1] * 0.04, 0.1 + cur.tint[2] * 0.045],
+    GT = { ink: [0.95, 0.92, 0.85], ukiyo: [0.07, 0.17, 0.32], glow: [0.01, 0.02, 0.05], blueprint: [0.08, 0.24, 0.5] },
+    gt = GT[top] || gs,
+    gf = GT[base] || gs;
+  gl.uniform3f(UG.uGlass, lerpN(gf[0], gt[0], pk), lerpN(gf[1], gt[1], pk), lerpN(gf[2], gt[2], pk));
+  // the text: inside the front when ASCII comes in, outside it when another look comes in over it
+  const ascW = top === 'ascii' ? 1 : base === 'ascii' ? -1 : 0;
+  if (ascW) atlas();
+  gl.uniform4f(UG.uAscii, ascW > 0 && base === 'ascii' ? 1e5 : shown, inkO[0], inkO[1], ascW);
+  gl.uniform2f(UG.uCell, CELL[0], CELL[1]);
+  gl.uniform1i(UG.uAtlas, 7);
   gl.uniform4fv(UG.uPane, paneA);
   gl.uniform4fv(UG.uPaneB, paneB);
   gl.uniform1i(UG.uPaneN, paneN);
@@ -3860,6 +4727,9 @@ function start() {
   makeShade();
   fillPanes();
   langBtn();
+  alignSeg();
+  document.fonts?.ready.then(alignSeg);
+  if (lang === 'ja') loadType();
   if (zhOn) speak();
   setPhase('auto');
   showTerm();
@@ -3878,6 +4748,7 @@ function start() {
     clearTimeout(rt);
     rt = setTimeout(() => {
       resize();
+      paintInk();
       makePetals();
     }, 150);
   });

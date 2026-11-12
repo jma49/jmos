@@ -17,7 +17,7 @@ import Layout from '../layouts/Layout.astro';
 import { profile } from '../content/site';
 import { formatMonth, getProjects } from '../lib/projects';
 import { getPhotos } from '../lib/photos';
-import { ABOUT, type LogEntry, PATH, PROJECT_EXTRAS, THIS_POND, ZH } from '../pond/content';
+import { ABOUT, JA, type LogEntry, PATH, PROJECT_EXTRAS, THIS_POND, ZH } from '../pond/content';
 import pondCover from '../assets/pond/cover.jpg';
 
 const cover = async (src: ImageMetadata) => (await getImage({ src, width: 1100, format: 'webp', quality: 74 })).src;
@@ -58,13 +58,15 @@ const photos = (await getPhotos(profile.photography)).map((p) => ({
   full: p.full,
   page: p.page
 }));
-const data = { log, photos, about: ABOUT, unsplash: profile.photography, zh: ZH };
+const data = { log, photos, about: ABOUT, unsplash: profile.photography, zh: ZH, ja: JA };
 const plain = (html: string) => html.replace(/<[^>]+>/g, '').replace(/\{work:(\w+)\}/g, '$1').replace('{photos}', 'photos').replace(/&amp;/g, '&');
 ---
 
 <Layout bleed path="/" tabTitle="Jincheng's pond" title="Jincheng Ma: a pond" description="Jincheng Ma, a software engineer in the Bay Area. A pond seen from above: his work, projects, photos and music, and everyone who visits is a koi.">
   <div id="pond" data-phase="day">
     <canvas id="gl" aria-hidden="true"></canvas>
+    <canvas id="inkArt" aria-hidden="true"></canvas>
+    <div class="mist" aria-hidden="true"><i></i><i></i></div>
     <div id="tags" aria-hidden="true"></div>
     <div class="shade" aria-hidden="true"><i></i><i></i></div>
     <div class="boat-tip" id="boatTip" aria-hidden="true"></div>
@@ -90,6 +92,7 @@ const plain = (html: string) => html.replace(/<[^>]+>/g, '').replace(/\{work:(\w
       </div>
       <aside class="alm rise" aria-label="Now">
         <b class="term-v" id="termV" lang="zh"></b>
+        <div class="kuan" aria-hidden="true"><span id="kuanTxt" lang="zh"></span><b class="seal" lang="zh">锦程</b></div>
         <div class="txt"><span id="termTxt"></span><span><b id="clockBig"></b> <span id="clockPart"></span></span><span id="hisTime"></span></div>
       </aside>
     </main>
@@ -110,8 +113,8 @@ const plain = (html: string) => html.replace(/<[^>]+>/g, '').replace(/\{work:(\w
         <span style="top:0">surface</span><span style="top:55%">koi</span><span style="top:100%">bed</span><i id="knob"></i>
       </div>
       <div class="br">
-        <button class="pill glass ink-btn lang-btn" data-r="20" id="langBtn" aria-label="中文 (L)"><span lang="zh">中</span></button>
-        <button class="pill glass ink-btn" data-r="20" id="inkBtn" aria-pressed="false" aria-label="Ink and paper (I)"><span lang="zh">墨</span></button>
+        <div class="pill glass seg" data-r="20" id="langBtn" role="group" aria-label="Language"><i class="seg-on" aria-hidden="true"></i><button data-lang="en" lang="en" aria-label="English" aria-pressed="false"><span>En</span></button><button data-lang="zh" lang="zh" aria-label="中文" aria-pressed="false"><span>中</span></button><button data-lang="ja" lang="ja" aria-label="日本語" aria-pressed="false"><span>日</span></button></div>
+        <button class="pill glass ink-btn" data-r="20" id="inkBtn" aria-pressed="false" aria-label="Ink and paper (I)" hidden><span lang="zh">墨</span></button>
         <button class="pill icon glass" data-r="20" id="clear" aria-label="Hide the glass" aria-pressed="true"
           ><svg width="16" height="16" viewBox="0 0 16 16" stroke-width="1.4" stroke-linejoin="round"
             ><rect x="2" y="3" width="8.5" height="7" rx="2"></rect><path d="M12.6 6.2A2 2 0 0 1 14 8.1V11a2 2 0 0 1-2 2H7.6a2 2 0 0 1-1.9-1.4" stroke-linecap="round"></path></svg
