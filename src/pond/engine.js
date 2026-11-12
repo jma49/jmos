@@ -11,6 +11,7 @@
 
 import { report } from '../os/core/report';
 import { load, save } from '../os/core/storage';
+import { effectsOf, loadWeather, minutesAt, phaseAt, seasonOf } from './weather';
 // the looks' type, as a stylesheet of its own: linked only once a look or 日 is chosen (loadType)
 import LOOKS_CSS from './looks.css?url';
 import { IDLE_AFTER, due, learnBeat, simSteps } from './clock.js';
@@ -771,7 +772,10 @@ let yearAuto = true,
   year = yearGoal;
 // how much of each thing the pond holds at a point in the year
 const AM = { petals: 0, lush: 0, bloom: 0, flies: 0, leaves: 0, brown: 0, ice: 0, snow: 0, tint: [1, 1, 1], light: 1 };
-function amounts(y) {
+// south of the equator the season the pond shows is half a year on (the term's name stays the calendar's)
+let south = false;
+function amounts(term) {
+  const y = seasonOf(term, south ? -1 : 1);
   AM.petals = hump(y, 3.5, 4.2);
   AM.bloom = hump(y, 11, 3);
   AM.flies = hump(y, 10.5, 3.6);
@@ -870,7 +874,7 @@ void main(){
 const FS = `#version 300 es
 precision highp float; in vec2 vUv; out vec4 o;
 uniform sampler2D uBed,uH,uFish,uPads,uTop,uIceN;
-uniform vec2 uRes,uGrid,uMoonPos,uCss; uniform float uTime,uAmb,uCaI,uMoon,uSwell,uFocus,uIce,uSnow; uniform vec2 uCalm;
+uniform vec2 uRes,uGrid,uMoonPos,uCss; uniform float uTime,uAmb,uCaI,uMoon,uSwell,uFocus,uIce,uSnow,uFog; uniform vec2 uCalm;
 uniform vec3 uTint,uCaC,uSky,uSeason;
 uniform vec4 uBox[12]; uniform vec4 uBoxB[12]; uniform int uBoxN; uniform vec4 uCrack[6]; uniform float uBroke[6]; uniform vec4 uInk; uniform vec3 uBlot[10]; uniform int uStyle, uPrev; uniform float uGlint;
 float hash1(vec2 p){ return fract(sin(dot(p,vec2(41.3,289.1)))*43758.5453); }
@@ -1169,6 +1173,8 @@ void main(){
   col=tp.rgb*(uAmb*.74+.26)*mix(vec3(1.),uTint*uSeason,.22)+col*(1.-tp.a);
   vec2 q=uv-.5; col*=1.-dot(q,q)*.6;
   col=mix(col*(1.-.5*calm),vec3(.02,.09,.1),calm*.3);
+  // fog: a soft haze over the water
+  col=mix(col,vec3(.55,.61,.63)*(uAmb*.6+.4),uFog*.36);
   // ---------- the looks: a front brings one look in over another (ink, ukiyo-e, glow, blueprint) ----------
   if(uInk.w>0.){
     gP=P; gUv=uv; gG=g; gIa=ia; gRef=ref; gLap=lap; gH=h; gLs=ls; gCalm=calm; gWater=col; gp=p; gHit=hit;
@@ -1327,7 +1333,8 @@ function initGL() {
     'uBlot',
     'uStyle',
     'uPrev',
-    'uGlint'
+    'uGlint',
+    'uFog'
   ])
     U[n] = gl.getUniformLocation(prog, n);
   for (const n of [
@@ -1560,8 +1567,14 @@ const PH = {
 let phaseChoice = 'auto',
   phase = 'day',
   cur = null,
-  raining = false;
+  raining = false,
+  // the weather where the visitor is (weather.ts), and what it does to the pond; a visitor's own rain wins
+  wx = null,
+  fx = effectsOf('clear'),
+  rainChosen = false,
+  flashAt = -99;
 const autoPhase = () => {
+  if (wx) return phaseAt(minutesAt(wx.timeZone), wx.sunrise, wx.sunset);
   const h = new Date().getHours();
   return h >= 5 && h < 8 ? 'dawn' : h >= 8 && h < 17 ? 'day' : h >= 17 && h < 20 ? 'dusk' : 'night';
 };
@@ -2238,6 +2251,10 @@ function setLook(name, from) {
   lookTimer = setTimeout(
     () => {
       pond.toggleAttribute('data-ink', inkOn);
+      if (life) {
+        life.dress(name);
+        spiderSig = '';
+      }
       if (inkOn) {
         paintInk();
         placeKuan();
@@ -2316,7 +2333,7 @@ function placeKuan() {
 let painted = '';
 function paintInk() {
   if (!inkOn) return;
-  const season = Math.floor((Math.floor(yearGoal) % 24) / 6),
+  const season = Math.floor((Math.floor(seasonOf(yearGoal, south ? -1 : 1)) % 24) / 6),
     key = `${season} ${Math.round(W)} ${Math.round(H)}`;
   if (key === painted) return;
   const first = !painted;
@@ -2384,7 +2401,7 @@ function drawSpider(c) {
     x.drawImage(life.canvas, 0, n, n, n, 0, 0, n, n);
   }
   c.globalAlpha = spider.alpha;
-  c.drawImage(spiderPic, spider.x - half, spider.y - half, half * 2, half * 2);
+  laidIn(c, () => c.drawImage(spiderPic, spider.x - half, spider.y - half, half * 2, half * 2));
   c.globalAlpha = 1;
 }
 
@@ -2517,7 +2534,18 @@ function drawDove(c) {
   const u = doveSize() * 0.34 * (1 + dove.h * 0.28),
     half = life.DOVE * u;
   life.dove(lifeDt, { a: dove.a, fly: dove.state !== 'sit', dip: dove.dip, h: dove.h, amb: cur ? cur.amb : 1, tint: cur ? cur.tint : [1, 1, 1] });
-  c.drawImage(life.canvas, dove.x - half, dove.y - half, half * 2, half * 2);
+  laidIn(c, () => c.drawImage(life.canvas, dove.x - half, dove.y - half, half * 2, half * 2));
+}
+// how the look lays the two into the air: ink soaks into the paper, glow adds light; the rest as they are
+const LAY = { ink: ['multiply', 0.8], glow: ['lighter', 0.65], ascii: ['source-over', 0.6] };
+function laidIn(c, draw) {
+  const l = LAY[look];
+  if (!l) return draw();
+  c.save();
+  c.globalCompositeOperation = l[0];
+  c.globalAlpha = l[1];
+  draw();
+  c.restore();
 }
 let dimsAt = 0,
   typeEdge = -1;
@@ -2578,6 +2606,10 @@ function drawDims(c) {
     c.stroke();
     c.fillText(`R ${(R / 100).toFixed(2)}`, b.x + R * 0.7071 + 4, b.y - R * 0.7071 - 4);
   }
+  // the two visitors, labelled as a drawing labels its parts
+  c.textAlign = 'left';
+  if (life && dove.state !== 'away') c.fillText('Devot · dove', dove.x + 26, dove.y + 30);
+  if (life && spider.alpha > 0.6 && spider.pad >= 0) c.fillText('ocra · jumping spider', spider.x + 22, spider.y + 26);
   c.restore();
 }
 // Rain falls where a look can carry it: on the water, in ink (fine dry strokes, and soft blooms where it
@@ -2649,6 +2681,7 @@ const airWanted = () =>
   gest.letters.length > 0 ||
   gest.glint > 0.05 ||
   AM.snow > 0.02 ||
+  fx.snow > 0.02 ||
   (rainNow() && AM.ice > 0.3) ||
   flies.some((f) => f.a2 >= 0.02) ||
   (life && dove.state !== 'away');
@@ -2673,8 +2706,8 @@ function drawAir() {
   if (look === 'blueprint' && inkR >= inkMax * 0.9) drawDims(c);
   drawRain(c);
   drawGesture(c);
-  if (AM.snow > 0.02 || (rainNow() && AM.ice > 0.3)) {
-    const n = Math.max(AM.snow, rainNow() && AM.ice > 0.3 ? 0.7 : 0);
+  if (Math.max(AM.snow, fx.snow) > 0.02 || (rainNow() && AM.ice > 0.3)) {
+    const n = Math.max(AM.snow, fx.snow, rainNow() && AM.ice > 0.3 ? 0.7 : 0);
     c.fillStyle = '#fff';
     for (const q of flakes)
       if (q.i < n) {
@@ -3649,6 +3682,19 @@ function commands() {
       cmd: true,
       run: () => setLang(nextLang())
     },
+    // the weather where the visitor is, said plainly
+    ...(wx
+      ? [
+          {
+            sec: 'Pond',
+            icon: 'rain',
+            label: weatherLine(),
+            hint: L('From Open-Meteo, for where you are', zhOn ? (lang === 'ja' ? 'Open-Meteo より、あなたのいる場所' : '来自 Open-Meteo，你所在的地方') : ''),
+            kw: 'weather temperature rain where 天气 天気',
+            run: () => {}
+          }
+        ]
+      : []),
     // it rains only on the water: in a look the rain waits, and the command with it
     ...(look === 'water'
       ? [
@@ -3661,6 +3707,7 @@ function commands() {
             cmd: true,
             run: () => {
               raining = !raining;
+              rainChosen = true;
               tick();
             }
           }
@@ -4109,6 +4156,12 @@ function plip(kind, vol) {
   const [what, name] = kind.split('-');
   if (name) {
     lookSound(name, what === 'look' ? 'in' : what, t, vol || 1);
+    return;
+  }
+  if (kind === 'thunder') {
+    // far off: a low roll a moment after the flash
+    hiss(t + rnd(0.6, 1.4), 2.6, 70, 0.4, 0.09 * (vol || 1));
+    hiss(t + rnd(0.8, 1.6), 1.8, 140, 0.6, 0.04 * (vol || 1));
     return;
   }
   if (kind === 'crack' && look !== 'water') {
@@ -4714,6 +4767,7 @@ function resize() {
    water settled, no look coming in, no rain), each on the display's own beat so they come evenly (clock.js);
    none while the tab is hidden. Under reduced motion the koi still swim, at the quiet pace: a pond
    that stopped a moment after the pointer did looked broken. invalidate() wakes it. A beat that isn't drawn on costs nothing but the callback. */
+let rainAcc = 0;
 let last = 0,
   running = false,
   beatAt = 0,
@@ -4815,17 +4869,24 @@ function tick1(raw) {
   // rain over open water; over ice it comes as snow instead
   // in a look the drops are smaller and fewer: a soft bloom in ink, a small ring in the print, a dot in ASCII
   if (rainNow() && AM.ice < 0.3) {
-    const k = { water: 1, ukiyo: 0.2 }[look] ?? 0.35;
-    for (let i = 0; i < (big ? 3 : 1); i++)
-      if (Math.random() < 0.55 * (look === 'water' ? 1 : 0.5)) {
-        const x = rnd(0, W),
-          y = rnd(0, H);
-        // on paper a drop doesn't ring: it blooms, a soft grey that spreads and dries
-        if (look === 'ink') {
-          blooms.push({ x, y, at: wall(), r: rnd(5, 11) });
-          if (blooms.length > 28) blooms.shift();
-        } else drop(x, y, 1.1, -rnd(0.25, 0.7) * k);
-      }
+    // drops a second, on time: about a hundred over a wide pond in steady rain; drizzle fewer, a storm more
+    const k = { water: 1, ukiyo: 0.2 }[look] ?? 0.35,
+      hard = rainChosen || !wx ? 1 : Math.max(0.3, fx.rain);
+    rainAcc += raw * (big ? 99 : 33) * hard * (look === 'water' ? 1 : 0.5);
+    for (; rainAcc >= 1; rainAcc--) {
+      const x = rnd(0, W),
+        y = rnd(0, H);
+      // on paper a drop doesn't ring: it blooms, a soft grey that spreads and dries
+      if (look === 'ink') {
+        blooms.push({ x, y, at: wall(), r: rnd(5, 11) });
+        if (blooms.length > 28) blooms.shift();
+      } else drop(x, y, 1.1, -rnd(0.25, 0.7) * k);
+    }
+  }
+  // a storm, over the water only: now and then a far flash, and its thunder after
+  if (fx.thunder && raining && !rainChosen && look === 'water' && Math.random() < raw / 35) {
+    flashAt = T;
+    plip('thunder');
   }
   for (const k of kois) k.update(dt);
   // the ripples step on time: the same speed whatever the frame rate
@@ -4914,7 +4975,7 @@ function tick1(raw) {
   gl.uniform4f(U.uInk, shown, inkO[0], inkO[1], shown > 0 ? (look !== 'water' && inkR >= inkMax ? 1 : 0.5) : 0);
   gl.uniform1i(U.uStyle, SID[top]);
   gl.uniform1i(U.uPrev, SID[base]);
-  gl.uniform1f(U.uGlint, 1 + gest.glint);
+  gl.uniform1f(U.uGlint, (1 + gest.glint) * fx.glint);
   for (let i = 0; i < 10; i++) {
     const b = blots[i];
     blotU.set(b ? [b.x, b.y, wall() - b.at] : [0, 0, -1], i * 3);
@@ -4927,9 +4988,11 @@ function tick1(raw) {
   gl.uniform1f(U.uFocus, focus);
   gl.uniform1f(U.uIce, AM.ice);
   gl.uniform1f(U.uSnow, AM.snow);
-  gl.uniform1f(U.uAmb, cur.amb);
-  gl.uniform1f(U.uCaI, cur.cai * AM.light);
-  gl.uniform1f(U.uMoon, cur.moon);
+  const flash = Math.exp(-(T - flashAt) * 7) * 0.9;
+  gl.uniform1f(U.uAmb, cur.amb * fx.light + flash);
+  gl.uniform1f(U.uCaI, cur.cai * AM.light * fx.light);
+  gl.uniform1f(U.uMoon, cur.moon * Math.max(0.15, fx.glint));
+  gl.uniform1f(U.uFog, fx.fog);
   gl.uniform4fv(U.uBox, boxA);
   gl.uniform4fv(U.uBoxB, boxB);
   gl.uniform1i(U.uBoxN, boxN);
@@ -5013,6 +5076,7 @@ settled
     (L) => {
       try {
         life = L.makeLife();
+        life.dress(look);
       } catch (err) {
         report(err, 'pond models');
       }
@@ -5020,6 +5084,42 @@ settled
     (err) => report(err, 'pond models')
   );
 settled.then(loadSongs);
+// The weather where the visitor is: once the pond has settled, so it never holds up the title page; again
+// every half hour while it's shown (weather.ts keeps it for half an hour, so a reload doesn't fetch).
+function weatherLine() {
+  const w = wx,
+    names = {
+      clear: ['Clear', '晴', '晴れ'],
+      cloudy: ['Cloudy', '多云', 'くもり'],
+      overcast: ['Overcast', '阴', 'くもり'],
+      fog: ['Fog', '雾', '霧'],
+      drizzle: ['Drizzle', '小雨', '小雨'],
+      rain: ['Rain', '雨', '雨'],
+      snow: ['Snow', '雪', '雪'],
+      storm: ['Storm', '雷雨', '雷雨']
+    }[w.condition],
+    i = lang === 'zh' ? 1 : lang === 'ja' ? 2 : 0,
+    head = ['Weather where you are', '你那里的天气', 'あなたのところの天気'][i];
+  return `${head}${i ? '：' : ': '}${names[i]}${i ? '，' : ', '}${w.temp}°${w.unit}${i ? '，' : ', '}${w.city}`;
+}
+function weatherIn(w) {
+  if (!w) return;
+  wx = w;
+  fx = effectsOf(w.condition);
+  if (!rainChosen) raining = fx.rain > 0;
+  pond.toggleAttribute('data-fog', fx.fog > 0);
+  if (south !== w.latitude < 0) {
+    south = w.latitude < 0;
+    amounts(year);
+    padsNow();
+    setIce();
+    paintInk();
+  }
+  if (phaseChoice === 'auto') setPhase('auto');
+  invalidate();
+}
+settled.then(() => loadWeather().then(weatherIn));
+setInterval(() => document.hidden || loadWeather().then(weatherIn), 30 * 60_000);
 people.startPeople(
   {
     onAccount: (a) => {
