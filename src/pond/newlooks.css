@@ -372,3 +372,15 @@
 #pond[data-look='dunhuang'] .term-v {
   color: #e2603f;
 }
+
+/* in Monet's pond a name is written on the painting, not pinned to it */
+#pond[data-look='monet'] .tag {
+  padding: 0;
+  background: none;
+  box-shadow: none;
+  font:
+    italic 500 14px / 1 'Cormorant Garamond',
+    serif;
+  color: rgba(247, 241, 230, 0.9);
+  text-shadow: 0 1px 8px rgba(22, 26, 56, 0.7);
+}

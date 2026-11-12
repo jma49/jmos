@@ -293,7 +293,7 @@ class Koi {
   // A painted koi: a straight picture seen from above, cut into slices along its length, each slice laid
   // along the koi's own spine as it is now, so the painting swims, turns and curls as the drawn koi does. The
   // tail runs on past the spine's end and sways with the stroke. row picks which koi of the sheet.
-  drawSprite(c, pic, row) {
+  drawSprite(c, pic, sy, sh) {
     const s = this.spine,
       acc = [0];
     for (let i = 1; i < N; i++) acc.push(acc[i - 1] + Math.hypot(s[i].x - s[i - 1].x, s[i].y - s[i - 1].y));
@@ -301,8 +301,9 @@ class Koi {
       tail = L * 0.27,
       total = L + tail,
       n = 28,
-      k = total / 896,
-      h = 256 * k,
+      span = sh.x1 - 62,
+      k = total / span,
+      h = sh.rowH * k,
       live = (0.5 + clamp(this.sp / this.cruise, 0, 2.4) * 0.6) * (0.74 + 0.26 * Math.sin(T * 0.7 + this.seed)),
       sway = Math.sin(this.ph - 3.6) * 0.42 * live,
       ex = s[N - 1].x - s[N - 2].x,
@@ -329,25 +330,28 @@ class Koi {
       c.save();
       c.translate(x0, y0);
       c.rotate(Math.atan2(y1 - y0, x1 - x0));
-      c.drawImage(pic, 62 + (896 * i) / n, row * 256, 896 / n + 1.5, 256, -0.4, -h / 2, len + 1.2, h);
+      c.drawImage(pic, 62 + (span * i) / n, sy, span / n + 1.5, sh.rowH, -0.4, -h / 2, len + 1.2, h);
       c.restore();
       x0 = x1;
       y0 = y1;
     }
     if (this.seal) {
       const [qx, qy] = at(L * 0.62),
-        q = this.size * 0.03;
-      c.fillStyle = 'rgba(184,56,42,0.9)';
-      c.fillRect(qx - q, qy - q, q * 2, q * 2);
+        q = this.size * 0.032;
+      // the seal, as a small dab of vermilion in the painting's own hand
+      c.fillStyle = 'rgba(190,52,40,0.88)';
+      c.beginPath();
+      c.ellipse(qx, qy, q * 1.15, q * 0.9, 0.5, 0, 6.2832);
+      c.fill();
     }
     c.restore();
   }
   draw(c) {
     if (this.alpha <= 0.01) return;
     if (look === 'stars' && inkR > inkMax * 0.45) return this.drawStars(c);
-    // Monet's koi are painted: the gold one for mine, the white and red for the visitor's own and the pale
-    // ones, the orange for the rest
-    if (look === 'monet' && koiPic && inkR > inkMax * 0.45) return this.drawSprite(c, koiPic, this === host ? 2 : this === you || this.base === WHITE ? 1 : 0);
+    // a look with painted koi draws them from its sheet, once it has come
+    const sh = koiSheets[look];
+    if (sh && sh.pic && inkR > inkMax * 0.45) return this.drawSprite(c, ...koiPicture(this, sh), sh);
     const s = this.spine,
       S = this.size,
       HW = S * 0.13,
@@ -1559,6 +1563,8 @@ const FS_U = [
   'uLeave',
   'uMural',
   'uFace',
+  'uPic',
+  'uSprite',
   'uStars',
   'uMoonPh'
 ];
@@ -2598,11 +2604,12 @@ function alignInk(sel) {
 const setInk = (on, from) => setLook(on ? 'ink' : 'water', from || $('#inkBtn'));
 function setLook(name, from) {
   if (!LOOKS.includes(name) || name === look) return;
-  if (name === 'dunhuang' || name === 'monet') {
+  if (name === 'dunhuang' || name === 'monet' || name === 'qinghua') {
     picLook = name;
-    name === 'monet' ? loadMonet() : loadMural();
+    name === 'monet' ? loadMonet() : name === 'qinghua' ? loadRim() : loadMural();
     paintPic();
   }
+  loadKoi(name);
   if (name !== 'water' && name !== 'ink') loadType();
   const was = look;
   look = name;
@@ -4803,12 +4810,72 @@ function loadMural() {
   });
 }
 // The one texture a look's picture lies in holds the picture of the look last asked for.
-let picLook = '';
+let picLook = '',
+  picIn = '';
 function paintPic() {
   if (picLook === 'dunhuang') paintMural();
   else if (picLook === 'monet') paintBed();
+  else if (picLook === 'qinghua') paintRim();
+}
+// 青花's rim: the lotus scroll tiled along all four sides (as many whole turns as fit, stretched a little to
+// close), the corner piece in each corner, mirrored. It is the frame the page stands inside.
+let rimImgs = null;
+function loadRim() {
+  if (rimImgs) return;
+  rimImgs = {};
+  for (const k of ['rim', 'corner']) {
+    const im = new Image();
+    im.onload = () => {
+      rimImgs[k] = im;
+      paintPic();
+      invalidate();
+    };
+    im.src = QINGHUA[k];
+  }
+}
+function paintRim() {
+  if (!glOK || !rimImgs || !rimImgs.rim || !rimImgs.corner) return;
+  const k = Math.min(2048 / W, glc.width / W, 2),
+    cv = document.createElement('canvas'),
+    b = big ? 41 : 23;
+  cv.width = Math.max(1, Math.round(W * k));
+  cv.height = Math.max(1, Math.round(H * k));
+  const c = cv.getContext('2d');
+  c.scale(k, k);
+  // one side: tiles from a corner piece to the next, drawn along x from the origin
+  const side = (len) => {
+    const n = Math.max(1, Math.round(len / (b * 8))),
+      tw = len / n;
+    for (let i = 0; i < n; i++) c.drawImage(rimImgs.rim, i * tw, 0, tw + 0.5, b);
+  };
+  const place = (x, y, a, sx, len) => {
+    c.save();
+    c.translate(x, y);
+    c.rotate(a);
+    c.scale(1, sx);
+    side(len);
+    c.restore();
+  };
+  place(b * 2, 0, 0, 1, W - b * 4);
+  place(b * 2, H, 0, -1, W - b * 4);
+  place(0, H - b * 2, -Math.PI / 2, 1, H - b * 4);
+  place(W, H - b * 2, -Math.PI / 2, -1, H - b * 4);
+  for (const [x, y, sx, sy] of [
+    [0, 0, 1, 1],
+    [W, 0, -1, 1],
+    [0, H, 1, -1],
+    [W, H, -1, -1]
+  ]) {
+    c.save();
+    c.translate(x, y);
+    c.scale(sx, sy);
+    c.drawImage(rimImgs.corner, 0, 0, b * 2, b * 2);
+    c.restore();
+  }
+  sendPic(cv);
 }
 function sendPic(cv) {
+  picIn = picLook;
   const was = gl.getParameter(gl.ACTIVE_TEXTURE);
   gl.activeTexture(gl.TEXTURE10);
   gl.bindTexture(gl.TEXTURE_2D, texMural);
@@ -4819,8 +4886,78 @@ function sendPic(cv) {
 // Monet's pictures: the painted water (upright on a phone, the small one on a small window, the large one
 // where the pond is drawn large), the lilies and the koi. Fetched the first time the look is asked for.
 let monetImgs = null,
-  lilyPic = null,
-  koiPic = null;
+  lilyPic = null;
+// The painted koi of the looks that have them (newlooks.js, KOI_SHEETS), fetched with the look. A visitor's
+// koi is one of the sheet's plain ones with their colour laid on, made once for each colour and kept.
+const koiSheets = {};
+function loadKoi(name) {
+  const d = PREVIEW && KOI_SHEETS[name];
+  if (!d || koiSheets[name]) return;
+  const sh = (koiSheets[name] = { ...d, pic: null, maskA: null, made: new Map() }),
+    pic = new Image();
+  pic.onload = () => ((sh.pic = pic), invalidate());
+  pic.src = d.src;
+  if (!d.mask) return;
+  const m = new Image();
+  m.onload = () => {
+    // the mask comes as white on black: its whiteness becomes its cover
+    const cv = document.createElement('canvas');
+    cv.width = m.naturalWidth;
+    cv.height = m.naturalHeight;
+    const x = cv.getContext('2d');
+    x.drawImage(m, 0, 0);
+    const px = x.getImageData(0, 0, cv.width, cv.height);
+    for (let i = 0; i < px.data.length; i += 4) {
+      px.data[i + 3] = px.data[i];
+      px.data[i] = px.data[i + 1] = px.data[i + 2] = 255;
+    }
+    x.putImageData(px, 0, 0);
+    sh.maskA = cv;
+    sh.made.clear();
+  };
+  m.src = d.mask;
+}
+// which picture a koi is drawn from, and how far down it its row starts
+function koiPicture(k, sh) {
+  if (k === host) return [sh.pic, sh.host * sh.rowH];
+  if (k === you) return [sh.pic, sh.you * sh.rowH];
+  if (sh.plain && !k.person) return [sh.pic, (k.base === WHITE ? 1 : 0) * sh.rowH];
+  const row = sh.others[Math.floor(k.seed * 7) % sh.others.length],
+    colour = k.person ? k.dot : sh.patch,
+    key = `${row}|${colour}`;
+  let cv = sh.made.get(key);
+  if (!cv) {
+    cv = document.createElement('canvas');
+    cv.width = 1024;
+    cv.height = sh.rowH;
+    const x = cv.getContext('2d');
+    x.drawImage(sh.pic, 0, row * sh.rowH, 1024, sh.rowH, 0, 0, 1024, sh.rowH);
+    x.globalCompositeOperation = 'source-atop';
+    if (sh.wash) {
+      x.globalAlpha = 0.55;
+      x.fillStyle = sh.wash;
+      x.fillRect(0, 0, 1024, sh.rowH);
+    }
+    if (sh.maskA && colour) {
+      const t = document.createElement('canvas');
+      t.width = 1024;
+      t.height = sh.rowH;
+      const y = t.getContext('2d');
+      y.fillStyle = colour;
+      y.fillRect(0, 0, 1024, sh.rowH);
+      y.globalCompositeOperation = 'destination-in';
+      y.drawImage(sh.maskA, 0, row * sh.rowH, 1024, sh.rowH, 0, 0, 1024, sh.rowH);
+      x.globalAlpha = 0.86;
+      x.drawImage(t, 0, 0);
+    } else if (colour && sh.tint) {
+      x.globalAlpha = sh.tint;
+      x.fillStyle = colour;
+      x.fillRect(0, 0, 1024, sh.rowH);
+    }
+    if (sh.maskA || !sh.mask) sh.made.set(key, cv);
+  }
+  return [cv, 0];
+}
 function loadMonet() {
   if (monetImgs) return;
   monetImgs = {};
@@ -4838,7 +4975,6 @@ function loadMonet() {
     lilyPic = im;
     padsNow();
   });
-  get('koi', MONET.koi, (im) => (koiPic = im));
 }
 function paintBed() {
   if (!glOK || !monetImgs || !monetImgs.bed) return;
@@ -5924,6 +6060,8 @@ function tick1(raw) {
   if (U.uMural) {
     gl.uniform1i(U.uMural, 10);
     gl.uniform3fv(U.uFace, muralFaces);
+    gl.uniform1f(U.uPic, picIn === look ? 1 : 0);
+    gl.uniform1f(U.uSprite, koiSheets[look] && koiSheets[look].pic ? 1 : 0);
   }
   gl.uniform2f(U.uRes, glc.width, glc.height);
   gl.uniform2f(U.uGrid, GW, GH);

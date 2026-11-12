@@ -10,7 +10,13 @@ export const NEW_LOOKS = ['monet', 'qinghua', 'dunhuang', 'stars'];
 export const NEW_SID = { monet: 6, qinghua: 7, dunhuang: 8, stars: 9, chalk: 10 };
 
 /** How each lays the dove and the spider into the air, the glass's tint, and how fast its front runs out. */
-export const NEW_LAY = { qinghua: ['multiply', 0.85], dunhuang: ['multiply', 0.8], stars: ['lighter', 0.6], chalk: ['screen', 0.7] };
+export const NEW_LAY = {
+  monet: ['source-over', 0.5],
+  qinghua: ['multiply', 0.85],
+  dunhuang: ['multiply', 0.8],
+  stars: ['lighter', 0.6],
+  chalk: ['screen', 0.7]
+};
 export const NEW_GLASS = {
   monet: [0.2, 0.26, 0.36],
   qinghua: [0.93, 0.95, 0.97],
@@ -22,6 +28,32 @@ export const NEW_GLASS = {
 /** How much of the tree's shade lies over each: none on glaze, plaster, the night sky or a board. */
 export const NEW_SHADE = { monet: 0.5, qinghua: 0, dunhuang: 0, stars: 0, chalk: 0 };
 
+/** 青花's pictures: the rim's lotus scroll and its corner, the koi and where a visitor's colour goes on them. */
+export const QINGHUA = {
+  rim: '/pond/qinghua/rim.webp',
+  corner: '/pond/qinghua/corner.webp',
+  koi: '/pond/qinghua/koi.webp',
+  koiMask: '/pond/qinghua/koi-mask.webp'
+};
+/**
+ * The painted koi of each look that has them: the sheet, how high a row is, where the tail ends, which row is
+ * mine and which the visitor's, which rows the rest take, and how a colour is laid on (a wash over a grey koi,
+ * its patches through the mask; or, with no mask, a tint over the whole fish).
+ */
+export const KOI_SHEETS = {
+  monet: { src: '/pond/monet/koi.webp', rowH: 256, x1: 958, host: 2, you: 1, others: [1], plain: true, tint: 0.38 },
+  qinghua: {
+    src: '/pond/qinghua/koi.webp',
+    mask: '/pond/qinghua/koi-mask.webp',
+    rowH: 384,
+    x1: 962,
+    host: 0,
+    you: 1,
+    others: [2, 3],
+    wash: '#3d5fc0',
+    patch: '#0f2470'
+  }
+};
 /** Monet's pictures (public/pond/monet/): the painted water in three shapes, the lilies and the koi. */
 export const MONET = {
   bed: '/pond/monet/bed.webp',
@@ -104,23 +136,24 @@ export const NEW_COMMANDS = [
 /** The looks' functions, added to the water pass after the six that ship. */
 export const NEW_GLSL = `
 // ---------- the preview looks ----------
-uniform sampler2D uMural; uniform vec3 uFace[2];
+uniform sampler2D uMural; uniform vec3 uFace[2]; uniform float uPic,uSprite;
 float grain(vec2 P){ return .5+.5*noise(P*1.9)*(.6+.4*noise(P*.7+9.)); }
 // Monet: an oil painting of the pond's water is the bed (a picture, laid into one texture once). The water over
 // it is a wet surface: it bends the painting a little where it moves and catches a sheen, and the paint's
 // own ridges take a little light. The lilies and the koi are painted too (engine.js draws them from their
 // sheets onto the pads' and the fish's canvases), so here they are only laid over, with a soft shade under them.
 vec3 lookMonet(){
-  vec2 uv=gUv, P=gP, ruv=uv+gG*gIa*.05+gRef*.35;
+  vec2 uv=gUv, P=gP, ruv=uv+gG*gIa*.028+gRef*.3;
   vec4 bed=texture(uMural,ruv);
   vec3 col=mix(vec3(.27,.38,.52)*(.85+.3*fbm(P*.004)),bed.rgb,bed.a);
   float ridge=dot(col-texture(uMural,ruv-vec2(0.,1.6)/uCss).rgb,vec3(.333))*bed.a;
   col+=vec3(.55,.54,.48)*clamp(ridge*3.,-.05,.09);
-  col+=vec3(.9,.95,1.)*clamp(abs(gLap)*5.+length(gG)*.3,0.,.13)*(1.-gCalm*.8);
+  col+=vec3(.9,.95,1.)*clamp(abs(gLap)*3.,0.,.045)*(1.-gCalm*.8);
   vec4 pd=textureLod(uPads,uv+gG*gIa*.006,0.); float ps=textureLod(uPads,uv+vec2(.004,.007),2.).a;
   col*=1.-.24*ps*(1.-pd.a); col=pd.rgb*.97+col*(1.-pd.a);
   vec4 f=textureLod(uFish,uv+gRef*.3,.7); col*=1.-.2*textureLod(uFish,uv+vec2(.004,.007),3.).a*(1.-f.a); col=f.rgb+col*(1.-f.a);
-  vec4 tp=textureLod(uTop,uv,1.); col=tp.rgb*.92+col*(1.-tp.a);
+  // (what sits or floats on the water is taken into the painting: softened, and greyed towards the water)
+  vec4 tp=textureLod(uTop,uv,2.2); col=mix(col,mix(tp.rgb/max(tp.a,1e-3),vec3(.30,.33,.48),.5),tp.a*.7);
   // a press: a dab of paint, its edge soft and uneven, that spreads and blends into what is under it
   for(int i=0;i<10;i++){ vec3 bl=uBlot[i]; if(bl.z<0.) continue;
     float t=bl.z, R=14.+46.*sqrt(t)*(1.-exp(-t*1.4)), d=length(P-bl.xy)+(noise(P*.09+bl.x)-.5)*16.+(noise(P*.4)-.5)*5.;
@@ -129,7 +162,7 @@ vec3 lookMonet(){
   // winter: the ice in white and the palest blue, laid on thick
   col=mix(col,mix(vec3(.88,.91,.95),vec3(.74,.81,.92),noise(P*.02)),gIce*.78);
   col*=.97+.03*sin(P.x*2.6)*sin(P.y*2.6);
-  col=mix(col,col*vec3(.66,.70,.80),gCalm*.5);
+  col=mix(col,col*vec3(.60,.65,.78),gCalm*.68);
   return col;
 }
 // 青花: white glaze with a soft gloss and a fine crackle; the koi, the lotus and the water in cobalt, in
@@ -151,8 +184,10 @@ vec3 lookQinghua(){
   vec3 pc=pd.rgb/max(pd.a,1e-3); c=mix(c,deep,clamp((pc.r-pc.g)*2.2,0.,1.)*pd.a*.6);
   // koi: outline in the deep blue, the body a wash, their red patches filled dark
   vec4 f0; float fa,fb,fc,red; fishAt(f0,fa,fb,fc,red);
+  vec3 cd=mix(c,f0.rgb/max(f0.a,1e-3),f0.a*clamp(pool+.3,0.,1.));   // painted koi, as they are
   c=mix(c,wash,fb*.5*pool); c=mix(c,deep,clamp((fa-fb)*3.6,0.,1.)*clamp(pool,0.,1.)); c=mix(c,deep,smoothstep(.2,.6,red)*.85*pool);
   c=mix(c,mix(wash,deep,.4),step(.5,f0.a)*smoothstep(.34,.46,abs(fract((P.x+P.y)*.11)-.5))*.35);
+  c=mix(c,cd,uSprite);
   vec4 tp=textureLod(uTop,uv,0.); float te=textureLod(uTop,uv,1.5).a; c=mix(c,deep,clamp(abs(tp.a-te)*3.,0.,1.)*.8*pool);
   // the rim: two lines and a row of petals between them
   float fs=mix(1.,.56,uCalm.x), e=min(min(P.x,uCss.x-P.x),min(P.y,uCss.y-P.y))/fs, along=((min(P.x,uCss.x-P.x)<min(P.y,uCss.y-P.y))?P.y:P.x)/fs;
@@ -160,7 +195,9 @@ vec3 lookQinghua(){
   c=mix(c,glaze,1.-smoothstep(39.,43.,e));
   float rim=(1.-smoothstep(0.,1.,abs(e-10.)-.5))+(1.-smoothstep(0.,1.,abs(e-13.5)-.2))+(1.-smoothstep(0.,1.,abs(e-36.)-.4));
   float pet=1.-smoothstep(0.,1.1,abs(length(vec2((fract(along/24.)-.5)*24.,e-25.))-8.)-.5);
-  c=mix(c,deep,clamp(rim+pet*step(15.,e)*step(e,35.),0.,1.)*clamp(pool,0.,1.)*.85);
+  // (the rim is a painted lotus scroll once it has come; a row of beads between lines until then)
+  vec4 rm=texture(uMural,uv); c=mix(c,rm.rgb/max(rm.a,1e-3),rm.a*uPic*clamp(pool+.2,0.,1.));
+  c=mix(c,deep,(1.-uPic)*clamp(rim+pet*step(15.,e)*step(e,35.),0.,1.)*clamp(pool,0.,1.)*.85);
   // the crackle, and a new craze line from each press, running out along the glaze
   // (the crackle comes last as the glaze cools, ticking across a patch at a time)
   c=mix(c,vec3(.55,.50,.44),(seams(P/46.)*.13+seams(P/17.+3.)*.05)*smoothstep(0.,.1,uLookT-1.7-hash1(floor(P/130.))*.9));

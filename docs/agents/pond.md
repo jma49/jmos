@@ -256,7 +256,10 @@ where a visitor's colour goes, as "Koi for each look" below asks of every look.
 
 #### 青花
 
-In `public/pond/qinghua/`. Cobalt only, the porcelain left transparent.
+In `public/pond/qinghua/`, and in use: `paintRim()` in `engine.js` tiles the rim along all four sides with the
+corner piece in each corner (mirrored), into the texture a look's picture lies in, and the frame is the
+page's margin; the koi swim from `koi.webp` (`Koi.drawSprite()`), the grey ones washed in cobalt, a
+visitor's colour laid into their patches through `koi-mask.webp` (`koiPicture()`). Cobalt only, the porcelain left transparent.
 
 | File | Size | What is in it |
 | --- | --- | --- |
