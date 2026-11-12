@@ -58,6 +58,22 @@ for; keep it true when the file changes.
   35 KB gzipped), its CSS and the serif. The backend loads at once only
   for someone with a stored session, otherwise once the pond has settled
   (`settled` in `engine.js`), as do the songs, three.js and the models.
+- **The loop's pace** (`clock.js`, `invalidate()` in `engine.js`):
+  - At most 30 frames a second while something happens, and 10 once nothing has for six seconds (no
+    input, the water settled, no look coming in, no rain).
+  - None while the tab is hidden. Under reduced motion it draws only for a moment after a change.
+  - The ripples step on time, 120 steps a second (scaled by ink's slow time), so they run at the same
+    speed at 60 and 120 Hz.
+  - A frame touches the page only when what it shows changes: the panes are read only while something
+    there moves, and tags, the knob and the gauge are written only on change.
+  - Textures are made once for each size and then only refilled. The top layer is drawn ten times a
+    second. The glass blurs a quarter-size copy of the scene, and the tree's shade is drawn in the
+    glass pass, not by a blurred, blended layer.
+  - At most about two megapixels are drawn, fewer if frames run slow.
+  - The sound sleeps when muted, hidden or idle for a minute.
+
+  A new animation must be time-based (scale by `dt`), and anything that changes the picture without
+  input must call `invalidate()`.
 - **Addresses:** a chapter is `#<chapter>`, and an entry on the timeline
   `#career/<id>` (ids from `content.ts` and the project pages' slugs).
 

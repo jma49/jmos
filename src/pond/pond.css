@@ -167,7 +167,11 @@ kbd {
     0 0 0 3px rgba(238, 244, 241, 0.2),
     0 1px 6px rgba(0, 0, 0, 0.4);
 }
-/* the shade of a tree over the water */
+/* the shade of a tree over the water: drawn by the glass pass (engine.js) when there is WebGL; this
+   is the same shade for a pond without it */
+#pond:not(.nogl) .shade {
+  display: none;
+}
 .shade {
   position: absolute;
   inset: -12%;
@@ -3082,6 +3086,9 @@ button.more:hover {
   height: 26vh;
   background: linear-gradient(180deg, rgba(246, 242, 232, 0), rgba(246, 242, 232, 0.42), rgba(246, 242, 232, 0));
   filter: blur(18px);
+}
+/* the mist drifts only while it shows (in ink): an animation left running behind opacity 0 still costs */
+#pond[data-ink] .mist i {
   animation: mist 90s ease-in-out infinite alternate;
 }
 .mist i:first-child {
@@ -3089,6 +3096,8 @@ button.more:hover {
 }
 .mist i:last-child {
   top: 60%;
+}
+#pond[data-ink] .mist i:last-child {
   animation-duration: 120s;
   animation-direction: alternate-reverse;
 }
