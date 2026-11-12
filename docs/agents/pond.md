@@ -159,6 +159,12 @@ The flying figures (飞天) can't be drawn well in a shader, so they are picture
 | `feitian-pipa.webp` | 1536 × 768, 135 KB | One figure playing a pipa, pale skin, skirt in green and blue: 114, 116, 1330, 519. The body is the left 45%, the ribbons the rest. |
 | `feitian-flowers.webp` | 1536 × 768, 116 KB | One figure scattering lotus flowers from a tray, brown skin, cinnabar skirt, descending: 82, 46, 1367, 658. |
 | `sky-flowers.webp` | 1024 × 512, 38 KB | Eight small motifs in a grid of 4 × 2 cells of 256 pixels, each inside the middle 152 pixels of its cell. Top row: a blue cloud, a green cloud, a red cloud, an open lotus. Bottom row: a bud, a half-open lotus, two petals, a flaming pearl. |
+| `feitian-pipa-2560.webp` | 2560 × 1280, 258 KB | The pipa player again for the centrepiece, in the same frame, so every position is the 1536 one's × 5/3 (the paint: 190, 194, 2217, 864). It is an enlargement of the original at the size the image model gave (1774 wide), not a redrawing: its lines are sharper than the 1536 one stretched, but it holds no new detail. To use it, point `MURAL.pipa` at it and make its source rectangle 2560 × 1280; `feitian-pipa.webp` can then go, or stay for narrow walls. |
+| `feitian-far.webp` | 768 × 384, 84 KB | A small, simpler figure flying to the right, holding a lotus out in both hands, ribbons streaming left, pale skin, green skirt: 35, 95, 701, 201. Her face is at 607, 165, radius 25. Her feet show. |
+| `border.webp` | 1024 × 128, 3 KB | A band to tile across the wall's top and bottom: a green vine with a green leaf, a blue leaf and a white bud on cinnabar, between two rows of white pearls on blue. Opaque all over, and seamless left to right: four turns of the vine and 64 pearls a row in one tile. No gold in it. |
+| `caisson.webp` | 1024 × 1024, 172 KB | A ceiling medallion (藻井): a lotus of two rings of petals round a white seed-pod, in a blue circle, a corner flower in each corner, then square bands of cinnabar triangles, white petals, blue and green: 42, 43, 939, 938. Opaque inside its square. No gold in it. Drawn by hand, so not exactly the same in its four quarters. |
+| `halo.webp` | 512 × 512, 51 KB | A halo (光环): a white disc, a blue ring, a ring of cinnabar and green petals, and a thin rim in the gold ochre: 23, 23, 466, 466, a circle about the middle. |
+| `cloud-trail.webp` | 1024 × 256, 36 KB | A long cloud (长云): three curled scrolls in white, blue and green at the left, thinning into one tail that ends in a point at the right: 57, 33, 916, 167. |
 
 - **How they are painted:** flat mineral colour inside a dark line, in the look's own palette (blue
   `#2B6385`, green `#4D856E`, cinnabar `#B34026`, white `#EDE0C2`, line `#2E1C12`, a little ochre
@@ -172,7 +178,8 @@ The flying figures (飞天) can't be drawn well in a shader, so they are picture
   stretching it further.
 - **Loading:** fetch them the first time the look is asked for, as its pass is built, never on the
   first load, and only in a build that has the look. They are same-origin, so the Content Security
-  Policy needs nothing. Each stays under the 200 KB budget of `scripts/check-public-sizes.mjs`.
+  Policy needs nothing. Each stays under the 200 KB budget of `scripts/check-public-sizes.mjs` but
+  `feitian-pipa-2560.webp`, which has an exception there with its reason.
 
 They come from an image model that only an agent on the owner's machine can reach (Codex's image
 tool, asked from there), not from an agent in the cloud. So the work is split:
@@ -189,24 +196,16 @@ tool, asked from there), not from an agent in the cloud. So the work is split:
 
 Wanted:
 
-- `feitian-pipa` again, larger: the same figure, pose and facing (flying left, ribbons right), 2560 ×
-  1280. It is the centrepiece, drawn up to half the wall's width, and on a 2000-pixel window at 2× the
-  1536 one is stretched past its sharpness. At this size it will pass 200 KB: `check-public-sizes.mjs`
-  would need a line for `public/pond/dunhuang/` (say 450 KB a picture), the reason being that these load
-  only when this one look is first chosen, never on a first visit.
-- A border strip for the top and bottom of the wall: a band of 卷草纹 (scrolling vine) between two rows
-  of 连珠 beads, the same palette and line, 1024 × 128, transparent, and seamless where its left end
-  meets its right, since it is tiled across. It runs the full width at the very top and bottom.
-- A ceiling medallion (藻井), simpler than the three hares: a lotus in the middle, concentric square
-  bands round it, a 角花 in each corner, square, 1024 × 1024. For the quiet lower middle-left of the
-  wall at low strength; it will be tried there and left out if it crowds the title.
-- One small, far-off 飞天, about a third the size of the others (768 × 384), simpler, flying to the
-  right (the others fly left), for depth on wide walls: it sits small, high and left of centre.
-- If they come easily: a halo (光环) disc, 512 × 512, and a long trail of cloud (长云), 1024 × 256, to
-  sit behind a figure.
 - A ceiling medallion (藻井) with the three hares that share three ears (cave 407), square, for the
   quiet middle of the wall. One was made and turned down: the ears came out as three spindles
   joining the hares' noses. Wanted only if the look has a place for it.
+
+About the second lot (the larger pipa player, the far figure, the border, the medallion, the halo and
+the long cloud): the image model gives nothing wider than 1774 pixels, so a picture asked for larger
+than that is an enlargement. Their colours were snapped to the palette, each area one flat colour, so
+their edges are a little harder than the first three's, and the far figure's crown has a few flecks of
+cinnabar in its ochre. The ochre is only where gold is meant: crowns, earrings, bracelets and the
+halo's rim.
 
 What worked, and what was changed in use (2026-11-12): the three pictures are good, well drawn and in
 the wall's own manner, and are used as they came. Both figures are used facing left,

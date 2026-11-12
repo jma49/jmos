@@ -38,6 +38,16 @@ export const EXCEPTIONS = new Map([
         'so at about quality 78 it is 1.53 MB; re-encoding it at quality 75 saves only 5.6% (still over 1 MB) ' +
         'for a measurable loss (36.6 dB PSNR against it, the gravel slightly softer at 1:1). Checked 2026-10-03.'
     }
+  ],
+  [
+    'pond/dunhuang/feitian-pipa-2560.webp',
+    {
+      bytes: 300 * KB,
+      reason:
+        'The centrepiece of the pond’s Dunhuang wall, drawn up to half the width of a large window at 2×, where ' +
+        'the 1536-pixel one is stretched soft. At 2560 × 1280 and quality 76 it is 258 KB; under 200 KB its lines ' +
+        'ring. It is fetched only when that one look is first chosen, never on a first visit.'
+    }
   ]
 ]);
 
