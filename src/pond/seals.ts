@@ -11,10 +11,14 @@ export interface Seal {
   cut: 'white' | 'red';
   /** Only in a preview build: a look visitors can't reach yet. */
   preview?: boolean;
+  /** A place kept in the album for a look that isn't chosen yet: shown as coming, never stamped. */
+  soon?: boolean;
 }
 export interface Volume {
   id: string;
   seals: Seal[];
+  /** places kept for looks still to come */
+  soon?: number;
 }
 /** The volumes in order. A new look's seal is added to a volume, or a volume added, here and nowhere else. */
 export const VOLUMES: Volume[] = [
@@ -35,14 +39,18 @@ export const VOLUMES: Volume[] = [
       { id: 'blueprint', chars: '图', shape: 'square', cut: 'white' },
       { id: 'ascii', chars: '字', shape: 'square', cut: 'red' },
       { id: 'stars', chars: '星', shape: 'round', cut: 'white', preview: true },
-      { id: 'chalk', chars: '板报', shape: 'tall', cut: 'red', preview: true }
+      { id: 'chalk', chars: '板报', shape: 'tall', cut: 'red', preview: true, soon: true }
     ]
   }
 ];
 
 /** The volumes as this build has them: without the looks that are only previews, unless it is one. */
 export const volumes = (preview: boolean): Volume[] =>
-  VOLUMES.map((v) => ({ ...v, seals: v.seals.filter((s) => preview || !s.preview) })).filter((v) => v.seals.length);
+  VOLUMES.map((v) => ({
+    ...v,
+    seals: v.seals.filter((s) => !s.soon && (preview || !s.preview)),
+    soon: preview ? v.seals.filter((s) => s.soon).length : 0
+  })).filter((v) => v.seals.length);
 
 export interface Album {
   /** seal id → the day it was found (YYYY-MM-DD, the visitor's own date) */
@@ -123,6 +131,7 @@ export interface SealWords {
   thanks: Record<string, string>;
   koi: string;
   both: string;
+  soon: string;
   line: string;
   open: string;
   openHint: string;
@@ -161,6 +170,7 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
     thanks: { painted: 'Every painted one. Thank you for looking so closely.', drawn: 'Every drawn one. Thank you for trying things.' },
     koi: 'Your koi wears a seal from now on.',
     both: 'Both volumes are full. The gold koi wears one too, to match.',
+    soon: 'Still to come.',
     line: 'The water answers more than a tap.',
     open: 'Seals',
     openHint: 'The looks you have found',
@@ -198,6 +208,7 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
     thanks: { painted: '画的这一册集齐了。谢谢你看得这么仔细。', drawn: '线的这一册集齐了。谢谢你什么都试一试。' },
     koi: '你的锦鲤，从此带着一方印。',
     both: '两册都满了。金色的那条也盖了一方，和你作伴。',
+    soon: '还没画好。',
     line: '水面不只会回应点击。',
     open: '集印册',
     openHint: '你遇见过的样子',
@@ -235,6 +246,7 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
     thanks: { painted: '絵の一冊がそろいました。じっくり見てくれて、ありがとう。', drawn: '線の一冊がそろいました。いろいろ試してくれて、ありがとう。' },
     koi: 'あなたの鯉に、印がひとつ付きました。',
     both: '二冊ともそろいました。金の鯉にも、おそろいの印を。',
+    soon: 'まだ準備中。',
     line: '水面は、タップのほかにも応えます。',
     open: '集印帳',
     openHint: '出会った姿',
@@ -267,7 +279,9 @@ export function albumHTML(a: Album, vols: Volume[], lang: Lang, fresh: string[] 
           ? `<li data-found>${sealMark(s)}<span class="nm">${esc(w.names[s.id])}</span><time datetime="${a.found[s.id]}">${dayText(a.found[s.id], lang)}</time></li>`
           : `<li>${sealBlank(s)}<span class="hint">${esc(w.hints[s.id])}</span></li>`
       )
-      .join('')}</ol>${
+      .join(
+        ''
+      )}${`<li class="soon"><b class="seal-m blank" data-shape="square" aria-hidden="true"></b><span class="hint">${esc(w.soon)}</span></li>`.repeat(v.soon ?? 0)}</ol>${
       done
         ? `<p class="grand"${fresh.includes(v.id) ? ' data-fresh' : ''}><span>${esc(w.thanks[v.id])}${v.id === 'painted' ? `<br>${esc(w.koi)}` : ''}${allFull(a, vols) && i === vols.length - 1 && vols.length > 1 ? `<br>${esc(w.both)}` : ''}</span><b class="seal-m own" data-shape="tall" data-cut="white" data-n="2" lang="zh" aria-hidden="true"><span>锦</span><span>程</span></b></p>`
         : ''

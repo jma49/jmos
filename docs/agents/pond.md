@@ -312,7 +312,24 @@ the shader and the type do better than a picture would.
 **The dove and the spider:** nothing yet. Their models are dressed for each look first; a look they
 can't be dressed for will ask for a small illustration of each here.
 
-**The look that replaces the blackboard:** held until it is chosen.
+**Egyptian relief** (`public/pond/relief/`), the look that replaces the blackboard, not built yet: a
+garden pond carved and painted in limestone, in the manner of New Kingdom tomb scenes (the pond from
+Nebamun's tomb), lit by a raking light that turns with the day. Real carving will beat procedural
+bumps, so each picture is wanted as two files of the same size and framing: `<name>-h.webp`, the
+relief's height in greyscale (mid grey the stone's face, lighter raised, darker cut in, soft
+continuous tone, opaque), and `<name>-c.webp`, the faded mineral paint that lies on it (Egyptian blue
+`#3F6FA8`, green `#5E8F6A`, red ochre `#A8482C`, yellow `#D6A23E`, black line), transparent where the
+stone is bare, worn in patches. No shading or cast shadow in either: the look lights the height itself.
+
+- ★ `fish`, 1024 × 512, a 2 × 1 sheet: two fish in profile as tomb reliefs carve them (tilapia, with
+  incised scales, fins and eye), heads to the left, one straight and one gently curved.
+- ★ `frieze`, 1024 × 128, a band of lotus flower and bud alternating, seamless left to right, for
+  the top and bottom of the wall.
+- ★ `lotus`, 1024 × 512, a 4 × 2 sheet: two open lotus flowers, two buds, two leaves seen from
+  above, a papyrus clump, a duck in profile facing left.
+- `cartouche`, 512 × 768, an empty cartouche frame (the rope ring and its bar), upright, to hold
+  the solar term. Nothing written in it.
+- No inscriptions anywhere: no hieroglyphic text, real or invented.
 
 ## Languages
 

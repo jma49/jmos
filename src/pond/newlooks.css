@@ -336,3 +336,39 @@
 #pond[data-look='chalk'] .seals-btn {
   margin-top: 0;
 }
+
+/* the Dunhuang wall has a band along its top and bottom: the clock and the controls stand clear of it */
+#pond[data-look='dunhuang'] .alm {
+  top: 44px;
+}
+#pond[data-look='dunhuang'] .hud .bl,
+#pond[data-look='dunhuang'] .hud .br,
+#pond[data-look='dunhuang'] .hud .cmd,
+#pond[data-look='dunhuang'] .preview {
+  bottom: 44px;
+}
+#pond[data-look='dunhuang'] .stamp {
+  bottom: 92px;
+}
+@media (max-width: 860px) {
+  #pond[data-look='dunhuang'] .alm {
+    top: 28px;
+  }
+  #pond[data-look='dunhuang'] .lead {
+    padding-top: 12px;
+  }
+  #pond[data-look='dunhuang'] .hud .bl,
+  #pond[data-look='dunhuang'] .hud .br,
+  #pond[data-look='dunhuang'] .hud .cmd,
+  #pond[data-look='dunhuang'] .preview {
+    bottom: 30px;
+  }
+}
+/* the clock stands in the soot at the top of the wall: its lines in the wall's white, not in umber */
+#pond[data-look='dunhuang'] .alm .txt,
+#pond[data-look='dunhuang'] .alm .txt b {
+  color: rgba(237, 224, 194, 0.92);
+}
+#pond[data-look='dunhuang'] .term-v {
+  color: #e2603f;
+}

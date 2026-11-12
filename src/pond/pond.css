@@ -3513,6 +3513,11 @@ button.more:hover {
 .album .slots .seal-m[data-shape='tall'] {
   --s: 62px;
 }
+.album .slots .soon .seal-m {
+  box-shadow: none;
+  outline: 1px dashed rgba(92, 58, 40, 0.3);
+  outline-offset: -1px;
+}
 .album .nm {
   font: 600 14px / 1.2 var(--display);
   color: #2a231c;

@@ -54,6 +54,7 @@ const ALLOWED = new Map([
   ['public/pond/ukiyo/', 'asked for, not yet delivered'],
   ['public/pond/stars/', 'asked for, not yet delivered'],
   ['public/pond/ink/', 'asked for, not yet delivered'],
+  ['public/pond/relief/', 'asked for, not yet delivered'],
   ['supabase/.temp/', 'the Supabase CLI’s local state, kept out of git'],
   // Named in docs/agents/pitfalls.md as history: where Astro's entry point
   // was and is, inside node_modules/astro.

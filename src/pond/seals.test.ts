@@ -28,7 +28,12 @@ describe('the volumes', () => {
       ['ink', 'ukiyo'],
       ['glow', 'blueprint', 'ascii']
     ]);
-    expect(preview.map((v) => v.seals.length)).toEqual([5, 5]);
+    expect(preview.map((v) => v.seals.length)).toEqual([5, 4]);
+    // the place kept for the look that replaces the blackboard: shown, never stamped
+    expect(preview[1].soon).toBe(1);
+    expect(stamp(emptyAlbum(), 'chalk', '2026-11-12', preview).fresh).toBe(false);
+    expect(albumHTML(emptyAlbum(), preview, 'en')).toContain(SEAL_WORDS.en.soon);
+    expect(albumHTML(emptyAlbum(), live, 'en')).not.toContain(SEAL_WORDS.en.soon);
   });
   it('give every seal its own id, one or two characters, and words in each language', () => {
     const all = VOLUMES.flatMap((v) => v.seals);

@@ -5,7 +5,8 @@
 // pass, and each is built as a pass of its own once it is asked for (engine.js, fsPart).
 
 /** The new looks and their numbers in the shader, after the six that ship. */
-export const NEW_LOOKS = ['monet', 'qinghua', 'dunhuang', 'stars', 'chalk'];
+// (the blackboard, 'chalk', is drawn below but is out of the list until the look that replaces it is chosen)
+export const NEW_LOOKS = ['monet', 'qinghua', 'dunhuang', 'stars'];
 export const NEW_SID = { monet: 6, qinghua: 7, dunhuang: 8, stars: 9, chalk: 10 };
 
 /** How each lays the dove and the spider into the air, the glass's tint, and how fast its front runs out. */
@@ -22,12 +23,21 @@ export const NEW_GLASS = {
 export const NEW_SHADE = { monet: 0.5, qinghua: 0, dunhuang: 0, stars: 0, chalk: 0 };
 
 /** The Dunhuang wall's pictures (public/pond/dunhuang/), fetched the first time the look is asked for. */
-export const MURAL = { pipa: '/pond/dunhuang/feitian-pipa.webp', flowers: '/pond/dunhuang/feitian-flowers.webp', sky: '/pond/dunhuang/sky-flowers.webp' };
+export const MURAL = {
+  pipa: '/pond/dunhuang/feitian-pipa.webp',
+  flowers: '/pond/dunhuang/feitian-flowers.webp',
+  sky: '/pond/dunhuang/sky-flowers.webp',
+  far: '/pond/dunhuang/feitian-far.webp',
+  border: '/pond/dunhuang/border.webp',
+  trail: '/pond/dunhuang/cloud-trail.webp'
+};
+/** The centrepiece again, larger: asked for in its place only where the wall is drawn wide enough to need it. */
+export const MURAL_LARGE = { pipa: '/pond/dunhuang/feitian-pipa-2560.webp' };
 /**
  * Where each picture goes on a wall of W by H: the pipa player high in the right half, flying left towards
  * the title; the one scattering flowers lower right, coming down, her lotus falling on towards the pond; a
  * few clouds by them, the pearl once; the left third left as plaster. On a narrow wall, one figure, in the
- * open water under the contents. Each entry is [picture, source x, y, w, h, x, y, w, h]; faces are [x, y, radius], kept from flaking.
+ * open water under the contents. Each entry is [picture, source x, y, w, h, x, y, w, h, strength]; faces are [x, y, radius], kept from flaking.
  */
 export function muralLayout(W, H, wide) {
   const cell = (i, j) => [i * 256 + 40, j * 256 + 40, 176, 176],
@@ -58,6 +68,10 @@ export function muralLayout(W, H, wide) {
       sky(2, 0, x1 - 30 * u, y1 + w1 * 0.36, 96 * u),
       sky(1, 0, x2 + w2 * 0.96, y2 + w2 * 0.08, 100 * u),
       sky(3, 1, x1 - 120 * u, y1 + 40 * u, 84 * u),
+      // far off, small, flying the other way: depth on a wide wall
+      ...(W > 1100 ? [['far', 0, 0, 768, 384, W * 0.3, H * 0.085, W * 0.15, W * 0.075, 0.55]] : []),
+      // a long cloud leading in under the lower figure, its tail towards the pond
+      ['trail', 1024, 0, -1024, 256, x2 + w2 * 0.2, y2 + w2 * 0.43, w2 * 0.62, w2 * 0.155, 0.8],
       ['pipa', 0, 0, 1536, 768, x1, y1, w1, w1 / 2],
       ['flowers', 0, 0, 1536, 768, x2, y2, w2, w2 / 2],
       sky(3, 0, x2 - 70 * u, y2 + w2 * 0.47, 62 * u),
@@ -76,8 +90,7 @@ export const NEW_COMMANDS = [
   ['monet', 'Water lilies', 'Monet’s pond in oil; or dab the water a few times in one place', 'monet water lilies oil paint impression giverny 睡莲 莫奈'],
   ['qinghua', '青花 Blue and white', 'Porcelain; or run a finger round the rim of the screen', 'qinghua porcelain blue white china cobalt 青花瓷 染付'],
   ['dunhuang', '敦煌 Dunhuang', 'A cave mural; or rub the wall back and forth', 'dunhuang mural cave fresco mogao 敦煌 壁画'],
-  ['stars', 'Star chart', 'The night sky in the water; or tap three points far apart', 'stars star chart atlas constellation night sky 星图 星図'],
-  ['chalk', 'Blackboard', 'A school board in chalk; or draw a tick', 'chalk blackboard board school newspaper 黑板报 黒板']
+  ['stars', 'Star chart', 'The night sky in the water; or tap three points far apart', 'stars star chart atlas constellation night sky 星图 星図']
 ];
 
 /** The looks' functions, added to the water pass after the six that ship. */
@@ -130,22 +143,24 @@ vec3 pondOil(vec2 at, float seed){
 vec3 lookMonet(){
   vec2 P=gP+gG*26.+vec2(sin(gP.y*.02+uTime*.3),0.)*1.5;
   float c1,r1,c2,r2,c3,r3,c4,r4;
-  vec2 a1=dab(P,vec2(58.,19.),1.,c1,r1), a2=dab(P+vec2(13.,7.),vec2(38.,13.),5.,c2,r2), a3=dab(P.yx+vec2(5.,21.),vec2(62.,11.),9.,c3,r3), a4=dab(P+vec2(31.,3.),vec2(22.,9.),13.,c4,r4);
-  // an underpainting, then the strokes over it wet into wet: each takes a little of what is under it
-  vec3 col=pondOil(P,0.)*.9;
+  // four layers and no more: broad drags, medium strokes, long upright drags for reflections, a few short dabs
+  vec2 a1=dab(P,vec2(150.,46.),1.,c1,r1), a2=dab(P+vec2(37.,19.),vec2(96.,31.),5.,c2,r2), a3=dab(P.yx+vec2(5.,21.),vec2(170.,26.),9.,c3,r3), a4=dab(P+vec2(61.,7.),vec2(54.,21.),13.,c4,r4);
+  // the canvas: primed linen, its weave showing wherever no stroke lies; a thin wash of the water's colour over it
+  float weave=.5+.5*sin(gP.x*2.4)*sin(gP.y*2.4), wash=fbm(gP*.004+vec2(0.,uTime*.006));
+  vec3 col=mix(vec3(.80,.76,.68)*(.9+.1*weave),mix(vec3(.34,.36,.60),vec3(.30,.48,.44),smoothstep(.35,.65,wash)),.55);
   col=mix(col,pondOil(a1,1.),c1);
-  // reflections are dragged downwards: long upright strokes where the trees stand in the water
   float up=smoothstep(.42,.66,fbm(gP*vec2(.006,.0018)+20.));
-  col=mix(col,pondOil(a3.yx-vec2(21.,5.),9.)*vec3(.80,.90,.86),c3*up*.9);
-  col=mix(col,pondOil(a2-vec2(13.,7.),5.),c2);
-  c4*=step(.42,hash1(floor(a4/7.)));
-  col=mix(col,pondOil(a4-vec2(31.,3.),13.)*1.06,c4*.9);
-  // thick paint stands up: light along a stroke's upper edge, a thin shadow under its lower one
-  float cov=max(max(c1*.6,c2),c4), ridge=c4>.3?r4:c2>.3?r2:r1;
-  col+=vec3(.17,.16,.14)*smoothstep(.2,.85,-ridge)*cov-vec3(.11,.11,.12)*smoothstep(.3,.95,ridge)*cov;
+  col=mix(col,pondOil(a3.yx-vec2(21.,5.),9.)*vec3(.80,.92,.84),c3*up*.92);
+  col=mix(col,pondOil(a2-vec2(37.,19.),5.),c2);
+  c4*=step(.5,hash1(floor(a4/9.)));
+  col=mix(col,pondOil(a4-vec2(61.,7.),13.)*1.07,c4*.92);
+  // thick paint stands up: a lit ridge along each stroke's upper edge, a shadow under its lower one, bristle
+  // streaks along its length
+  float cov=max(max(c1*.7,c2),c4), ridge=c4>.3?r4:c2>.3?r2:r1;
+  col+=vec3(.20,.19,.16)*smoothstep(.15,.8,-ridge)*cov-vec3(.14,.14,.16)*smoothstep(.25,.95,ridge)*cov;
+  col*=1.+.07*sin(ridge*26.+hash1(floor(a2/9.))*6.)*cov;
   col+=vec3(.9,.95,1.)*clamp(abs(gLap)*14.,0.,.5)*(1.-gCalm*.8)*step(.4,c2);
-  // the canvas shows through, a weave under everything
-  col*=.94+.06*sin(gP.x*2.6)*sin(gP.y*2.6);
+  col*=.95+.05*weave;
   col=mix(col,vec3(.27,.30,.42),gCalm*.5);
   return col;
 }
@@ -193,7 +208,7 @@ vec3 lookQinghua(){
 // green, the koi and the lotus with a dark line round them, as on a cave's ceiling
 vec3 lookDunhuang(){
   vec2 P=gP, uv=gUv;
-  vec3 wall=vec3(.76,.60,.39)*(.9+.2*fbm(P*.006))-vec3(.07,.06,.05)*smoothstep(.55,.9,noise(P*vec2(.012,.05)));
+  vec3 wall=vec3(.68,.51,.30)*(.9+.2*fbm(P*.006))-vec3(.05,.045,.04)*smoothstep(.6,.95,noise(P*vec2(.012,.05)));
   float flake=smoothstep(.56,.62,fbm(P*.021+4.))+smoothstep(.78,.8,noise(P*.11))*.6, keep=1.-clamp(flake,0.,1.)*.86;
   vec3 qing=vec3(.17,.39,.52), lv=vec3(.30,.52,.43), zhu=vec3(.70,.25,.15), bai=vec3(.93,.88,.76), line=vec3(.18,.11,.07);
   vec3 c=wall;
@@ -217,7 +232,7 @@ vec3 lookDunhuang(){
   vec4 f0; float fa,fb,fc,red; fishAt(f0,fa,fb,fc,red); vec3 fcol=f0.rgb/max(f0.a,1e-3);
   c=mix(c,mix(mix(bai,vec3(.80,.56,.22),clamp((fcol.r-fcol.b)*1.6-.1,0.,1.)),zhu,smoothstep(.2,.5,red)),f0.a*mix(1.,keep,.5));
   c=mix(c,line,clamp((fa-fb)*3.8,0.,1.));
-  c=mix(c,wall,gCalm*.62*(1.-mu.a*.75*uCalm.x));
+  c=mix(c,wall*1.14,gCalm*.62*(1.-mu.a*.75*uCalm.x));
   vec4 tp=textureLod(uTop,uv,0.); float te=textureLod(uTop,uv,1.5).a; c=mix(c,tp.rgb/max(tp.a,1e-3)*.8,tp.a*.8*keep*(1.-gCalm*.6)); c=mix(c,line,clamp(abs(tp.a-te)*3.,0.,1.)*.7);
   // a press: the pigment lifts off in a patch, and its dust drifts out and settles
   for(int i=0;i<10;i++){ vec3 b=uBlot[i]; if(b.z<0.) continue;
@@ -225,7 +240,8 @@ vec3 lookDunhuang(){
     c=mix(c,wall*1.06,(1.-smoothstep(R*.7,R,d))*exp(-t*.05)*.9);
     float ring=R+70.*(1.-exp(-t*.9)); c=mix(c,bai*.9,step(.86,hash1(floor(P/3.)+floor(b.x)))*(1.-smoothstep(0.,26.,abs(d-ring)))*exp(-t*1.1)*.8); }
   // age: fine cracks, and the soot of lamps towards the edges
-  c=mix(c,line,seams(P/150.+noise(P*.004)*1.5)*.13*smoothstep(.3,.6,noise(P*.006+9.))); c*=1.-1.15*dot(uv-.5,uv-.5)*(1.-gCalm*.55); c=mix(c,c*vec3(.84,.76,.64),.3*(1.-gCalm)); c*=.94+.12*noise(P*1.3);
+  c=mix(c,line,seams(P/150.+noise(P*.004)*1.5)*.13*smoothstep(.3,.6,noise(P*.006+9.))); float soot=smoothstep(.5,0.,uv.y)*.34*(.6+.6*fbm(P*vec2(.004,.012)+5.))+pow(clamp(length((uv-.5)*vec2(1.,1.08))*1.42,0.,1.),3.5)*.62;
+  c*=1.-soot*(1.-gCalm*.6); c=mix(c,c*vec3(1.,.86,.66),.22); c*=.94+.12*noise(P*1.3);
   // winter: frost on the wall, white and dry
   if(gIce>0.){ c=mix(c,bai,gIce*.5*(.6+.4*noise(P*.4))); c=mix(c,line,clamp(gHit.x,0.,1.)*.7); c=mix(c,vec3(1.),step(.93,hash1(floor(P/7.)))*uSnow*gIce*.5); }
   return c;

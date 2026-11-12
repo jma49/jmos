@@ -35,7 +35,7 @@ import {
 import { FPS, IDLE_AFTER, due, learnBeat, simSteps } from './clock.js';
 import { PERF, add, count, frameDone, span } from './perf.js';
 import { strokeLifted, strokeMoving, tapsLook } from './gestures';
-import { MURAL, NEW_COMMANDS, NEW_GLASS, NEW_GLSL, NEW_LAY, NEW_LOOKS, NEW_SHADE, NEW_SID, muralLayout } from './newlooks.js';
+import { MURAL, MURAL_LARGE, NEW_COMMANDS, NEW_GLASS, NEW_GLSL, NEW_LAY, NEW_LOOKS, NEW_SHADE, NEW_SID, muralLayout } from './newlooks.js';
 import { SocialError } from '../os/social/errors';
 import { coverOf, loadSongs, music, onMusic, play as playSongAt, setMusicMuted, toggle as toggleSong } from './music';
 import * as people from './people';
@@ -1196,9 +1196,23 @@ float reveal(int s,out float e){
   vec2 P=gP; float R=uInk.x, r, w=40.;
   if(s==1){ float fib=fbm(P*.03)*.55+noise(P*.21)*.25+noise(P*vec2(1.1,.06))*.12+noise(P*vec2(.05,1.3))*.08;
     r=length(P-uInk.yz)+(fib-.5)*150.+(noise(P*.012+R*.003)-.5)*120.; }
-  else if(s==2){ r=(P.x+P.y)*.7071+(noise(P*vec2(.02,.004))-.5)*30.; w=6.; }   // peeled off the block from the top left
+  // the print: a carved wave sweeps across from the top left as it is pulled off the block
+  else if(s==2){ float t=P.x-P.y; r=(P.x+P.y)*.7071+(noise(P*vec2(.02,.004))-.5)*26.+sin(t*.012)*18.+sin(t*.031)*6.; w=6.; }
   else if(s==4){ r=P.y; w=2.; }                                                 // a scan from the top
-  else { r=length(P-uInk.yz)+(noise(P*.01)-.5)*30.; w=s==3?12.:30.; }
+  // glow: the lights go out in a long soft falloff
+  else if(s==3){ r=length(P-uInk.yz)+(noise(P*.006)-.5)*60.; w=90.; }
+  // ASCII: the picture turns to characters a cell at a time, scattering out from where the typing was
+  else if(s==5){ vec2 q=floor(P/vec2(9.,18.)); r=length(q*vec2(9.,18.)-uInk.yz)+(hash1(q)-.5)*190.; w=1.; }
+  // oil: broad strokes laid across the scene a few at a time, nearest first, until it is covered
+  else if(s==6){ vec2 q=(P+vec2(noise(P*.021)*70.,noise(P*.027+5.)*34.))/vec2(170.,44.); q.x+=step(1.,mod(floor(q.y),2.))*.5; vec2 f=fract(q)-.5;
+    r=length(P-uInk.yz)*.8+(hash1(floor(q))-.5)*320.+dot(f*f,vec2(150.,170.))+(noise(P*.2)-.5)*26.; w=18.; }
+  // 青花: the glaze flows in from the rim towards the middle
+  else if(s==7){ float ed=min(min(P.x,uCss.x-P.x),min(P.y,uCss.y-P.y)); r=ed/(.5*min(uCss.x,uCss.y))*length(uCss)*.5+(fbm(P*.008)-.5)*90.; w=46.; }
+  // 敦煌: dust brushed away from where the wall was rubbed, raggedly
+  else if(s==8){ r=length(P-uInk.yz)+(fbm(P*.018)-.5)*190.+(noise(P*.22)-.5)*34.; w=22.; }
+  // the stars: dusk falls from the top of the sky
+  else if(s==9){ r=P.y/uCss.y*length(uCss)*.5+(noise(P*.004)-.5)*50.; w=170.; }
+  else { r=length(P-uInk.yz)+(noise(P*.01)-.5)*30.; w=30.; }
   e=exp(-pow((r-R)/(s==1?38.:s==4?3.:s==2?10.:14.),2.))*step(1.,R)*(1.-step(.999,uInk.w));
   return 1.-smoothstep(R-w,R+w,r);
 }
@@ -1207,6 +1221,10 @@ vec3 edgeCol(int s){
   if(s==2) return vec3(1.,.97,.88);
   if(s==3) return vec3(.3,1.,.95)*1.4;
   if(s==4) return vec3(.7,.95,1.)*1.3;
+  if(s==6) return vec3(.95,.9,.8)*.25;      // wet paint at a stroke's edge
+  if(s==7) return vec3(.12,.25,.7);         // the cobalt blooming into the glaze
+  if(s==8) return vec3(.86,.74,.52);        // dust
+  if(s==9) return vec3(.3,.25,.45)*.5;      // the last of the dusk
   return vec3(.85,.95,1.)*.6;
 }
 void main(){
@@ -4666,6 +4684,7 @@ $('#snd').addEventListener('click', () => {
    the wall's size into one canvas, and sent to the GPU once (and again only when the pond is resized);
    lookDunhuang() draws them under its own wear. Nothing here runs in the frame. */
 let muralImgs = null,
+  muralLarge = false,
   texMural = null;
 const muralFaces = new Float32Array(6);
 function loadMural() {
@@ -4695,7 +4714,40 @@ function paintMural() {
   cv.height = Math.max(1, Math.round(H * k));
   const c = cv.getContext('2d');
   c.scale(k, k);
-  for (const [im, sx, sy, sw, sh, x, y, w, h] of draw) if (muralImgs[im]) c.drawImage(muralImgs[im], sx, sy, sw, sh, x, y, w, h);
+  // a band across the very top and bottom of the wall, tiled
+  if (muralImgs.border) {
+    const bh = big ? 30 : 18,
+      bw = bh * 8;
+    c.globalAlpha = 0.85;
+    for (let x = 0; x < W; x += bw) {
+      c.drawImage(muralImgs.border, x, 0, bw, bh);
+      c.drawImage(muralImgs.border, x, H - bh, bw, bh);
+    }
+    c.globalAlpha = 1;
+  }
+  for (const [im, sx, sy, sw, sh, x, y, w, h, strength = 1] of draw) {
+    const pic = muralImgs[im];
+    if (!pic) continue;
+    // a picture that came larger than the layout's numbers is the same picture, scaled; a source drawn
+    // from its right edge back (a negative width) is mirrored; a fainter one is further off, or more worn
+    const f = pic.naturalWidth / (im === 'pipa' ? 1536 : pic.naturalWidth);
+    c.globalAlpha = strength;
+    if (sw < 0) {
+      c.save();
+      c.translate(x + w, y);
+      c.scale(-1, 1);
+      c.drawImage(pic, (sx + sw) * f, sy * f, -sw * f, sh * f, 0, 0, w, h);
+      c.restore();
+    } else c.drawImage(pic, sx * f, sy * f, sw * f, sh * f, x, y, w, h);
+  }
+  c.globalAlpha = 1;
+  // the centrepiece is fetched again, larger, where it is drawn wider than the first one is sharp
+  if (!muralLarge && big && W * k * 0.5 > 1100) {
+    muralLarge = true;
+    const im = new Image();
+    im.onload = () => ((muralImgs.pipa = im), paintMural(), invalidate());
+    im.src = MURAL_LARGE.pipa;
+  }
   faces.forEach((f, i) => muralFaces.set(f, i * 3));
   const was = gl.getParameter(gl.ACTIVE_TEXTURE);
   gl.activeTexture(gl.TEXTURE10);
