@@ -186,6 +186,7 @@ The flying figures (飞天) can't be drawn well in a shader, so they are picture
 | `koi-mask.webp` | 1024 × 1536, 11 KB | White over the patches of rows 3 and 4 (about 13% of each fish), soft by 2 to 3 pixels, black elsewhere. |
 | `lotus.webp` | 1024 × 512, 68 KB | Eight motifs in a 4 × 2 grid of 256-pixel cells, from above, at one scale, each at least 14 pixels clear of its cell's edge, flat colour in an iron-brown line. Top row: three leaves in malachite green, large (226 pixels across), medium with a notch (189) and small with a notch (141), then a flower of white and cinnabar rings round a yellow heart. Bottom row: a flower with the cinnabar outermost, a white one, a bud as a white disc with three cinnabar tips, a seed-pod in ochre with eight seeds. The fills carry a faint cloudiness, no plaster. |
 | `dove.webp`, `spider.webp` | 768 × 256, 17 KB and 32 KB | Three poses each in 256-pixel cells, from above, facing right, at one scale. The dove as a white bird of the murals, green and cinnabar on its wings and tail: sitting (114 × 50), wings half open (113 × 135), flying (115 × 234). The spider in ochre and dark brown, a cloud scroll on its abdomen: sitting (153 × 85), walking (175 × 155), jumping (213 × 234). The spider's front legs are drawn long, and the dove is more ornament than bird. |
+| `afloat.webp` | 1024 × 512, 94 KB | What drifts on the water through the year, in a 4 × 2 grid of 256-pixel cells, from above, each fitted to its cell (not at one scale) with 16 pixels clear. Top row: two spring petals, two autumn leaves. Bottom row: a snow crystal, a frost flower, two flying things, heads to the right. Here: two lotus petals in white tipped with cinnabar, a ginkgo leaf in ochre, a green vine leaf as a scroll; the crystal and a frost star in white; a crane flying, and a butterfly in blue, cinnabar and ochre, which is drawn from the side with its wings together. |
 
 - **How they are painted:** flat mineral colour inside a dark line, in the look's own palette (blue
   `#2B6385`, green `#4D856E`, cinnabar `#B34026`, white `#EDE0C2`, line `#2E1C12`, a little ochre
@@ -279,6 +280,7 @@ their dabs through the mask, a visitor's own or the pond's koi's own.
 | `lilies-autumn.webp` | 1024 × 256, 41 KB | The autumn row for `lilies.webp`: four pads in 256-pixel cells in the same oil dabs and at its large pads' size (about 205 pixels across), gone ochre, rust and a grey violet, with ragged edges: one with a notch to the right, one whole, one with a hole, one with a notch below. No line, no flowers. |
 | `dragonfly.webp` | 512 × 256, 21 KB | Two dragonflies in 256-pixel cells, from above, head to the right, each a blue-green body stroke and four pale lilac wing dabs (140 × 228). The two differ little, and the wings are broad for a dragonfly's. |
 | `dove.webp`, `spider.webp` | 768 × 256, 16 KB and 46 KB | Three poses each in 256-pixel cells, from above, facing right, at one scale. The dove in white with lilac and cream: sitting (113 × 54), wings half open (113 × 146), flying (116 × 234). The spider in umber with a touch of orange: sitting (185 × 127), walking (215 × 178), jumping (229 × 234). Both are painted more finely than a few dabs: closer to a small oil study than to the panel's own handling. |
+| `afloat.webp` | 1024 × 512, 100 KB | What drifts on the water through the year, in a 4 × 2 grid of 256-pixel cells, from above, each fitted to its cell (not at one scale) with 16 pixels clear. Top row: two spring petals, two autumn leaves. Bottom row: a snow crystal, a frost flower, two flying things, heads to the right. Here: a pink petal and a white one, a willow leaf in ochre, a poplar leaf in rust; the crystal and the frost flower in white and lilac; a dragonfly and a white butterfly. Painted more finely than a few dabs. |
 
 #### 青花
 
@@ -296,6 +298,7 @@ visitor's colour laid into their patches through `koi-mask.webp` (`koiPicture()`
 | `lotus.webp` | 1024 × 512, 96 KB | Eight motifs in a 4 × 2 grid of 256-pixel cells, from above, cobalt only, at one scale, each at least 14 pixels clear of its cell's edge. Top row: a large leaf with a notch (228 pixels across), a small one (134), a large one turned and folded at its notch, an open flower. Bottom row: a second flower, a bud, a seed-pod, a spray of water-weed (faint, and seen from the side). The wash is partly transparent, so the glaze shows through the leaves. |
 | `medallion.webp` | 1024 × 1024, 172 KB | A double ring (944 pixels across, at 40, 45) and in it two koi circling head to tail, three lotus flowers, two leaves and sprays of water-weed, in cobalt line and wash on a transparent ground. The koi are drawn with patches and scales in full, so it is busy at full strength: it is meant large and pale. Its alpha is stored coarsely to keep it under the budget. |
 | `dove.webp`, `spider.webp` | 768 × 256, 20 KB and 47 KB | Three poses each in 256-pixel cells, from above, facing right, at one scale, in cobalt line and wash. The dove: sitting (101 × 50), wings half open (100 × 129), flying (100 × 234); its feathers are drawn densely. The spider, banded: sitting (141 × 111), walking (171 × 153), jumping (200 × 234); the walking one shows six legs clearly, not eight. |
+| `afloat.webp` | 1024 × 512, 130 KB | What drifts on the water through the year, in cobalt only, in a 4 × 2 grid of 256-pixel cells, from above, each fitted to its cell (not at one scale) with 16 pixels clear. Top row: two spring petals, two autumn leaves. Bottom row: a snow crystal, a frost flower, two flying things, heads to the right. Here: a plum petal and a peach petal, a maple leaf, a bamboo leaf; the crystal and a frost flower as fern-like needles (a little haze round them); a dragonfly, and a butterfly drawn from the side with its wings together. |
 
 #### Ukiyo-e
 
@@ -319,6 +322,7 @@ In `public/pond/ukiyo/`, and in use in a preview build (the look itself ships; i
 | `bed-tall.webp` | 1080 × 1920, 63 KB | The same water painted again upright, not a crop: the top third dark with two thin lines, the swells below it running across, dark at the top to light at the bottom. Painted at 941 × 1672 and enlarged. |
 | `paper.webp` | 512 × 512, 12 KB | Washi grain, greyscale, opaque, light (mean 225 of 255, a spread of about 5), with fine pale fibres; it tiles on all four sides (the edges are crossfaded into each other, and the slow drift of tone is taken out). The grain is fine: meant to be multiplied in at its own size or larger. |
 | `lilies.webp` | 1024 × 512, 84 KB | Eight motifs in a 4 × 2 grid of 256-pixel cells, from above, at one scale, flat colour in a key line with a little paper grain in the fills. Top row: three lotus leaves with a notch (225, 179 and 140 pixels across), an open pink lotus. Bottom row: an open white lotus, a red maple leaf, an orange one, three cherry petals together in one cell. Each is at least 14 pixels clear of its cell's edge. |
+| `afloat.webp` | 1024 × 512, 110 KB | What drifts on the water through the year, as a print draws it, in a 4 × 2 grid of 256-pixel cells, from above, each fitted to its cell (not at one scale) with 16 pixels clear. Top row: two spring petals, two autumn leaves. Bottom row: a snow crystal, a frost flower, two flying things, heads to the right. Here: two cherry petals, a red maple leaf, a yellow ginkgo leaf; the crystal and a frost flower in white with a blue-grey line; a red dragonfly, and a red and yellow butterfly drawn from the side with its wings together. |
 
 #### Star chart
 
@@ -405,6 +409,7 @@ In `public/pond/relief/`, each picture as a pair that lines up to the pixel: `-c
 | `duck-c.webp`, `duck-h.webp` | 512 × 512, 26 KB and 9 KB | A duck in profile facing right, standing: blue head and wing, green neck and flank, red ochre breast and legs, a yellow bill; 30, 101 to 482, 411. |
 | `cartouche-c.webp`, `cartouche-h.webp` | 512 × 768, 36 KB and 14 KB | An empty cartouche, upright: a rope ring in yellow with its tied bar at the bottom, 89, 30 to 423, 738. Nothing inside it: bare stone at the face's height. |
 | `dove-c.webp`, `dove-h.webp`, `spider-c.webp`, `spider-h.webp` | 512 × 512, 32, 13, 58 and 22 KB | One pose each, from above, facing right. The dove with wings spread, its body bare stone and its wings and tail in bands of blue, yellow, green and red (105, 26 to 407, 486). The spider with legs spread, banded in all four colours, with large round eyes (26, 34 to 486, 477); it is busier and more of a cartoon than anything else on the wall. These are raised like the rest, not sunk: the height is made the same way for every picture. |
+| `afloat-c.webp`, `afloat-h.webp` | 1024 × 512, 94 KB and 33 KB | What drifts on the water through the year, in a 4 × 2 grid of 256-pixel cells, each fitted to its cell with 18 pixels clear. Top row: two blue lotus petals, a sycamore fig leaf in green, a willow leaf in yellow. Bottom row: a snow crystal and a frost flower in blue line, a bee, a swallow flying, heads to the right. The crystals are thin, so little of them is raised. |
 
 - **The paint** is flat colour in the look's palette inside a dark line, faded a little, with 28% of
   it worn away in patches and speckle, more at the edges; where it is gone the file is transparent.
@@ -569,7 +574,8 @@ what floats and what flies, its dove and spider, its seal. Where the manner has 
 look goes without it and shows what it does have instead (the star chart has no lily pads or
 dragonflies; its rain is a shower of meteors). Glow, the blueprint and ASCII are light, ruled line and
 characters by nature, and are drawn in code. So besides the lines in each kit below, every painted
-look (ukiyo-e, Monet, 青花, Dunhuang, the relief) wants, as P1, a sheet `afloat.webp`, 1024 × 512,
+look (ukiyo-e, Monet, 青花, Dunhuang, the relief) has (delivered, to wire in; the relief's as a
+pair) a sheet `afloat.webp`, 1024 × 512,
 4 × 2, of what drifts on its water through the year in its own hand: two spring petals, two autumn
 leaves, a snow crystal or a frost flower, and, where the manner has one, a dragonfly or another small
 flying thing seen from above (a crane or a butterfly for Dunhuang, a bee or a swallow for the relief).
@@ -577,8 +583,7 @@ flying thing seen from above (a crane or a butterfly for Dunhuang, a bee or a sw
 **The round asked for now** (every line is already in a look's kit below, or is new there; make them
 in this order, commit each lot as it is done, and say in its table what came out):
 
-All of it but line 9 is delivered and waits to be wired in; what came out is in each look's table
-above.
+All of it is delivered and waits to be wired in; what came out is in each look's table above.
 
 1. Water: `dragon-boat`, `lanterns`, `afloat`, `dragonfly`.
 2. Ukiyo-e: `bed`, `bed-tall`, `paper`, `lilies`.
@@ -588,7 +593,7 @@ above.
 6. Monet: `lilies-autumn`, `dragonfly`.
 7. Ink: `stems`; the seals stay on hold until a seal-script face is chosen.
 8. Egyptian relief: `papyrus`, `duck`, `cartouche`, each as a pair.
-9. Each painted look's `afloat` sheet (above): still wanted.
+9. Each painted look's `afloat` sheet (above).
 10. The dove and the spider dressed for ink, Monet, 青花, Dunhuang, the star chart, the blueprint
     and the relief. They are drawn by the image model from the brief's words, not from the Blender
     sheets, so their proportions are not those sheets'.
