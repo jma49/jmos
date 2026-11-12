@@ -213,8 +213,9 @@ the wall's own manner, and are used as they came. Both figures are used facing l
 unmirrored. The pipa player sits high in the right half and the flower-scatterer lower right;
 her three falling lotus are continued by a lotus, a bud and petals from `sky-flowers` towards the
 pond. Three clouds and the pearl are placed by the figures; the half-open lotus and the green cloud's
-twin are unused so far. On a narrow wall only the pipa player is drawn, at the top, 1.3 walls wide so
-her body fills the width and the ribbons run off the right edge. Faces are kept from flaking by
+twin are unused so far. On a narrow wall only the pipa player is drawn, in the open water under the contents (at the top
+she lay under the greeting), 1.25 walls wide so her body fills the width and the ribbons run off the
+right edge. Faces are kept from flaking by
 position (`faces` in `muralLayout()`): if a picture is redrawn with the head elsewhere, say where. The
 ochre (`#CC8F38`) is read as gold leaf and made to glint, so anything meant as gold should keep that
 colour and anything not meant as gold should avoid it. The loose flowers are fixed on the wall, not

@@ -21,6 +21,56 @@ export const NEW_GLASS = {
 /** How much of the tree's shade lies over each: none on glaze, plaster, the night sky or a board. */
 export const NEW_SHADE = { monet: 0.5, qinghua: 0, dunhuang: 0, stars: 0, chalk: 0 };
 
+/** The Dunhuang wall's pictures (public/pond/dunhuang/), fetched the first time the look is asked for. */
+export const MURAL = { pipa: '/pond/dunhuang/feitian-pipa.webp', flowers: '/pond/dunhuang/feitian-flowers.webp', sky: '/pond/dunhuang/sky-flowers.webp' };
+/**
+ * Where each picture goes on a wall of W by H: the pipa player high in the right half, flying left towards
+ * the title; the one scattering flowers lower right, coming down, her lotus falling on towards the pond; a
+ * few clouds by them, the pearl once; the left third left as plaster. On a narrow wall, one figure, in the
+ * open water under the contents. Each entry is [picture, source x, y, w, h, x, y, w, h]; faces are [x, y, radius], kept from flaking.
+ */
+export function muralLayout(W, H, wide) {
+  const cell = (i, j) => [i * 256 + 40, j * 256 + 40, 176, 176],
+    sky = (i, j, x, y, s) => ['sky', ...cell(i, j), x - s / 2, y - s / 2, s, s];
+  if (!wide) {
+    // (below the contents, in the open water: at the top she would lie under the greeting)
+    const w = W * 1.25,
+      x = W * 0.03,
+      y = H * 0.615;
+    return {
+      draw: [sky(1, 0, W * 0.84, H * 0.6, W * 0.2), ['pipa', 0, 0, 1536, 768, x, y, w, w / 2]],
+      faces: [
+        [x + w * 0.11, y + w * 0.2, w * 0.05],
+        [0, 0, 0]
+      ]
+    };
+  }
+  const w1 = Math.min(W * 0.5, H * 1.05),
+    x1 = W * 0.965 - w1,
+    y1 = H * 0.07,
+    w2 = Math.min(W * 0.43, H * 0.9),
+    x2 = W * 0.95 - w2,
+    y2 = H * 0.5,
+    u = Math.min(W, H * 1.6) / 1280;
+  return {
+    draw: [
+      sky(0, 0, x1 + w1 * 0.9, y1 + w1 * 0.44, 110 * u),
+      sky(2, 0, x1 - 30 * u, y1 + w1 * 0.36, 96 * u),
+      sky(1, 0, x2 + w2 * 0.96, y2 + w2 * 0.08, 100 * u),
+      sky(3, 1, x1 - 120 * u, y1 + 40 * u, 84 * u),
+      ['pipa', 0, 0, 1536, 768, x1, y1, w1, w1 / 2],
+      ['flowers', 0, 0, 1536, 768, x2, y2, w2, w2 / 2],
+      sky(3, 0, x2 - 70 * u, y2 + w2 * 0.47, 62 * u),
+      sky(1, 1, x2 - 150 * u, y2 + w2 * 0.5 + 50 * u, 54 * u),
+      sky(2, 1, x2 - 230 * u, y2 + w2 * 0.5 + 96 * u, 46 * u)
+    ],
+    faces: [
+      [x1 + w1 * 0.11, y1 + w1 * 0.2, w1 * 0.05],
+      [x2 + w2 * 0.255, y2 + w2 * 0.385, w2 * 0.05]
+    ]
+  };
+}
+
 /** The command bar's entries: found by name only, as the other looks are. */
 export const NEW_COMMANDS = [
   ['monet', 'Water lilies', 'Monet’s pond in oil; or dab the water a few times in one place', 'monet water lilies oil paint impression giverny 睡莲 莫奈'],
@@ -33,6 +83,7 @@ export const NEW_COMMANDS = [
 /** The looks' functions, added to the water pass after the six that ship. */
 export const NEW_GLSL = `
 // ---------- the preview looks ----------
+uniform sampler2D uMural; uniform vec3 uFace[2];
 float grain(vec2 P){ return .5+.5*noise(P*1.9)*(.6+.4*noise(P*.7+9.)); }
 // one layer of loaded strokes. Each lies along the water's flow where it is, a little off it; longer or shorter,
 // pressed harder or less; ragged at its ends where the bristles part. Returns the stroke's own place (where its
@@ -146,13 +197,19 @@ vec3 lookDunhuang(){
   float flake=smoothstep(.56,.62,fbm(P*.021+4.))+smoothstep(.78,.8,noise(P*.11))*.6, keep=1.-clamp(flake,0.,1.)*.86;
   vec3 qing=vec3(.17,.39,.52), lv=vec3(.30,.52,.43), zhu=vec3(.70,.25,.15), bai=vec3(.93,.88,.76), line=vec3(.18,.11,.07);
   vec3 c=wall;
-  // the water: ribbons that rise and fall together, a white line between each
+  // the painting on the wall: the flying figures (pictures, laid into one texture once), under the wear so
+  // they age with it. The pigment is uneven and deeper than fresh paint, patches of it are lost (never a face),
+  // the line is a little broken, and what was gold leaf catches the light, more where the water moves.
+  vec4 mu=texture(uMural,uv+gG*.006); vec3 mo=mu.rgb/max(mu.a,1e-3); float ml=dot(mo,vec3(.333));
+  float face=0.; for(int i=0;i<2;i++) face=max(face,1.-smoothstep(uFace[i].z*.6,uFace[i].z,length(P-uFace[i].xy)));
+  float lost=clamp(flake,0.,1.)*(1.-face), gold=(1.-smoothstep(.1,.24,distance(mo,vec3(.80,.56,.22))))*mu.a*(1.-lost);
+  vec3 mp=mo*(.70+.36*noise(P*.045))*(.9+.2*noise(P*.9)); mp=mix(mp,mp*mp*1.3,.42);
+  c=mix(c,mp,mu.a*(1.-lost*.82)*(1.-.4*step(ml,.28)*step(.62,noise(P*.7)))*(1.-gCalm*mix(.75,.3,uCalm.x)));
+  c+=vec3(1.,.80,.42)*gold*(.08+.5*pow(noise(P*.3+vec2(uTime*.12,0.)),3.)+clamp(abs(gLap)*26.+length(gG)*1.2,0.,.6))*(1.-gCalm*.75);
+  // the water plays over it: ribbons that rise and fall together, thin, firmer where it moves
   float y=P.y+26.*sin(P.x*.011+uTime*.12)+10.*sin(P.x*.031-uTime*.2)+gH*70., band=y/30., bi=floor(band), bf=fract(band);
-  vec3 bc=mod(bi,3.)<1.?qing:mod(bi,3.)<2.?lv:mix(qing,bai,.55);
-  c=mix(c,bc,.62*keep*(1.-gCalm*.96)); c=mix(c,bai,smoothstep(.43,.5,abs(bf-.5))*.7*keep*(1.-gCalm*.96));
-  // two ribbons adrift, as the flying figures trail them
-  for(int i=0;i<2;i++){ float fi=float(i), x=P.x+uTime*(6.+fi*3.), yy=uCss.y*(.24+.5*fi)+46.*sin(x*.006+fi*2.)+18.*sin(x*.017), w=7.+5.*sin(x*.011+fi);
-    float rb=1.-smoothstep(w-1.5,w,abs(P.y-yy)); c=mix(c,mix(zhu,bai,.25+.5*fi),rb*.7*keep*smoothstep(.3,.6,noise(vec2(x*.002,fi*7.)))*(1.-gCalm)); c=mix(c,line,(1.-smoothstep(0.,1.2,abs(abs(P.y-yy)-w)))*rb*.0); }
+  vec3 bc=mod(bi,3.)<1.?qing:mod(bi,3.)<2.?lv:mix(qing,bai,.55); float wet=clamp(abs(gLap)*20.+length(gG)*1.5,0.,1.);
+  c=mix(c,bc,(.12+.34*wet)*keep*(1.-gCalm*.96)*(1.-mu.a*.7)); c=mix(c,bai,smoothstep(.43,.5,abs(bf-.5))*(.2+.45*wet)*keep*(1.-gCalm*.96)*(1.-mu.a*.6));
   // lotus pads: mineral green, ringed dark; the flower red and white
   vec4 pd=textureLod(uPads,uv,0.); float pe=textureLod(uPads,uv,1.5).a; vec3 pc=pd.rgb/max(pd.a,1e-3);
   c=mix(c,mix(lv*1.1,zhu,clamp((pc.r-pc.g)*2.5,0.,1.)),pd.a*.9*keep); c=mix(c,line,clamp(abs(pd.a-pe)*3.,0.,1.)*.85);
@@ -160,7 +217,7 @@ vec3 lookDunhuang(){
   vec4 f0; float fa,fb,fc,red; fishAt(f0,fa,fb,fc,red); vec3 fcol=f0.rgb/max(f0.a,1e-3);
   c=mix(c,mix(mix(bai,vec3(.80,.56,.22),clamp((fcol.r-fcol.b)*1.6-.1,0.,1.)),zhu,smoothstep(.2,.5,red)),f0.a*mix(1.,keep,.5));
   c=mix(c,line,clamp((fa-fb)*3.8,0.,1.));
-  c=mix(c,wall,gCalm*.62);
+  c=mix(c,wall,gCalm*.62*(1.-mu.a*.75*uCalm.x));
   vec4 tp=textureLod(uTop,uv,0.); float te=textureLod(uTop,uv,1.5).a; c=mix(c,tp.rgb/max(tp.a,1e-3)*.8,tp.a*.8*keep*(1.-gCalm*.6)); c=mix(c,line,clamp(abs(tp.a-te)*3.,0.,1.)*.7);
   // a press: the pigment lifts off in a patch, and its dust drifts out and settles
   for(int i=0;i<10;i++){ vec3 b=uBlot[i]; if(b.z<0.) continue;
@@ -168,7 +225,7 @@ vec3 lookDunhuang(){
     c=mix(c,wall*1.06,(1.-smoothstep(R*.7,R,d))*exp(-t*.05)*.9);
     float ring=R+70.*(1.-exp(-t*.9)); c=mix(c,bai*.9,step(.86,hash1(floor(P/3.)+floor(b.x)))*(1.-smoothstep(0.,26.,abs(d-ring)))*exp(-t*1.1)*.8); }
   // age: fine cracks, and the soot of lamps towards the edges
-  c=mix(c,line,seams(P/90.)*.2); c*=1.-.5*dot(uv-.5,uv-.5); c*=.94+.12*noise(P*1.3);
+  c=mix(c,line,seams(P/150.+noise(P*.004)*1.5)*.13*smoothstep(.3,.6,noise(P*.006+9.))); c*=1.-1.15*dot(uv-.5,uv-.5)*(1.-gCalm*.55); c=mix(c,c*vec3(.84,.76,.64),.3*(1.-gCalm)); c*=.94+.12*noise(P*1.3);
   // winter: frost on the wall, white and dry
   if(gIce>0.){ c=mix(c,bai,gIce*.5*(.6+.4*noise(P*.4))); c=mix(c,line,clamp(gHit.x,0.,1.)*.7); c=mix(c,vec3(1.),step(.93,hash1(floor(P/7.)))*uSnow*gIce*.5); }
   return c;

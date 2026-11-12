@@ -35,7 +35,7 @@ import {
 import { FPS, IDLE_AFTER, due, learnBeat, simSteps } from './clock.js';
 import { PERF, add, count, frameDone, span } from './perf.js';
 import { strokeLifted, strokeMoving, tapsLook } from './gestures';
-import { NEW_COMMANDS, NEW_GLASS, NEW_GLSL, NEW_LAY, NEW_LOOKS, NEW_SHADE, NEW_SID } from './newlooks.js';
+import { MURAL, NEW_COMMANDS, NEW_GLASS, NEW_GLSL, NEW_LAY, NEW_LOOKS, NEW_SHADE, NEW_SID, muralLayout } from './newlooks.js';
 import { SocialError } from '../os/social/errors';
 import { coverOf, loadSongs, music, onMusic, play as playSongAt, setMusicMuted, toggle as toggleSong } from './music';
 import * as people from './people';
@@ -1449,6 +1449,8 @@ const FS_U = [
   'uPrev',
   'uGlint',
   'uFog',
+  'uMural',
+  'uFace',
   'uStars',
   'uMoonPh'
 ];
@@ -1539,6 +1541,13 @@ function initGL() {
   blurFbo = gl.createFramebuffer();
   glOK = true;
   tq = gl.getExtension('EXT_disjoint_timer_query_webgl2');
+  if (PREVIEW) {
+    // the Dunhuang wall's painting: empty until the look is asked for
+    gl.activeTexture(gl.TEXTURE10);
+    texMural = tex(gl.LINEAR);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(4));
+    gl.activeTexture(gl.TEXTURE0);
+  }
 }
 function sizeGL() {
   // at most 1.5 pixels to a CSS pixel, at most about two megapixels in all, and less if frames run slow
@@ -1556,6 +1565,7 @@ function sizeGL() {
   padKey = '';
   padsNow();
   if (!glOK) return;
+  paintMural();
   // the pebble bed never changes, so it's drawn once into a texture
   gl.bindTexture(gl.TEXTURE_2D, texBed);
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, glc.width, glc.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
@@ -2480,6 +2490,7 @@ function alignInk(sel) {
 const setInk = (on, from) => setLook(on ? 'ink' : 'water', from || $('#inkBtn'));
 function setLook(name, from) {
   if (!LOOKS.includes(name) || name === look) return;
+  if (name === 'dunhuang') loadMural();
   if (name !== 'water' && name !== 'ink') loadType();
   const was = look;
   look = name;
@@ -4650,6 +4661,51 @@ $('#snd').addEventListener('click', () => {
   setMuted(!muted);
 });
 
+/* ================= the Dunhuang wall's painting (a preview look) =================
+   The flying figures are pictures. They are fetched the first time the look is asked for, laid out for
+   the wall's size into one canvas, and sent to the GPU once (and again only when the pond is resized);
+   lookDunhuang() draws them under its own wear. Nothing here runs in the frame. */
+let muralImgs = null,
+  texMural = null;
+const muralFaces = new Float32Array(6);
+function loadMural() {
+  if (muralImgs) return;
+  muralImgs = {};
+  Promise.all(
+    Object.entries(MURAL).map(
+      ([k, src]) =>
+        new Promise((done) => {
+          const im = new Image();
+          im.onload = () => ((muralImgs[k] = im), done());
+          im.onerror = done;
+          im.src = src;
+        })
+    )
+  ).then(() => {
+    paintMural();
+    invalidate();
+  });
+}
+function paintMural() {
+  if (!glOK || !muralImgs || !muralImgs.pipa) return;
+  const k = Math.min(2048 / W, glc.width / W, 2),
+    cv = document.createElement('canvas'),
+    { draw, faces } = muralLayout(W, H, big);
+  cv.width = Math.max(1, Math.round(W * k));
+  cv.height = Math.max(1, Math.round(H * k));
+  const c = cv.getContext('2d');
+  c.scale(k, k);
+  for (const [im, sx, sy, sw, sh, x, y, w, h] of draw) if (muralImgs[im]) c.drawImage(muralImgs[im], sx, sy, sw, sh, x, y, w, h);
+  faces.forEach((f, i) => muralFaces.set(f, i * 3));
+  const was = gl.getParameter(gl.ACTIVE_TEXTURE);
+  gl.activeTexture(gl.TEXTURE10);
+  texMural ??= tex(gl.LINEAR);
+  gl.bindTexture(gl.TEXTURE_2D, texMural);
+  gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, cv);
+  gl.activeTexture(was);
+}
+
 /* ================= the seal album (集印册) =================
    Each look has a seal (seals.ts). The first time a look comes in all the way, by whatever route, its seal is
    stamped in the corner and kept in this browser; the album is a sheet, opened from the command bar or from
@@ -5671,6 +5727,10 @@ function tick1(raw) {
   gl.uniform1i(U.uPads, 3);
   gl.uniform1i(U.uTop, 5);
   gl.uniform1i(U.uIceN, 6);
+  if (U.uMural) {
+    gl.uniform1i(U.uMural, 10);
+    gl.uniform3fv(U.uFace, muralFaces);
+  }
   gl.uniform2f(U.uRes, glc.width, glc.height);
   gl.uniform2f(U.uGrid, GW, GH);
   gl.uniform2f(U.uMoonPos, big ? 0.6 : 0.74, big ? 0.1 : 0.12);
