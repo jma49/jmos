@@ -382,6 +382,9 @@ comes out. Sprites are preferred wherever they take 3D out of the frame.
   preen), take-off (6), flight (8, a wing-beat loop), landing (6);
   `spider.webp` (the same folder), cells of 192 × 192: sitting (2), walking (8, a loop), crouch (2), jump (4).
   Neutral colour, so a look can tint or line them.
+  In hand: being modelled and rendered on the owner's machine (Blender 5.3, run without its window
+  from a script). The sheets, their frame order and what is weak in them will be set out under
+  "Water" above when they come; until then nothing here is to be relied on.
 - Height and normal maps for the relief's carvings (fish, lotus, papyrus, frieze), 16-bit greys
   rendered from the delivered drawings as shallow sunk relief, so the raking light is true:
   `<name>-n.webp` beside each, the same size and framing as each `-h` file.
