@@ -23,7 +23,7 @@ const { chromium } = require('playwright');
   const only = process.argv[3];
   const G0 = {
     dunhuang: () => path(Array.from({ length: 6 }, (_, k) => seg(k % 2 ? [720, 300] : [600, 300], k % 2 ? [600, 302] : [720, 302], 8)).flat()),
-    chalk: () => path([...seg([600, 300], [625, 340], 6), ...seg([625, 340], [740, 210], 14)]),
+    relief: () => path(Array.from({ length: 7 }, (_, k) => seg([420 + k * 50, k % 2 ? 360 : 430], [470 + k * 50, k % 2 ? 430 : 360], 8)).flat()),
     stars: async () => {
       await p.evaluate(() => {
         window.__ev = [];

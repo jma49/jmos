@@ -51,9 +51,11 @@ import {
   NEW_SHADE,
   NEW_SID,
   QINGHUA,
+  RELIEF,
   STARS,
   UKIYO,
-  muralLayout
+  muralLayout,
+  reliefLayout
 } from './newlooks.js';
 import { SocialError } from '../os/social/errors';
 import { coverOf, loadSongs, music, onMusic, play as playSongAt, setMusicMuted, toggle as toggleSong } from './music';
@@ -1073,7 +1075,7 @@ precision highp float; in vec2 vUv; out vec4 o;
 uniform sampler2D uBed,uH,uFish,uPads,uTop,uIceN,uMural; uniform float uPic;
 uniform vec2 uRes,uGrid,uMoonPos,uCss; uniform float uTime,uAmb,uCaI,uMoon,uSwell,uFocus,uIce,uSnow,uFog,uStars; uniform vec3 uMoonPh; uniform vec2 uCalm;
 uniform vec3 uTint,uCaC,uSky,uSeason;
-uniform vec4 uBox[12]; uniform vec4 uBoxB[12]; uniform int uBoxN; uniform vec4 uCrack[6]; uniform float uBroke[6]; uniform vec4 uInk; uniform vec3 uBlot[10]; uniform int uStyle, uPrev; uniform float uGlint; uniform float uLookT,uLeave,uSprite;
+uniform vec4 uBox[12]; uniform vec4 uBoxB[12]; uniform int uBoxN; uniform vec4 uCrack[6]; uniform float uBroke[6]; uniform vec4 uInk; uniform vec3 uBlot[10]; uniform int uStyle, uPrev; uniform float uGlint; uniform float uLookT,uLeave,uSprite,uDay;
 float hash1(vec2 p){ return fract(sin(dot(p,vec2(41.3,289.1)))*43758.5453); }
 vec2 hash2(vec2 p){ p=vec2(dot(p,vec2(127.1,311.7)),dot(p,vec2(269.5,183.3))); return fract(sin(p)*43758.5453); }
 float noise(vec2 p){ vec2 i=floor(p),f=fract(p); f=f*f*(3.-2.*f);
@@ -1324,6 +1326,8 @@ float reveal(int s,out float e){
   else if(s==8){ r=length(P-uInk.yz)+(fbm(P*.018)-.5)*190.+(noise(P*.22)-.5)*34.; w=22.; }
   // the stars: dusk falls from the top of the sky
   else if(s==9){ r=P.y/uCss.y*length(uCss)*.5+(noise(P*.004)-.5)*50.; w=170.; }
+  // the relief: sand blown off the stone, in long streaks down the wind
+  else if(s==10){ r=length(P-uInk.yz)+(fbm(P*vec2(.004,.045)+3.)-.5)*300.+(noise(P*vec2(.03,.5))-.5)*46.; w=34.; }
   else { r=length(P-uInk.yz)+(noise(P*.01)-.5)*30.; w=30.; }
   e=exp(-pow((r-R)/(s==1?38.:s==4?3.:s==2?10.:14.),2.))*step(1.,R)*(1.-step(.999,uInk.w));
   return 1.-smoothstep(R-w,R+w,r);
@@ -1337,6 +1341,7 @@ vec3 edgeCol(int s){
   if(s==7) return vec3(.12,.25,.7);         // the cobalt blooming into the glaze
   if(s==8) return vec3(.86,.74,.52);        // dust
   if(s==9) return vec3(.3,.25,.45)*.5;      // the last of the dusk
+  if(s==10) return vec3(.88,.80,.62);       // sand
   return vec3(.85,.95,1.)*.6;
 }
 void main(){
@@ -1594,6 +1599,7 @@ const FS_U = [
   'uFace',
   'uPic',
   'uSprite',
+  'uDay',
   'uStars',
   'uMoonPh'
 ];
@@ -1896,6 +1902,11 @@ let phaseChoice = 'auto',
   fx = effectsOf('clear'),
   rainChosen = false,
   flashAt = -99;
+// how far through the day it is where the visitor is, 0 to 1 (a time of day chosen by hand stands for its hour)
+const dayNow = () =>
+  phaseChoice !== 'auto'
+    ? { dawn: 0.27, day: 0.5, dusk: 0.73, night: 0 }[phase]
+    : (wx ? minutesAt(wx.timeZone) : new Date().getHours() * 60 + new Date().getMinutes()) / 1440;
 const autoPhase = () => {
   if (wx) return phaseAt(minutesAt(wx.timeZone), wx.sunrise, wx.sunset);
   const h = new Date().getHours();
@@ -4791,16 +4802,18 @@ function lookSound(name, what, t, vol) {
       shimmer(t, note() * 4, v * 0.22, 1.2);
       tone('sine', 2600, t, 0.5, v * 0.12, 900);
     }
-  } else if (name === 'chalk') {
-    // chalk on a board: taps and a short stroke, the stroke with its little squeak left out
-    const tap = (at, k) => (hiss(at, 0.018, 3400, 2.5, v * k), tone('triangle', rnd(380, 460), at, 0.03, v * k * 0.3));
+  } else if (name === 'relief') {
+    // stone: a chisel's dry knock, and sand running off as the look comes in
+    const knock = (at, k) => (
+      hiss(at, 0.02, 2600, 2.2, v * k), tone('triangle', rnd(300, 360), at, 0.05, v * k * 0.4), bubble(at, rnd(150, 170), v * k * 0.5, 0.06)
+    );
     if (what === 'in') {
-      [0, 0.09, 0.2].forEach((d) => tap(t + d, 0.8));
-      hiss(t + 0.3, 0.32, 2600, 1.6, v * 0.45);
+      hiss(t, 1.1, 1700, 0.5, v * 0.3);
+      knock(t + 0.5, 0.7);
     } else if (what === 'crack') {
-      tap(t, 1);
-      tap(t + 0.06, 0.7);
-    } else tap(t, 0.9);
+      knock(t, 1);
+      knock(t + 0.07, 0.6);
+    } else knock(t, 0.9);
   }
 }
 function plip(kind, vol) {
@@ -4930,9 +4943,59 @@ function paintPic() {
   else if (picLook === 'qinghua') paintRim();
   else if (picLook === 'stars') paintPlate();
   else if (picLook === 'ukiyo') paintWaves();
+  else if (picLook === 'relief') paintRelief();
 }
 // which looks have a picture in that texture, and how each fetches its own
-const PICTURED = { dunhuang: () => loadMural(), monet: () => loadMonet(), qinghua: () => loadRim(), stars: () => loadStars(), ukiyo: () => loadWaves() };
+const PICTURED = {
+  dunhuang: () => loadMural(),
+  monet: () => loadMonet(),
+  qinghua: () => loadRim(),
+  stars: () => loadStars(),
+  ukiyo: () => loadWaves(),
+  relief: () => loadRelief()
+};
+// The relief's carvings: each picture is a pair, its paint and its height. The paint is laid into the top
+// half of the look's texture and the height into the bottom half, at the same places, so the shader reads
+// both from one picture; where nothing is carved the height is the stone's face (mid grey).
+let reliefImgs = null;
+function loadRelief() {
+  if (reliefImgs) return;
+  reliefImgs = {};
+  Promise.all(
+    Object.entries(RELIEF).map(
+      ([k, src]) =>
+        new Promise((done) => {
+          const im = new Image();
+          im.onload = () => ((reliefImgs[k] = im), done());
+          im.onerror = () => (report(new Error(`no picture at ${src}`), 'pond pictures'), done());
+          im.src = src;
+        })
+    )
+  ).then(() => {
+    paintPic();
+    invalidate();
+  });
+}
+function paintRelief() {
+  if (!glOK || !reliefImgs || !reliefImgs.friezeH) return;
+  const k = Math.min(2048 / W, glc.width / W, 2),
+    cv = document.createElement('canvas');
+  cv.width = Math.max(1, Math.round(W * k));
+  cv.height = Math.max(2, Math.round(H * k) * 2);
+  const c = cv.getContext('2d'),
+    half = cv.height / 2;
+  c.fillStyle = 'rgb(128,128,128)';
+  c.fillRect(0, half, cv.width, half);
+  for (const [pair, sx, sy, sw, sh, x, y, w, h] of reliefLayout(W, H, big)) {
+    const paint = reliefImgs[`${pair}C`],
+      height = reliefImgs[`${pair}H`];
+    // a carving is drawn only whole: its paint without its height would be a flat picture on the stone
+    if (!paint || !height) continue;
+    c.drawImage(paint, sx, sy, sw, sh, x * k, y * k, w * k, h * k);
+    c.drawImage(height, sx, sy, sw, sh, x * k, half + y * k, w * k, h * k);
+  }
+  sendPic(cv);
+}
 // Ukiyo-e's wave crests: the sheet itself is the texture (the shader picks a crest's cell), with smaller
 // copies, since a crest is drawn well under the size it was cut at.
 let waves = null;
@@ -5716,7 +5779,7 @@ const HOLD = 1.2,
           toggleLook(t, [at.reduce((a, q) => a + q.x, 0) / at.length, at.reduce((a, q) => a + q.y, 0) / at.length]);
         }
       }
-    } else if (PREVIEW && strokeLifted(drawn) === 'chalk') toggleLook('chalk', [x, y]);
+    } else if (PREVIEW && strokeLifted(drawn) === 'relief') toggleLook('relief', [x, y]);
     gest.pts = [];
   };
   pond.addEventListener('pointerup', lift);
@@ -5924,7 +5987,8 @@ function drawNewCues(c, now) {
   if (gest.down && P.length > 8 && gest.len > 70 && Math.abs(gest.turn) < Math.PI * 0.6 && !straightness()) {
     c.lineCap = c.lineJoin = 'round';
     c.lineWidth = 2;
-    c.strokeStyle = 'rgba(243,242,232,0.5)';
+    // (a stroke that is neither a turn nor a ruled line leaves its trace: a zigzag is read when it lifts)
+    c.strokeStyle = 'rgba(236,222,190,0.5)';
     c.beginPath();
     P.forEach((q, i) => (i ? c.lineTo(q[0], q[1]) : c.moveTo(q[0], q[1])));
     c.stroke();
@@ -6283,6 +6347,7 @@ function tick1(raw) {
   gl.uniform4f(U.uInk, fade ? shown / inkMax : shown, inkO[0], inkO[1], fade ? 0.25 : inkW);
   // how long the look on show has been arriving (what each builds up after its front), or leaving
   gl.uniform1f(U.uLookT, look === 'water' || RM ? 99 : since);
+  gl.uniform1f(U.uDay, dayNow());
   gl.uniform1f(U.uLeave, look === 'water' && inkR > 0 && !RM ? since : -1);
   gl.uniform1i(U.uStyle, SID[top]);
   gl.uniform1i(U.uPrev, SID[base]);

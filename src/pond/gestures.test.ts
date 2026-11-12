@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { type Pt, type Tap, loop, rub, straight, strokeLifted, strokeMoving, tapsLook, tick } from './gestures';
+import { type Pt, type Tap, loop, rub, straight, strokeLifted, strokeMoving, tapsLook, zigzag } from './gestures';
 
 const W = 1280,
   H = 800;
@@ -29,10 +29,8 @@ const rim = (m = 50, w = W, h = H): Pt[] => {
 };
 const rubbing = (x: number, y: number, w = 120, passes = 6): Pt[] =>
   Array.from({ length: passes }, (_, k) => line(k % 2 ? [x + w, y + k * 2] : [x, y + k * 2], k % 2 ? [x, y + k * 2 + 2] : [x + w, y + k * 2 + 2], 12)).flat();
-const ticking = (x: number, y: number, s = 1): Pt[] => [
-  ...line([x, y], [x + 30 * s, y + 46 * s], 10),
-  ...line([x + 30 * s, y + 46 * s], [x + 150 * s, y - 90 * s], 24)
-];
+const zigzagging = (x: number, y: number, legs = 7, pitch = 50, swing = 70): Pt[] =>
+  Array.from({ length: legs }, (_, k) => line([x + k * pitch, y + (k % 2 ? -swing : 0)], [x + (k + 1) * pitch, y + (k % 2 ? 0 : -swing)], 10)).flat();
 const ruled = (): Pt[] => line([300, 500], [760, 380], 60);
 const taps = (pts: Pt[], gap = 0.3): Tap[] => pts.map(([x, y], i) => ({ t: 10 + i * gap, x, y }));
 
@@ -41,7 +39,7 @@ const strokes: Record<string, Pt[]> = {
   qinghua: rim(),
   dunhuang: rubbing(600, 400),
   blueprint: ruled(),
-  chalk: ticking(600, 400)
+  relief: zigzagging(420, 430)
 };
 /** Everything a stroke could be taken for, while it moves and when it lifts. */
 const read = (pts: Pt[]) => {
@@ -70,7 +68,7 @@ describe('each stroke means its own look and no other', () => {
     expect(loop(phoneRim, w, h)).toBe('qinghua');
     expect(loop(circle(200, 500, 70), w, h)).toBe('ukiyo');
     expect(rub(rubbing(120, 500, 100))).toBe(true);
-    expect(tick(ticking(120, 500, 0.8))).toBe(true);
+    expect(zigzag(zigzagging(60, 520, 7, 36, 60))).toBe(true);
   });
 });
 
@@ -80,7 +78,7 @@ describe('every pair: one stroke is never read as another', () => {
     qinghua: (p) => loop(p, W, H) === 'qinghua',
     dunhuang: (p) => rub(p),
     blueprint: (p) => (straight(p)?.chord ?? 0) > 320,
-    chalk: (p) => strokeLifted(p) === 'chalk'
+    relief: (p) => strokeLifted(p) === 'relief'
   };
   for (const made of Object.keys(strokes))
     for (const asked of Object.keys(tests))
@@ -95,8 +93,9 @@ describe('strokes that are none of them', () => {
     expect(read(Array.from({ length: 60 }, (_, i) => [300 + i * 8, 400 + Math.sin(i / 4) * 60] as Pt)).size).toBe(0);
     expect([...read(circle(640, 400, 200))]).toEqual(['ukiyo']);
     expect(read(circle(640, 400, 120, 0.5)).size).toBe(0);
-    // a V with arms of one length is no tick
-    expect(tick([...line([500, 300], [560, 420], 12), ...line([560, 420], [620, 300], 12)])).toBe(false);
+    // a zigzag of two peaks is one short, and one drawn up and down is still a zigzag
+    expect(zigzag(zigzagging(420, 430, 4))).toBe(false);
+    expect(zigzag(zigzagging(420, 430).map(([x, y]) => [y + 100, x] as Pt))).toBe(true);
   });
   it('two passes are not a rub, and a wide scribble is not one', () => {
     expect(rub(rubbing(600, 400, 120, 3))).toBe(false);

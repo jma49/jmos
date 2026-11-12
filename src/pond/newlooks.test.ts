@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { KOI_SHEETS, MURAL, MURAL_FOOT, MURAL_FOOT_NARROW, muralLayout } from './newlooks.js';
+import { KOI_SHEETS, MURAL, MURAL_FOOT, MURAL_FOOT_NARROW, RELIEF, muralLayout, reliefLayout } from './newlooks.js';
 
 describe('the Dunhuang wall', () => {
   const walls = [
@@ -53,6 +53,34 @@ describe('the Dunhuang wall', () => {
     expect(halo[5] + halo[7] / 2).toBeCloseTo(faces[0][0], 3);
     expect(halo[6] + halo[8] / 2).toBeCloseTo(faces[0][1], 3);
     expect(halo[7]).toBeGreaterThan(faces[0][2] * 2);
+  });
+});
+
+describe('the relief', () => {
+  it('carves nothing but the frieze under the controls, on any wall', () => {
+    for (const [W, H, wide] of [
+      [1100, 640, true],
+      [1280, 800, true],
+      [1920, 900, true],
+      [2560, 1300, true],
+      [1600, 1400, true],
+      [390, 844, false],
+      [375, 667, false],
+      [800, 500, false]
+    ] as [number, number, boolean][])
+      for (const [pair, , , , , x, y, w, h] of reliefLayout(W, H, wide)) {
+        if (pair === 'frieze') continue;
+        expect(y + h, `${pair} on ${W}×${H}`).toBeLessThanOrEqual(H - (wide ? MURAL_FOOT : MURAL_FOOT_NARROW) + 0.5);
+        expect(x + w, `${pair} on ${W}×${H}`).toBeLessThanOrEqual(W + 0.5);
+        expect(y, `${pair} on ${W}×${H}`).toBeGreaterThan(wide ? 40 : 26);
+      }
+  });
+  it('keeps the title’s side of a wide wall bare, and has both halves of every pair it places', () => {
+    for (const [pair, , , , , x] of reliefLayout(1440, 900, true)) {
+      expect(Object.keys(RELIEF)).toContain(`${pair}C`);
+      expect(Object.keys(RELIEF)).toContain(`${pair}H`);
+      if (pair !== 'frieze') expect(x).toBeGreaterThan(1440 * 0.5);
+    }
   });
 });
 

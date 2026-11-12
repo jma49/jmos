@@ -67,7 +67,8 @@ const DRESS = {
   ascii: { flat: '#cfe6df' },
   qinghua: { mul: '#a9bde6', line: '#1f3f8f' },
   dunhuang: { mul: '#ede0c2', line: '#2e1c12' },
-  stars: { flat: '#c9d4f0', line: '#c9d4f0', hollow: 0.18 }
+  stars: { flat: '#c9d4f0', line: '#c9d4f0', hollow: 0.18 },
+  relief: { mul: '#d8cfbd', line: '#4a3d31' }
 };
 /** Whether a look keeps the rendering's own light (and so the ground's soft shadow under it). */
 export const lit = (look) => !DRESS[look] || look === 'ukiyo';

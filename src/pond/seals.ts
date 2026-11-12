@@ -39,7 +39,7 @@ export const VOLUMES: Volume[] = [
       { id: 'blueprint', chars: '图', shape: 'square', cut: 'white' },
       { id: 'ascii', chars: '字', shape: 'square', cut: 'red' },
       { id: 'stars', chars: '星', shape: 'round', cut: 'white', preview: true },
-      { id: 'chalk', chars: '板报', shape: 'tall', cut: 'red', preview: true, soon: true }
+      { id: 'relief', chars: '刻', shape: 'square', cut: 'white', preview: true }
     ]
   }
 ];
@@ -153,7 +153,7 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
       blueprint: 'Blueprint',
       ascii: 'ASCII',
       stars: 'Star chart',
-      chalk: 'Blackboard'
+      relief: 'Relief'
     },
     hints: {
       ink: 'Stillness leaves a mark.',
@@ -165,7 +165,7 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
       blueprint: 'Every drawing starts with one straight line.',
       ascii: 'Say something.',
       stars: 'Three stars, far apart, make a figure.',
-      chalk: 'The teacher’s mark.'
+      relief: 'Water is written as a zigzag.'
     },
     thanks: { painted: 'Every painted one. Thank you for looking so closely.', drawn: 'Every drawn one. Thank you for trying things.' },
     koi: 'Your koi wears a seal from now on.',
@@ -191,7 +191,7 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
       blueprint: '蓝图',
       ascii: '字符',
       stars: '星图',
-      chalk: '黑板报'
+      relief: '浮雕'
     },
     hints: {
       ink: '停一停，会留下痕迹。',
@@ -203,7 +203,7 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
       blueprint: '每张图纸，都从一条直线开始。',
       ascii: '说点什么。',
       stars: '隔得远远的三颗星，连成一个形。',
-      chalk: '老师打的那个勾。'
+      relief: '古人画水，画成一道折线。'
     },
     thanks: { painted: '画的这一册集齐了。谢谢你看得这么仔细。', drawn: '线的这一册集齐了。谢谢你什么都试一试。' },
     koi: '你的锦鲤，从此带着一方印。',
@@ -229,7 +229,7 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
       blueprint: '青写真',
       ascii: '文字',
       stars: '星図',
-      chalk: '黒板'
+      relief: 'レリーフ'
     },
     hints: {
       ink: 'じっとしていると、跡が残る。',
@@ -241,7 +241,7 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
       blueprint: 'どの図面も、まっすぐな一本から。',
       ascii: 'なにか言ってみて。',
       stars: '離れた星みっつで、かたちになる。',
-      chalk: '先生がつける、あのしるし。'
+      relief: '水は、ぎざぎざの線で書く。'
     },
     thanks: { painted: '絵の一冊がそろいました。じっくり見てくれて、ありがとう。', drawn: '線の一冊がそろいました。いろいろ試してくれて、ありがとう。' },
     koi: 'あなたの鯉に、印がひとつ付きました。',

@@ -1,7 +1,7 @@
 // @ts-nocheck (a scratch tool kept from the session: see docs/agents/pond-handoff.md)
 // the demo's screenshots: node demo.cjs <dist> <stamps|album|looks|winter>
 const { chromium } = require('playwright');
-const ALL = ['ink', 'ukiyo', 'glow', 'blueprint', 'ascii', 'monet', 'qinghua', 'dunhuang', 'stars', 'chalk'],
+const ALL = ['ink', 'ukiyo', 'glow', 'blueprint', 'ascii', 'monet', 'qinghua', 'dunhuang', 'stars', 'relief'],
   NEW = ALL.slice(5);
 const out = __dirname + '/demo/';
 (async () => {

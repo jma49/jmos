@@ -1,6 +1,6 @@
 // @ts-nocheck (a scratch tool kept from the session: see docs/agents/pond-handoff.md)
 // polish shots: node pol.cjs <dist> <w> <h> <dsf> <tag> <looks,..> [phone]
-// (RM=1 runs under reduced motion and also pictures each look leaving and gone)
+// (RM=1 runs under reduced motion and also pictures each look leaving and gone; PHASE=dawn|day|dusk|night sets the time of day)
 const { chromium } = require('playwright');
 (async () => {
   const [, , dir, w, h, dsf, tag, looks, phone] = process.argv;
@@ -34,6 +34,12 @@ const { chromium } = require('playwright');
   p.on('pageerror', (e) => errs.push(e.message.slice(0, 400)));
   await p.goto(srv.url, { waitUntil: 'load' });
   await p.waitForTimeout(10000);
+  if (process.env.PHASE)
+    await p.evaluate((v) => {
+      const s = document.querySelector('.preview [data-k=phase]');
+      s.value = v;
+      s.dispatchEvent(new Event('input', { bubbles: true }));
+    }, process.env.PHASE);
   for (const l of looks.split(',')) {
     await p.evaluate((l) => {
       const s = document.querySelector('.preview [data-k=look]');

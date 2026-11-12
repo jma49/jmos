@@ -139,8 +139,9 @@ The state of this work, what is left and what was learnt along the way is in
 [pond-handoff.md](pond-handoff.md).
 
 Five looks exist only in a build with `PUBLIC_POND_PREVIEW=1` (`newlooks.js`, `newlooks.css`): Monet's
-water lilies in oil, blue-and-white porcelain (青花), a Dunhuang mural (敦煌), a star chart (星图) and a
-school blackboard newspaper (黑板报). A release build leaves out their shader source, gestures and
+water lilies in oil, blue-and-white porcelain (青花), a Dunhuang mural (敦煌), a star chart (星图) and an
+Egyptian relief (carved and painted limestone; it took the place of a school blackboard, which was
+turned down). A release build leaves out their shader source, gestures and
 commands; their seals are marked `preview` in `seals.ts`.
 
 - Each is one function of the water pass, built as a pass of its own the first time it is asked for
@@ -339,7 +340,31 @@ its red), entering at the right edge and reaching left, the left third empty.
 #### Egyptian relief
 
 In `public/pond/relief/`, each picture as a pair that lines up to the pixel: `-c.webp` the paint,
-`-h.webp` the height.
+`-h.webp` the height. All three pairs are in use.
+
+- **How the look is drawn** (`lookRelief()` in `newlooks.js`): one height for the whole wall, in pixels
+  above the stone's face, and one light on it. What is in the pond stands proud: the koi and the pads
+  from their own canvases, with a soft shoulder; the tomb's carvings from the pictures. The water is the
+  sign for water, rows of zigzag cut into the face, sliding a little and shaken where the pond moves;
+  there is none under the type nor in the plain band under the frieze, where the clock stands. The
+  surface's slope comes from the pass's own derivatives, so the height is read once a pixel.
+- **The light** follows the visitor's day (`uDay`, 0 to 1): low from the left in the morning, higher
+  and from above at noon, low from the right towards evening; by night a lamp held low at one side,
+  warmer and dimmer. What stands proud throws a short shadow away from it.
+- **The pictures in the texture** (`paintRelief()` in `engine.js`): the paint of each carving in the top
+  half of the look's one texture and its height in the bottom half, at the same places, where nothing
+  is carved the stone's face (mid grey). `reliefLayout()` places them: the frieze along the top and the
+  foot; on a wide wall a marsh in the right half (papyrus, duck, lotus, bud, leaf) over two tilapia;
+  on a narrow one a single tilapia under the contents. Nothing but the frieze lies under the controls
+  (`newlooks.test.ts`). A carving is drawn only when both halves of its pair have come.
+- **The rest:** a press is a chisel's strike (a chip of bare stone and its dust); the look arrives as
+  sand blown off in streaks; winter is frost; the gesture is a zigzag of three peaks or more, read when
+  the finger lifts (`zigzag()` in `gestures.ts`: five sharp corners, so a wavy line is not one); the
+  seal is 刻; the sounds are a chisel's knock and running sand. No inscription anywhere.
+- **Still drawn without a picture:** the koi (a relief of the pond's own, with scales cut in and flat
+  paint: the brief's `koi-h`, `koi-c` and mask would replace them through `KOI_SHEETS`), the stone's
+  face (the brief's `stone-h`), and the dove and the spider (the neutral sheets, in stone's tone inside
+  a dark line).
 
 | Pair | Size | What is in it (each motif within its cell, as left, top, right, bottom) |
 | --- | --- | --- |
@@ -453,7 +478,7 @@ light and refraction, the glass) stays in the shader.
 | Seals (ten looks and 锦程) | the brush face in CSS | A family, but running script, not seal script | Replace | `ink/seals` (asked) |
 | Ink: inscription | the brush face | Good | Keep | none |
 | Festival things (preview) | canvas paths | Lanterns pass; the dragon boat is crude | Replace the boat and the river lanterns | `water/festival` sheet, later |
-| Borders and frames | shader (青花 beads, Dunhuang band) | 青花's beads are plain | Replace | delivered (`qinghua/rim`, `corner`; `dunhuang/border`) |
+| Borders and frames | pictures (青花's rim, the Dunhuang band, the relief's frieze) | In keeping | Done | in use (`qinghua/rim`, `corner`; `dunhuang/border`; `relief/frieze`) |
 | Solar-term block, chapter headers, the album's paper | type and CSS | In keeping | Keep | per look only where asked below |
 | Presses | shader, per look | Good where they are physics (rings, blots); ukiyo-e's claws are stiff | Ukiyo-e's replaced in a preview build | in use (`ukiyo/waves`) |
 | The pond's mark, timeline marks | PNG files already | n/a | Keep | none |
@@ -669,7 +694,7 @@ dark painted game mural.
    dove; a spider in the same hand).
 7. Seal: on the ink sheet.
 
-**Egyptian relief** (not built yet). Judge it by: painted limestone relief from a New Kingdom
+**Egyptian relief** (built on the first lot; what is still wanted is below). Judge it by: painted limestone relief from a New Kingdom
 tomb under a raking light: carved, pale, cool, nothing like the Dunhuang wall's warm paint.
 Every picture comes as a pair of the same size: `-h` the height (mid grey the stone's face,
 lighter raised, darker cut in; opaque) and `-c` the faded paint over it (Egyptian blue `#3F6FA8`,
@@ -677,7 +702,7 @@ green `#5E8F6A`, red ochre `#A8482C`, yellow `#D6A23E`, black line; transparent 
 1. P1 `stone-h.webp`, 1024 × 1024, a limestone face with chisel marks and fine pitting, seamless.
 2. P0 `koi-h.webp`, `koi-c.webp` + `koi-mask.webp` to the common spec: tilapia as tomb reliefs
    carve them, incised scales; gold in yellow ochre, the spot in red ochre.
-3. Delivered: `fish`, `lotus`, `frieze`. P1 `papyrus`, 512 × 1024, a papyrus clump; `duck`, 512 ×
+3. Delivered and in use: `fish`, `lotus`, `frieze`. P1 `papyrus`, 512 × 1024, a papyrus clump; `duck`, 512 ×
    512, a duck in profile.
 4. P1 `cartouche`, 512 × 768, an empty cartouche ring, upright, for the solar term. Nothing in it.
 5. Press: a chip and dust, in the shader. Nothing wanted.
@@ -724,6 +749,7 @@ air) and ASCII (the pond in characters).
   - glow: press the light on the water (the moon's, or the sun's glint
     by day);
   - blueprint: draw a long straight line;
+  - Egyptian relief (preview): draw a zigzag of three peaks or more;
   - ASCII: type five letters that aren't shortcuts within 3 s (each
     lands on the water at the pointer), or "ascii" or "text" in ⌘K on a
     phone.

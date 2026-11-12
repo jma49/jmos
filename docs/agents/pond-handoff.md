@@ -67,7 +67,7 @@ pass, and the move from drawing things in code to painted pictures. How the pond
 | 青花 | Preview. Painted rim and corners; painted koi with visitors' colours through the mask; the frame is the page's margin. | `qinghua/rim`, `corner`, `koi` + mask | none | Lotus and the pads are still shader outlines. The tint through the mask has never been seen with a second visitor. |
 | Dunhuang | Preview. The flying figures are the wall; mural koi; nothing painted under the controls. | `dunhuang/feitian-pipa`, `feitian-flowers`, `feitian-far`, `sky-flowers`, `border`, `cloud-trail`, `halo`, `koi` + mask | `caisson`, `feitian-pipa-2560` (never fetched while the picture texture is at most 2048 across: see pond.md) | The caisson has no place. Seen at 1280 × 800, 1920 × 900 and a 390 × 844 phone; shorter phones are held by a test, not seen. |
 | Star chart | Preview. Koi drawn as constellations in code, the atlas's koi in outline behind each; the plate's grid in the sky. | `stars/plate`, `koi-figures` | none | Seen once, at 1280 × 800, a few seconds in. The grid repeats mirrored: where a mirror line crosses the window the meridians kink; not seen after minutes of turning. |
-| Egyptian relief | Not built. Replaces the blackboard, which is out of the looks, commands and album; its shader and CSS are still in `newlooks.js` / `newlooks.css` and are to be deleted when the relief stands. | none | `relief/fish`, `lotus`, `frieze` (each `-h` and `-c`) | The whole look. |
+| Egyptian relief | Preview. Built: carved and painted limestone under a light that goes round with the day; zigzag water; the frieze and a marsh of the delivered carvings; a chisel's strike for a press; sand blown off as it arrives; the zigzag gesture; the seal 刻. The blackboard is gone from the code. | `relief/fish`, `lotus`, `frieze` (each `-h` and `-c`) | none | Seen at 1280 × 800 (dawn, noon, night), 1440 × 900 (dusk), a phone in winter, and its arrival and a press in a 640 × 400 frame sequence. Its koi are the pond's own, raised and painted by the shader, until the brief's koi sheet comes. Chapters, the album's stamp, the dove and the spider in its dress, and a second language were not looked at. |
 
 Jincheng's words that still stand:
 
@@ -79,7 +79,7 @@ Jincheng's words that still stand:
 - Pictures over code: "把一些不协调的代码生成的素材用真实的图像资产替代"; "我建议每个风格的主要素材
   都用本地线程去做，你给出明确的指引".
 - The Blender sheets: "鸽子不够细致，不够写实，参考现实中的鸽子去做。跳蛛的细节还要继续优化。"
-- The blackboard: "明显比其他的差很多…首先考虑换掉这个风格" (replaced in plan by the Egyptian relief).
+- The blackboard: "明显比其他的差很多…首先考虑换掉这个风格" (replaced by the Egyptian relief).
 - Layout between looks: "如果组件位置有变化，切换的时候丝滑一些".
 
 ## 3. What ships when
@@ -130,11 +130,11 @@ koi moved to the common sheet. What is left of those:
    place before, at the swap and after; it was right for 青花 and Dunhuang at 1280 × 800. Not done:
    a performance trace for reflow (two rounds of `getBoundingClientRect` on seven elements, once a
    change of look).
-6. **Egyptian relief look.** The brief is in pond.md ("Egyptian relief" in the art brief) and in
-   this session's notes there: carved and painted limestone lit by a raking light that follows the
-   time of day; zigzag water; no inscriptions; press as a chisel strike; arrival as sand blowing
-   off; gesture a zigzag of three peaks or more (add it to `gestures.ts`'s table and test every
-   pair); seal 刻; its own shader pass; the delivered `relief/` lot. Then delete the blackboard.
+6. **Egyptian relief: built; to be finished.** How it is drawn is in pond.md ("Egyptian relief").
+   Left: its koi from the brief's `koi-h`, `koi-c` and mask when they come (through `KOI_SHEETS`; the
+   shader then lays the sheet's paint in and reads its height); the stone's face from `stone-h`; the
+   cartouche round the solar term; its chapters and stamp through the finish checklist (item 10); how
+   strong the light should be, which is a matter for a real screen.
 7. **Exits designed** where the arrival run backwards looks wrong (only the stars have their own).
 8. **Reduced motion: seen once.** Every look was brought in and sent back under reduced motion
    (`RM=1` with `tools/pond/pol.cjs`): each cross-fades in and out with no error. Seen as stills at

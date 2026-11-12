@@ -10,12 +10,13 @@
 //   qinghua     once round the rim of the screen     moving    a full turn spanning most of the screen, near its edges
 //   dunhuang    rub back and forth over a spot       moving    four reversals along one line, thinner than 50 px
 //   blueprint   one long straight line               lift      over 320 px, straight
-//   chalk       a tick: down, then a longer rise     lift      two straight parts, a corner at the bottom, not straight overall
+//   relief      a zigzag of three peaks or more      lift      five sharp corners, travelling one way, wider than a rub
 //   stars       three taps far apart, within 1.5 s   lift      each over 150 px from the others
 //   monet       four taps in one place, within 1.8 s lift      all within 44 px of their middle
 //
 // A stir is at least 50 px across and a rub at most, so they can't both hold; a rim loop is a stir that
-// spans the screen; a tick has a corner where a ruled line has none; the taps differ by how far apart.
+// spans the screen; a zigzag swings at least 50 px and never turns round, and its corners are sharp, so a
+// wavy line is not one; a ruled line has no corner; the taps differ by how far apart.
 
 export type Pt = [number, number];
 export interface Tap {
@@ -101,33 +102,70 @@ export function rub(pts: Pt[]): boolean {
   }
   return n >= 4;
 }
-/** A tick: a short stroke down to the right, a corner, and a longer one up to the right. */
-export function tick(pts: Pt[]): boolean {
-  if (pts.length < 4) return false;
-  let c = 0;
-  for (let i = 1; i < pts.length; i++) if (pts[i][1] > pts[c][1]) c = i;
-  if (c === 0 || c === pts.length - 1) return false;
-  const a = pts[0],
-    b = pts[c],
-    z = pts[pts.length - 1],
-    l1 = Math.hypot(b[0] - a[0], b[1] - a[1]),
-    l2 = Math.hypot(z[0] - b[0], z[1] - b[1]);
-  if (b[0] - a[0] < 6 || b[1] - a[1] < 20 || z[0] - b[0] < 30 || b[1] - z[1] < 50 || l2 < 80 || l2 < l1 * 1.4 || l1 > 220) return false;
-  const off = (p: Pt, q: Pt, part: Pt[]) => {
-    const ch = Math.hypot(q[0] - p[0], q[1] - p[1]) || 1;
-    return Math.max(...part.map(([x, y]) => Math.abs((q[0] - p[0]) * (p[1] - y) - (p[0] - x) * (q[1] - p[1])) / ch));
+/**
+ * A zigzag, as the sign for water is cut: it travels one way, swinging across its way at least five times
+ * (three peaks and the two valleys between them, or more), each turn a sharp corner.
+ */
+export function zigzag(pts: Pt[]): boolean {
+  if (pts.length < 12) return false;
+  const e = ext(pts),
+    k = e.w >= e.h ? 0 : 1,
+    j = 1 - k,
+    travel = Math.max(e.w, e.h),
+    swing = Math.min(e.w, e.h);
+  if (travel < 180 || swing < 50) return false;
+  // it never doubles back along its way
+  const way = Math.sign(pts[pts.length - 1][k] - pts[0][k]);
+  let lead = pts[0][k];
+  for (const p of pts) {
+    if ((p[k] - lead) * way > 0) lead = p[k];
+    else if ((lead - p[k]) * way > 24) return false;
+  }
+  // where it turns across its way: the furthest point of each swing of 30 px or more
+  const corners: number[] = [];
+  let dir = 0,
+    far = 0;
+  pts.forEach((p, i) => {
+    const v = p[j];
+    if (dir === 0) {
+      if (Math.abs(v - pts[0][j]) >= 30) {
+        dir = Math.sign(v - pts[0][j]);
+        far = i;
+      }
+    } else if ((v - pts[far][j]) * dir > 0) far = i;
+    else if ((pts[far][j] - v) * dir >= 30) {
+      corners.push(far);
+      dir = -dir;
+      far = i;
+    }
+  });
+  // a corner is sharp if the heading turns by more than 62° within 16 px either side of it
+  const reach = (from: number, step: number): Pt => {
+    let d = 0,
+      i = from;
+    while (i + step >= 0 && i + step < pts.length && d < 16) {
+      d += Math.hypot(pts[i + step][0] - pts[i][0], pts[i + step][1] - pts[i][1]);
+      i += step;
+    }
+    return pts[i];
   };
-  if (off(a, b, pts.slice(0, c + 1)) > Math.max(8, l1 * 0.14) || off(b, z, pts.slice(c)) > Math.max(8, l2 * 0.1)) return false;
-  // it never doubles back sideways
-  for (let i = 1; i < pts.length; i++) if (pts[i][0] < pts[i - 1][0] - 10) return false;
-  return true;
+  const sharp = corners.filter((c) => {
+    const a = reach(c, -1),
+      b = reach(c, 1),
+      p = pts[c],
+      u = [p[0] - a[0], p[1] - a[1]],
+      w = [b[0] - p[0], b[1] - p[1]],
+      turn = Math.abs(Math.atan2(u[0] * w[1] - u[1] * w[0], u[0] * w[0] + u[1] * w[1]));
+    return turn > 1.08;
+  });
+  return sharp.length >= 5;
 }
 /** What a stroke means while it is still being drawn. */
 export const strokeMoving = (pts: Pt[], W: number, H: number): 'dunhuang' | 'ukiyo' | 'qinghua' | null => (rub(pts) ? 'dunhuang' : loop(pts, W, H));
-/** What a stroke means once the finger lifts (a ruled line comes before a tick). */
-export const strokeLifted = (pts: Pt[]): 'blueprint' | 'chalk' | null => {
+/** What a stroke means once the finger lifts. */
+export const strokeLifted = (pts: Pt[]): 'blueprint' | 'relief' | null => {
   const ln = straight(pts);
-  return ln && ln.chord > 320 ? 'blueprint' : tick(pts) ? 'chalk' : null;
+  return ln && ln.chord > 320 ? 'blueprint' : zigzag(pts) ? 'relief' : null;
 };
 /** What the taps so far mean, the newest last: three far apart (a triangle of stars), or four in one place (dabs of paint). */
 export function tapsLook(taps: Tap[]): 'stars' | 'monet' | null {

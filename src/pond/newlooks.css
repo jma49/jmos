@@ -165,50 +165,6 @@
   letter-spacing: 0.04em;
 }
 
-/* 黑板报: a chalk hand; the greeting lettered as the board's headline, with the shadow coloured chalk gives it */
-#pond[data-look='chalk'] {
-  --deep: #12322a;
-  --mist: #f3f2e8;
-  --mist-dim: rgba(243, 242, 232, 0.82);
-  --mist-faint: rgba(243, 242, 232, 0.54);
-  --hair: rgba(243, 242, 232, 0.3);
-  --lift: rgba(243, 242, 232, 0.08);
-  --koi: #f79aa6;
-  --gold: #f7dd7e;
-  --latin-d: 'Architects Daughter';
-  --latin-b: 'Architects Daughter';
-}
-#pond[data-look='chalk'][lang='ja'] {
-  --cjk-d: 'Klee One';
-  --cjk-b: 'Klee One';
-}
-#pond[data-look='chalk'] .hero {
-  letter-spacing: 0.02em;
-  color: #f3f2e8;
-  text-shadow: 2px 2px 0 rgba(247, 154, 166, 0.5);
-}
-#pond[data-look='chalk'] .toc .go b,
-#pond[data-look='chalk'] .sheet h1 {
-  color: #f3f2e8;
-}
-#pond[data-look='chalk'] .filt button[aria-pressed='true'],
-#pond[data-look='chalk'] .sheet .chap button[aria-current],
-#pond[data-look='chalk'] .rooms button[aria-selected='true'] {
-  background: #f3f2e8;
-  color: #12322a;
-}
-#pond[data-look='chalk'] .toc .row {
-  border-style: dashed;
-}
-#pond[data-look='chalk'] .term-v {
-  color: #f79aa6;
-}
-#pond[data-look='chalk'] .sheet {
-  background: rgba(14, 44, 36, 0.66) !important;
-}
-
-/* the album's stamp, pressed each look's own way: in paint, as the mark under a bowl, in cinnabar gone
-   dry, as a point of light, in chalk */
 #pond[data-look='monet'] .stamp .seal-m {
   --red: #c8473f;
   --cut: #f6ead6;
@@ -235,108 +191,47 @@
   box-shadow: inset 0 0 0 1px var(--red);
   filter: drop-shadow(0 0 6px rgba(240, 207, 138, 0.7));
 }
-#pond[data-look='chalk'] .stamp .seal-m {
-  --red: #f79aa6;
-  background: none;
-  color: var(--red);
-  box-shadow: inset 0 0 0 2px var(--red);
-  clip-path: none;
-  border-radius: 3px;
-  filter: none;
-}
-
-/* A look with a border round the whole pond (the bowl's rim, the board's frame): the border is the page's
+/* A look with a border round the whole pond (the bowl's rim): the border is the page's
    margin in that look, and the title page, the clock and every control stand inside it, clear by the same
    gap on every side. --frame is how far the border reaches in (newlooks.js draws it at this scale). */
-#pond[data-look='qinghua'],
-#pond[data-look='chalk'] {
+#pond[data-look='qinghua'] {
   --frame: 48px;
   --edge: max(clamp(20px, 4.2vw, 68px), calc(var(--frame) + 14px));
 }
-#pond[data-look='qinghua'] .alm,
-#pond[data-look='chalk'] .alm {
+#pond[data-look='qinghua'] .alm {
   top: calc(var(--frame) + 10px);
 }
 #pond[data-look='qinghua'] .hud .bl,
 #pond[data-look='qinghua'] .hud .br,
-#pond[data-look='qinghua'] .hud .cmd,
-#pond[data-look='chalk'] .hud .bl,
-#pond[data-look='chalk'] .hud .br,
-#pond[data-look='chalk'] .hud .cmd {
+#pond[data-look='qinghua'] .hud .cmd {
   bottom: calc(var(--frame) + 10px);
 }
-#pond[data-look='qinghua'] .preview,
-#pond[data-look='chalk'] .preview {
+#pond[data-look='qinghua'] .preview {
   bottom: calc(var(--frame) + 10px);
 }
-#pond[data-look='qinghua'] .stamp,
-#pond[data-look='chalk'] .stamp {
+#pond[data-look='qinghua'] .stamp {
   bottom: calc(var(--frame) + 58px);
 }
-#pond[data-look='qinghua'] .veil,
-#pond[data-look='chalk'] .veil {
+#pond[data-look='qinghua'] .veil {
   padding: calc(var(--frame) + 6px);
 }
 @media (max-width: 860px) {
-  #pond[data-look='qinghua'],
-  #pond[data-look='chalk'] {
+  #pond[data-look='qinghua'] {
     --frame: 27px;
   }
-  #pond[data-look='qinghua'] .home,
-  #pond[data-look='chalk'] .home {
+  #pond[data-look='qinghua'] .home {
     padding-inline: calc(var(--frame) + 8px);
   }
-  #pond[data-look='qinghua'] .lead,
-  #pond[data-look='chalk'] .lead {
+  #pond[data-look='qinghua'] .lead {
     padding-top: calc(var(--frame) + 4px);
   }
-  #pond[data-look='qinghua'] .hud,
-  #pond[data-look='chalk'] .hud {
+  #pond[data-look='qinghua'] .hud {
     padding-inline: calc(var(--frame) + 6px);
   }
-  #pond[data-look='qinghua'] .veil,
-  #pond[data-look='chalk'] .veil {
+  #pond[data-look='qinghua'] .veil {
     padding: calc(var(--frame) + 2px);
   }
 }
-
-/* 黑板报, as a class lays one out: a headline in block letters filled with coloured chalk between two
-   ruled lines, the contents in a ruled box, the date in the duty corner */
-#pond[data-look='chalk'] .hero {
-  display: inline-block;
-  padding: 0.16em 0.5em 0.22em 0.1em;
-  border-block: 2px solid rgba(243, 242, 232, 0.7);
-  font-size: clamp(34px, 4.4vw, 64px);
-  line-height: 1.12;
-  letter-spacing: 0.05em;
-  color: #f7dd7e;
-  -webkit-text-stroke: 1.2px #f3f2e8;
-  paint-order: stroke fill;
-  text-shadow: 3px 3px 0 rgba(247, 154, 166, 0.6);
-}
-#pond[data-look='chalk'] .toc {
-  padding: 2px 16px 4px;
-  border: 2px solid rgba(243, 242, 232, 0.55);
-  border-radius: 9px 13px 8px 12px;
-}
-#pond[data-look='chalk'] .toc .row:first-child {
-  border-top-color: transparent;
-}
-#pond[data-look='chalk'] .toc .row:last-child {
-  border-bottom-color: transparent;
-}
-#pond[data-look='chalk'] .toc .go i {
-  color: #f79aa6;
-}
-#pond[data-look='chalk'] .alm .txt {
-  padding: 8px 10px;
-  border: 1.5px dashed rgba(247, 221, 126, 0.7);
-  border-radius: 7px 9px 6px 10px;
-}
-#pond[data-look='chalk'] .seals-btn {
-  margin-top: 0;
-}
-
 /* the Dunhuang wall has a band along its top and bottom: the clock and the controls stand clear of it */
 #pond[data-look='dunhuang'] .alm {
   top: 44px;
@@ -383,4 +278,101 @@
     serif;
   color: rgba(247, 241, 230, 0.9);
   text-shadow: 0 1px 8px rgba(22, 26, 56, 0.7);
+}
+
+/* Egyptian relief: dark umber on pale limestone, red ochre where it matters, Egyptian blue for what is live.
+   The stone is light, so nothing glows; the frieze runs along the top and the foot, and the clock and the
+   controls stand clear of it. */
+#pond[data-look='relief'] {
+  --deep: #ded7c6;
+  --mist: #2b2620;
+  --mist-dim: rgba(43, 38, 32, 0.8);
+  --mist-faint: rgba(43, 38, 32, 0.54);
+  --hair: rgba(43, 38, 32, 0.22);
+  --lift: rgba(43, 38, 32, 0.07);
+  --koi: #a8482c;
+  --gold: #3f6fa8;
+  --latin-d: 'Cormorant Garamond';
+  --latin-b: 'Shippori Mincho Latin';
+}
+#pond[data-look='relief'] .hero {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+#pond[data-look='relief'] .home *,
+#pond[data-look='relief'] .hud *,
+#pond[data-look='relief'] .sheet * {
+  text-shadow: none !important;
+}
+#pond[data-look='relief'] .say,
+#pond[data-look='relief'] .alm .txt,
+#pond[data-look='relief'] .alm .txt b {
+  color: rgba(43, 38, 32, 0.84);
+}
+#pond[data-look='relief'] .sheet {
+  background: rgba(226, 219, 204, 0.64) !important;
+}
+#pond[data-look='relief'] .veil {
+  background: rgba(50, 42, 30, 0.12);
+}
+#pond[data-look='relief'] .shade {
+  opacity: 0.3;
+}
+#pond[data-look='relief'] .link {
+  background: var(--lift);
+}
+#pond[data-look='relief'] .filt {
+  background: color-mix(in srgb, var(--deep) 94%, transparent);
+  box-shadow: inset 0 0 0 1px var(--hair);
+}
+#pond[data-look='relief'] .filt button[aria-pressed='true'],
+#pond[data-look='relief'] .sheet .chap button[aria-current],
+#pond[data-look='relief'] .rooms button[aria-selected='true'],
+#pond[data-look='relief'] .seg-on {
+  background: var(--mist);
+  color: var(--deep);
+}
+#pond[data-look='relief'] .seg button[aria-pressed='true'] {
+  color: var(--deep);
+}
+#pond[data-look='relief'] .term-v {
+  color: #a8482c;
+}
+#pond[data-look='relief'] .tag {
+  color: var(--mist);
+  background: color-mix(in srgb, var(--deep) 78%, transparent);
+  box-shadow: inset 0 0 0 1px var(--hair);
+}
+#pond[data-look='relief'] .stamp .seal-m {
+  --red: #a8482c;
+  --cut: #e6dfcf;
+  filter: none;
+  opacity: 0.9;
+  mix-blend-mode: multiply;
+}
+#pond[data-look='relief'] .alm {
+  top: 54px;
+}
+#pond[data-look='relief'] .hud .bl,
+#pond[data-look='relief'] .hud .br,
+#pond[data-look='relief'] .hud .cmd,
+#pond[data-look='relief'] .preview {
+  bottom: 54px;
+}
+#pond[data-look='relief'] .stamp {
+  bottom: 102px;
+}
+@media (max-width: 860px) {
+  #pond[data-look='relief'] .alm {
+    top: 34px;
+  }
+  #pond[data-look='relief'] .lead {
+    padding-top: 16px;
+  }
+  #pond[data-look='relief'] .hud .bl,
+  #pond[data-look='relief'] .hud .br,
+  #pond[data-look='relief'] .hud .cmd,
+  #pond[data-look='relief'] .preview {
+    bottom: 36px;
+  }
 }

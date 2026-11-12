@@ -1,13 +1,12 @@
 // Five looks that are only previews (a build with PUBLIC_POND_PREVIEW=1): Monet's water lilies in oil,
-// blue-and-white porcelain (青花), a Dunhuang mural (敦煌), a star chart (星图) and a school blackboard
-// newspaper (黑板报). Each is a function of the water pass, drawn from what that pass has already worked
+// blue-and-white porcelain (青花), a Dunhuang mural (敦煌), a star chart (星图) and an Egyptian relief,
+// carved and painted limestone. Each is a function of the water pass, drawn from what that pass has already worked
 // out (the ripples, the koi, the pads, where the water was pressed), as the other looks are; none adds a
 // pass, and each is built as a pass of its own once it is asked for (engine.js, fsPart).
 
 /** The new looks and their numbers in the shader, after the six that ship. */
-// (the blackboard, 'chalk', is drawn below but is out of the list until the look that replaces it is chosen)
-export const NEW_LOOKS = ['monet', 'qinghua', 'dunhuang', 'stars'];
-export const NEW_SID = { monet: 6, qinghua: 7, dunhuang: 8, stars: 9, chalk: 10 };
+export const NEW_LOOKS = ['monet', 'qinghua', 'dunhuang', 'stars', 'relief'];
+export const NEW_SID = { monet: 6, qinghua: 7, dunhuang: 8, stars: 9, relief: 10 };
 
 /** How each lays the dove and the spider into the air, the glass's tint, and how fast its front runs out. */
 export const NEW_LAY = {
@@ -15,18 +14,18 @@ export const NEW_LAY = {
   qinghua: ['multiply', 0.85],
   dunhuang: ['multiply', 0.8],
   stars: ['lighter', 0.6],
-  chalk: ['screen', 0.7]
+  relief: ['multiply', 0.9]
 };
 export const NEW_GLASS = {
   monet: [0.2, 0.26, 0.36],
   qinghua: [0.93, 0.95, 0.97],
   dunhuang: [0.8, 0.66, 0.46],
   stars: [0.01, 0.015, 0.045],
-  chalk: [0.07, 0.17, 0.13]
+  relief: [0.86, 0.83, 0.76]
 };
 
-/** How much of the tree's shade lies over each: none on glaze, plaster, the night sky or a board. */
-export const NEW_SHADE = { monet: 0.5, qinghua: 0, dunhuang: 0, stars: 0, chalk: 0 };
+/** How much of the tree's shade lies over each: none on glaze, plaster, the night sky or carved stone. */
+export const NEW_SHADE = { monet: 0.5, qinghua: 0, dunhuang: 0, stars: 0, relief: 0 };
 
 /** 青花's pictures: the rim's lotus scroll and its corner, the koi and where a visitor's colour goes on them. */
 export const QINGHUA = {
@@ -87,6 +86,56 @@ export const STARS = {
   grid: [100, 84, 1848, 856],
   figure: [46, 184, 424, 163]
 };
+/**
+ * The relief's pictures (public/pond/relief/), each a pair that lines up to the pixel: `C` the faded paint,
+ * `H` the height (mid grey the stone's face).
+ */
+export const RELIEF = {
+  fishC: '/pond/relief/fish-c.webp',
+  fishH: '/pond/relief/fish-h.webp',
+  lotusC: '/pond/relief/lotus-c.webp',
+  lotusH: '/pond/relief/lotus-h.webp',
+  friezeC: '/pond/relief/frieze-c.webp',
+  friezeH: '/pond/relief/frieze-h.webp'
+};
+/**
+ * Where the relief's carvings go on a wall of W by H: the frieze along the top and the foot; in the right
+ * half a marsh as tombs carve it (a papyrus clump, a duck, lotus in flower and in bud, a leaf) over two
+ * tilapia; the left left bare for the title. A narrow wall has the frieze and one tilapia under the
+ * contents. Each entry is [pair, source x, y, w, h, x, y, w, h]; nothing but the frieze lies under the controls.
+ */
+export function reliefLayout(W, H, wide) {
+  const band = wide ? 40 : 26,
+    frieze = [];
+  for (let x = 0; x < W; x += band * 8)
+    frieze.push(['frieze', 0, 0, 1024, 128, x, 0, band * 8, band], ['frieze', 0, 0, 1024, 128, x, H - band, band * 8, band]);
+  // a motif of the lotus sheet, by its cell, drawn s across about (x, y); a tilapia, by its cell, w across
+  const motif = (i, j, x, y, s) => ['lotus', i * 256 + 14, j * 256 + 14, 228, 228, x - s / 2, y - s / 2, s, s],
+    fish = (i, x, y, w) => ['fish', i * 512 + 20, 120, 472, 272, x, y, w, (w * 272) / 472];
+  if (!wide) {
+    const w = Math.min(W * 0.78, H * 0.5),
+      h = (w * 272) / 472;
+    // (under the contents on an upright wall; at the right of a small one that is wider than tall)
+    return [...frieze, fish(0, W > H ? W * 0.95 - w : W * 0.5 - w / 2, Math.min(H * (W > H ? 0.36 : 0.66), H - MURAL_FOOT_NARROW - h), w)];
+  }
+  const foot = H - Math.max(MURAL_FOOT, band + 46),
+    u = Math.min(H, W * 0.6),
+    w1 = Math.min(W * 0.27, u * 0.56),
+    h1 = (w1 * 272) / 472,
+    w2 = w1 * 0.66,
+    h2 = (w2 * 272) / 472,
+    y1 = Math.min(H * 0.5, foot - h1 - h2 * 0.75);
+  return [
+    ...frieze,
+    motif(2, 1, W * 0.875, H * 0.3, u * 0.25),
+    motif(3, 1, W * 0.735, H * 0.27, u * 0.17),
+    motif(0, 0, W * 0.8, H * 0.43, u * 0.13),
+    motif(2, 0, W * 0.935, H * 0.5, u * 0.11),
+    motif(0, 1, W * 0.6, H * 0.33, u * 0.13),
+    fish(0, W * 0.6, y1, w1),
+    fish(1, W * 0.52, Math.min(y1 + h1 * 0.95, foot - h2), w2)
+  ];
+}
 /** The Dunhuang wall's pictures (public/pond/dunhuang/), fetched the first time the look is asked for. */
 export const MURAL = {
   pipa: '/pond/dunhuang/feitian-pipa.webp',
@@ -168,7 +217,13 @@ export const NEW_COMMANDS = [
   ['monet', 'Water lilies', 'Monet’s pond in oil; or dab the water a few times in one place', 'monet water lilies oil paint impression giverny 睡莲 莫奈'],
   ['qinghua', '青花 Blue and white', 'Porcelain; or run a finger round the rim of the screen', 'qinghua porcelain blue white china cobalt 青花瓷 染付'],
   ['dunhuang', '敦煌 Dunhuang', 'A cave mural; or rub the wall back and forth', 'dunhuang mural cave fresco mogao 敦煌 壁画'],
-  ['stars', 'Star chart', 'The night sky in the water; or tap three points far apart', 'stars star chart atlas constellation night sky 星图 星図']
+  ['stars', 'Star chart', 'The night sky in the water; or tap three points far apart', 'stars star chart atlas constellation night sky 星图 星図'],
+  [
+    'relief',
+    'Egyptian relief',
+    'Carved and painted stone; or draw a zigzag of three peaks',
+    'relief egypt egyptian carved stone tomb limestone nile 浮雕 埃及 レリーフ'
+  ]
 ];
 
 /** The looks' functions, added to the water pass after the six that ship. */
@@ -334,55 +389,65 @@ vec3 lookStars(){
   c=mix(c,vec3(.01,.014,.04),gCalm*.4);
   return c;
 }
-// 黑板报: a dark green board, smudged where it was wiped; everything in chalk
-vec3 lookChalk(){
-  vec2 P=gP, uv=gUv;
-  vec3 board=vec3(.085,.215,.165)*(.92+.16*fbm(P*.003));
-  // where the eraser passed: long pale smears, and the dust left in the board's grain
-  float sm=smoothstep(.5,.85,fbm(P*vec2(.0035,.012)+vec2(3.,0.)))*.5+smoothstep(.6,.9,fbm(P.yx*vec2(.004,.014)+8.))*.3;
-  vec3 c=board+vec3(.10,.12,.11)*sm+vec3(.05)*step(.93,noise(P*1.6))*.5;
-  float g=grain(P); vec3 wht=vec3(.95,.95,.9), blu=vec3(.62,.8,.95), ylw=vec3(.98,.88,.5), pnk=vec3(.98,.62,.68), grn=vec3(.66,.9,.6);
-  // the water: wavy lines, hatched, in pale blue chalk
-  float row=(P.y+7.*sin(P.x*.024+floor(P.y/30.)*1.7)+gH*90.)/30., wl=smoothstep(.44,.5,abs(fract(row)-.5));
-  wl*=step(.34,noise(vec2(P.x*.012+floor(row)*5.,floor(row))))*(.35+clamp(abs(gLap)*20.+length(gG),0.,.5));
-  c=mix(c,blu,wl*g*(1.-gCalm*.85));
-  // pads and lotus: drawn round, filled with a few slanting strokes
-  vec4 pd=textureLod(uPads,uv,0.); float pe=textureLod(uPads,uv,1.5).a; vec3 pc=pd.rgb/max(pd.a,1e-3);
-  float hat=smoothstep(.3,.44,abs(fract((P.x-P.y)*.07)-.5));
-  c=mix(c,mix(grn,pnk,clamp((pc.r-pc.g)*2.5,0.,1.)),(clamp(abs(pd.a-pe)*3.2,0.,1.)+pd.a*hat*.4)*g);
-  // koi: a white line round them, their patches rubbed in with coloured chalk
-  vec4 f0; float fa,fb,fc,red; fishAt(f0,fa,fb,fc,red); vec3 fcol=f0.rgb/max(f0.a,1e-3);
-  float fh=smoothstep(.28,.44,abs(fract((P.x+P.y)*.09)-.5));
-  c=mix(c,mix(ylw,wht,step(.5,fcol.b)),f0.a*fh*.5*g); c=mix(c,pnk,smoothstep(.2,.5,red)*g*.9); c=mix(c,wht,clamp((fa-fb)*4.4+(fb-fc)*.5,0.,1.)*(.8+.2*g));
-  vec4 tp=textureLod(uTop,uv,0.); float te=textureLod(uTop,uv,1.5).a; c=mix(c,ylw,clamp(abs(tp.a-te)*3.,0.,1.)*g*.8);
-  // the border the class draws round its board, always on top: two lines, a row of points in two colours
-  // between them, and a fan of arcs in each corner
-  float fs=mix(1.,.56,uCalm.x); vec2 ed=vec2(min(P.x,uCss.x-P.x),min(P.y,uCss.y-P.y))/fs; float e=min(ed.x,ed.y), along=(ed.x<ed.y?P.y:P.x)/fs;
-  c=mix(c,board+vec3(.10,.12,.11)*sm,1.-smoothstep(42.,46.,e));
-  float zig=abs(fract(along/30.)-.5)*2., bl=(1.-smoothstep(0.,1.3,abs(e-9.)-.8))+(1.-smoothstep(0.,1.3,abs(e-39.)-.8));
-  float tri=1.-smoothstep(0.,1.6,abs((e-14.)-zig*20.)-.9), corner=step(ed.x,46.)*step(ed.y,46.), cr=length(ed-46.);
-  c=mix(c,ylw,bl*g*.9*(1.-corner));
-  c=mix(c,mod(floor(along/30.),2.)<1.?pnk:blu,tri*step(11.,e)*step(e,37.)*g*.9*(1.-corner));
-  for(int i=0;i<3;i++){ float rr=12.+float(i)*12.; c=mix(c,i==0?ylw:i==1?pnk:blu,(1.-smoothstep(0.,1.4,abs(cr-rr)-.9))*corner*step(cr,40.)*g*.9); }
-  // drawings in coloured chalk, where a wide board has room: a sun up top, flowers along the bottom
-  if(uCalm.x<.5){
-    vec2 sp=P-vec2(uCss.x*.52,88.); float sr=length(sp), sa=atan(sp.y,sp.x);
-    c=mix(c,ylw,((1.-smoothstep(0.,1.5,abs(sr-19.)-1.))+(1.-smoothstep(0.,.16,abs(fract(sa*12./6.2832)-.5)-.07))*step(26.,sr)*step(sr,38.+4.*sin(sa*6.)))*g*.9);
-    for(int i=0;i<3;i++){ float fi=float(i); vec2 fp=P-vec2(uCss.x*(.535+.045*fi),uCss.y-78.-mod(fi,2.)*9.); float fr=length(fp), fa=atan(fp.y,fp.x);
-      c=mix(c,i==1?ylw:pnk,(1.-smoothstep(0.,1.4,abs(fr-(7.+3.5*cos(fa*5.)))-.8))*g*.9); c=mix(c,i==1?pnk:ylw,(1.-smoothstep(1.5,3.,fr))*g);
-      c=mix(c,grn,(1.-smoothstep(0.,1.3,abs(fp.x-2.*sin(fp.y*.2))-.8))*step(11.,fp.y)*step(fp.y,30.)*g*.9); }
-  }
-  // the ledge under the board, and the dust that has settled on it
-  float ly=(uCss.y-P.y)/fs; c=mix(c,vec3(.33,.25,.16)*(.85+.3*noise(P*vec2(.05,.8))),1.-smoothstep(4.,5.5,ly));
-  c=mix(c,wht,step(.82+.16*smoothstep(4.,26.,ly),hash1(floor(P/2.)))*step(ly,26.)*.55);
-  // a press: a small burst of chalk dust, and the mark it leaves, slow to fade
+// Egyptian relief: painted limestone, carved low, under a raking light that goes round with the day. What
+// stands in the pond stands proud of the stone (the koi, the pads, and the tomb's own carvings, which are a
+// picture: its paint in the top half of the look's texture, its height in the bottom half); the water is the
+// sign for water, rows of zigzag cut into the face; the paint is flat, faded and worn off in patches.
+vec3 lookRelief(){
+  vec2 P=gP, uv=gUv; float flt=1.-gCalm*.8;
+  vec3 stone=vec3(.845,.82,.76)*(.95+.09*fbm(P*.004))-vec3(.03)*smoothstep(.62,.9,noise(P*vec2(.011,.04)+2.));
+  vec3 blu=vec3(.27,.45,.66), grn=vec3(.39,.57,.43), red=vec3(.64,.29,.18), ylw=vec3(.82,.63,.26), dark=vec3(.24,.2,.17);
+  // where the paint has held: less at the edges of the wall, and in patches
+  float held=smoothstep(.34,.58,fbm(P*.017+7.))*(.75+.25*noise(P*.6));
+  // the tomb's carvings
+  vec2 mv=vec2(uv.x,clamp(uv.y,.002,.998)*.5); vec4 pc=texture(uMural,mv)*uPic; float ph=(texture(uMural,mv+vec2(0.,.5)).r-.502)*uPic;
+  // the koi and the pads, with a shoulder where they rise
+  vec4 f0; float fa,fb,fc,rd; fishAt(f0,fa,fb,fc,rd); vec3 fcol=f0.rgb/max(f0.a,1e-3);
+  vec4 pd=textureLod(uPads,uv,0.); float pb=textureLod(uPads,uv,1.6).a; vec3 pcol=pd.rgb/max(pd.a,1e-3);
+  vec4 tp=textureLod(uTop,uv,0.); float tb=textureLod(uTop,uv,1.5).a;
+  float proud=clamp(max(max(smoothstep(.08,.7,fb),pb),max(ph*9.,tb)),0.,1.);
+  // the water: zigzags in rows, each row sliding a little, shaken where the water moves; none under the
+  // type, nor in the plain band under the frieze, where the clock stands
+  vec2 Q=P+gG*70.; float row=floor(Q.y/28.), zx=Q.x/30.+row*.37+uTime*.012*(mod(row,2.)<1.?1.:-1.)+gH*2.;
+  float zig=abs((fract(Q.y/28.)-.5)*28.-(abs(fract(zx)-.5)*2.-.5)*11.), groove=(1.-smoothstep(.9,2.6,zig))*(1.-proud)*(1.-gCalm)*smoothstep(.15,.22,uv.y);
+  // the surface: its height above the stone's face, in pixels
+  float h=ph*34.+smoothstep(.08,.7,fb)*4.6+pb*3.2+tb*2.2-groove*1.1+(noise(P*.45)-.5)*.22+(noise(vec2(P.x+P.y,P.x-P.y)*vec2(.03,.16))-.5)*.16;
+  // (scales cut into the koi, veins into the pads)
+  h-=smoothstep(.5,.9,f0.a)*(1.-smoothstep(.5,1.5,abs(length(fract(P/7.+vec2(floor(P.y/7.)*.5,0.))-vec2(.5,1.))*7.-4.)))*.35;
+  h-=pd.a*(1.-smoothstep(.0,.12,abs(fract(atan(P.y-uCss.y*.5,P.x-uCss.x*.5)*4.)-.5)-.44))*.5;
+  h*=flt;
+  // a press is a chisel's strike: a chip out of the face, bare stone in it, and its dust thrown out
+  float bare=0., dust=0.;
   for(int i=0;i<10;i++){ vec3 b=uBlot[i]; if(b.z<0.) continue;
-    float t=b.z, d=length(P-b.xy), R=6.+46.*(1.-exp(-t*2.2));
-    c=mix(c,wht,step(.8,hash1(floor(P/2.5)+floor(b.y)))*(1.-smoothstep(R*.3,R,d))*exp(-t*1.2)*.9);
-    c=mix(c,wht,(1.-smoothstep(0.,1.6,abs(d-7.)-1.))*g*exp(-t*.08)*.8); }
-  // winter: the ice as a pale rubbing, its cracks in white, the snow as dots
-  if(gIce>0.){ c=mix(c,wht,gIce*hat*.2*g); c=mix(c,wht,clamp(gHit.x,0.,1.)*g);
-    c=mix(c,wht,(1.-smoothstep(1.2,2.2,length(fract(P/18.)*18.-9.-(hash2(floor(P/18.))-.5)*9.)))*step(1.-.4*uSnow,hash1(floor(P/18.)+3.))*gIce*g); }
+    float t=b.z, d=length(P-b.xy)+(noise(P*.35+b.x)-.5)*5., R=7.+5.*fract(b.x*.37), chip=(1.-smoothstep(R*.35,R,d))*exp(-t*.05);
+    h-=chip*2.6; bare=max(bare,chip);
+    float ring=R+60.*(1.-exp(-t*1.6)); dust+=step(.8,hash1(floor(P/2.5)+floor(b.y)))*(1.-smoothstep(0.,22.,abs(d-ring)))*exp(-t*1.4); }
+  if(gIce>0.) h-=clamp(gHit.x,0.,1.)*1.6;
+  // the light: from the left in the morning, overhead at noon, from the right towards evening, always low;
+  // by night a lamp held low at one side
+  float dayT=clamp((uDay-.25)/.5,0.,1.), night=step(uDay,.25)+step(.75,uDay);
+  float th=mix(mix(-2.62,-.52,dayT),2.25,night), el=mix(mix(.4,.66,sin(dayT*3.1416)),.38,night);
+  vec3 L=vec3(cos(th)*cos(el),sin(th)*cos(el),sin(el));
+  vec2 dh=vec2(dFdx(h),dFdy(h))*(uRes.x/uCss.x); vec3 n=normalize(vec3(-dh,1.));
+  float lit=dot(n,L)/L.z;
+  // what stands proud throws a short shadow away from the light
+  vec2 so=L.xy*7./uCss; float shade=clamp((max(max(smoothstep(.08,.7,textureLod(uFish,uv+so,1.5).a),textureLod(uPads,uv+so,1.6).a),
+    (texture(uMural,vec2(uv.x+so.x,clamp(uv.y+so.y,.002,.998)*.5+.5)).r-.502)*9.*uPic)-proud)*flt,0.,1.);
+  // the paint, flat and faded, over the stone
+  vec3 c=stone;
+  c=mix(c,blu,(.1*(1.-proud)+groove*.42)*held*flt*(1.-gCalm));
+  c=mix(c,mix(pc.rgb/max(pc.a,1e-3),stone,.18),pc.a*.92);
+  c=mix(c,mix(mix(grn,red,clamp((pcol.r-pcol.g)*2.5,0.,1.)),stone,.2),pd.a*(.35+.5*held));
+  vec3 fp=mix(mix(vec3(.9,.87,.8),ylw,clamp((fcol.r-fcol.b)*1.7-.1,0.,1.)),red,smoothstep(.2,.5,rd));
+  c=mix(c,mix(fp,stone,.12),f0.a*(.6+.35*held));
+  c=mix(c,mix(tp.rgb/max(tp.a,1e-3),stone,.45),tp.a*.7);
+  c=mix(c,dark,clamp(max(max((fa-fb)*3.4,abs(pd.a-pb)*2.6),abs(tp.a-tb)*2.4),0.,1.)*.7*flt);
+  c=mix(c,stone*1.06,bare);
+  c*=mix(1.,clamp(lit,.2,1.9),.9)*(1.-shade*.34);
+  c*=mix(vec3(1.),vec3(1.,.92,.78)*.88,night);
+  c+=vec3(.9,.88,.82)*dust*.5;
+  // winter: frost on the stone, white in the cuts
+  if(gIce>0.){ c=mix(c,vec3(.95,.96,.97),gIce*.4*(.6+.4*noise(P*.5))); c=mix(c,vec3(1.),step(.9,hash1(floor(P/7.)))*(1.-smoothstep(.9,2.,length(fract(P/7.)*7.-3.5-(hash2(floor(P/7.))-.5)*3.)))*uSnow*gIce*.7); }
   return c;
 }
 vec3 lookNew(int s){
@@ -390,6 +455,6 @@ vec3 lookNew(int s){
   if(s==7) return lookQinghua();
   if(s==8) return lookDunhuang();
   if(s==9) return lookStars();
-  return lookChalk();
+  return lookRelief();
 }
 `;
