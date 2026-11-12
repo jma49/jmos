@@ -48,6 +48,16 @@ export const EXCEPTIONS = new Map([
         'the 1536-pixel one is stretched soft. At 2560 × 1280 and quality 76 it is 258 KB; under 200 KB its lines ' +
         'ring. It is fetched only when that one look is first chosen, never on a first visit.'
     }
+  ],
+  [
+    'pond/monet/bed.webp',
+    {
+      bytes: 450 * KB,
+      reason:
+        'The painting under the pond’s Monet look, which fills a large window: 2560 × 1440. At quality 87 it is ' +
+        '380 KB; lower, the impasto smears. It is fetched only when that one look is first chosen on a large ' +
+        'window (a small one takes bed-1280.webp), never on a first visit.'
+    }
   ]
 ]);
 
