@@ -36,7 +36,22 @@ import { FPS, IDLE_AFTER, due, learnBeat, simSteps } from './clock.js';
 import { PERF, add, count, frameDone, span } from './perf.js';
 import { strokeLifted, strokeMoving, tapsLook } from './gestures';
 import { underPainting } from './hang.js';
-import { MONET, MURAL, MURAL_LARGE, NEW_COMMANDS, NEW_GLASS, NEW_GLSL, NEW_LAY, NEW_LOOKS, NEW_SHADE, NEW_SID, muralLayout } from './newlooks.js';
+import { paintingOf, seasonAmounts } from './seasons.js';
+import {
+  KOI_SHEETS,
+  MONET,
+  MURAL,
+  MURAL_LARGE,
+  NEW_COMMANDS,
+  NEW_GLASS,
+  NEW_GLSL,
+  NEW_LAY,
+  NEW_LOOKS,
+  NEW_SHADE,
+  NEW_SID,
+  QINGHUA,
+  muralLayout
+} from './newlooks.js';
 import { SocialError } from '../os/social/errors';
 import { coverOf, loadSongs, music, onMusic, play as playSongAt, setMusicMuted, toggle as toggleSong } from './music';
 import * as people from './people';
@@ -475,15 +490,12 @@ class Koi {
     }
     // a small seal on the back of a koi that has earned one (the seal album)
     if (this.seal) {
-      const q = S * 0.042;
+      const q = S * 0.046;
       c.save();
       c.translate(P[7][0], P[7][1]);
       c.rotate(ang(7));
       c.fillStyle = '#b8382a';
       c.fillRect(-q, -q, q * 2, q * 2);
-      c.strokeStyle = 'rgba(244,236,224,0.7)';
-      c.lineWidth = Math.max(0.6, q * 0.22);
-      c.strokeRect(-q * 0.52, -q * 0.52, q * 1.04, q * 1.04);
       c.restore();
     }
     // roundness: light gathers along the back and falls off towards the flanks
@@ -949,11 +961,6 @@ const sstep = (a, b, x) => {
   const t = clamp((x - a) / (b - a), 0, 1);
   return t * t * (3 - 2 * t);
 };
-const hump = (x, c, w) => {
-  let d = Math.abs(x - c);
-  d = Math.min(d, 24 - d);
-  return 1 - sstep(w * 0.45, w, d);
-};
 let yearAuto = true,
   yearGoal = yearToday(),
   year = yearGoal;
@@ -962,21 +969,8 @@ const AM = { petals: 0, lush: 0, bloom: 0, flies: 0, leaves: 0, brown: 0, ice: 0
 // south of the equator the season the pond shows is half a year on (the term's name stays the calendar's)
 let south = false;
 function amounts(term) {
-  const y = seasonOf(term, south ? -1 : 1);
-  AM.petals = hump(y, 3.5, 4.2);
-  AM.bloom = hump(y, 11, 3);
-  AM.flies = hump(y, 10.5, 3.6);
-  AM.leaves = hump(y, 16.6, 3.8);
-  AM.lush = y < 19.5 ? sstep(-0.5, 7, y) * (1 - 0.6 * sstep(13.5, 17.5, y)) * (1 - sstep(17.5, 19.5, y)) : 0;
-  AM.brown = y < 20 ? sstep(13.5, 18, y) : 0;
-  const w = y < 3 ? y + 24 : y;
-  AM.ice = sstep(18.7, 21.6, w) * (1 - sstep(24.2, 25.8, w));
-  AM.snow = hump(y, 22.3, 2.6);
-  const su = hump(y, 10, 5),
-    au = hump(y, 16.5, 4),
-    wi = hump(y, 22, 4.5);
-  AM.tint = [1 + 0.02 * su + 0.1 * au - 0.1 * wi, 1 + 0.02 * su - 0.03 * au - 0.02 * wi, 1 - 0.03 * su - 0.17 * au + 0.07 * wi];
-  AM.light = 1 + 0.25 * su - 0.4 * wi;
+  // (what belongs to which season is in seasons.js, with its tests)
+  Object.assign(AM, seasonAmounts(seasonOf(term, south ? -1 : 1)));
 }
 amounts(year);
 function setYear(y) {
@@ -2725,7 +2719,7 @@ function placeKuan() {
 // Ink as a hanging painting: the season's motif (painting.js, loaded the first time ink comes) washes in
 // at one edge; a new season washes the old one out and the new one in, with a brush's breath.
 let painted = '';
-const inkSeason = () => Math.floor((Math.floor(seasonOf(yearGoal, south ? -1 : 1)) % 24) / 6);
+const inkSeason = () => paintingOf(seasonOf(yearGoal, south ? -1 : 1));
 function paintInk() {
   if (!inkOn) return;
   const season = inkSeason(),

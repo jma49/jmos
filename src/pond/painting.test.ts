@@ -12,7 +12,9 @@ describe("where a season's painting hangs", () => {
       for (let season = 0; season < 4; season++) {
         const [x, y, size] = hang(W, H, season);
         expect(x + size).toBeLessThanOrEqual(W + 0.001);
-        expect(x + size).toBeGreaterThan(W - 100);
+        expect(x + size).toBeGreaterThan(W - 110);
+        // clear of the term's column and the gauge, which take the last 100 pixels of a wide pond
+        if (W >= 860) expect(x + size).toBeLessThanOrEqual(W - 100);
         expect(x).toBeGreaterThanOrEqual(0);
         expect(y).toBeGreaterThanOrEqual(0);
         expect(y + size).toBeLessThanOrEqual(H);
