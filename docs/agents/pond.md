@@ -355,119 +355,190 @@ Highest value, in order: Monet's painted bed; a koi sheet per look (one look fir
 lily pads and flowers for the water look; the dove and the spider as rendered sprites; the seals in
 true seal script.
 
-#### Koi for each look
+#### The art brief
 
-A straight, top-view koi is cut into slices along its length and each slice drawn along the koi's
-live spine, so it swims and turns as the drawn koi does; fins and tail follow the same motion. Who is
-who must survive: the gold koi (Jincheng), the visitor's own (white with the red spot), and other
-visitors in their colours. One loader reads every look's sheet, so every sheet is the same:
+Every look's main pictures are made by the thread on the owner's machine; this brief is the whole of
+what each look needs, in the order to make it, so nothing has to be asked. A look is built to work
+without its pictures and to take each one as it comes. What has been delivered is in the tables
+above; this list says what each thing is for and what is still wanted.
 
-- `public/pond/<look>/koi.webp`, 1024 × 1536, transparent, four rows of 1024 × 384, one koi in each:
-  seen from directly above, head to the left, the body straight along the row's middle line, 900
-  pixels from nose to tail tip, fins and tail spread naturally and symmetrically, no shadow, no
-  water, a margin of 4%. Rows: (1) the gold koi; (2) white with one red spot on the head; (3) and
-  (4) two koi to be tinted, painted in greys only (light to dark as the look's manner needs).
-- `public/pond/<look>/koi-mask.webp`, the same size and layout: white where a visitor's colour
-  goes on rows 3 and 4 (the patches), black elsewhere; rows 1 and 2 black.
+**For every picture, unless its line says otherwise**
 
-The method is proved on Monet's koi (2026-11-12): 28 slices along the spine, the tail carried on
-past its end, swim, turn and curl cleanly, with no change to the numbers asked for here. Monet's
-sheet came as three rows of 256; a loader that takes the row height from the sheet reads both. So
-the rest can be made:
+- WebP. Transparent ground with straight (not premultiplied) alpha; a ground the line calls opaque
+  is painted to all four edges. `cwebp -q 82 -alpha_q 90 -m 6`.
+- At least 4% of clear margin inside the picture, or inside each cell of a sheet. Nothing cropped.
+- No text, letters, numerals, signature, watermark or frame. No cast shadow, no background, no water.
+- No ageing, paper, canvas or plaster texture baked in: the look adds its own. The exception is a
+  bed, which is the texture.
+- Sheets are grids of equal cells, one motif in the middle of each, read left to right, top to bottom.
+- "In the manner of" always means the period and the hand, never a copy of a particular work.
+- Size budget: 200 KB a file (`scripts/check-public-sizes.mjs`). A bed may pass it, with a line
+  there giving the reason (it loads only with its look); nothing on the water look may, since the
+  water is the first visit.
+- Folder: `public/pond/<look>/`, the looks being `water`, `ink`, `ukiyo`, `glow`, `blueprint`,
+  `ascii`, `monet`, `qinghua`, `dunhuang`, `stars`, `relief`.
+- Priority: **P0** the look is not itself without it; **P1** lifts it; **P2** a nicety.
 
-- 青花's pair has come, as the proof (the table under "青花" above). The others wait for word that it
-  swims well, and for any change to the numbers.
+**What belongs to which season** (paint seasonal sets to this; the pond's own rules follow it, and
+`seasons.test.ts` holds them to it). Plum blossom and green lily pads never appear together.
 
-Then, in each look's manner: ukiyo-e (flat colour inside a key line, as a carp print); Monet (a few
-loaded dabs); Dunhuang (mineral colour in an iron-wire line); the relief (with a height sheet,
-`koi-h.webp`, for the raking light); blueprint (a white line drawing with a centre line and the
-fins' construction lines); ink only if a painted one beats the pond's own, which is liked; stars
-have their engraved figures; glow stays as light; ASCII has none.
+| Season | Solar terms | On the water | In ink's painting |
+| --- | --- | --- | --- |
+| Spring | 立春 to 谷雨 | Peach and cherry petals; lily pads small and few, just come up; no lotus flowers | Willow |
+| Summer | 立夏 to 大暑 | Pads full and green; lotus in bud, then in flower; dragonflies; fireflies at night | Lotus |
+| Autumn | 立秋 to 霜降 | Falling leaves; the lotus withered (残荷): pads brown and curled, fewer each term, bare stems; no flowers | Reeds and wild geese |
+| Winter | 立冬 to 大寒 | Snow and ice; no pads, no lotus, no dragonflies; at most a few dry lotus stems | Plum blossom |
 
-#### Blender jobs
+South of the equator the same table is read half a year on. A look that keeps seasons wants its
+pads and flowers as these sets: spring (small young pads), summer (full pads, bud, flower), autumn
+(withered pads and stems). Winter has none.
 
-Where a model beats a flat picture, the same list asks for it, saying it is a Blender job and what
-comes out. Sprites are preferred wherever they take 3D out of the frame.
+**The koi sheet, the same for every look** (so one loader reads them all)
 
-- ★ The dove (Devot's) and the jumping spider (ocra's), modelled properly and rendered from straight
-  above with one soft light from the upper left, transparent, as sprite sheets:
-  `dove.webp` (in `public/pond/water/`), cells of 256 × 256: sitting (4 frames: still, head turn left, head turn right,
-  preen), take-off (6), flight (8, a wing-beat loop), landing (6);
-  `spider.webp` (the same folder), cells of 192 × 192: sitting (2), walking (8, a loop), crouch (2), jump (4).
-  Neutral colour, so a look can tint or line them.
-  In hand: being modelled and rendered on the owner's machine (Blender 5.3, run without its window
-  from a script). The sheets, their frame order and what is weak in them will be set out under
-  "Water" above when they come; until then nothing here is to be relied on.
-- Height and normal maps for the relief's carvings (fish, lotus, papyrus, frieze), 16-bit greys
-  rendered from the delivered drawings as shallow sunk relief, so the raking light is true:
-  `<name>-n.webp` beside each, the same size and framing as each `-h` file.
-- A carved seal's height map, 512 × 512, for the stamp's press: `seal-h.webp`, with the ink look's pictures.
-- Later, if the pebble bed is tried: `bed.webp` and `bed-n.webp` for the water look, 2048 × 1152, river
-  pebbles from above under shallow water light, seamless left to right.
+- `koi.webp`, 1024 × 1536, four rows of 1024 × 384, one koi in each: seen from straight above, head
+  to the left, the body straight along the row's middle line, 900 pixels from the barbels (x 62) to
+  the tail tip (x 962), fins and tail spread and symmetrical. Rows: (1) the gold koi, which is
+  Jincheng; (2) white with ONE red spot on the head and no other mark, which is the visitor; (3)
+  and (4) two koi to be tinted, in greys only, each with three or four patches.
+- `koi-mask.webp`, the same size: white over the patches of rows 3 and 4, black elsewhere, soft by
+  2 to 3 pixels. A visitor's colour is laid into the patches.
+- How it is used: cut into 28 slices along its length, each laid along the swimming koi's spine, so
+  keep the spine dead straight and paint nothing that only makes sense straight (no long straight
+  highlight down the back). 青花's sheet is the model of a correct one.
 
-#### Wanted, by look
+**The dove and the spider** are being modelled in Blender and rendered from straight above as sprite
+sheets (sitting, take-off, flight, landing; sitting, walk, crouch, jump), neutral in colour. Each
+look below says how it wants them dressed; where a look only says "tinted", the neutral sheet is
+tinted in code and nothing more is needed.
 
-A first small lot for each look: the two or three pictures that would lift it most. ★ marks the ones
-to make first. Unless a line says otherwise: WebP, transparent ground, straight alpha, a margin of at
-least 4% inside each picture or cell, nothing cropped, no text or signature, no ageing or paper
-texture baked in (the shader adds its own). Sheets are grids of equal cells with one motif in the
-middle of each, read left to right, top to bottom.
+**The seals** are one sheet for all looks, in the ink kit below.
 
-**Monet** (`public/pond/monet/`). **Urgent, before everything else here.** Strokes synthesised in
-the shader did not converge: they read as scales, then as clutter. The look is to be carried by
-painted pictures, as Dunhuang's is: a painting as the still bed, the water's ripples bending it
-gently like a wet surface, the lilies and the koi as painted sprites over it. Until they come the
-look shows a calm fallback (soft passages of colour in small strokes).
+---
 
-- All four have come (the table under "Monet" above); nothing more is wanted until they are tried.
+**Water** (the first thing anyone sees; everything here must be small). Judge it by: it still looks
+like clear water over stones, nothing looks pasted on.
+1. Bed: keep the shader's pebbles. P2, to try behind a flag: a Blender-rendered bed, `bed.webp` and
+   a normal map `bed-n.webp`, 2048 × 1152, opaque, river pebbles from straight above in soft even
+   light, seamless left to right, under 150 KB together.
+2. Koi: keep the pond's own. No sheet wanted.
+3. P0 `lilies.webp`, 1024 × 768, 4 × 3: lily pads from above in three sizes (two with a notch),
+   leaf veins and a wet sheen, natural greens; the same three as autumn pads (yellowing, a brown
+   curled edge); a white and a pink lotus flower, open; a bud. Photographic-painterly, soft edges.
+   Drawn under the water's light. P1 `afloat.webp`, 1024 × 512, 4 × 2: two cherry petals, three
+   autumn leaves (maple, ginkgo, oak), a folded paper boat from above in three tones.
+4. Ornaments: none.
+5. Press: none (it is the water itself).
+6. Dove and spider: the neutral sheets as rendered. P0 for both.
+7. P1 `dragonfly.webp`, 1024 × 256, four frames of a dragonfly from above, wings in four positions
+   of a beat.
 
-**青花** (`public/pond/qinghua/`). The rim is beads between lines; a real pattern would make it porcelain.
+**Ink** (the benchmark; Jincheng's favourite). Judge it by: a Song or Yuan album leaf; empty paper
+is most of it.
+1. Bed: the shader's paper. P2 `hills.webp`, 2048 × 512, three far hills as pale washes, for the foot.
+2. Koi: the pond's own wash koi are liked and stay. P1, **for an A/B only**: `koi.webp` to the
+   common spec as ink wash koi (wet body, dry-brush edge, the spot and patches in cinnabar
+   `#B8382A`). It replaces the drawn ones only if it is clearly better in motion.
+3. Seasons: delivered and in use (`willow`, `lotus`, `reeds`, `plum`). Composited by multiplying
+   into the paper, faded at their outer edges.
+4. Ornaments: none; the inscription and the 锦程 seal are type.
+5. Press: the shader's blot. Nothing wanted.
+6. Dove and spider: P1, each as three ink-wash poses on one sheet `dove.webp` / `spider.webp`,
+   768 × 256 (sitting, moving, wings or legs spread), in the manner of Bada Shanren's birds:
+   a few wet strokes, black and grey. Multiplied into the paper.
+7. P0 `seals.webp`, 1024 × 768, 4 × 3, true seal script (篆书), vermilion `#B8382A`, the stone's
+   uneven edge, white characters out of red (白文) or red characters and border on transparent
+   (朱文): 墨 (square, 白), 浮世 (tall, 朱), 莲 (round, 白), 青花 (tall, 白), 敦煌 (tall, 朱), 光
+   (round, 朱), 图 (square, 白), 字 (square, 朱), 星 (round, 白), 刻 (square, 白, for the relief),
+   锦程 (tall, 白, 锦 over 程), one cell empty. Tall is 3 : 5. Used in the album, the stamp and
+   under the solar term.
 
-- `medallion.webp`, 1024 × 1024, a round 开光 medallion for the bowl's centre: a double ring, and in
-  it two koi among lotus and water-weed, line and wash, the same cobalt. It sits large and pale in
-  the right half behind the swimming koi.
-- Later: three koi poses and two lotus as 青花 motifs, to replace the shader's outlines.
+**Ukiyo-e.** Judge it by: a Hokusai or Hiroshige print at arm's length: flat colour, a key line,
+bokashi gradation, paper showing.
+1. P1 `paper.webp`, 512 × 512, washi grain with a few long fibres, greyscale, opaque, seamless.
+2. P0 `koi.webp` + mask: flat colour inside a black key line, as in a carp print (Kuniyoshi's and
+   Hiroshige's carp); gold as ochre `#E9B44C`, the spot in vermilion `#E2563A`.
+3. P1 `lilies.webp`, 1024 × 512, 4 × 2: lotus leaves and flowers as a print draws them from above;
+   maple leaves and cherry petals for the seasons.
+4. Ornaments: none (no cartouche: it was tried and taken out).
+5. Delivered: `waves.webp`. To be used for the press and the arrival.
+6. Dove and spider: tinted flat, with a key line added in code. Nothing wanted.
+7. Seal: on the ink sheet.
 
-**Ukiyo-e** (`public/pond/ukiyo/`).
+**Glow.** Light only: the shader draws everything. Nothing wanted. Dove and spider: tinted as light.
 
-- `paper.webp`, 512 × 512, washi paper grain with a few long fibres, greyscale, opaque, seamless.
-- No title cartouche: the cream block was taken out and nothing is asked for in its place.
+**Blueprint.** Judge it by: a draughtsman's sheet, white line on blue.
+2. P1 `koi.webp` (no mask needed: visitors are told apart by their dimension labels): white line
+   drawings of a koi from above with a centre line, station marks along the spine and the fins'
+   construction lines, line only, no fill, the line `#EAF3FF`.
+6. Dove and spider: P2, the same as line drawings, one pose each, 512 × 512.
+Everything else is ruled in the shader. Nothing more wanted.
 
-**Star chart** (`public/pond/stars/`).
+**ASCII.** Characters only. Nothing wanted.
 
-- `compass.webp`, 512 × 512, an ornamental compass rose in the same engraving, for a lower corner.
+**Monet.** Judge it by: at thumbnail size it is a late Nymphéas panel.
+1. Delivered and in use: `bed`, `bed-1280`, `bed-tall`.
+2. Delivered and in use: `koi` (three). P0: redo it to the common spec, so that row 2 is white
+   with one red spot and rows 3 and 4 are tintable with a mask; the same loaded dabs.
+3. Delivered and in use: `lilies`. P1: an autumn row for it (pads gone yellow-brown), 1024 × 256.
+4. Ornaments: none.
+5. Delivered, not yet used: `strokes`, `canvas`. For the press and the arrival.
+6. Dove and spider: P1 `dove.webp`, `spider.webp`, 768 × 256, three poses each as a few loaded
+   oil dabs, soft edges, no line.
+7. Seal: on the ink sheet.
 
-**Ink** (`public/pond/ink/`). The look Jincheng is happiest with; these would finish it.
+**青花.** Judge it by: a Yuan or early Ming blue-and-white dish seen from above: cobalt only, on
+white, the blue pooling at line ends.
+1. Bed: the shader's glaze and crackle. P1 `medallion.webp`, 1024 × 1024: a double ring, and in it
+   two koi among lotus and water-weed in line and wash; it lies large and pale in the right half.
+2. Delivered: `koi` + mask, to the common spec.
+3. P1 `lotus.webp`, 1024 × 512, 4 × 2, in the cobalt: three lotus leaves from above, two flowers,
+   a bud, a seed-pod, a spray of water-weed. They replace the shader's pad outlines.
+4. Delivered: `rim`, `corner`.
+5. Press: the shader's craze line. Nothing wanted.
+6. Dove and spider: P1 `dove.webp`, `spider.webp`, 768 × 256, three poses each in cobalt line and
+   wash.
+7. Seal: on the ink sheet; the stamp is shown in cobalt, as a reign mark is.
 
-- ★ `seals.webp`, 1024 × 768, a 4 × 3 sheet of seals carved in true seal script (篆书), which the
-  brush face can't give: vermilion `#B8382A` and the stone's uneven edge, the cut either white
-  characters out of red (白文) or red characters and a red border on transparent (朱文). In order:
-  墨 (square, 白文), 浮世 (tall, 朱文), 莲 (round, 白文), 青花 (tall, 白文), 敦煌 (tall, 朱文), 光
-  (round, 朱文), 图 (square, 白文), 字 (square, 朱文), 星 (round, 白文), 锦程 (tall, 白文, 锦 over
-  程), then two cells left empty. Tall seals are 3 : 5. They replace the album's seals and the stamp.
-  Tried and not delivered: the image model draws shapes that look like seal script and are not the
-  characters, and no seal-script font is on the owner's machine to set them from. It needs such a font
-  (the owner's to choose, for its licence); the seals would then be set from it and carved in code.
-- Later: three washes of distant hills, 2048 × 512.
+**Dunhuang.** Judge it by: a Mogao wall of the high Tang, sooted and flaked, with the weight of a
+dark painted game mural.
+1. Delivered and in use: the figures, `sky-flowers`, `border`, `cloud-trail`; `halo` and `caisson`
+   delivered, to be placed.
+2. P0 `koi.webp` + mask: mural fish, mineral colour inside an iron-wire line `#2E1C12`; gold in
+   the ochre `#CC8F38`, the spot in cinnabar `#B34026`, the tintable ones in the wall's white
+   `#EDE0C2` with grey patches.
+3. P1 `lotus.webp`, 1024 × 512, 4 × 2: lotus leaves and flowers as cave ceilings paint them, flat
+   mineral green, white and cinnabar in the same line.
+4. Delivered: `border`. 5. Press: the shader's flaking. Nothing wanted.
+6. Dove and spider: P1 `dove.webp`, `spider.webp`, 768 × 256, three poses each in the wall's
+   manner (the dove as the white birds of the murals).
+7. Seal: on the ink sheet.
 
-**Glow, blueprint, ASCII:** nothing wanted. Each is made of light, ruled line or characters, which
-the shader and the type do better than a picture would.
+**Star chart.** Judge it by: a plate from an eighteenth-century celestial atlas.
+1. Delivered: `plate`. 2. Delivered: `koi-figures`. P1: the same to the common spec (four rows,
+   outline and engraved scales only, with a mask of where a visitor's colour tints the line).
+3. P1 `nebulae.webp`, 1024 × 512, 4 × 2: engraved discs and wreaths that stand for the lily pads
+   (a ringed planet, a nebula as stippling, a cluster, an armillary ring), the pale line `#C9D4F0`.
+4. P2 `compass.webp`, 512 × 512, a compass rose in the same engraving.
+5. Press: the shader's star. Nothing wanted.
+6. Dove and spider: P1 as engraved constellation figures, one pose each, 512 × 512 (Columba the
+   dove; a spider in the same hand).
+7. Seal: on the ink sheet.
 
-**The dove and the spider:** nothing yet. Their models are dressed for each look first; a look they
-can't be dressed for will ask for a small illustration of each here.
-
-**Egyptian relief** (`public/pond/relief/`), the look that replaces the blackboard, not built yet: a
-garden pond carved and painted in limestone, in the manner of New Kingdom tomb scenes (the pond from
-Nebamun's tomb), lit by a raking light that turns with the day. Real carving will beat procedural
-bumps, so each picture is wanted as two files of the same size and framing: `<name>-h.webp`, the
-relief's height in greyscale (mid grey the stone's face, lighter raised, darker cut in, soft
-continuous tone, opaque), and `<name>-c.webp`, the faded mineral paint that lies on it (Egyptian blue
-`#3F6FA8`, green `#5E8F6A`, red ochre `#A8482C`, yellow `#D6A23E`, black line), transparent where the
-stone is bare, worn in patches. No shading or cast shadow in either: the look lights the height itself.
-
-- `cartouche`, 512 × 768, an empty cartouche frame (the rope ring and its bar), upright, to hold
-  the solar term. Nothing written in it.
-- No inscriptions anywhere: no hieroglyphic text, real or invented.
+**Egyptian relief** (not built yet). Judge it by: painted limestone relief from a New Kingdom
+tomb under a raking light: carved, pale, cool, nothing like the Dunhuang wall's warm paint.
+Every picture comes as a pair of the same size: `-h` the height (mid grey the stone's face,
+lighter raised, darker cut in; opaque) and `-c` the faded paint over it (Egyptian blue `#3F6FA8`,
+green `#5E8F6A`, red ochre `#A8482C`, yellow `#D6A23E`, black line; transparent where bare).
+1. P1 `stone-h.webp`, 1024 × 1024, a limestone face with chisel marks and fine pitting, seamless.
+2. P0 `koi-h.webp`, `koi-c.webp` + `koi-mask.webp` to the common spec: tilapia as tomb reliefs
+   carve them, incised scales; gold in yellow ochre, the spot in red ochre.
+3. Delivered: `fish`, `lotus`, `frieze`. P1 `papyrus`, 512 × 1024, a papyrus clump; `duck`, 512 ×
+   512, a duck in profile.
+4. P1 `cartouche`, 512 × 768, an empty cartouche ring, upright, for the solar term. Nothing in it.
+5. Press: a chip and dust, in the shader. Nothing wanted.
+6. Dove and spider: P1 as sunk relief, `dove-h/-c`, `spider-h/-c`, one pose each, 512 × 512 (the
+   dove in the manner of the birds of the marsh scenes).
+7. Seal: 刻, on the ink sheet. No hieroglyphic text anywhere, real or invented.
 
 ## Languages
 
