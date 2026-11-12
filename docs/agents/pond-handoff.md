@@ -1,0 +1,179 @@
+# The pond's looks: handoff (2026-11-12)
+
+For whoever picks this work up next, with no memory of how it got here. It covers the branch
+`cloud/youthful-bardeen-mq3cpl`: five looks added as previews, a seal album, a second performance
+pass, and the move from drawing things in code to painted pictures. How the pond itself works is in
+[pond.md](pond.md); this page is the state of the work, what is left, and what was learnt.
+
+## 1. Where things are
+
+- **Branch and PR:** `cloud/youthful-bardeen-mq3cpl`, draft PR
+  [jma49/jmos#294](https://github.com/jma49/jmos/pull/294). It stays a draft and is not merged until
+  Jincheng approves. Push to no other branch.
+- **Two threads work on the branch.** An agent in the cloud writes the code; an agent on Jincheng's
+  own machine makes the pictures (an image model and Blender are only reachable from there) and
+  commits them to the same branch. They talk through the doc: the art brief and its wanted lists
+  under "Pictures for the looks" in [pond.md](pond.md). Always `git pull --rebase origin
+  cloud/youthful-bardeen-mq3cpl` before a push; the other thread pushes often. Don't edit the
+  delivered-pictures tables that thread writes; add what is wanted to the brief.
+- **The demo** is one self-contained HTML file published as an artifact:
+  <https://claude.ai/artifact/LT41KxtTa8V65mrLMpxjMJ>. To rebuild and republish it:
+
+  ```bash
+  PUBLIC_POND_PREVIEW=1 npx astro build --outDir /tmp/pond-demo
+  ```
+
+  ```bash
+  node tools/pond/inline.mjs /tmp/pond-demo /tmp/pond-looks.html
+  ```
+
+  Then publish `/tmp/pond-looks.html` to that artifact's URL (keep the same URL). The inliner needs
+  `pyftsubset` (fontTools) on the path. It inlines every picture under `/pond/<look>/` it finds named
+  in the script, so a new look's folder must be added to the list in its `swap` line. The build flag
+  turns on the preview looks and the Preview panel (bottom centre: every look, the album, "Stamp all
+  seals", "Clear seals", dates, weather).
+- **Tools kept from the session** are in `tools/pond/` (they were scratch files; they work, they are
+  not polished). All take a built `dist` directory as their first argument and write pictures into a
+  folder beside themselves (ignored by git). They run headless Chromium with a software renderer.
+
+  | Tool | What it does |
+  | --- | --- |
+  | `inline.mjs` | The build into one HTML file, for the artifact. |
+  | `pol.cjs` | Title-page screenshots of given looks at a given size and scale; `DATE=<month index>` shifts the date (seasons), `SHEET=1` adds a chapter, `WAIT` the settle time. |
+  | `demo.cjs` | The album in each state and language, a stamp in each look, each new look's title, chapter, press and winter. |
+  | `trans.cjs`, `koi.cjs` | Frame sequences on a virtual clock: a look arriving and leaving; painted koi swimming, turning and curling. |
+  | `terms.cjs` | Ink in each of the 24 solar terms. |
+  | `ab.cjs`, `abdiff.py` | A deterministic A/B of two builds (seeded random, virtual clock, frames stepped by hand) and the largest pixel difference. |
+  | `gest5.cjs` | Each look's gesture made with a real pointer, and which look arrives. |
+  | `fishcost.cjs`, `pace-nogl.cjs`, `bench.cjs` | The fish layer's CPU time with `?perf`; frames drawn a second with WebGL off; the water shader alone, timed. |
+  | `dove-spider-sprites.patch` | An untested draft of drawing the dove and the spider from their rendered sheets (see the queue). |
+
+## 2. The state of each look
+
+"Preview" means it exists only in a build with `PUBLIC_POND_PREVIEW=1`.
+
+| Look | State | Pictures in use | Delivered, not used | Wrong or unverified |
+| --- | --- | --- | --- | --- |
+| Water | Live. Unchanged but for the seal on a koi. | none | `public/pond/water/lilies.webp` (not looked at), `public/pond/water/dove.webp`, `public/pond/water/spider.webp` (placeholders, being redone) | Lily pads, petals and the dragonfly are still drawn in code and are the weakest things on it. |
+| Ink | Live; Jincheng's favourite and the benchmark. Seasonal motif is now a painting; seasons put right. | `ink/willow`, `lotus`, `reeds`, `plum` | none | Checked at 1280, 1440, 2000 and phone in summer only. Dry lotus stems asked for, not drawn. The seals are still the brush face, not seal script. |
+| Ukiyo-e | Live. Its arrival has a carved-wave front. | none | `public/pond/ukiyo/waves.webp`, `public/pond/ukiyo/koi.webp` + mask (not looked at) | The new front was seen once in a small frame sequence. |
+| Glow | Live. Goes dark, then relights in rings. | none wanted | none | Seen once in a frame sequence. |
+| Blueprint | Live. Plots its lines before the paper's blue floods in. | none | none | Seen once in a frame sequence. |
+| ASCII | Live. Resolves a cell at a time. | none wanted | none | Seen once in a frame sequence. |
+| Monet | Preview. Rebuilt on its paintings: bed, lilies, koi. | `monet/bed`, `bed-1280`, `bed-tall`, `lilies`, `koi` | `public/pond/monet/koi-v2.webp` + mask (to the common spec; not looked at; `KOI_SHEETS.monet` should move to it), `strokes`, `canvas` | The press is a soft dab from the shader, not the stamps. The dove is only dimmed. Visitors' colours are a tint over the whole fish until the masked sheet is used. |
+| 青花 | Preview. Painted rim and corners; painted koi with visitors' colours through the mask; the frame is the page's margin. | `qinghua/rim`, `corner`, `koi` + mask | none | Lotus and the pads are still shader outlines. The tint through the mask has never been seen with a second visitor. |
+| Dunhuang | Preview. The flying figures are the wall. | `dunhuang/feitian-pipa` (and `-2560`), `feitian-flowers`, `feitian-far`, `sky-flowers`, `border`, `cloud-trail` | `halo`, `caisson`, `koi.webp` + mask (not looked at) | See the queue: phone figure under the controls, the cloud trail across the control row, when the large figure loads. |
+| Star chart | Preview. Koi drawn as constellations in code. | none | `stars/plate`, `koi-figures` | The plate and the figures are not wired in. |
+| Egyptian relief | Not built. Replaces the blackboard, which is out of the looks, commands and album; its shader and CSS are still in `newlooks.js` / `newlooks.css` and are to be deleted when the relief stands. | none | `relief/fish`, `lotus`, `frieze` (each `-h` and `-c`) | The whole look. |
+
+Jincheng's words that still stand:
+
+- Ink: "梅花和荷叶是不能在一个地方同时出现的，这种常识问题不要犯错" (fixed at the source, with a
+  test; keep it so).
+- Monet's synthesised strokes: "这个完全都不是优化风格了，太杂乱了". After the paintings went in:
+  "很好就是这样". No stroke synthesis in the shader again.
+- Koi: "最好是每个风格的鱼都有自己专属的素材".
+- Pictures over code: "把一些不协调的代码生成的素材用真实的图像资产替代"; "我建议每个风格的主要素材
+  都用本地线程去做，你给出明确的指引".
+- The Blender sheets: "鸽子不够细致，不够写实，参考现实中的鸽子去做。跳蛛的细节还要继续优化。"
+- The blackboard: "明显比其他的差很多…首先考虑换掉这个风格" (replaced in plan by the Egyptian relief).
+- Layout between looks: "如果组件位置有变化，切换的时候丝滑一些".
+
+## 3. What ships when
+
+- **On main already:** the six looks, the weather, the first performance pass (PRs 287 to 292).
+- **In this branch, ready in a release build (no flag):** the second performance pass (each look its
+  own shader pass, GPU-timed adaptive scale, quiet pace when covered or in the background); the
+  seal album and the one-line hint; ink's painted motifs and the season rules; each live look's own
+  arrival; reduced motion as a cross-fade (never run under reduced motion: test it first).
+- **Preview only (`PUBLIC_POND_PREVIEW=1`):** Monet, 青花, Dunhuang, the star chart, their gestures,
+  commands and seals, painted koi, the Preview panel. `?preview` in the address also turns the
+  panel's festival and weather previews on in any build of this branch; `?perf` shows the numbers
+  overlay (fps, CPU per part, GPU time, which pass, scale).
+- **Open decision:** in a release build the album's first volume is only ink and ukiyo-e, and the
+  second glow, blueprint and ASCII. Whether the album ships before the new looks do, with volumes
+  that small, is Jincheng's call.
+- Ink's painting commits (`31081b0`, `f6cfdeb`, `85fa581`, `57488f6`) were kept self-contained so
+  they can ship first.
+
+## 4. The queue, in order
+
+1. **Dove and spider as sprites; three.js gone.** Waiting on revised renders (the brief says what).
+   `tools/pond/dove-spider-sprites.patch` draws them from the placeholder sheets in preview builds,
+   frame by state, turned to heading; it is untested. Done when: both behave as now (sit, take off,
+   fly, land; sit, walk, crouch, jump) in a frame sequence, each look dresses them, `life.js` and
+   three.js are no longer fetched (about 500 KB, 130 KB gzipped, and a 512 px 3D render a frame while
+   the dove is out), and the release build drops them too once the renders are approved.
+2. **Ukiyo-e crests** (`ukiyo/waves`): large on the arrival's front, small at a press's breaking
+   edge, where they beat the shader's claws. Then its koi sheet through `KOI_SHEETS`.
+3. **Star chart:** the plate as the sky's engraved grid at low strength, turning with the stars; the
+   koi figures faintly over each constellation, bent along the spine by `drawSprite`.
+4. **Dunhuang leftovers:** the halo behind the pipa player if it reads at that size; the caisson
+   where it fits (the album page or a chapter's header for this look; the wall's left is the
+   title's); on a phone the figure clear of the Preview pill and the controls; the cloud trail off
+   the control row; the 2560 figure fetched only when the drawn figure passes the 1536 one's
+   sharpness (check a 2000 px window at 2×). Its koi sheet through `KOI_SHEETS`.
+5. **Layout glides between looks (FLIP).** Today the title page and controls fade out while a look
+   arrives and come back in their new places. Wanted: they stay visible where the look allows and
+   move from the old box to the new (measure, apply, transform back, ease), text that changes face
+   cross-fading in place. At least: 青花's inset, Dunhuang's offsets, font-metric shifts. Check with
+   a performance trace for reflow.
+6. **Egyptian relief look.** The brief is in pond.md ("Egyptian relief" in the art brief) and in
+   this session's notes there: carved and painted limestone lit by a raking light that follows the
+   time of day; zigzag water; no inscriptions; press as a chisel strike; arrival as sand blowing
+   off; gesture a zigzag of three peaks or more (add it to `gestures.ts`'s table and test every
+   pair); seal 刻; its own shader pass; the delivered `relief/` lot. Then delete the blackboard.
+7. **Exits designed** where the arrival run backwards looks wrong (only the stars have their own).
+8. **A run under reduced motion**, every look in and out.
+9. **A visitor's colour on painted koi, seen with a second visitor** (two browsers signed in, or
+   presence faked), in 青花 and Monet.
+10. **The finish checklist, ink as the benchmark,** for every look: title page; every chapter
+    (Timeline, Photos, Music, Notes, Chat, About, Account, ⌘K, the album) with rules, buttons, focus
+    rings, scrollbars, selection, hover, the photo viewer; the press; tags; gauge; clock and term;
+    dove and spider; seasons and weather; the stamp; sounds; phone. Report fixes by look.
+11. **The final review by an independent reviewer:** looks × seasons × weather × chapters ×
+    desktop and phone × En, 中, 日.
+12. **Performance on a real Mac with `?perf`:** frame rate, GPU time and scale in each look and
+    through each arrival. Nothing here could measure that (see the traps).
+
+## 5. Rules learnt the hard way
+
+- **Jincheng's standing preferences:** things line up exactly; no labels or copy that read as
+  machine-made; plain wording in all three languages; the seasons make common sense; calm beats
+  clever; a painted picture wherever code-drawing looks rough; nothing added to the cost of a frame;
+  the picture's quality never traded for speed. Ink is the standard every look is held to.
+- **Before every push:** `npm run check` (0 errors and 0 hints: CI failed once on an unused
+  directive that only this shows), `npm run lint`, `npm run format:check`, `npm test`, `npm run
+  build`, `npm run test:smoke`, `npm run perf`, `node scripts/check-public-sizes.mjs`, `node
+  scripts/check-doc-paths.mjs`. Then pull with rebase, then push.
+- **Only this branch.** The PR stays a draft. Commit messages and docs say what a thing does, not
+  how it came about.
+- **A look must work without its pictures** and take each as it comes; pictures load with their
+  look, never on the first visit.
+- **One commit for one thing**, so a piece (ink's paintings, say) can ship alone.
+- **Software-rendered screenshots judge stills only:** composition, colour, overlap. They can't
+  judge frame rate, fades or anything timed.
+
+## 6. Known traps
+
+- **The headless renderer is slow (one to five frames a second).** Anything that eases over frames
+  looks unfinished in a screenshot taken too soon: the tree's shade fading from a look that has
+  none, CSS animations (the stamp sits at its first frame; the tools force it), the shade's grey
+  smudges on 青花 and Dunhuang. Wait longer (`WAIT=22000`) or judge on a real machine.
+- **Gestures are timed by the pointer events' own timestamps.** Under slow frames a scripted press
+  can turn into a hold (ink) or miss; `gest5.cjs` loads a fresh page for each. A scripted click that
+  lands on the gold koi takes the pond back to water.
+- **The virtual-clock harnesses** (`ab.cjs`, `trans.cjs`) replace the clock, timers and
+  `requestAnimationFrame`, turn off audio and CSS animation, and block three.js; they are
+  deterministic only because of all four.
+- **Size budget:** 200 KB a file in `public/`. A picture over it needs a line in
+  `scripts/check-public-sizes.mjs` with its reason (Dunhuang's large figure and Monet's bed have one).
+- **Doc paths:** `scripts/check-doc-paths.mjs` fails on a path in backticks that doesn't exist. A
+  folder asked for but not delivered goes in its `ALLOWED` list; a file wanted is named without its
+  folder.
+- **The one picture texture** (`uMural`, unit 10) holds the picture of the look last asked for
+  (Dunhuang's wall, Monet's bed, 青花's rim). Going straight from one of those looks to another
+  swaps it while the old look is still on screen.
+- **`PREVIEW`** in `engine.js` comes from the build flag on this branch's release path and also from
+  `?preview` (via `preview.js`); a release build of this branch therefore shows the preview looks to
+  anyone who adds `?preview`. Decide before merging whether that is wanted.

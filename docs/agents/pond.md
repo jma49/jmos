@@ -134,6 +134,9 @@ gesture, key or ⌘K, its seal is stamped in the corner above the controls, in t
 
 ## Looks that are only previews
 
+The state of this work, what is left and what was learnt along the way is in
+[pond-handoff.md](pond-handoff.md).
+
 Five looks exist only in a build with `PUBLIC_POND_PREVIEW=1` (`newlooks.js`, `newlooks.css`): Monet's
 water lilies in oil, blue-and-white porcelain (青花), a Dunhuang mural (敦煌), a star chart (星图) and a
 school blackboard newspaper (黑板报). A release build leaves out their shader source, gestures and
