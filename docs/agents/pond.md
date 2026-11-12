@@ -308,12 +308,32 @@ least 4% inside each picture or cell, nothing cropped, no text or signature, no 
 texture baked in (the shader adds its own). Sheets are grids of equal cells with one motif in the
 middle of each, read left to right, top to bottom.
 
-**Monet** (`public/pond/monet/`). The strokes are procedural tiles now and read as scales; real
-brushwork to stamp the scene with is what the look most needs.
+**Monet** (`public/pond/monet/`). **Urgent, before everything else here.** Strokes synthesised in
+the shader did not converge: they read as scales, then as clutter. The look is to be carried by
+painted pictures, as Dunhuang's is: a painting as the still bed, the water's ripples bending it
+gently like a wet surface, the lilies and the koi as painted sprites over it. Until they come the
+look shows a calm fallback (soft passages of colour in small strokes).
 
-- `lilies.webp`, 1024 × 512, a 4 × 2 sheet of water lilies painted in oil, seen from above at a low
-  angle: four pads (two with a notch, in different greens), four blossoms (white, pink, deep rose,
-  a bud), each a few thick strokes, colour included. They replace the look's dabbed pads.
+- ★★ `bed.webp`, 2560 × 1440, and the same picture at 1280 × 720 as `bed-1280.webp`: an oil painting
+  of a lily pond's water seen from above, in the manner of Monet's late Nymphéas. Broad wet-on-wet
+  passages of blue-violet water, green-gold reflections of willows running down it, a few pale
+  passages where the sky shows; brushwork visible but large and harmonious, with impasto. Only the
+  water: no lily pads or flowers (they are separate and move), no figures, bridge, bank, horizon,
+  frame or signature. Calm and low in contrast overall, the left third a little darker and plainer
+  for the title's pale type. Opaque, painted to all four edges. It will pass the 200 KB budget
+  (`check-public-sizes.mjs` needs a line for it, as for Dunhuang's centrepiece: it loads only with
+  this look, the small one on a phone or a small window).
+- ★★ `bed-tall.webp`, 1080 × 1920: the same painting composed upright for a phone, the plainer,
+  darker passage across the top third.
+- ★ `lilies.webp`, 1024 × 768, a 4 × 3 sheet on transparent, painted in the same oil and seen from
+  above: lily pads in three sizes and greens (olive, grey-green, one catching the light), two with
+  a notch; blossoms in white and in pink, each with a yellow heart, open and half open; one bud.
+  Thick dabs, soft edges, no outline, no cast shadow.
+- ★ `koi.webp`, 1024 × 768, three koi on transparent, one to a row: orange, white with red patches,
+  and gold. Each seen from directly above, the body straight, head to the left, 900 pixels long,
+  fins and tail spread, painted in a few loaded strokes with soft edges. Straight so the pond can
+  bend them along the spine as it does its own. If they don't come out well, the pond keeps its
+  own koi, softened.
 
 **青花** (`public/pond/qinghua/`). The rim is beads between lines; a real pattern would make it porcelain.
 

@@ -98,18 +98,16 @@ export const NEW_GLSL = `
 // ---------- the preview looks ----------
 uniform sampler2D uMural; uniform vec3 uFace[2];
 float grain(vec2 P){ return .5+.5*noise(P*1.9)*(.6+.4*noise(P*.7+9.)); }
-// one layer of loaded strokes. Each lies along the water's flow where it is, a little off it; longer or shorter,
-// pressed harder or less; ragged at its ends where the bristles part. Returns the stroke's own place (where its
-// colour is taken), how much of it covers here, and where across its width this is (for the ridge of paint).
+// Monet, kept calm until its painted pictures come (docs/agents/pond.md): soft passages of colour in short
+// strokes of one size, nothing laid over anything else to fight it.
+// one layer of short loaded strokes: cells longer than they are high, every other row set off; returns the
+// stroke's own place (where its colour is taken) and how much of it covers here, thick in the middle
 vec2 dab(vec2 P, vec2 cell, float seed, out float cover, out float ridge){
   vec2 q=P/cell; q.x+=step(1.,mod(floor(q.y),2.))*.5; vec2 id=floor(q), f=fract(q)-.5;
-  vec2 j=(hash2(id+seed)-.5)*vec2(.6,.4); f-=j*.5;
-  vec2 at=id+.5+j*.5; at.x-=step(1.,mod(id.y,2.))*.5; at*=cell;
-  float a=(noise(at*.0035+seed)-.5)*1.3+(hash1(id+seed*3.)-.5)*.5+clamp(gG.x*5.,-.3,.3);
-  float ln=.8+.55*hash1(id+seed*5.), pr=.6+.4*hash1(id+seed*7.);
-  vec2 px=f*cell, r=vec2(px.x*cos(a)+px.y*sin(a),-px.x*sin(a)+px.y*cos(a))/cell; r.x/=ln;
-  float d=length(r*vec2(1.7,2.15))+(noise(P*.3+seed)-.5)*.3+abs(noise(vec2(r.y*11.,id.x+seed))-.5)*.5*smoothstep(.18,.5,abs(r.x));
-  cover=(1.-smoothstep(.5,1.06,d))*pr; ridge=r.y*2.; return at;
+  vec2 j=(hash2(id+seed)-.5)*vec2(.5,.3); f-=j*.5;
+  float a=(hash1(id+seed*3.)-.5)*.5; f=vec2(f.x*cos(a)-f.y*sin(a)*cell.y/cell.x, f.x*sin(a)*cell.x/cell.y+f.y*cos(a));
+  float d=length(f*vec2(1.9,2.1)); cover=1.-smoothstep(.72,1.02,d+(noise(P*.35+seed)-.5)*.28);
+  ridge=f.y*2.; vec2 at=(id+.5+j); at.x-=step(1.,mod(id.y,2.))*.5; return at*cell;
 }
 // what Monet's pond is at a place: water in violet, green, rose and blue, the lilies' pads, the koi
 vec3 pondOil(vec2 at, float seed){
@@ -121,14 +119,9 @@ vec3 pondOil(vec2 at, float seed){
   col=mix(col,vec3(.70,.80,.90),smoothstep(.56,.84,fbm(at*vec2(.004,.016)+11.))*.7);
   col=mix(col,vec3(.14,.30,.26),smoothstep(.6,.86,fbm(at*vec2(.009,.003)+31.))*.6);
   col=mix(col,vec3(.93,.86,.70),smoothstep(.74,.92,noise(at*.006+17.))*.5);
-  // broken colour: each stroke leans to one pure pigment, so the eye does the mixing
-  float hq=hash1(floor(at/4.)+seed*11.);
-  col=mix(col,hq<.25?vec3(.44,.34,.72):hq<.5?vec3(.20,.40,.74):hq<.75?vec3(.18,.50,.38):vec3(.88,.58,.70),.26*step(.5,seed));
   col*=.86+.3*hash1(floor(at/7.)+seed);
-  // the lilies: pads in thick greens, lighter where the light catches them; the flowers pink and white
-  vec4 pd=textureLod(uPads,uv,1.6); vec3 pc=pd.rgb/max(pd.a,1e-3); float hp=hash1(floor(at/9.)+seed);
-  vec3 leaf=mix(mix(vec3(.20,.42,.30),vec3(.44,.62,.38),hp),vec3(.62,.74,.50),step(.82,hp));
-  col=mix(col,mix(leaf,mix(vec3(.97,.90,.92),vec3(.93,.52,.66),hp),clamp((pc.r-pc.g)*3.,0.,1.)),smoothstep(.2,.55,pd.a));
+  vec4 pd=textureLod(uPads,uv,2.); vec3 pc=pd.rgb/max(pd.a,1e-3);
+  col=mix(col,mix(vec3(.26,.50,.36),vec3(.48,.62,.40),hash1(floor(at/9.)+seed))*(.8+.5*pc.g)+vec3(.5,.2,.3)*clamp((pc.r-pc.g)*2.,0.,1.),smoothstep(.25,.6,pd.a));
   vec4 f=textureLod(uFish,uv+gRef*.25,2.2); vec3 fc=f.rgb/max(f.a,1e-3);
   col=mix(col,mix(fc*1.15+vec3(.08,.02,-.04),vec3(.95,.5,.2),clamp((fc.r-fc.b)*1.2,0.,.6)),smoothstep(.3,.7,f.a));
   vec4 tp=textureLod(uTop,uv,1.5); col=mix(col,tp.rgb/max(tp.a,1e-3),smoothstep(.3,.7,tp.a)*.8);
@@ -142,25 +135,19 @@ vec3 pondOil(vec2 at, float seed){
 }
 vec3 lookMonet(){
   vec2 P=gP+gG*26.+vec2(sin(gP.y*.02+uTime*.3),0.)*1.5;
-  float c1,r1,c2,r2,c3,r3,c4,r4;
-  // four layers and no more: broad drags, medium strokes, long upright drags for reflections, a few short dabs
-  vec2 a1=dab(P,vec2(150.,46.),1.,c1,r1), a2=dab(P+vec2(37.,19.),vec2(96.,31.),5.,c2,r2), a3=dab(P.yx+vec2(5.,21.),vec2(170.,26.),9.,c3,r3), a4=dab(P+vec2(61.,7.),vec2(54.,21.),13.,c4,r4);
-  // the canvas: primed linen, its weave showing wherever no stroke lies; a thin wash of the water's colour over it
-  float weave=.5+.5*sin(gP.x*2.4)*sin(gP.y*2.4), wash=fbm(gP*.004+vec2(0.,uTime*.006));
-  vec3 col=mix(vec3(.80,.76,.68)*(.9+.1*weave),mix(vec3(.34,.36,.60),vec3(.30,.48,.44),smoothstep(.35,.65,wash)),.55);
+  float c1,r1,c2,r2,c3,r3;
+  vec2 a1=dab(P,vec2(46.,17.),1.,c1,r1), a2=dab(P+vec2(13.,7.),vec2(34.,13.),5.,c2,r2), a3=dab(P.yx+vec2(5.,21.),vec2(40.,12.),9.,c3,r3);
+  vec3 col=pondOil(P,0.)*.92;
   col=mix(col,pondOil(a1,1.),c1);
-  float up=smoothstep(.42,.66,fbm(gP*vec2(.006,.0018)+20.));
-  col=mix(col,pondOil(a3.yx-vec2(21.,5.),9.)*vec3(.80,.92,.84),c3*up*.92);
-  col=mix(col,pondOil(a2-vec2(37.,19.),5.),c2);
-  c4*=step(.5,hash1(floor(a4/9.)));
-  col=mix(col,pondOil(a4-vec2(61.,7.),13.)*1.07,c4*.92);
-  // thick paint stands up: a lit ridge along each stroke's upper edge, a shadow under its lower one, bristle
-  // streaks along its length
-  float cov=max(max(c1*.7,c2),c4), ridge=c4>.3?r4:c2>.3?r2:r1;
-  col+=vec3(.20,.19,.16)*smoothstep(.15,.8,-ridge)*cov-vec3(.14,.14,.16)*smoothstep(.25,.95,ridge)*cov;
-  col*=1.+.07*sin(ridge*26.+hash1(floor(a2/9.))*6.)*cov;
+  // reflections run downwards: upright strokes where the trees stand in the water
+  float up=smoothstep(.5,.7,fbm(gP*vec2(.006,.0018)+20.));
+  col=mix(col,pondOil(a3.yx-vec2(21.,5.)+vec2(0.,0.),9.)*vec3(.82,.9,.84),c3*up);
+  col=mix(col,pondOil(a2-vec2(13.,7.),5.),c2*.92);
+  // thick paint catches the light along a stroke's upper edge, and the canvas shows through its weave
+  float ridge=mix(r1*c1,r2*c2,c2);
+  col+=vec3(.10,.10,.09)*smoothstep(.2,.9,-ridge)-vec3(.07)*smoothstep(.3,.95,ridge);
   col+=vec3(.9,.95,1.)*clamp(abs(gLap)*14.,0.,.5)*(1.-gCalm*.8)*step(.4,c2);
-  col*=.95+.05*weave;
+  col*=.95+.05*sin(gP.x*2.6)*sin(gP.y*2.6);
   col=mix(col,vec3(.27,.30,.42),gCalm*.5);
   return col;
 }
@@ -194,7 +181,8 @@ vec3 lookQinghua(){
   float pet=1.-smoothstep(0.,1.1,abs(length(vec2((fract(along/24.)-.5)*24.,e-25.))-8.)-.5);
   c=mix(c,deep,clamp(rim+pet*step(15.,e)*step(e,35.),0.,1.)*clamp(pool,0.,1.)*.85);
   // the crackle, and a new craze line from each press, running out along the glaze
-  c=mix(c,vec3(.55,.50,.44),seams(P/46.)*.13+seams(P/17.+3.)*.05);
+  // (the crackle comes last as the glaze cools, ticking across a patch at a time)
+  c=mix(c,vec3(.55,.50,.44),(seams(P/46.)*.13+seams(P/17.+3.)*.05)*smoothstep(0.,.1,uLookT-1.7-hash1(floor(P/130.))*.9));
   for(int i=0;i<10;i++){ vec3 b=uBlot[i]; if(b.z<0.) continue;
     vec2 d=P-b.xy; float t=b.z, R=10.+150.*(1.-exp(-t*1.6)), r=length(d), an=atan(d.y,d.x)+noise(vec2(r*.03,b.x))*1.1;
     float ray=1.-smoothstep(0.,.9+r*.004,abs(sin(an*2.5+b.y*.1))*r*.5);
@@ -256,9 +244,10 @@ vec3 lookStars(){
   vec3 c=vec3(.010,.016,.045)+vec3(.012,.02,.05)*fbm(S*.002);
   float band=exp(-pow(((S.x-pole.x)*.55+(S.y-pole.y)*.83-uCss.y*.95)/(uCss.y*.2),2.));
   c+=vec3(.16,.17,.24)*band*(.25+.75*fbm(S*.006+3.))*.55+vec3(.5,.52,.6)*band*pow(noise(S*.5),6.)*.5;
+  // (the stars come out a few at a time as the dusk deepens, the brightest first)
   for(int k=0;k<2;k++){ float sz=k==0?46.:19.; vec2 id=floor(S/sz), f=fract(S/sz)-.5, o=(hash2(id+float(k)*7.)-.5)*.7; float h=hash1(id+float(k)*13.);
     float tw=.75+.25*sin(uTime*(1.+h*2.)+h*40.), m=step(k==0?.72:.6,h);
-    c+=mix(vec3(.8,.87,1.),vec3(1.,.9,.74),step(.9,h))*(k==0?star4((f-o)*sz,1.1+h*1.2):exp(-dot(f-o,f-o)*sz*sz/.7))*m*tw*(k==0?.9:.5); }
+    c+=mix(vec3(.8,.87,1.),vec3(1.,.9,.74),step(.9,h))*(k==0?star4((f-o)*sz,1.1+h*1.2):exp(-dot(f-o,f-o)*sz*sz/.7))*m*tw*(k==0?.9:.5)*smoothstep(0.,.5,uLookT-.5-(1.-h)*4.2*(k==0?1.:1.4)); }
   // orbits: the ripples as thin rings
   float ring=smoothstep(.45,.5,abs(fract(gH*14.)-.5));
   c+=vec3(.45,.6,.9)*ring*smoothstep(.015,.07,abs(gLap)*4.+abs(gH)*.7)*.3*(1.-gCalm*.9);
@@ -266,7 +255,10 @@ vec3 lookStars(){
   vec4 pd=textureLod(uPads,uv,0.); float pe=textureLod(uPads,uv,1.6).a;
   c+=vec3(.42,.3,.62)*pd.a*fbm(P*.02+2.)*.3+vec3(.6,.75,1.)*clamp(abs(pd.a-pe)*3.,0.,1.)*.4;
   // the koi, already drawn as stars and the lines between them
-  vec4 f=textureLod(uFish,uv+gRef*.2,0.); c+=f.rgb*1.15+vec3(.25,.4,.8)*textureLod(uFish,uv,3.).a*.3;
+  // (their lines join once the stars are out)
+  vec4 f=textureLod(uFish,uv+gRef*.2,0.); c+=(f.rgb*1.15+vec3(.25,.4,.8)*textureLod(uFish,uv,3.).a*.3)*smoothstep(1.8,2.8,uLookT);
+  // leaving: dawn comes up from the horizon and the stars go out in it
+  if(uLeave>=0.) c=mix(c,vec3(.34,.26,.30)+vec3(.3,.2,.1)*uv.y,smoothstep(0.,1.6,uLeave)*(.25+.5*uv.y));
   vec4 tp=textureLod(uTop,uv,1.); c+=vec3(.6,.7,1.)*tp.a*.14;
   // a press: a star is born, flares, and settles to a point that fades; a streak falls away from it
   for(int i=0;i<10;i++){ vec3 b=uBlot[i]; if(b.z<0.) continue;

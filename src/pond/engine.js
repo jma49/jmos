@@ -975,7 +975,7 @@ precision highp float; in vec2 vUv; out vec4 o;
 uniform sampler2D uBed,uH,uFish,uPads,uTop,uIceN;
 uniform vec2 uRes,uGrid,uMoonPos,uCss; uniform float uTime,uAmb,uCaI,uMoon,uSwell,uFocus,uIce,uSnow,uFog,uStars; uniform vec3 uMoonPh; uniform vec2 uCalm;
 uniform vec3 uTint,uCaC,uSky,uSeason;
-uniform vec4 uBox[12]; uniform vec4 uBoxB[12]; uniform int uBoxN; uniform vec4 uCrack[6]; uniform float uBroke[6]; uniform vec4 uInk; uniform vec3 uBlot[10]; uniform int uStyle, uPrev; uniform float uGlint;
+uniform vec4 uBox[12]; uniform vec4 uBoxB[12]; uniform int uBoxN; uniform vec4 uCrack[6]; uniform float uBroke[6]; uniform vec4 uInk; uniform vec3 uBlot[10]; uniform int uStyle, uPrev; uniform float uGlint; uniform float uLookT,uLeave;
 float hash1(vec2 p){ return fract(sin(dot(p,vec2(41.3,289.1)))*43758.5453); }
 vec2 hash2(vec2 p){ p=vec2(dot(p,vec2(127.1,311.7)),dot(p,vec2(269.5,183.3))); return fract(sin(p)*43758.5453); }
 float noise(vec2 p){ vec2 i=floor(p),f=fract(p); f=f*f*(3.-2.*f);
@@ -1126,9 +1126,10 @@ vec3 lookGlow(){
   vec2 P=gP, uv=gUv;
   vec3 c=vec3(.003,.006,.018)+vec3(.0,.015,.04)*fbm(P*.003);
   float rip=clamp(abs(gLap)*26.+length(gG)*.7,0.,.6)*(1.-gCalm*.8);
-  c+=mix(vec3(.05,.55,1.),vec3(.2,1.,.85),.5+.5*sin(P.x*.004+uTime*.2))*rip*.55;
+  float lit=1.-smoothstep(-90.,90.,length(P-uInk.yz)-(uLookT-.7)*620.); lit*=.55+.45*step(.5,fract(length(P-uInk.yz)/140.-uLookT*1.2))*step(uLookT,3.)+.45*step(3.,uLookT);
+  c+=mix(vec3(.05,.55,1.),vec3(.2,1.,.85),.5+.5*sin(P.x*.004+uTime*.2))*rip*.55*lit;
   vec4 f0; float fa,fb,fc,red; fishAt(f0,fa,fb,fc,red);
-  c+=vec3(.05,.9,.85)*fc*.4+vec3(.2,1.,.9)*fb*.55+vec3(.75,1.,.97)*fa*.35;
+  c+=(vec3(.05,.9,.85)*fc*.4+vec3(.2,1.,.9)*fb*.55+vec3(.75,1.,.97)*fa*.35)*lit;
   c+=vec3(1.,.12,.65)*red*1.2+vec3(1.,.2,.7)*smoothstep(.1,.5,red)*fb*.3;
   vec4 pd=textureLod(uPads,uv,0.); float pe=textureLod(uPads,uv,2.).a;
   c+=vec3(.2,1.,.4)*clamp(abs(pd.a-pe)*2.,0.,1.)*.35+vec3(.0,.05,.03)*pd.a;
@@ -1165,6 +1166,10 @@ vec3 lookBlueprint(){
     c=mix(c,vec3(.85,.92,1.),step(abs(gHit.w-6.),.5)*step(.5,fract((gP.x+gP.y)*.09))*.7);
     vec2 cc=fract(gP/16.)-.5; float cr=clamp(step(abs(cc.x),.03)*step(abs(cc.y),.18)+step(abs(cc.y),.03)*step(abs(cc.x),.18),0.,1.);
     c=mix(c,vec3(.95,.98,1.),cr*step(1.-.35*uSnow,hash1(floor(gP/16.)))*step(.5,gIce)); }
+  // the drawing is plotted in line first, over what was there, a row at a time behind the rule; the paper's
+  // blue floods in after
+  float fill=smoothstep(.25,.9,uLookT-gP.y/uCss.y*1.5);
+  if(fill<1.){ float ln=smoothstep(.1,.32,dot(c-vec3(.07,.22,.47),vec3(.333))); c=mix(mix(gWater*.3,vec3(.92,.96,1.),ln),c,fill); }
   return c;
 }
 // ASCII: the picture the characters are made from (the glass pass turns it into text). The bed is
@@ -1193,6 +1198,7 @@ vec3 look(int s){
 }
 // How far the front has come over this pixel (1 inside), and how bright its leading edge is here.
 float reveal(int s,out float e){
+  if(uInk.w<.3){ e=0.; return smoothstep(0.,1.,uInk.x); }
   vec2 P=gP; float R=uInk.x, r, w=40.;
   if(s==1){ float fib=fbm(P*.03)*.55+noise(P*.21)*.25+noise(P*vec2(1.1,.06))*.12+noise(P*vec2(.05,1.3))*.08;
     r=length(P-uInk.yz)+(fib-.5)*150.+(noise(P*.012+R*.003)-.5)*120.; }
@@ -1467,6 +1473,8 @@ const FS_U = [
   'uPrev',
   'uGlint',
   'uFog',
+  'uLookT',
+  'uLeave',
   'uMural',
   'uFace',
   'uStars',
@@ -5786,7 +5794,13 @@ function tick1(raw) {
   gl.uniform2f(U.uRes, glc.width, glc.height);
   gl.uniform2f(U.uGrid, GW, GH);
   gl.uniform2f(U.uMoonPos, big ? 0.6 : 0.74, big ? 0.1 : 0.12);
-  gl.uniform4f(U.uInk, shown, inkO[0], inkO[1], inkW);
+  // under reduced motion a look comes and goes as a plain cross-fade (the front's place is its progress)
+  const fade = RM && inkW === 0.5,
+    since = performance.now() / 1000 - inkAt;
+  gl.uniform4f(U.uInk, fade ? shown / inkMax : shown, inkO[0], inkO[1], fade ? 0.25 : inkW);
+  // how long the look on show has been arriving (what each builds up after its front), or leaving
+  gl.uniform1f(U.uLookT, look === 'water' || RM ? 99 : since);
+  gl.uniform1f(U.uLeave, look === 'water' && inkR > 0 && !RM ? since : -1);
   gl.uniform1i(U.uStyle, SID[top]);
   gl.uniform1i(U.uPrev, SID[base]);
   gl.uniform1f(U.uGlint, (1 + gest.glint) * fx.glint);
