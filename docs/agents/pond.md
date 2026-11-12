@@ -184,6 +184,8 @@ The flying figures (飞天) can't be drawn well in a shader, so they are picture
 | `cloud-trail.webp` | 1024 × 256, 36 KB | A long cloud (长云): three curled scrolls in white, blue and green at the left, thinning into one tail that ends in a point at the right: 57, 33, 916, 167. |
 | `koi.webp` | 1024 × 1536, 134 KB | The koi sheet to the common spec, as mural fish: an iron-wire line, rows of scale arcs, flat mineral colour. Four rows of 384 pixels, each from x 62 (the barbels) to a tail tip at 962, the spine on its row's middle line (y 192, 576, 960, 1344); one drawing mirrored about the spine. Row 1 in the gold ochre with white fins; row 2 the wall's white with one cinnabar spot on the head; rows 3 and 4 in greys with three and four grey patches. The ochre is on the gold koi only. Its fin rays taper a little, and it is close in drawing to the ukiyo-e sheet: the two differ mostly in line weight and colour. |
 | `koi-mask.webp` | 1024 × 1536, 11 KB | White over the patches of rows 3 and 4 (about 13% of each fish), soft by 2 to 3 pixels, black elsewhere. |
+| `lotus.webp` | 1024 × 512, 68 KB | Eight motifs in a 4 × 2 grid of 256-pixel cells, from above, at one scale, each at least 14 pixels clear of its cell's edge, flat colour in an iron-brown line. Top row: three leaves in malachite green, large (226 pixels across), medium with a notch (189) and small with a notch (141), then a flower of white and cinnabar rings round a yellow heart. Bottom row: a flower with the cinnabar outermost, a white one, a bud as a white disc with three cinnabar tips, a seed-pod in ochre with eight seeds. The fills carry a faint cloudiness, no plaster. |
+| `dove.webp`, `spider.webp` | 768 × 256, 17 KB and 32 KB | Three poses each in 256-pixel cells, from above, facing right, at one scale. The dove as a white bird of the murals, green and cinnabar on its wings and tail: sitting (114 × 50), wings half open (113 × 135), flying (115 × 234). The spider in ochre and dark brown, a cloud scroll on its abdomen: sitting (153 × 85), walking (175 × 155), jumping (213 × 234). The spider's front legs are drawn long, and the dove is more ornament than bird. |
 
 - **How they are painted:** flat mineral colour inside a dark line, in the look's own palette (blue
   `#2B6385`, green `#4D856E`, cinnabar `#B34026`, white `#EDE0C2`, line `#2E1C12`, a little ochre
@@ -274,6 +276,9 @@ their dabs through the mask, a visitor's own or the pond's koi's own.
 | `lilies.webp` | 1024 × 768, 137 KB | Twelve motifs in a 4 × 3 grid of 256-pixel cells, each at least 22 pixels clear of its cell's edge, no outline or shadow, soft bristle edges in the alpha. Row 1: three large pads (olive, grey-green with a notch, one catching the light) and a medium olive pad with a notch. Row 2: a medium grey-green pad, a small olive pad, a small light pad, an open white blossom. Row 3: a half-open white blossom, an open pink, a half-open pink, a bud. The large pads are about 210 pixels across, the medium 170, the small 120. |
 | `koi-v2.webp` | 1024 × 1536, 173 KB | The koi again, to the common spec: four rows of 384 pixels, heads to the left, each from x 62 (the barbels) to a tail tip at 962, the spine on its row's middle line (y 192, 576, 960, 1344), within 3 pixels (it is not mirrored, so the fins keep a small natural unevenness). The same fish in the same dabs four times: gold; white with one red dab on the head; two in greys with four darker dabs each, laid differently. The body is slimmer than in `koi.webp`. Smooth alpha (256 levels). In use; the three-koi sheet it replaced is gone. |
 | `koi-mask.webp` | 1024 × 1536, 17 KB | White over the grey dabs of rows 3 and 4 of `koi-v2.webp` (about 30% of each fish), soft by 2 pixels, black elsewhere. |
+| `lilies-autumn.webp` | 1024 × 256, 41 KB | The autumn row for `lilies.webp`: four pads in 256-pixel cells in the same oil dabs and at its large pads' size (about 205 pixels across), gone ochre, rust and a grey violet, with ragged edges: one with a notch to the right, one whole, one with a hole, one with a notch below. No line, no flowers. |
+| `dragonfly.webp` | 512 × 256, 21 KB | Two dragonflies in 256-pixel cells, from above, head to the right, each a blue-green body stroke and four pale lilac wing dabs (140 × 228). The two differ little, and the wings are broad for a dragonfly's. |
+| `dove.webp`, `spider.webp` | 768 × 256, 16 KB and 46 KB | Three poses each in 256-pixel cells, from above, facing right, at one scale. The dove in white with lilac and cream: sitting (113 × 54), wings half open (113 × 146), flying (116 × 234). The spider in umber with a touch of orange: sitting (185 × 127), walking (215 × 178), jumping (229 × 234). Both are painted more finely than a few dabs: closer to a small oil study than to the panel's own handling. |
 
 #### 青花
 
@@ -288,6 +293,9 @@ visitor's colour laid into their patches through `koi-mask.webp` (`koiPicture()`
 | `corner.webp` | 256 × 256, 13 KB | The top-left corner: the outer lines along the top and left edges, the inner lines meeting at 128, 128, the stem turning at 64, 64 under a small lotus. Its right edge meets `rim.webp` and its bottom edge meets `rim.webp` turned a quarter, to the pixel. The lotus is small and pale beside the rim's flowers. |
 | `koi.webp` | 1024 × 1536, 163 KB | Four koi from straight above in rows of 384 pixels, heads to the left, each from x 62 (the barbels; the snout is a little to the right) to a tail tip at 962, the spine on its row's middle line (y 192, 576, 960, 1344). All four are one drawing, its upper half mirrored onto the lower, so the spine is exactly straight and the fish exactly symmetrical; the brush marks repeat across it. Scales and fin rays in cobalt line, the body an opaque porcelain white. Row 1 has four gold patches, row 2 one cobalt spot on the head, rows 3 and 4 are in greys with four and three grey patches. The patches are plain rounded shapes laid under the line, not brushed washes: good enough to prove the method, to be redrawn once it is settled. |
 | `koi-mask.webp` | 1024 × 1536, 6 KB | White over the patches of rows 3 and 4 (about 6% of each row), with edges 2 to 3 pixels soft, black elsewhere. Made from the same shapes as the patches, so it lines up with `koi.webp` to the pixel. |
+| `lotus.webp` | 1024 × 512, 96 KB | Eight motifs in a 4 × 2 grid of 256-pixel cells, from above, cobalt only, at one scale, each at least 14 pixels clear of its cell's edge. Top row: a large leaf with a notch (228 pixels across), a small one (134), a large one turned and folded at its notch, an open flower. Bottom row: a second flower, a bud, a seed-pod, a spray of water-weed (faint, and seen from the side). The wash is partly transparent, so the glaze shows through the leaves. |
+| `medallion.webp` | 1024 × 1024, 172 KB | A double ring (944 pixels across, at 40, 45) and in it two koi circling head to tail, three lotus flowers, two leaves and sprays of water-weed, in cobalt line and wash on a transparent ground. The koi are drawn with patches and scales in full, so it is busy at full strength: it is meant large and pale. Its alpha is stored coarsely to keep it under the budget. |
+| `dove.webp`, `spider.webp` | 768 × 256, 20 KB and 47 KB | Three poses each in 256-pixel cells, from above, facing right, at one scale, in cobalt line and wash. The dove: sitting (101 × 50), wings half open (100 × 129), flying (100 × 234); its feathers are drawn densely. The spider, banded: sitting (141 × 111), walking (171 × 153), jumping (200 × 234); the walking one shows six legs clearly, not eight. |
 
 #### Ukiyo-e
 
@@ -307,6 +315,10 @@ In `public/pond/ukiyo/`, and in use in a preview build (the look itself ships; i
 | `waves.webp` | 1024 × 512, 68 KB | Eight wave crests in a 4 × 2 grid of 256-pixel cells, all breaking to the left: four large ones with claw foam and spray dots in the top row, four low wavelets in the bottom. Exactly four colours: `#1F4A7A`, `#8FB4C8`, `#F6EDD8` and a keyline `#0C1B27`. The four large crests are much alike in outline. |
 | `koi.webp` | 1024 × 1536, 177 KB | The koi sheet to the common spec, as a carp print: a black key line, bold scale arcs, flat colour. Four rows of 384 pixels, each from x 62 (the barbels) to a tail tip at 962, the spine on its row's middle line (y 192, 576, 960, 1344); one drawing, its upper half mirrored onto the lower, so the spine is exact. Row 1 ochre `#E9B44C` with paper-white fins; row 2 paper white with one vermilion spot on the head; row 3 in greys with three grey patches, row 4 with four. The patches are irregular and not the same either side of the spine. The line is cleaner and more even than a cut block's. |
 | `koi-mask.webp` | 1024 × 1536, 11 KB | White over the patches of rows 3 and 4 (about 14% of each fish), soft by 2 to 3 pixels, black elsewhere. |
+| `bed.webp` | 2048 × 1152, 78 KB | The water alone, opaque to every edge: Prussian blue in flat tones, long swells in a dark key line that curl at their right ends, lighter bands between the lines. The left third is one dark blue with two thin lines across it; the water lightens to the right and most of all at the lower right. No foam, nothing in it. Painted at 1672 × 941 and enlarged, so the line is a little soft at full size; the tones are graded more smoothly than a block prints them. |
+| `bed-tall.webp` | 1080 × 1920, 63 KB | The same water painted again upright, not a crop: the top third dark with two thin lines, the swells below it running across, dark at the top to light at the bottom. Painted at 941 × 1672 and enlarged. |
+| `paper.webp` | 512 × 512, 12 KB | Washi grain, greyscale, opaque, light (mean 225 of 255, a spread of about 5), with fine pale fibres; it tiles on all four sides (the edges are crossfaded into each other, and the slow drift of tone is taken out). The grain is fine: meant to be multiplied in at its own size or larger. |
+| `lilies.webp` | 1024 × 512, 84 KB | Eight motifs in a 4 × 2 grid of 256-pixel cells, from above, at one scale, flat colour in a key line with a little paper grain in the fills. Top row: three lotus leaves with a notch (225, 179 and 140 pixels across), an open pink lotus. Bottom row: an open white lotus, a red maple leaf, an orange one, three cherry petals together in one cell. Each is at least 14 pixels clear of its cell's edge. |
 
 #### Star chart
 
@@ -325,6 +337,8 @@ In `public/pond/stars/`, and in use. One colour, `#C9D4F0`, its strength in the 
 | --- | --- | --- |
 | `koi-figures.webp` | 1024 × 512, 31 KB | Two koi from above in outline, heads to the left, in two 512-pixel cells: one straight (46, 184, 424, 163), one in a shallow S (in its own cell: 40, 185, 435, 167). A few scale arcs and fin rays, no fill. Plainer than an atlas figure. |
 | `grid.webp` | 1024 × 1024, 51 KB | A grid that tiles on all four sides, made in code: eight meridians and eight parallels to a tile, each gently bowed (so it reads as a chart, not graph paper) and a little uneven in strength, every fourth one heavier and ticked. No frame, equator or ecliptic. Meridians that draw together, as on the plate, can't tile, so these stay evenly spaced: it is a quieter thing than the plate. |
+| `nebulae.webp` | 1024 × 512, 151 KB | Eight motifs in a 4 × 2 grid of 256-pixel cells, each fitted to its cell with 14 pixels clear, in the one pale line (`#C9D4F0`, the tone carried by the alpha). Top row: a ringed planet, hatched; a nebula as stippling, dense at its middle; a cluster of dots with three six-pointed stars; an armillary sphere of five rings. Bottom row: a comet, its head at the lower left; a spiral nebula in dotted arms; a wreath of sixteen six-pointed stars round an empty middle (made in code); a crescent moon, hatched, open to the right. They are bolder and plainer than an atlas's engraving, so that they read small. |
+| `dove.webp`, `spider.webp` | 512 × 512, 40 KB and 78 KB | One pose each, from above, facing right, in the same pale line: the dove with wings spread (315 × 468 at 98, 22), six stars on it joined by straight lines; the spider with legs spread (457 × 468 at 27, 22), its segments and hair drawn, five small stars on it. The dove's line is thin and its hatching sparse; the spider reads as a specimen plate more than a constellation figure. |
 
 #### Ink
 
@@ -340,6 +354,8 @@ its red), entering at the right edge and reaching left, the left third empty.
 | `willow.webp` | 56 KB | Willow fronds hanging from a branch at the upper right: 359, 73, 665, 820. |
 | `lotus.webp` | 77 KB | A lotus leaf in wet wash, a flower in line above it and a bud, on stems from the lower right: 358, 194, 666, 636. |
 | `reeds.webp` | 75 KB | Reeds bending from the right, a goose flying in at the top and one standing among them: 364, 90, 660, 840. |
+| `stems.webp` | 42 KB | Withered lotus (残荷), 1024 × 1024 like the others and stored the same way (near-black, the tone in the alpha): three dry stems entering from the right edge and folding over, a seed-pod hanging at 538, 236 and a curled dead leaf below it; the paint is 538, 236, 486, 587, and the left half is empty. Sparse, as asked; the stems are thin, so it may want more strength than the reeds when multiplied in. |
+| `dove.webp`, `spider.webp` | 16 KB and 27 KB | 768 × 256 each, three poses in 256-pixel cells, from above, facing right, at one scale, stored as the others are. The dove left as bare paper inside a few dark strokes at wing tips and tail: sitting (115 × 54), wings half open (117 × 134), flying (117 × 234). The spider in wet grey and black: sitting (193 × 94), walking (189 × 144), jumping (234 × 170). The dove's body has no tone of its own, so on the paper only its edges and tips show. |
 
 
 #### Egyptian relief
@@ -385,6 +401,10 @@ In `public/pond/relief/`, each picture as a pair that lines up to the pixel: `-c
 | `lotus-c.webp`, `lotus-h.webp` | 1024 × 512, 98 KB and 33 KB | Eight motifs in a 4 × 2 grid of 256-pixel cells, each at least 18 pixels clear of its cell's edge. Top row: two open lotus flowers, a blue bud, a green bud. Bottom row: two leaves from above, with a notch and veins, a papyrus clump, a duck facing left (18, 70, 238, 185). |
 | `stone-h.webp` | 1024 × 1024, 167 KB | The height of a dressed limestone face, made in code, not by the image model: short parallel chisel strokes in drifting directions, fine pores, a few deeper pocks and hairline flaws. It averages 128 and stays low (nearly all within 10 of it; the deepest pock is 108, nothing is above 133), so the carvings stand well clear. It tiles on all four sides; the dressing is even all over, with no large feature to repeat. |
 | `koi-c-bold.webp`, `koi-h-bold.webp`, `koi-mask-bold.webp` | 1024 × 1536, 177 KB, 88 KB and 14 KB | The koi sheet cut bolder, for the size a koi is drawn at: the same fish, outline and places; about 16 scales along the body where there were 30, and 3 across where there were 6, their lines 6 pixels where they were 3; fewer, wider fin rays; plain round eyes; an outline of 6 pixels. The patches are where they were and the mask is the same file as `koi-mask.webp`, byte for byte. The height is cut from the new lines (face 128, highest 158, lowest 115). The scales are drawn by rule and look it; a few joins at the fins' roots are angular. |
+| `papyrus-c.webp`, `papyrus-h.webp` | 512 × 1024, 67 KB and 27 KB | A papyrus clump in profile: seven stems with fan umbels and two blue buds rising from a tuft of leaves; the paint is 30, 226 to 482, 797 (it is as wide as it is tall, so the top and bottom of the picture are bare). |
+| `duck-c.webp`, `duck-h.webp` | 512 × 512, 26 KB and 9 KB | A duck in profile facing right, standing: blue head and wing, green neck and flank, red ochre breast and legs, a yellow bill; 30, 101 to 482, 411. |
+| `cartouche-c.webp`, `cartouche-h.webp` | 512 × 768, 36 KB and 14 KB | An empty cartouche, upright: a rope ring in yellow with its tied bar at the bottom, 89, 30 to 423, 738. Nothing inside it: bare stone at the face's height. |
+| `dove-c.webp`, `dove-h.webp`, `spider-c.webp`, `spider-h.webp` | 512 × 512, 32, 13, 58 and 22 KB | One pose each, from above, facing right. The dove with wings spread, its body bare stone and its wings and tail in bands of blue, yellow, green and red (105, 26 to 407, 486). The spider with legs spread, banded in all four colours, with large round eyes (26, 34 to 486, 477); it is busier and more of a cartoon than anything else on the wall. These are raised like the rest, not sunk: the height is made the same way for every picture. |
 
 - **The paint** is flat colour in the look's palette inside a dark line, faded a little, with 28% of
   it worn away in patches and speckle, more at the edges; where it is gone the file is transparent.
@@ -397,6 +417,14 @@ In `public/pond/relief/`, each picture as a pair that lines up to the pixel: `-c
 - Seen under a raking light, the scales and the narrow petals read a little rounded, and the papyrus
   rays are fine for this size. The drawing is cleaner and more regular than a tomb wall's.
 
+
+#### Blueprint
+
+In `public/pond/blueprint/`, delivered and not yet used.
+
+| File | Size | What is in it |
+| --- | --- | --- |
+| `dove.webp`, `spider.webp` | 512 × 512, 43 KB and 55 KB | One pose each, from above, facing right, as line drawings in `#EAF3FF` with no fill (the tone carried by the alpha): the dove with wings spread (358 × 468 at 77, 22), the spider with legs spread (468 × 465 at 22, 23), each with a dashed centre line and a few station ticks. The dove's line is thin and faint next to the spider's, and the spider's joints are drawn as circles. |
 
 #### Water
 
@@ -469,6 +497,29 @@ the revised renders are approved.
   green as autumn comes) and their flowers (a bud as summer comes, open at its height, none in autumn).
   The sheet is fetched once the pond has settled, never on the first screen, and the drawn pads stand
   until it has come. The first sheet, with cells of 256, is gone.
+- **`dragon-boat.webp`**, 1024 × 512, 94 KB: the dragon boat from straight above, bow to the right,
+  in two rows of 256, like a softened photograph. The hull is 940 pixels long (x 42 to 982) and 81
+  across, its middle line on y 128 of its row; red lacquer inside, a band of gold scales along each
+  gunwale, a gold and green dragon's head with horns and whiskers at the bow, a green tail at the
+  stern, a drummer in red with a drum behind the head, two files of nine paddlers in white, a
+  helmsman in green with a long oar trailing aft. Row 1: the paddles reaching forward. Row 2: the
+  same picture with the paddles mirrored to point aft, so everything but the paddles outside the
+  hull is the same to the pixel in both. Two things are not as asked: with its paddles the boat is
+  191 pixels across (y 34 to 225 of its row), not 110, since paddles drawn shorter stopped reading
+  as paddles; and in row 2 the paddlers' arms inside the hull still reach forward, which does not
+  show at 240 pixels. The dragon's mouth is closed, seen from above.
+- **`lanterns.webp`**, 512 × 256, 22 KB: two cells of 256, from above, each about 228 pixels
+  across: a river lantern (two rings of pink paper petals round a candle in a cup) and a red paper
+  lantern (a red disc, ribs running out from a gold cap). No glow, no shadow.
+- **`afloat.webp`**, 1024 × 512, 60 KB: eight things in a 4 × 2 grid of 256-pixel cells, from above,
+  each fitted to its cell (so they are not at one scale), 16 pixels clear at least. Top row: two
+  cherry petals, a red maple leaf, a yellow ginkgo leaf. Bottom row: a brown oak leaf, then a folded
+  paper boat three times, in white, cream and grey, lying along the row.
+- **`dragonfly.webp`**, 1024 × 256, 48 KB: one dragonfly in four cells of 256, from above, head to
+  the right, the body on y 128 and the same size in each (about 172 pixels long). The wings: spread
+  and upright, swept back a little, half raised and narrow, swept back and wide. The bodies were
+  painted four times, so they differ by a pixel or two between frames, and the wings are milky, not
+  clear.
 
 
 #### What is drawn by code, and what should be a picture
@@ -526,16 +577,21 @@ flying thing seen from above (a crane or a butterfly for Dunhuang, a bee or a sw
 **The round asked for now** (every line is already in a look's kit below, or is new there; make them
 in this order, commit each lot as it is done, and say in its table what came out):
 
-1. Water: `dragon-boat`, `lanterns` (new), then `afloat` and `dragonfly`.
-2. Ukiyo-e: `bed` (new: the look has no painted water of its own), then `paper` and `lilies`.
-3. 青花: `lotus`, then `medallion`.
+All of it but line 9 is delivered and waits to be wired in; what came out is in each look's table
+above.
+
+1. Water: `dragon-boat`, `lanterns`, `afloat`, `dragonfly`.
+2. Ukiyo-e: `bed`, `bed-tall`, `paper`, `lilies`.
+3. 青花: `lotus`, `medallion`.
 4. Dunhuang: `lotus`.
 5. Star chart: `nebulae`.
-6. Monet: the autumn row of lilies, then `dragonfly`.
+6. Monet: `lilies-autumn`, `dragonfly`.
 7. Ink: `stems`; the seals stay on hold until a seal-script face is chosen.
-8. Egyptian relief: `papyrus`, `duck`, `cartouche`.
-9. Each painted look's `afloat` sheet (above).
-10. The dove and the spider dressed for each look, where a kit asks for them, last.
+8. Egyptian relief: `papyrus`, `duck`, `cartouche`, each as a pair.
+9. Each painted look's `afloat` sheet (above): still wanted.
+10. The dove and the spider dressed for ink, Monet, 青花, Dunhuang, the star chart, the blueprint
+    and the relief. They are drawn by the image model from the brief's words, not from the Blender
+    sheets, so their proportions are not those sheets'.
 
 **For every picture, unless its line says otherwise**
 
@@ -635,16 +691,16 @@ like clear water over stones, nothing looks pasted on.
    light, seamless left to right, under 150 KB together.
 2. Koi: keep the pond's own. No sheet wanted.
 3. Delivered and in use (preview): `lilies-768.webp` (summer pads, autumn pads, two flowers and a
-   bud; cells of 192). P1
+   bud; cells of 192). Delivered, to wire in:
    `afloat.webp`, 1024 × 512, 4 × 2: two cherry petals, three autumn leaves (maple, ginkgo, oak), a
    folded paper boat from above in three tones.
 4. Ornaments: none.
 5. Press: none (it is the water itself).
 6. Dove and spider: the neutral sheets as rendered: delivered (`dove.webp`, `spider.webp`), and drawn
    from in a preview build; the revised ones replace them.
-7. P1 `dragonfly.webp`, 1024 × 256, four frames of a dragonfly from above, wings in four positions
+7. Delivered, to wire in: `dragonfly.webp`, 1024 × 256, four frames of a dragonfly from above, wings in four positions
    of a beat.
-8. **P0, new:** the dragon boat of the Dragon Boat festival, which is three paths today and reads as
+8. **Delivered, to wire in:** the dragon boat of the Dragon Boat festival, which is three paths today and reads as
    a red sliver. `dragon-boat.webp`, 1024 × 512, two frames stacked in rows of 256, the boat from
    straight above, bow to the right, about 940 pixels long and at most 110 across with its paddles,
    centred in its row. A long narrow hull in red lacquer with a band of gold scales along each side;
@@ -656,7 +712,7 @@ like clear water over stones, nothing looks pasted on.
    differ. No water, wake, spray or shadow (the pond draws its own wake). Drawn about 240 pixels
    long on screen, so keep the shapes bold: a head that reads at that size matters more than
    detail. In the manner of the water look's own pictures (like softened photographs). Under 120 KB.
-9. **P1, new:** `lanterns.webp`, 512 × 256, two cells of 256, from straight above: a river lantern
+9. **Delivered, to wire in:** `lanterns.webp`, 512 × 256, two cells of 256, from straight above: a river lantern
    (a paper lotus of pale pink petals round a small candle) and a red paper lantern (round, gold
    caps top and bottom, ribs showing). No glow painted (the pond adds the light), no shadow. Each
    is drawn about 40 pixels across. Under 40 KB.
@@ -669,12 +725,12 @@ is most of it.
    `#B8382A`). It replaces the drawn ones only if it is clearly better in motion.
 3. Seasons: delivered and in use (`willow`, `lotus`, `reeds`, `plum`). Composited by multiplying
    into the paper, faded at their outer edges.
-   P1 `stems.webp`, 1024 × 1024, withered lotus (残荷) in ink: a few dry bent stems, a curled brown
+   Delivered, to wire in: `stems.webp`, 1024 × 1024, withered lotus (残荷) in ink: a few dry bent stems, a curled brown
    leaf, a seed-pod, entering from the right edge like the others; it joins the reeds in late autumn
    and stands alone under the plum in winter.
 4. Ornaments: none; the inscription and the 锦程 seal are type.
 5. Press: the shader's blot. Nothing wanted.
-6. Dove and spider: P1, each as three ink-wash poses on one sheet `dove.webp` / `spider.webp`,
+6. Dove and spider: delivered, to wire in: each as three ink-wash poses on one sheet `dove.webp` / `spider.webp`,
    768 × 256 (sitting, moving, wings or legs spread), in the manner of Bada Shanren's birds:
    a few wet strokes, black and grey. Multiplied into the paper.
 7. P0 `seals.webp`, 1024 × 768, 4 × 3, true seal script (篆书), vermilion `#B8382A`, the stone's
@@ -686,7 +742,7 @@ is most of it.
 
 **Ukiyo-e.** Judge it by: a Hokusai or Hiroshige print at arm's length: flat colour, a key line,
 bokashi gradation, paper showing.
-1. **P0, new:** `bed.webp`, 2048 × 1152, opaque to every edge, with `bed-tall.webp`, 1080 × 1920, the
+1. **Delivered, to wire in:** `bed.webp`, 2048 × 1152, opaque to every edge, with `bed-tall.webp`, 1080 × 1920, the
    same water painted again upright (not a crop). The water of a print, seen from above, with nothing
    in it: flat Prussian blue in three or four tones (`#16365f`, `#1f4a7a`, `#33638c`, a little
    `#8fb4c8`), the swell as long carved contour lines that run in parallel bands and curl at their
@@ -696,9 +752,9 @@ bokashi gradation, paper showing.
    of Hokusai's and Hiroshige's water, not a copy of a print. It replaces the shader's bands, which
    read as blotches; the shader keeps the moving foam and the press. Under 300 KB and 120 KB (a bed
    may pass the budget, with its line in the size check).
-   P1 `paper.webp`, 512 × 512, washi grain with a few long fibres, greyscale, opaque, seamless.
+   Delivered, to wire in: `paper.webp`, 512 × 512, washi grain with a few long fibres, greyscale, opaque, seamless.
 2. Delivered and in use: `koi.webp` + mask, as a carp print.
-3. P1 `lilies.webp`, 1024 × 512, 4 × 2: lotus leaves and flowers as a print draws them from above;
+3. Delivered, to wire in: `lilies.webp`, 1024 × 512, 4 × 2: lotus leaves and flowers as a print draws them from above;
    maple leaves and cherry petals for the seasons.
 4. Ornaments: none (no cartouche: it was tried and taken out).
 5. Delivered and in use: `waves.webp`, for the press and the arrival.
@@ -711,7 +767,7 @@ bokashi gradation, paper showing.
 2. P1 `koi.webp` (no mask needed: visitors are told apart by their dimension labels): white line
    drawings of a koi from above with a centre line, station marks along the spine and the fins'
    construction lines, line only, no fill, the line `#EAF3FF`.
-6. Dove and spider: P2, the same as line drawings, one pose each, 512 × 512.
+6. Dove and spider: delivered, to wire in: the same as line drawings, one pose each, 512 × 512.
 Everything else is ruled in the shader. Nothing more wanted.
 
 **ASCII.** Characters only. Nothing wanted.
@@ -719,25 +775,25 @@ Everything else is ruled in the shader. Nothing more wanted.
 **Monet.** Judge it by: at thumbnail size it is a late Nymphéas panel.
 1. Delivered and in use: `bed`, `bed-1280`, `bed-tall`.
 2. Delivered and in use: `koi-v2` + mask, to the common spec.
-3. Delivered and in use: `lilies`. P1: an autumn row for it (pads gone yellow-brown), 1024 × 256.
+3. Delivered and in use: `lilies`. Delivered, to wire in: an autumn row for it, `lilies-autumn.webp` (pads gone yellow-brown), 1024 × 256.
 4. Ornaments: none.
 5. Delivered, not yet used: `strokes`, `canvas`. For the press and the arrival.
-6. Dove and spider: P1 `dove.webp`, `spider.webp`, 768 × 256, three poses each as a few loaded
+6. Dove and spider: delivered, to wire in: `dove.webp`, `spider.webp`, 768 × 256, three poses each as a few loaded
    oil dabs, soft edges, no line.
-   P1 `dragonfly.webp`, 512 × 256, two dragonflies as a few thin dabs (the drawn one is only
+   Delivered, to wire in: `dragonfly.webp`, 512 × 256, two dragonflies as a few thin dabs (the drawn one is only
    dimmed for now).
 7. Seal: on the ink sheet.
 
 **青花.** Judge it by: a Yuan or early Ming blue-and-white dish seen from above: cobalt only, on
 white, the blue pooling at line ends.
-1. Bed: the shader's glaze and crackle. P1 `medallion.webp`, 1024 × 1024: a double ring, and in it
+1. Bed: the shader's glaze and crackle. Delivered, to wire in: `medallion.webp`, 1024 × 1024: a double ring, and in it
    two koi among lotus and water-weed in line and wash; it lies large and pale in the right half.
 2. Delivered: `koi` + mask, to the common spec.
-3. P1 `lotus.webp`, 1024 × 512, 4 × 2, in the cobalt: three lotus leaves from above, two flowers,
+3. Delivered, to wire in: `lotus.webp`, 1024 × 512, 4 × 2, in the cobalt: three lotus leaves from above, two flowers,
    a bud, a seed-pod, a spray of water-weed. They replace the shader's pad outlines.
 4. Delivered: `rim`, `corner`.
 5. Press: the shader's craze line. Nothing wanted.
-6. Dove and spider: P1 `dove.webp`, `spider.webp`, 768 × 256, three poses each in cobalt line and
+6. Dove and spider: delivered, to wire in: `dove.webp`, `spider.webp`, 768 × 256, three poses each in cobalt line and
    wash.
 7. Seal: on the ink sheet; the stamp is shown in cobalt, as a reign mark is.
 
@@ -746,10 +802,10 @@ dark painted game mural.
 1. Delivered and in use: the figures, `sky-flowers`, `border`, `cloud-trail`, `halo`; `caisson`
    delivered, to be placed.
 2. Delivered and in use: `koi.webp` + mask, as mural fish.
-3. P1 `lotus.webp`, 1024 × 512, 4 × 2: lotus leaves and flowers as cave ceilings paint them, flat
+3. Delivered, to wire in: `lotus.webp`, 1024 × 512, 4 × 2: lotus leaves and flowers as cave ceilings paint them, flat
    mineral green, white and cinnabar in the same line.
 4. Delivered: `border`. 5. Press: the shader's flaking. Nothing wanted.
-6. Dove and spider: P1 `dove.webp`, `spider.webp`, 768 × 256, three poses each in the wall's
+6. Dove and spider: delivered, to wire in: `dove.webp`, `spider.webp`, 768 × 256, three poses each in the wall's
    manner (the dove as the white birds of the murals).
 7. Seal: on the ink sheet.
 
@@ -757,11 +813,11 @@ dark painted game mural.
 1. Delivered and in use: `grid.webp`, a grid that tiles (the plate it replaced is gone).
 2. Delivered and in use: `koi-figures`. P1: the same to the common spec (four rows,
    outline and engraved scales only, with a mask of where a visitor's colour tints the line).
-3. P1 `nebulae.webp`, 1024 × 512, 4 × 2: engraved discs and wreaths that stand for the lily pads
+3. Delivered, to wire in: `nebulae.webp`, 1024 × 512, 4 × 2: engraved discs and wreaths that stand for the lily pads
    (a ringed planet, a nebula as stippling, a cluster, an armillary ring), the pale line `#C9D4F0`.
 4. P2 `compass.webp`, 512 × 512, a compass rose in the same engraving.
 5. Press: the shader's star. Nothing wanted.
-6. Dove and spider: P1 as engraved constellation figures, one pose each, 512 × 512 (Columba the
+6. Dove and spider: delivered, to wire in: as engraved constellation figures, one pose each, 512 × 512 (Columba the
    dove; a spider in the same hand).
 7. Seal: on the ink sheet.
 
@@ -774,11 +830,11 @@ green `#5E8F6A`, red ochre `#A8482C`, yellow `#D6A23E`, black line; transparent 
 2. Delivered and in use: `koi-h.webp`, `koi-c.webp` + `koi-mask.webp`, to the common spec.
    Delivered and in use: the bolder cut, `koi-c-bold.webp`, `koi-h-bold.webp`, `koi-mask-bold.webp`
    (the first cut is gone).
-3. Delivered and in use: `fish`, `lotus`, `frieze`. P1 `papyrus`, 512 × 1024, a papyrus clump; `duck`, 512 ×
+3. Delivered and in use: `fish`, `lotus`, `frieze`. Delivered, to wire in: `papyrus`, 512 × 1024, a papyrus clump; `duck`, 512 ×
    512, a duck in profile.
-4. P1 `cartouche`, 512 × 768, an empty cartouche ring, upright, for the solar term. Nothing in it.
+4. Delivered, to wire in: `cartouche`, 512 × 768, an empty cartouche ring, upright, for the solar term. Nothing in it.
 5. Press: a chip and dust, in the shader. Nothing wanted.
-6. Dove and spider: P1 as sunk relief, `dove-h/-c`, `spider-h/-c`, one pose each, 512 × 512 (the
+6. Dove and spider: delivered, to wire in (raised, like the rest): `dove-h/-c`, `spider-h/-c`, one pose each, 512 × 512 (the
    dove in the manner of the birds of the marsh scenes).
 7. Seal: 刻, on the ink sheet. No hieroglyphic text anywhere, real or invented.
 
