@@ -154,7 +154,7 @@ pull request and starts CI on it itself.
 - `npm run test:smoke` opens every app in the registry in a production
   build and fails on an uncaught error, a console error, a crashed
   window or anything the Content Security Policy in `vercel.json`
-  refuses or would refuse (its Report-Only one included). A new app is
+  refuses. A new app is
   covered once it's registered; a new origin the site fetches from, or a
   changed inline script's hash, goes in the policy in the same change.
 
