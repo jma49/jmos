@@ -140,8 +140,13 @@ koi moved to the common sheet. What is left of those:
    (`RM=1` with `tools/pond/pol.cjs`): each cross-fades in and out with no error. Seen as stills at
    800 × 500 only; glow's page type is still hidden 1.5 s into leaving, where the others' has come
    back, which may only be its longer fade.
-9. **A visitor's colour on painted koi, seen with a second visitor** (two browsers signed in, or
-   presence faked), in 青花 and Monet.
+9. **A visitor's colour on painted koi: seen with visitors who are not there.** With `?perf` a tool
+   can show koi for visitors who are not there (`window.__pond.visitors`; `VISITORS=1` with
+   `tools/pond/pol.cjs` or `koi.cjs`). Three were added, in blue, violet and green: in ukiyo-e and
+   Monet their patches take the colour through the mask and read clearly; in 青花 the colour is laid
+   under the cobalt wash and is pale, paler still under the title. Whether 青花 should show a
+   visitor's colour more strongly, or keep to cobalt, is Jincheng's to say. Not done with two real
+   browsers signed in.
 10. **The finish checklist, ink as the benchmark,** for every look: title page; every chapter
     (Timeline, Photos, Music, Notes, Chat, About, Account, ⌘K, the album) with rules, buttons, focus
     rings, scrollbars, selection, hover, the photo viewer; the press; tags; gauge; clock and term;

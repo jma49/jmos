@@ -1,6 +1,6 @@
 // @ts-nocheck (a scratch tool kept from the session: see docs/agents/pond-handoff.md)
 // polish shots: node pol.cjs <dist> <w> <h> <dsf> <tag> <looks,..> [phone]
-// (RM=1 runs under reduced motion and also pictures each look leaving and gone; PHASE=dawn|day|dusk|night sets the time of day)
+// (RM=1 runs under reduced motion and also pictures each look leaving and gone; PHASE=dawn|day|dusk|night sets the time of day; VISITORS=1 adds three visitors' koi, in blue, violet and green)
 const { chromium } = require('playwright');
 (async () => {
   const [, , dir, w, h, dsf, tag, looks, phone] = process.argv;
@@ -32,8 +32,16 @@ const { chromium } = require('playwright');
   const p = await ctx.newPage();
   const errs = [];
   p.on('pageerror', (e) => errs.push(e.message.slice(0, 400)));
-  await p.goto(srv.url, { waitUntil: 'load' });
+  await p.goto(srv.url + (process.env.VISITORS ? '?perf' : ''), { waitUntil: 'load' });
   await p.waitForTimeout(10000);
+  if (process.env.VISITORS)
+    await p.evaluate(() =>
+      window.__pond.visitors([
+        { id: 'a', username: 'mei', color: '#3aa7c9' },
+        { id: 'b', username: '', color: '#8a5cf0' },
+        { id: 'c', username: 'tomo', color: '#3fae6a' }
+      ])
+    );
   if (process.env.PHASE)
     await p.evaluate((v) => {
       const s = document.querySelector('.preview [data-k=phase]');

@@ -2918,8 +2918,9 @@ const dove = { state: 'away', x: 0, y: 0, a: 0, h: 1, spread: 1, ph: 0, dip: 0, 
 const flies = [0, 1].map((i) => ({ x: -50, y: -50, a: 0, tx: 0, ty: 0, next: 0, tone: i ? '#d6503a' : '#3aa7c9', a2: 0 })),
   flakes = Array.from({ length: 60 }, (_, i) => ({ x: Math.random(), y: Math.random(), z: Math.random(), i: i / 60, s: rnd(0.7, 1.4) }));
 const doveSize = () => (big ? 64 : 48);
-// with ?perf, where the two are and what they are doing, for a tool that pictures them (tools/pond/life.cjs)
-if (PERF) window.__pond = { dove, spider };
+// with ?perf, for the tools that picture the pond (tools/pond/): where the two are and what they are doing,
+// and a way to show visitors who are not there (it changes this browser's picture only)
+if (PERF) window.__pond = { dove, spider, visitors: (list) => seeVisitors(list) };
 function callDove() {
   if (!life || dove.state !== 'away') return;
   const spots = padSpots.filter((_, i) => i !== spider.pad),

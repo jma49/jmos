@@ -411,7 +411,7 @@ vec3 lookRelief(){
   vec2 Q=P+gG*70.; float row=floor(Q.y/28.), zx=Q.x/30.+row*.37+uTime*.012*(mod(row,2.)<1.?1.:-1.)+gH*2.;
   float zig=abs((fract(Q.y/28.)-.5)*28.-(abs(fract(zx)-.5)*2.-.5)*11.), groove=(1.-smoothstep(.9,2.6,zig))*(1.-proud)*(1.-gCalm)*smoothstep(.15,.22,uv.y);
   // the surface: its height above the stone's face, in pixels
-  float h=ph*34.+smoothstep(.08,.7,fb)*4.6+pb*3.2+tb*2.2-groove*1.1+(noise(P*.45)-.5)*.22+(noise(vec2(P.x+P.y,P.x-P.y)*vec2(.03,.16))-.5)*.16;
+  float h=ph*34.+smoothstep(.08,.7,fb)*4.6+pb*3.2+tb*2.2-groove*.75+(noise(P*.45)-.5)*.22+(noise(vec2(P.x+P.y,P.x-P.y)*vec2(.03,.16))-.5)*.16;
   // (scales cut into the koi, veins into the pads)
   h-=smoothstep(.5,.9,f0.a)*(1.-smoothstep(.5,1.5,abs(length(fract(P/7.+vec2(floor(P.y/7.)*.5,0.))-vec2(.5,1.))*7.-4.)))*.35;
   h-=pd.a*(1.-smoothstep(.0,.12,abs(fract(atan(P.y-uCss.y*.5,P.x-uCss.x*.5)*4.)-.5)-.44))*.5;
@@ -443,7 +443,7 @@ vec3 lookRelief(){
   c=mix(c,mix(tp.rgb/max(tp.a,1e-3),stone,.45),tp.a*.7);
   c=mix(c,dark,clamp(max(max((fa-fb)*3.4,abs(pd.a-pb)*2.6),abs(tp.a-tb)*2.4),0.,1.)*.7*flt);
   c=mix(c,stone*1.06,bare);
-  c*=mix(1.,clamp(lit,.2,1.9),.9)*(1.-shade*.34);
+  c*=mix(1.,clamp(lit,.42,1.65),.9)*(1.-shade*.34);
   c*=mix(vec3(1.),vec3(1.,.92,.78)*.88,night);
   c+=vec3(.9,.88,.82)*dust*.5;
   // winter: frost on the stone, white in the cuts
