@@ -147,6 +147,51 @@ commands; their seals are marked `preview` in `seals.ts`.
 - The gestures are rules apart from the pond (`gestures.ts`), with the table of all ten looks at the
   top; `gestures.test.ts` tries every pair. A new gesture goes in the table and gets its pairs.
 
+### Pictures for the Dunhuang look
+
+The flying figures (飞天) can't be drawn well in a shader, so they are pictures, in
+`public/pond/dunhuang/`. They are delivered but not yet used: `lookDunhuang()` still draws only the two
+ribbons the figures would trail.
+
+| File | Size | What is in it (pixels with any paint, as x, y, width, height) |
+| --- | --- | --- |
+| `feitian-pipa.webp` | 1536 × 768, 135 KB | One figure playing a pipa, pale skin, skirt in green and blue: 114, 116, 1330, 519. The body is the left 45%, the ribbons the rest. |
+| `feitian-flowers.webp` | 1536 × 768, 116 KB | One figure scattering lotus flowers from a tray, brown skin, cinnabar skirt, descending: 82, 46, 1367, 658. |
+| `sky-flowers.webp` | 1024 × 512, 38 KB | Eight small motifs in a grid of 4 × 2 cells of 256 pixels, each inside the middle 152 pixels of its cell. Top row: a blue cloud, a green cloud, a red cloud, an open lotus. Bottom row: a bud, a half-open lotus, two petals, a flaming pearl. |
+
+- **How they are painted:** flat mineral colour inside a dark line, in the look's own palette (blue
+  `#2B6385`, green `#4D856E`, cinnabar `#B34026`, white `#EDE0C2`, line `#2E1C12`, a little ochre
+  `#CC8F38`), on a transparent ground with straight (not premultiplied) alpha. They carry no plaster,
+  flaking or cracks: the shader has those, so lay each picture in under `keep`, the cracks and the soot
+  as the koi and the pads are, and it ages with the wall.
+- **Which way they face:** both figures fly to the left with their ribbons streaming right, which is
+  the way the shader's two ribbons already drift. Mirror the texture's x to fly the other way.
+- **How large:** at 1536 pixels a figure is sharp up to about half the width of a large window at
+  2× and softens beyond that, which the wall's grain mostly hides. Ask for a larger one before
+  stretching it further.
+- **Loading:** fetch them the first time the look is asked for, as its pass is built, never on the
+  first load, and only in a build that has the look. They are same-origin, so the Content Security
+  Policy needs nothing. Each stays under the 200 KB budget of `scripts/check-public-sizes.mjs`.
+
+They come from an image model that only an agent on the owner's machine can reach (Codex's image
+tool, asked from there), not from an agent in the cloud. So the work is split:
+
+- An agent that can't make pictures writes what it needs under "Wanted" below (the subject, the
+  pose and the way it faces, the pixel size, and where it will sit), pushes, and tells the owner.
+- The agent on the owner's machine has them made, looks at each over the wall's colour
+  (`#C29963`), rejects what is cropped, modern-looking or wrong, encodes them as WebP with alpha
+  (`cwebp -q 82 -alpha_q 90 -m 6`), commits them to the same branch, and moves the line from
+  "Wanted" into the table above. The lossless originals stay out of git.
+- To match the ones here, a new picture is asked for as a high Tang Mogao mural (caves 320, 321
+  and 39), flat pigment inside an iron-wire line, the palette above, no shading, no background, no
+  ageing, with a margin of at least 4% on every side.
+
+Wanted:
+
+- A ceiling medallion (藻井) with the three hares that share three ears (cave 407), square, for the
+  quiet middle of the wall. One was made and turned down: the ears came out as three spindles
+  joining the hares' noses. Wanted only if the look has a place for it.
+
 ## Languages
 
 The language is chosen apart from the look: the En / 中 / 日 segments
