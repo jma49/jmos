@@ -5314,7 +5314,6 @@ function straightness() {
 }
 // the cues, drawn in the air: ink gathering under a held finger, the stirred path, a ruler, the typed letters
 function stepGesture() {
-  const now = performance.now() / 1000;
   gest.glint += ((gest.near ? 1 : 0) - gest.glint) * Math.min(1, lifeRaw * 7);
   if (gest.down && !gest.strayed) {
     const held = performance.now() / 1000 - gest.t0;
