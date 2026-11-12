@@ -41,29 +41,30 @@ pass, and the move from drawing things in code to painted pictures. How the pond
   | `inline.mjs` | The build into one HTML file, for the artifact. |
   | `pol.cjs` | Title-page screenshots of given looks at a given size and scale; `DATE=<month index>` shifts the date (seasons), `SHEET=1` adds a chapter, `WAIT` the settle time. |
   | `demo.cjs` | The album in each state and language, a stamp in each look, each new look's title, chapter, press and winter. |
-  | `trans.cjs`, `koi.cjs` | Frame sequences on a virtual clock: a look arriving and leaving; painted koi swimming, turning and curling. |
+  | `trans.cjs`, `koi.cjs` | Frame sequences on a virtual clock: a look arriving and leaving (`PRESS=x,y` adds a press and what it leaves); a look's painted koi swimming, turning and curling (`koi.cjs <dist> <look>`). |
+| `life.cjs` | The dove and the spider through their states, as strips of crops round each, in the looks given (`HOUR` sets the time of day). It opens the page with `?perf`, which hands their places to `window.__pond`. Slow: six minutes a look and more. |
+| `virtual.cjs` | The virtual clock the newer tools share. |
   | `terms.cjs` | Ink in each of the 24 solar terms. |
   | `ab.cjs`, `abdiff.py` | A deterministic A/B of two builds (seeded random, virtual clock, frames stepped by hand) and the largest pixel difference. |
   | `gest5.cjs` | Each look's gesture made with a real pointer, and which look arrives. |
   | `fishcost.cjs`, `pace-nogl.cjs`, `bench.cjs` | The fish layer's CPU time with `?perf`; frames drawn a second with WebGL off; the water shader alone, timed. |
-  | `dove-spider-sprites.patch` | An untested draft of drawing the dove and the spider from their rendered sheets (see the queue). |
-
+  
 ## 2. The state of each look
 
 "Preview" means it exists only in a build with `PUBLIC_POND_PREVIEW=1`.
 
 | Look | State | Pictures in use | Delivered, not used | Wrong or unverified |
 | --- | --- | --- | --- | --- |
-| Water | Live. Unchanged but for the seal on a koi. | none | `public/pond/water/lilies.webp` (not looked at), `public/pond/water/dove.webp`, `public/pond/water/spider.webp` (placeholders, being redone) | Lily pads, petals and the dragonfly are still drawn in code and are the weakest things on it. |
+| Water | Live. Unchanged but for the seal on a koi. In a preview build the dove and the spider are sprites. | `water/dove`, `water/spider` (preview only; placeholders, being redone) | `public/pond/water/lilies.webp` (not looked at) | Lily pads, petals and the dragonfly are still drawn in code and are the weakest things on it. The sprites were seen in frame sequences in the water, ink and the blueprint (flight, landing, sitting, preening, take-off); the other looks' dress was made but not looked at. The spider reads as a dark soft shape on its pad, as the model did. |
 | Ink | Live; Jincheng's favourite and the benchmark. Seasonal motif is now a painting; seasons put right. | `ink/willow`, `lotus`, `reeds`, `plum` | none | Checked at 1280, 1440, 2000 and phone in summer only. Dry lotus stems asked for, not drawn. The seals are still the brush face, not seal script. |
-| Ukiyo-e | Live. Its arrival has a carved-wave front. | none | `public/pond/ukiyo/waves.webp`, `public/pond/ukiyo/koi.webp` + mask (not looked at) | The new front was seen once in a small frame sequence. |
+| Ukiyo-e | Live. Its arrival has a carved-wave front. In a preview build: the great crests on that front, wavelets round a press, painted koi. | `ukiyo/waves`, `koi` + mask (preview only) | none | The crests were judged in a 640 × 400 frame sequence only. The press's wavelets are small beside its two swell rings; whether the rings should thin is a matter of taste on a real screen. |
 | Glow | Live. Goes dark, then relights in rings. | none wanted | none | Seen once in a frame sequence. |
 | Blueprint | Live. Plots its lines before the paper's blue floods in. | none | none | Seen once in a frame sequence. |
 | ASCII | Live. Resolves a cell at a time. | none wanted | none | Seen once in a frame sequence. |
-| Monet | Preview. Rebuilt on its paintings: bed, lilies, koi. | `monet/bed`, `bed-1280`, `bed-tall`, `lilies`, `koi` | `public/pond/monet/koi-v2.webp` + mask (to the common spec; not looked at; `KOI_SHEETS.monet` should move to it), `strokes`, `canvas` | The press is a soft dab from the shader, not the stamps. The dove is only dimmed. Visitors' colours are a tint over the whole fish until the masked sheet is used. |
+| Monet | Preview. Rebuilt on its paintings: bed, lilies, koi. | `monet/bed`, `bed-1280`, `bed-tall`, `lilies`, `koi-v2` + mask | `strokes`, `canvas` | The press is a soft dab from the shader, not the stamps. The dove is only dimmed. |
 | 青花 | Preview. Painted rim and corners; painted koi with visitors' colours through the mask; the frame is the page's margin. | `qinghua/rim`, `corner`, `koi` + mask | none | Lotus and the pads are still shader outlines. The tint through the mask has never been seen with a second visitor. |
-| Dunhuang | Preview. The flying figures are the wall. | `dunhuang/feitian-pipa` (and `-2560`), `feitian-flowers`, `feitian-far`, `sky-flowers`, `border`, `cloud-trail` | `halo`, `caisson`, `koi.webp` + mask (not looked at) | See the queue: phone figure under the controls, the cloud trail across the control row, when the large figure loads. |
-| Star chart | Preview. Koi drawn as constellations in code. | none | `stars/plate`, `koi-figures` | The plate and the figures are not wired in. |
+| Dunhuang | Preview. The flying figures are the wall; mural koi; nothing painted under the controls. | `dunhuang/feitian-pipa`, `feitian-flowers`, `feitian-far`, `sky-flowers`, `border`, `cloud-trail`, `halo`, `koi` + mask | `caisson`, `feitian-pipa-2560` (never fetched while the picture texture is at most 2048 across: see pond.md) | The caisson has no place. Seen at 1280 × 800, 1920 × 900 and a 390 × 844 phone; shorter phones are held by a test, not seen. |
+| Star chart | Preview. Koi drawn as constellations in code, the atlas's koi in outline behind each; the plate's grid in the sky. | `stars/plate`, `koi-figures` | none | Seen once, at 1280 × 800, a few seconds in. The grid repeats mirrored: where a mirror line crosses the window the meridians kink; not seen after minutes of turning. |
 | Egyptian relief | Not built. Replaces the blackboard, which is out of the looks, commands and album; its shader and CSS are still in `newlooks.js` / `newlooks.css` and are to be deleted when the relief stands. | none | `relief/fish`, `lotus`, `frieze` (each `-h` and `-c`) | The whole look. |
 
 Jincheng's words that still stand:
@@ -98,21 +99,25 @@ Jincheng's words that still stand:
 
 ## 4. The queue, in order
 
-1. **Dove and spider as sprites; three.js gone.** Waiting on revised renders (the brief says what).
-   `tools/pond/dove-spider-sprites.patch` draws them from the placeholder sheets in preview builds,
-   frame by state, turned to heading; it is untested. Done when: both behave as now (sit, take off,
-   fly, land; sit, walk, crouch, jump) in a frame sequence, each look dresses them, `life.js` and
-   three.js are no longer fetched (about 500 KB, 130 KB gzipped, and a 512 px 3D render a frame while
-   the dove is out), and the release build drops them too once the renders are approved.
-2. **Ukiyo-e crests** (`ukiyo/waves`): large on the arrival's front, small at a press's breaking
-   edge, where they beat the shader's claws. Then its koi sheet through `KOI_SHEETS`.
-3. **Star chart:** the plate as the sky's engraved grid at low strength, turning with the stars; the
-   koi figures faintly over each constellation, bent along the spine by `drawSprite`.
-4. **Dunhuang leftovers:** the halo behind the pipa player if it reads at that size; the caisson
-   where it fits (the album page or a chapter's header for this look; the wall's left is the
-   title's); on a phone the figure clear of the Preview pill and the controls; the cloud trail off
-   the control row; the 2560 figure fetched only when the drawn figure passes the 1536 one's
-   sharpness (check a 2000 px window at 2×). Its koi sheet through `KOI_SHEETS`.
+Done since this page was first written, in a preview build (each its own commit): the dove and the
+spider as sprites, with three.js and `life.js` no longer fetched; ukiyo-e's crests and koi; the star
+chart's plate and figures; Dunhuang's halo, its koi, and nothing painted under the controls; Monet's
+koi moved to the common sheet. What is left of those:
+
+1. **Dove and spider: the release build.** Waiting on the revised renders (the brief says what). When
+   the `-v2` sheets come: point `SHEETS` in `sprites.js` at them, set the frame counts and order in
+   `doveFrame()` and `spiderFrame()` (and in `sprites.test.ts`), look at every look's dress with
+   `tools/pond/life.cjs`, then draw them from sprites in a release build too and delete `life.js`,
+   the three.js dependency and the models' half of `drawDove()` and `drawSpider()` (about 500 KB,
+   130 KB gzipped, and a 512 px 3D render a frame while the dove is out).
+2. **Ukiyo-e, to ship:** the crests and the painted koi are behind the preview flag (`CRESTS` in the
+   pass, `KOI_SHEETS`). Shipping them means the look fetches its pictures in a release build: a
+   decision for Jincheng once he has seen them on a real screen.
+3. **Star chart:** look at the grid after the sky has turned a while; if the mirror line's kink shows,
+   ask for a plate that tiles.
+4. **Dunhuang:** a place for the caisson (the album page or a chapter's header for this look; the
+   wall's left is the title's). `feitian-pipa-2560.webp` and its line in
+   `scripts/check-public-sizes.mjs` can go unless the picture texture is to grow past 2048.
 5. **Layout glides between looks (FLIP).** Today the title page and controls fade out while a look
    arrives and come back in their new places. Wanted: they stay visible where the look allows and
    move from the old box to the new (measure, apply, transform back, ease), text that changes face
@@ -172,7 +177,7 @@ Jincheng's words that still stand:
   folder asked for but not delivered goes in its `ALLOWED` list; a file wanted is named without its
   folder.
 - **The one picture texture** (`uMural`, unit 10) holds the picture of the look last asked for
-  (Dunhuang's wall, Monet's bed, 青花's rim). Going straight from one of those looks to another
+  (Dunhuang's wall, Monet's bed, 青花's rim, the star chart's plate, ukiyo-e's crests). Going straight from one of those looks to another
   swaps it while the old look is still on screen.
 - **`PREVIEW`** in `engine.js` comes from the build flag on this branch's release path and also from
   `?preview` (via `preview.js`); a release build of this branch therefore shows the preview looks to

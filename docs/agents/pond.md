@@ -12,7 +12,8 @@ that open as one tall sheet of glass. Everyone who visits is a koi.
 | --- | --- |
 | `src/pages/index.astro` | The markup, and everything gathered at build time: the timeline (each project's page plus `src/pond/content.ts`), the latest Unsplash photos (`src/lib/photos.ts`), covers resized by `getImage`. It hands them to the script as JSON (`#pond-data`) and keeps a plain-text copy for screen readers and visitors without JavaScript. |
 | `src/pond/engine.js` | Everything that moves: the water (a height field stepped on the CPU), the koi, lily pads, the 24 solar terms and the time of day, ice that cracks and breaks, boats, the dove's and spider's behaviour, the WebGL passes (the pond into a texture, then the glass over it), the chapters, the command bar, the sound effects, the opening. Its sections are marked `/* ===== … ===== */`. |
-| `src/pond/life.js` | Devot's dove and ocra's jumping spider as three.js models built in code, drawn from straight above into a small picture each frame. It and three.js load once the pond has settled. |
+| `src/pond/life.js` | Devot's dove and ocra's jumping spider as three.js models built in code, drawn from straight above into a small picture each frame. It and three.js load once the pond has settled. A preview build never fetches either: it draws the two from sprite sheets. |
+| `src/pond/sprites.js` | The dove and the spider as rendered sprite sheets, for a preview build: which frame a moment calls for (`doveFrame()`, `spiderFrame()`), and how each look dresses the sheets (`dressed()`). `sprites.test.ts` holds the frames to the sheets' grids. |
 | `src/pond/music.ts` | The music: Ryuichi Sakamoto only, the songs `POND_MUSIC` in `content.ts` chooses first and the rest of his in the library the iPod plays (`/api/songs`, or `src/data/songs.json`), played with YouTube's player in a frame clipped to nothing. |
 | `src/pond/people.ts` | Accounts, presence, the guestbook's notes and the chat, through `src/os/social` (the same backend and rules as the desktop). |
 | `src/pond/content.ts` | The pond's wording: the timeline's jobs and schools, each project's colour, mark and highlights, This pond's own entry, the About chapter. |
@@ -234,6 +235,16 @@ ochre (`#CC8F38`) is read as gold leaf and made to glint, so anything meant as g
 colour and anything not meant as gold should avoid it. The loose flowers are fixed on the wall, not
 adrift: riding the petals' wind would need them as sprites on the top layer, which is a later step.
 
+Since then: the halo sits behind the pipa player's head on a wide wall (it reads from about a 1280
+window up; its ochre rim glints as gold). Nothing painted lies under the controls: on a wide wall the
+lower figure, the cloud under her and the falling lotus end `MURAL_FOOT` above the wall's foot, and on
+a narrow one the figure's paint ends `MURAL_FOOT_NARROW` above it (`newlooks.test.ts` holds both). The
+koi are the mural fish of `KOI_SHEETS.dunhuang`, laid in under the wall's wear as they are, a koi's own
+colour snapped to the wall's cinnabar, blue, green or ochre. The larger pipa player is asked for only
+where she is drawn wider than the first one's 1536 pixels; while the picture texture is at most 2048
+across and she takes half the wall, that is nowhere, so the file is never fetched today. The caisson
+has no place yet.
+
 #### Monet
 
 In `public/pond/monet/`, and the look is built on them: the painted water is the bed (`paintBed()` in
@@ -245,7 +256,9 @@ it a little and catches a sheen (`lookMonet()`), the pads and their flowers are 
 Not used yet: `strokes` and `canvas` (the press is a soft dab drawn in the shader, and the arrival's
 front is the shader's; both could take the stamps later).
 
-The koi to the common spec have come as `koi-v2.webp` and `koi-mask.webp` (the table below).
+The koi are the sheet to the common spec, `koi-v2.webp` with `koi-mask.webp` (`KOI_SHEETS.monet`): the
+gold one is mine, the white one with the red dab the visitor's, and the two grey ones take a colour in
+their dabs through the mask, a visitor's own or the pond's koi's own.
 
 | File | Size | What is in it |
 | --- | --- | --- |
@@ -255,8 +268,7 @@ The koi to the common spec have come as `koi-v2.webp` and `koi-mask.webp` (the t
 | `bed-1280.webp` | 1280 × 720, 93 KB | The same picture, for a phone held sideways or a small window. |
 | `bed-tall.webp` | 1080 × 1920, 95 KB | The same pond painted again upright, not a crop: the dark, plain passage across the top third (it averages `#3F6383`; the rest `#648699`), willow reflections and pale sky below. Quieter and softer than the wide one. |
 | `lilies.webp` | 1024 × 768, 137 KB | Twelve motifs in a 4 × 3 grid of 256-pixel cells, each at least 22 pixels clear of its cell's edge, no outline or shadow, soft bristle edges in the alpha. Row 1: three large pads (olive, grey-green with a notch, one catching the light) and a medium olive pad with a notch. Row 2: a medium grey-green pad, a small olive pad, a small light pad, an open white blossom. Row 3: a half-open white blossom, an open pink, a half-open pink, a bud. The large pads are about 210 pixels across, the medium 170, the small 120. |
-| `koi.webp` | 1024 × 768, 166 KB | Three koi from straight above, one to a 256-pixel row, heads to the left: orange (spine at y 128), white with red (384), gold (640). Each runs from a snout at x 62 (barbels to 55) to a tail tip at 958, the spine within 3 pixels of its row's middle. The tails and fins are not quite the same above and below the spine, there is more detail than a few loaded strokes, and the alpha has only 12 levels, so the bristle edges are coarser than the lilies'. If they don't sit well, keep the pond's own koi. |
-| `koi-v2.webp` | 1024 × 1536, 173 KB | The koi again, to the common spec: four rows of 384 pixels, heads to the left, each from x 62 (the barbels) to a tail tip at 962, the spine on its row's middle line (y 192, 576, 960, 1344), within 3 pixels (it is not mirrored, so the fins keep a small natural unevenness). The same fish in the same dabs four times: gold; white with one red dab on the head; two in greys with four darker dabs each, laid differently. The body is slimmer than in `koi.webp`. Smooth alpha (256 levels). `KOI_SHEETS.monet` still reads `koi.webp`, whose rows are 256 pixels: to change over, point it at this file with rows of 384, the tail tip at 962 and the mask, then delete `koi.webp`. |
+| `koi-v2.webp` | 1024 × 1536, 173 KB | The koi again, to the common spec: four rows of 384 pixels, heads to the left, each from x 62 (the barbels) to a tail tip at 962, the spine on its row's middle line (y 192, 576, 960, 1344), within 3 pixels (it is not mirrored, so the fins keep a small natural unevenness). The same fish in the same dabs four times: gold; white with one red dab on the head; two in greys with four darker dabs each, laid differently. The body is slimmer than in `koi.webp`. Smooth alpha (256 levels). In use; the three-koi sheet it replaced is gone. |
 | `koi-mask.webp` | 1024 × 1536, 17 KB | White over the grey dabs of rows 3 and 4 of `koi-v2.webp` (about 30% of each fish), soft by 2 pixels, black elsewhere. |
 
 #### 青花
@@ -275,7 +287,16 @@ visitor's colour laid into their patches through `koi-mask.webp` (`koiPicture()`
 
 #### Ukiyo-e
 
-In `public/pond/ukiyo/`.
+In `public/pond/ukiyo/`, and in use in a preview build (the look itself ships; its pictures don't yet).
+
+- **The crests:** the sheet itself is the look's picture texture (`paintWaves()`, with smaller copies,
+  since a crest is drawn well under the size it was cut at). `lookUkiyo()` rings a press with six of the
+  low wavelets, base to the middle, sinking as the splash dies, in place of the shader's claws; the
+  arrival's front carries the four large crests, standing on the front and rising ahead of it, as tall
+  as 28% of the window and no taller than they were cut. Both are inside `#ifdef CRESTS`, which only a
+  preview build defines, so the pass a release build compiles is unchanged.
+- **The koi:** `KOI_SHEETS.ukiyo`. The shader lays a painted koi in as it is (`uSprite`), without the
+  posterising and the key line it gives the pond's own koi, since the sheet carries its own.
 
 | File | Size | What is in it |
 | --- | --- | --- |
@@ -285,7 +306,14 @@ In `public/pond/ukiyo/`.
 
 #### Star chart
 
-In `public/pond/stars/`. One colour, `#C9D4F0`, its strength in the alpha.
+In `public/pond/stars/`, and in use. One colour, `#C9D4F0`, its strength in the alpha.
+
+- **The plate** is the sky's engraved grid: `paintPlate()` cuts it inside its frame (`STARS.grid`) and
+  lays it to cover the pond in the look's picture texture, which repeats it mirrored, so the grid has
+  no edge; `lookStars()` rules it in faintly after the first stars are out, turning with them.
+- **The figures:** the straight koi (`STARS.figure`) is kept as one row to the koi sheets' measure and
+  bent along each constellation's spine by `Koi.drawSprite()`, faint, behind its stars. The koi in an S
+  is not used: the spine does the bending.
 
 | File | Size | What is in it |
 | --- | --- | --- |
@@ -334,7 +362,24 @@ In `public/pond/relief/`, each picture as a pair that lines up to the pixel: `-c
 #### Water
 
 In `public/pond/water/`: Devot's dove and ocra's jumping spider as sprite sheets, modelled in Blender
-and rendered from straight above. Not used yet: `life.js` still draws them.
+and rendered from straight above. A preview build draws the two from them (`sprites.js`, `drawCell()`
+in `engine.js`) and never fetches three.js or `life.js`; a release build still draws the models, until
+the revised renders are approved.
+
+- **How they are played:** the pond's own behaviour is unchanged; only the picture is. The dove beats
+  once a turn of the phase its shadow already follows, takes off through its six frames in 0.45 s, comes
+  down through the landing's first four below 0.45 of its height and folds up in the last two, sits
+  still while it drinks, and turns its head and preens once it has. The spider's walk advances a loop
+  to each stride it actually covers, so its feet don't slide; it looks up when prey lands or a pointer
+  moves close, gathers, jumps through three frames and lands splayed for a moment.
+- **How each look dresses them** (`DRESS` in `sprites.js`, made once for a look and kept): ink a flat
+  wash, glow and ASCII a flat light, blueprint and the star chart a line with a faint body, ukiyo-e
+  three flat tones inside a key line, 青花 a cobalt line and wash, Dunhuang the wall's white inside its
+  dark line. The water and Monet keep the rendering, in the light of the time of day, with the soft
+  shadow the model's ground gave it.
+- **A new sheet** (the `-v2` ones): change `SHEETS` (the file, the cell, the units a cell spans) and
+  the frame counts and order in `doveFrame()` and `spiderFrame()`; `sprites.test.ts` has the grid.
+- `tools/pond/life.cjs` pictures both through their states in any look.
 
 | File | Size | Cells | Rows, left-aligned, the rest of each row empty |
 | --- | --- | --- | --- |
@@ -392,13 +437,13 @@ light and refraction, the glass) stays in the shader.
 
 | Element | Drawn in | How it reads now | Verdict | Picture wanted |
 | --- | --- | --- | --- | --- |
-| Koi | `Koi.draw()` on the fish canvas, restyled by each look's shader | Good in water and ink; a silhouette restyled in the other looks, which is where they look least like the look | Replace per look, keep in water (and in ink unless a painted one is clearly better) | A sheet per look, bent along the live spine: see "Koi for each look" |
+| Koi | `Koi.draw()` on the fish canvas, restyled by each look's shader; from a painted sheet in ukiyo-e, Monet, 青花 and Dunhuang (preview) | Good in water and ink; a silhouette restyled in glow, blueprint and ASCII, which suits them | Painted per look where a sheet has come; keep in water (and in ink unless a painted one is clearly better) | A sheet per look, bent along the live spine: see the koi sheet in the brief |
 | Lily pads, lotus flowers and buds | `padsNow()` on the pads canvas | Flat discs with a notch, flowers a few ellipses; the weakest thing on the water look | Replace | `water/lilies`, then one per painted look |
 | Petals, autumn leaves | `drawTop()` paths | Leaves pass; petals are two ellipses | Replace petals and leaves together | `water/afloat` sheet |
 | Snowflakes | dots on the air canvas | Fine: they are small and moving | Keep | none |
 | Dragonflies | paths on the air canvas | Stiff; wings are plain ellipses | Replace | `water/dragonfly` sprite, 4 wing frames |
 | Fireflies (preview) | soft dots | Fine | Keep | none |
-| Devot's dove, ocra's spider | three.js models built in code (`life.js`), rendered into a small canvas | Rough close up, and each look can only tint them | Replace with rendered sprites; this also removes the per-frame 3D | Blender job, below |
+| Devot's dove, ocra's spider | three.js models built in code (`life.js`), rendered into a small canvas; rendered sprites in a preview build (`sprites.js`) | The models are rough close up; the sprites are placeholders | Sprites everywhere once the revised renders are approved; that removes three.js and the per-frame 3D | Blender job, below |
 | Paper boats | three paths in `drawTop()` | Read as boats; a little bare | Replace when convenient | in `water/afloat` |
 | Moon, sun glint | shader | Light, not an object | Keep | none |
 | The tree's shade | a texture drawn once | Good on water; wrong on the painted looks (switched off there) | Keep | none |
@@ -410,7 +455,7 @@ light and refraction, the glass) stays in the shader.
 | Festival things (preview) | canvas paths | Lanterns pass; the dragon boat is crude | Replace the boat and the river lanterns | `water/festival` sheet, later |
 | Borders and frames | shader (青花 beads, Dunhuang band) | 青花's beads are plain | Replace | delivered (`qinghua/rim`, `corner`; `dunhuang/border`) |
 | Solar-term block, chapter headers, the album's paper | type and CSS | In keeping | Keep | per look only where asked below |
-| Presses | shader, per look | Good where they are physics (rings, blots); ukiyo-e's claws are stiff | Replace ukiyo-e's | delivered (`ukiyo/waves`) |
+| Presses | shader, per look | Good where they are physics (rings, blots); ukiyo-e's claws are stiff | Ukiyo-e's replaced in a preview build | in use (`ukiyo/waves`) |
 | The pond's mark, timeline marks | PNG files already | n/a | Keep | none |
 
 Highest value, in order: Monet's painted bed; a koi sheet per look (one look first, as the proof);
@@ -526,7 +571,8 @@ like clear water over stones, nothing looks pasted on.
    folded paper boat from above in three tones.
 4. Ornaments: none.
 5. Press: none (it is the water itself).
-6. Dove and spider: the neutral sheets as rendered: delivered (`dove.webp`, `spider.webp`), to wire in.
+6. Dove and spider: the neutral sheets as rendered: delivered (`dove.webp`, `spider.webp`), and drawn
+   from in a preview build; the revised ones replace them.
 7. P1 `dragonfly.webp`, 1024 × 256, four frames of a dragonfly from above, wings in four positions
    of a beat.
 
@@ -556,11 +602,11 @@ is most of it.
 **Ukiyo-e.** Judge it by: a Hokusai or Hiroshige print at arm's length: flat colour, a key line,
 bokashi gradation, paper showing.
 1. P1 `paper.webp`, 512 × 512, washi grain with a few long fibres, greyscale, opaque, seamless.
-2. Delivered, to wire in: `koi.webp` + mask, as a carp print.
+2. Delivered and in use: `koi.webp` + mask, as a carp print.
 3. P1 `lilies.webp`, 1024 × 512, 4 × 2: lotus leaves and flowers as a print draws them from above;
    maple leaves and cherry petals for the seasons.
 4. Ornaments: none (no cartouche: it was tried and taken out).
-5. Delivered: `waves.webp`. To be used for the press and the arrival.
+5. Delivered and in use: `waves.webp`, for the press and the arrival.
 6. Dove and spider: tinted flat, with a key line added in code. Nothing wanted.
 7. Seal: on the ink sheet.
 
@@ -577,8 +623,7 @@ Everything else is ruled in the shader. Nothing more wanted.
 
 **Monet.** Judge it by: at thumbnail size it is a late Nymphéas panel.
 1. Delivered and in use: `bed`, `bed-1280`, `bed-tall`.
-2. Delivered and in use: `koi` (three). Delivered, to change over to: `koi-v2` + mask, to the common
-   spec (the table above says how).
+2. Delivered and in use: `koi-v2` + mask, to the common spec.
 3. Delivered and in use: `lilies`. P1: an autumn row for it (pads gone yellow-brown), 1024 × 256.
 4. Ornaments: none.
 5. Delivered, not yet used: `strokes`, `canvas`. For the press and the arrival.
@@ -603,9 +648,9 @@ white, the blue pooling at line ends.
 
 **Dunhuang.** Judge it by: a Mogao wall of the high Tang, sooted and flaked, with the weight of a
 dark painted game mural.
-1. Delivered and in use: the figures, `sky-flowers`, `border`, `cloud-trail`; `halo` and `caisson`
+1. Delivered and in use: the figures, `sky-flowers`, `border`, `cloud-trail`, `halo`; `caisson`
    delivered, to be placed.
-2. Delivered, to wire in: `koi.webp` + mask, as mural fish.
+2. Delivered and in use: `koi.webp` + mask, as mural fish.
 3. P1 `lotus.webp`, 1024 × 512, 4 × 2: lotus leaves and flowers as cave ceilings paint them, flat
    mineral green, white and cinnabar in the same line.
 4. Delivered: `border`. 5. Press: the shader's flaking. Nothing wanted.
@@ -614,7 +659,7 @@ dark painted game mural.
 7. Seal: on the ink sheet.
 
 **Star chart.** Judge it by: a plate from an eighteenth-century celestial atlas.
-1. Delivered: `plate`. 2. Delivered: `koi-figures`. P1: the same to the common spec (four rows,
+1. Delivered and in use: `plate`. 2. Delivered and in use: `koi-figures`. P1: the same to the common spec (four rows,
    outline and engraved scales only, with a mask of where a visitor's colour tints the line).
 3. P1 `nebulae.webp`, 1024 × 512, 4 × 2: engraved discs and wreaths that stand for the lily pads
    (a ringed planet, a nebula as stippling, a cluster, an armillary ring), the pale line `#C9D4F0`.
