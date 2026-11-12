@@ -94,6 +94,28 @@ back to full going home. A press on paper leaves a blot that spreads
 in `pond.css`, which redefines the palette and puts every chapter on
 paper; a new pane or control needs its ink colours there too.
 
+## The seal album
+
+Each look has a seal (`seals.ts`: the seals, the volumes, the album's state and its words in the three
+languages). The first time a look comes in all the way (`reached()` in `engine.js`, from `stepInk`), by
+gesture, key or ⌘K, its seal is stamped in the corner above the sound, in the look's own manner
+(`#pond[data-look] .stamp` in `pond.css`), with a soft thud; under reduced motion it only appears.
+
+- The album is a sheet (`#seals`, ⌘K "Seals"), not a numbered chapter: a leaf of paper for each volume
+  (册), found seals in vermilion with the day, the rest an outline and a hint that points at the gesture
+  without saying it. Its small mark sits under the clock's lines once there is a seal, or on a later
+  visit by someone the line on the water didn't reach.
+- A full volume carries the large 锦程 seal and a line of thanks. The first volume full, the visitor's
+  koi wears a small seal; every volume full, the gold koi does too. ⌘K then offers "Clear my seals".
+- Someone who has found no look is shown one line on the water, once: 20 s after the pond settles, or a
+  moment after their first press, with the gold koi coming over. Never over a chapter, the command bar
+  or the title's type.
+- Everything is kept in `localStorage` (`pond-seals`) and nowhere else. Nothing runs in the frame: the
+  stamp is a CSS animation, the line a timer.
+- A new look adds its seal to a volume in `VOLUMES` (characters the brush face has), its name and hint
+  in each language, and its stamp's manner in `pond.css`. Looks marked `preview` exist only in a build
+  with `PUBLIC_POND_PREVIEW=1`.
+
 ## Languages
 
 The language is chosen apart from the look: the En / 中 / 日 segments

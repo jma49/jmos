@@ -15,6 +15,23 @@ import { effectsOf, loadWeather, minutesAt, phaseAt, seasonOf } from './weather'
 // the looks' type, as a stylesheet of its own: linked only once a look or 日 is chosen (loadType)
 import LOOKS_CSS from './looks.css?url';
 import { IDLE_AFTER, due, learnBeat, simSteps } from './clock.js';
+import {
+  SEAL_WORDS,
+  albumHTML,
+  allFull,
+  clearSeals,
+  count as sealCount,
+  dayOf,
+  entryShows,
+  full,
+  markSealed,
+  mayHint,
+  readAlbum,
+  sealMark,
+  stamp,
+  volumes,
+  writeAlbum
+} from './seals';
 import { SocialError } from '../os/social/errors';
 import { coverOf, loadSongs, music, onMusic, play as playSongAt, setMusicMuted, toggle as toggleSong } from './music';
 import * as people from './people';
@@ -331,6 +348,19 @@ class Koi {
       );
       c.fill();
     }
+    // a small seal on the back of a koi that has earned one (the seal album)
+    if (this.seal) {
+      const q = S * 0.042;
+      c.save();
+      c.translate(P[7][0], P[7][1]);
+      c.rotate(ang(7));
+      c.fillStyle = '#b8382a';
+      c.fillRect(-q, -q, q * 2, q * 2);
+      c.strokeStyle = 'rgba(244,236,224,0.7)';
+      c.lineWidth = Math.max(0.6, q * 0.22);
+      c.strokeRect(-q * 0.52, -q * 0.52, q * 1.04, q * 1.04);
+      c.restore();
+    }
     // roundness: light gathers along the back and falls off towards the flanks
     for (const [w, al] of [
       [1.5, 0.09],
@@ -492,6 +522,7 @@ function makeKoi() {
       })
   );
   kois = [...v, host, you];
+  koiSeals();
   for (const k of kois) nameTag(k);
   ptr.x = W * 0.5;
   ptr.y = H * 0.62;
@@ -1643,6 +1674,7 @@ function launchBoat(text, by, from) {
   return b;
 }
 function feed(x, y) {
+  hintSoon(1800);
   for (let i = 0; i < 4 && food.length < 28; i++)
     food.push({ x: clamp(x + rnd(-24, 24), 10, W - 10), y: clamp(y + rnd(-24, 24), 10, H - 10), vx: rnd(-22, 22), vy: rnd(-22, 22), born: T });
 }
@@ -2161,6 +2193,7 @@ function speak() {
   showTerm();
   tick();
   fillNotes();
+  sealsEntry();
   if (sheetOpen() && sheetId) openSheet(sheetId);
 }
 // En / 中 / 日: the page's words fade, turn to the other language and come back; the look is left as it is.
@@ -2360,7 +2393,10 @@ function stepInk(raw) {
     if (top === 'blueprint') inkR = inkMax * Math.min(1, k / 1.5);
     else inkR = inkMax * (1 - Math.exp(-k * ({ ink: 1.25, ukiyo: 1.1, glow: 1.6, ascii: 1.4 }[top] || 1.6))) * Math.min(1, 0.2 + k * 3);
     if (k > 4.5) inkR = inkMax;
-    if (inkR >= inkMax) base = top;
+    if (inkR >= inkMax && base !== top) {
+      base = top;
+      reached(top);
+    }
   } else if (inkR > 0) {
     inkR = Math.max(0, inkR - raw * inkMax * (0.4 + k * 1.3));
     if (inkR <= 0) top = 'water';
@@ -3003,6 +3039,7 @@ const KINDS = [
 let logKind = 'all',
   logCompact = false;
 const SHEETS = {
+  seals: () => `<div class="album">${albumHTML(album, VOLS, lang, freshVols())}</div>`,
   career:
     () => `<h1>${L('Soundings', ZH.career.title)}</h1><p class="lede">${L("Work, projects and school on one line, newest at the surface. Scroll, and the pond's focus sinks with you to the bed.", ZH.career.lede)}</p>
     <div class="filt" role="toolbar" aria-label="Show">${KINDS.map(([k, l]) => `<button data-kind="${k}">${L(l, ZH.career.kinds[k])}<em>${k === 'all' ? LOG.length : LOG.filter((e) => e.kind === k).length}</em></button>`).join('')}<span class="gap"></span>
@@ -3067,7 +3104,8 @@ const CHAPTERS = {
   music: ['03', 'Music'],
   notes: ['04', 'Notes'],
   chat: ['05', 'Chat'],
-  account: ['', 'Account']
+  account: ['', 'Account'],
+  seals: ['', 'Seals']
 };
 // Which entries show, and which of them is the first of its year (it carries the year on the staff).
 function applyLog() {
@@ -3130,7 +3168,7 @@ function openSheet(id, at) {
   if (log) logKind = id === 'resume' ? 'role' : id === 'work' && !at ? 'project' : 'all';
   viewAt = -1;
   $('#sheet').innerHTML =
-    `<header class="head"><p class="eyebrow">${L(name, ZH.chapters[id])}</p><span class="read" id="readout"></span><nav class="chap" aria-label="Chapters">${ORDER.map((k) => `<button data-sheet="${k}" aria-label="${L(CHAPTERS[k][1], ZH.chapters[k])}" ${CHAPTERS[k][0] === no ? 'aria-current="true"' : ''}>${+CHAPTERS[k][0]}</button>`).join('')}</nav><button class="x" aria-label="Close"><svg width="12" height="12" viewBox="0 0 12 12" stroke-width="1.6" stroke-linecap="round"><path d="M2 2l8 8M10 2l-8 8"/></svg></button></header><div class="scroll" id="scroll">${SHEETS[log ? 'career' : id]()}</div>` +
+    `<header class="head"><p class="eyebrow">${id === 'seals' ? SEAL_WORDS[lang].title : L(name, ZH.chapters[id])}</p><span class="read" id="readout"></span><nav class="chap" aria-label="Chapters">${ORDER.map((k) => `<button data-sheet="${k}" aria-label="${L(CHAPTERS[k][1], ZH.chapters[k])}" ${CHAPTERS[k][0] === no ? 'aria-current="true"' : ''}>${+CHAPTERS[k][0]}</button>`).join('')}</nav><button class="x" aria-label="Close"><svg width="12" height="12" viewBox="0 0 12 12" stroke-width="1.6" stroke-linecap="round"><path d="M2 2l8 8M10 2l-8 8"/></svg></button></header><div class="scroll" id="scroll">${SHEETS[log ? 'career' : id]()}</div>` +
     (id === 'photos'
       ? '<div class="view" id="view" hidden><button class="vx" aria-label="Close the photograph"><svg width="12" height="12" viewBox="0 0 12 12" stroke-width="1.6" stroke-linecap="round"><path d="M2 2l8 8M10 2l-8 8"/></svg></button><button class="vs" data-step="-1" aria-label="Previous">‹</button><img id="viewImg" alt="Photo by Jincheng Ma"><button class="vs" data-step="1" aria-label="Next">›</button><p><span id="viewCap"></span><a class="link" id="viewLink" target="_blank" rel="noopener">' +
         L('Open on Unsplash ↗', ZH.photos.open) +
@@ -3161,6 +3199,7 @@ function openSheet(id, at) {
   else if (id === 'chat') openChat();
   else if (id === 'notes') void people.readNotes();
   else if (id === 'music') void loadSongs();
+  else if (id === 'seals') albumShown();
   if (id !== 'chat') closeChat();
   if (log || id === 'work') showRow(at);
 }
@@ -3755,6 +3794,44 @@ function commands() {
         setMuted(!muted);
       }
     },
+    // the seal album: listed once its mark shows, found by name before that; clearing it once a volume is full
+    {
+      sec: 'Pond',
+      icon: 'brush',
+      label: SEAL_WORDS[lang].open,
+      hint: SEAL_WORDS[lang].openHint,
+      kw: 'seals stamps album collection looks 集印册 集印帳 印 御朱印',
+      hidden: !entryShows(album),
+      cmd: true,
+      run: () => openSheet('seals')
+    },
+    ...(VOLS.some((v) => full(album, v)) || PREVIEW
+      ? [
+          {
+            sec: 'Pond',
+            icon: 'again',
+            label: SEAL_WORDS[lang].clear,
+            hint: SEAL_WORDS[lang].clearHint,
+            kw: 'seals clear reset again 清空 印 消す',
+            hidden: !PREVIEW,
+            cmd: true,
+            run: () => setAlbum(clearSeals(album))
+          }
+        ]
+      : []),
+    ...(PREVIEW
+      ? [
+          {
+            sec: 'Pond',
+            icon: 'brush',
+            label: 'Preview: stamp all seals',
+            hint: 'Fills the album, a seal at a time',
+            kw: 'preview seals stamp all',
+            cmd: true,
+            run: () => VOLS.flatMap((v) => v.seals).forEach((x, i) => setTimeout(() => reached(x.id), i * 3400))
+          }
+        ]
+      : []),
     { sec: 'Pond', icon: 'again', label: 'Replay the opening', hint: 'The greeting and the gold koi', kw: 'intro again restart', cmd: true, run: () => intro() }
   ];
 }
@@ -4175,6 +4252,13 @@ function plip(kind, vol) {
     bubble(t, rnd(180, 220), v, 0.4);
     return;
   }
+  if (kind === 'stamp') {
+    // a seal pressed down: a soft low thud, and the paper's small breath under it
+    const v = 0.09 * (vol || 1);
+    hiss(t, 0.06, 420, 0.7, v * 0.5);
+    bubble(t + 0.004, rnd(96, 112), v, 0.16);
+    return;
+  }
   if (kind === 'drop') {
     const v = 0.075 * (vol || 1),
       f0 = rnd(540, 760);
@@ -4233,6 +4317,129 @@ $('#snd').addEventListener('click', () => {
   audio();
   setMuted(!muted);
 });
+
+/* ================= the seal album (集印册) =================
+   Each look has a seal (seals.ts). The first time a look comes in all the way, by whatever route, its seal is
+   stamped in the corner and kept in this browser; the album is a sheet, opened from the command bar or from
+   the small mark by the solar term, which shows once there is a seal to see. Someone who has found none is
+   shown one quiet line on the water, once. None of it runs in the frame: a stamp is a CSS animation, and
+   the line a timer. */
+const PREVIEW = !!import.meta.env.PUBLIC_POND_PREVIEW;
+const VOLS = volumes(PREVIEW);
+let album = readAlbum(load('pond-seals'));
+album = { ...album, visits: album.visits + 1 };
+save('pond-seals', writeAlbum(album));
+function setAlbum(a) {
+  album = a;
+  save('pond-seals', writeAlbum(a));
+  koiSeals();
+  sealsEntry();
+  if (sheetOpen() && sheetId === 'seals') openSheet('seals');
+}
+// the visitor's koi wears a seal once the first volume is full, and the gold one once every volume is
+function koiSeals() {
+  if (you) you.seal = full(album, VOLS[0]);
+  if (host) host.seal = allFull(album, VOLS);
+}
+function sealsEntry() {
+  const b = $('#sealsBtn');
+  b.hidden = !entryShows(album);
+  b.toggleAttribute('data-some', sealCount(album) > 0);
+  b.toggleAttribute('data-all', allFull(album, VOLS));
+  b.setAttribute('aria-label', SEAL_WORDS[lang].title);
+}
+// the volumes whose large seal hasn't been seen yet: it stamps as the album opens, once
+const freshVols = () => VOLS.filter((v) => full(album, v) && !album.sealed.includes(v.id)).map((v) => v.id);
+// a seal's characters are centred by their own ink, measured once the brush has come for them
+function alignSeals(sel) {
+  alignInk(sel);
+  const chars = [...document.querySelectorAll(sel)].map((x) => x.textContent).join('');
+  if (chars && document.fonts?.load)
+    document.fonts.load("40px 'Zhi Mang Xing'", chars).then(
+      () => alignInk(sel),
+      () => {}
+    );
+}
+function albumShown() {
+  alignSeals('#sheet .seal-m span');
+  const fresh = freshVols();
+  if (!fresh.length) return;
+  if (!RM) setTimeout(() => sheetOpen() && sheetId === 'seals' && plip('stamp'), 700);
+  let a = album;
+  for (const v of fresh) a = markSealed(a, v);
+  album = a;
+  save('pond-seals', writeAlbum(a));
+}
+let stampTimer = 0;
+// a look has come in all the way: its seal, if this is the first time
+function reached(id) {
+  const r = stamp(album, id, dayOf(new Date()), VOLS);
+  if (!r.fresh) return;
+  album = r.album;
+  save('pond-seals', writeAlbum(album));
+  koiSeals();
+  const seal = VOLS.flatMap((v) => v.seals).find((x) => x.id === id),
+    el = $('#stamp');
+  clearTimeout(stampTimer);
+  delete el.dataset.on;
+  stampTimer = setTimeout(
+    () => {
+      el.innerHTML = sealMark(seal);
+      alignSeals('#stamp .seal-m span');
+      $('#stampSay').textContent = `${SEAL_WORDS[lang].title}: ${SEAL_WORDS[lang].names[id]}`;
+      el.dataset.on = '';
+      plip('stamp');
+      // the water takes the press
+      const b = el.getBoundingClientRect(),
+        pr = pond.getBoundingClientRect();
+      if (!RM) drop(b.left - pr.left + b.width / 2, b.top - pr.top + b.height / 2, 2.4, 0.5);
+      sealsEntry();
+      invalidate();
+      stampTimer = setTimeout(() => delete el.dataset.on, 3400);
+    },
+    RM ? 0 : 600
+  );
+}
+// One line on the water for someone who has found no look: once the pond has settled and they have been
+// here a while, or a moment after their first press. The gold koi comes over as it does at the opening.
+// Never over a chapter, the command bar or the title's type; shown once, and not at all after a seal.
+sealsEntry();
+let hintTimer = 0;
+function hintSoon(ms) {
+  if (!mayHint(album)) return;
+  clearTimeout(hintTimer);
+  hintTimer = setTimeout(hint, ms);
+}
+function hint() {
+  if (!mayHint(album)) return;
+  if (sheetOpen() || palOpen() || look !== 'water' || !arrived || host.mode !== 'wander' || document.hidden) return void hintSoon(6000);
+  const el = $('#whisper'),
+    toc = $('#toc').getBoundingClientRect(),
+    pr = pond.getBoundingClientRect(),
+    wide = toc.width && toc.right - pr.left < W * 0.8;
+  el.textContent = SEAL_WORDS[lang].line;
+  // beside the title on a wide pond, under it on a narrow one; near the visitor's koi where that is open water
+  const half = Math.min(W - 40, el.offsetWidth) / 2,
+    left = wide ? toc.right - pr.left + 40 : 20,
+    x = clamp(you.x, left + half, W - 20 - half),
+    y = clamp(you.y + 54, wide ? 90 : toc.bottom - pr.top + 34, H - 130);
+  el.style.left = `${Math.round(x)}px`;
+  el.style.top = `${Math.round(y)}px`;
+  el.dataset.on = '';
+  album = { ...album, hinted: dayOf(new Date()) };
+  save('pond-seals', writeAlbum(album));
+  {
+    host.mode = 'visit';
+    setTimeout(() => {
+      if (host.mode === 'visit') {
+        host.mode = 'wander';
+        host.wander();
+      }
+    }, 7000);
+  }
+  invalidate();
+  setTimeout(() => delete el.dataset.on, 6500);
+}
 
 /* ================= the opening ================= */
 function place() {
@@ -5084,6 +5291,7 @@ settled
     (err) => report(err, 'pond models')
   );
 settled.then(loadSongs);
+settled.then(() => hintSoon(20000));
 // The weather where the visitor is: once the pond has settled, so it never holds up the title page; again
 // every half hour while it's shown (weather.ts keeps it for half an hour, so a reload doesn't fetch).
 function weatherLine() {
