@@ -1,6 +1,6 @@
 // @ts-nocheck (a scratch tool kept from the session: see docs/agents/pond-handoff.md)
 // polish shots: node pol.cjs <dist> <w> <h> <dsf> <tag> <looks,..> [phone]
-// (RM=1 runs under reduced motion and also pictures each look leaving and gone; PHASE=dawn|day|dusk|night sets the time of day; VISITORS=1 adds three visitors' koi, in blue, violet and green)
+// (RM=1 runs under reduced motion and also pictures each look leaving and gone; PHASE=dawn|day|dusk|night sets the time of day; WEATHER=rain|snow|.. sets the weather; VISITORS=1 adds three visitors' koi, in blue, violet and green)
 const { chromium } = require('playwright');
 (async () => {
   const [, , dir, w, h, dsf, tag, looks, phone] = process.argv;
@@ -42,6 +42,12 @@ const { chromium } = require('playwright');
         { id: 'c', username: 'tomo', color: '#3fae6a' }
       ])
     );
+  if (process.env.WEATHER)
+    await p.evaluate((v) => {
+      const s = document.querySelector('.preview [data-k=weather]');
+      s.value = v;
+      s.dispatchEvent(new Event('input', { bubbles: true }));
+    }, process.env.WEATHER);
   if (process.env.PHASE)
     await p.evaluate((v) => {
       const s = document.querySelector('.preview [data-k=phase]');

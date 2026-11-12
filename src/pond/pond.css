@@ -3221,9 +3221,13 @@ button.more:hover {
   color: var(--koi);
 }
 /* the term in the blueprint, in the drawing's title block; in ukiyo-e it stands on the water as it is */
-#pond[data-look='blueprint'] .alm {
-  padding: 9px 10px;
+/* (the title block's frame is drawn round the clock where it stands: it takes no room of its own) */
+#pond[data-look='blueprint'] .alm::before {
+  content: '';
+  position: absolute;
+  inset: -9px -10px;
   box-shadow: inset 0 0 0 1px rgba(225, 240, 255, 0.5);
+  pointer-events: none;
 }
 /* chapter headings: a print's double rule, a drawing's thin rule */
 #pond[data-look='ukiyo'] .sheet h1 {
@@ -3683,4 +3687,45 @@ button.more:hover {
   border-radius: 8px;
   color: inherit;
   background: rgba(255, 255, 255, 0.1);
+}
+
+/* One layout whatever face a look or a language sets the page in. Each face has its own measure, so the
+   blocks that hold type are given their size by the page, not by the type: the greeting two lines of the
+   water's (standing on its last line), the line under it two lines, the contents' first column one width,
+   the chat's pill one width. What a look changes is then only the face, never where anything stands. */
+.lead {
+  --hero-size: clamp(52px, 6.3vw, 92px);
+  --say-size: clamp(16px, 1.3vw, 18.5px);
+}
+.hero {
+  min-height: calc(2 * 0.98 * var(--hero-size));
+  align-content: end;
+}
+.say {
+  height: calc(2 * 1.6 * var(--say-size));
+}
+.toc .row {
+  grid-template-columns: minmax(clamp(170px, 15.6vw, 200px), max-content) minmax(0, 1fr) 2.6em;
+}
+.talk {
+  min-width: 88px;
+  justify-content: center;
+}
+@media (max-width: 860px) {
+  .lead {
+    --hero-size: clamp(44px, 13vw, 58px);
+    --say-size: 16px;
+  }
+  .say {
+    height: auto;
+    min-height: calc(3 * 1.6 * var(--say-size));
+  }
+  .toc .row {
+    grid-template-columns: minmax(0, 1fr) 2.6em;
+  }
+  /* (the search box, which is as wide as its word in the look's face) */
+  .hud .cmd {
+    width: 104px;
+    justify-content: center;
+  }
 }

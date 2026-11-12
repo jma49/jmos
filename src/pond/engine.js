@@ -50,6 +50,7 @@ import {
   NEW_LOOKS,
   NEW_SHADE,
   NEW_SID,
+  NEW_WITHOUT,
   QINGHUA,
   RELIEF,
   STARS,
@@ -3258,9 +3259,54 @@ function drawDims(c) {
 const wall = () => performance.now() / 1000;
 const RAINY = { water: 1, ink: 1, ukiyo: 1, ascii: 1 },
   blooms = [],
-  rainNow = () => raining && RAINY[look] === 1;
+  rainNow = () => raining && RAINY[look] === 1,
+  // on the star chart rain is a shower of meteors: nothing falls on the water, the sky does it
+  meteorsNow = () => PREVIEW && raining && look === 'stars' && inkR >= inkMax * 0.9,
+  meteors = [];
+let meteorAt = 0;
+function drawMeteors(c) {
+  const now = wall();
+  if (now > meteorAt) {
+    meteorAt = now + rnd(0.12, 0.5);
+    const a = 2.25 + rnd(-0.12, 0.12);
+    meteors.push({ x: rnd(0.1, 1.25) * W, y: rnd(-0.1, 0.6) * H, a, v: rnd(520, 900), len: rnd(70, 190), at: now, life: rnd(0.45, 0.9) });
+  }
+  c.save();
+  c.lineCap = 'round';
+  for (let i = meteors.length - 1; i >= 0; i--) {
+    const m = meteors[i],
+      k = (now - m.at) / m.life;
+    if (k >= 1) {
+      meteors.splice(i, 1);
+      continue;
+    }
+    // a head that runs down the sky and a tail that thins out behind it; bright in the middle of its life
+    const d = (now - m.at) * m.v,
+      hx = m.x + Math.cos(m.a) * d,
+      hy = m.y + Math.sin(m.a) * d,
+      tx = hx - Math.cos(m.a) * m.len,
+      ty = hy - Math.sin(m.a) * m.len,
+      o = Math.sin(k * Math.PI),
+      g = c.createLinearGradient(hx, hy, tx, ty);
+    g.addColorStop(0, `rgba(240,246,255,${0.9 * o})`);
+    g.addColorStop(0.3, `rgba(190,208,250,${0.4 * o})`);
+    g.addColorStop(1, 'rgba(170,190,240,0)');
+    c.strokeStyle = g;
+    c.lineWidth = 1.4;
+    c.beginPath();
+    c.moveTo(hx, hy);
+    c.lineTo(tx, ty);
+    c.stroke();
+    c.fillStyle = `rgba(255,255,255,${o})`;
+    c.beginPath();
+    c.arc(hx, hy, 1.5, 0, TAU);
+    c.fill();
+  }
+  c.restore();
+}
 // the rain itself, drawn in the air in the look's own hand, once the look has come in
 function drawRain(c) {
+  if (meteorsNow()) return drawMeteors(c);
   if (!rainNow() || look === 'water' || inkR < inkMax * 0.9 || AM.ice > 0.3) return;
   c.save();
   if (look === 'ink') {
@@ -3314,6 +3360,7 @@ function drawRain(c) {
 // Summer nights: a handful of soft lights that drift and blink; a press near them sends them off.
 const fireflies = () => pv.fliesOn || (AM.flies > 0.3 && phase === 'night' && look !== 'blueprint');
 function drawFireflies(c) {
+  if (NEW_WITHOUT[look]?.flies) return;
   if (!fireflies()) return (pv.flies.length = 0);
   if (!pv.flies.length) pv.flies = Array.from({ length: big ? 9 : 5 }, () => ({ x: rnd(0.45, 0.95) * W, y: rnd(0.1, 0.9) * H, vx: 0, vy: 0, p: rnd(0, TAU) }));
   const now = performance.now() / 1000;
@@ -3339,6 +3386,7 @@ let airShown = true;
 const airWanted = () =>
   (look === 'blueprint' && inkR >= inkMax * 0.9) ||
   (look !== 'water' && rainNow()) ||
+  meteorsNow() ||
   gest.down ||
   gest.letters.length > 0 ||
   (PREVIEW && gest.taps && gest.taps.length > 0) ||
@@ -3384,7 +3432,8 @@ function drawAir() {
     c.globalAlpha = 1;
   }
   for (const f of flies) {
-    if (f.a2 < 0.02) continue;
+    // (a look that has no place for a dragonfly does without: the night sky, glaze, a painted or carved wall)
+    if (f.a2 < 0.02 || (PREVIEW && NEW_WITHOUT[look]?.flies)) continue;
     c.save();
     c.globalAlpha = f.a2 * (look === 'monet' ? 0.42 : 1);
     c.translate(f.x, f.y);
@@ -6260,6 +6309,7 @@ function busy(now) {
     now - wokeAt < IDLE_AFTER * 1000 ||
     now - stirred(now) < 2000 ||
     rainNow() ||
+    meteorsNow() ||
     top !== base ||
     (look === 'water' && inkR > 0) ||
     gest.down ||

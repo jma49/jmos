@@ -47,6 +47,7 @@ pass, and the move from drawing things in code to painted pictures. How the pond
 | `virtual.cjs` | The virtual clock the newer tools share. |
 | `glide.cjs` | The layout glide between looks, measured: where each block stood, where it is drawn the moment the look's styles apply, where it ends. |
 | `finish.cjs` | The finish checklist as contact sheets: each look's title page, chapters, album and command bar, and a phone sheet. About three minutes a look. |
+| `layout.cjs` | Where every block of the title page stands in each look, and which differ from the water's: `node layout.cjs <dist> [w] [h] [lang]`. |
   | `terms.cjs` | Ink in each of the 24 solar terms. |
   | `ab.cjs`, `abdiff.py` | A deterministic A/B of two builds (seeded random, virtual clock, frames stepped by hand) and the largest pixel difference. |
   | `gest5.cjs` | Each look's gesture made with a real pointer, and which look arrives. |
@@ -82,6 +83,11 @@ Jincheng's words that still stand:
 - The Blender sheets: "鸽子不够细致，不够写实，参考现实中的鸽子去做。跳蛛的细节还要继续优化。"
 - The blackboard: "明显比其他的差很多…首先考虑换掉这个风格" (replaced by the Egyptian relief).
 - Layout between looks: "如果组件位置有变化，切换的时候丝滑一些".
+- Layout: "切换字体的时候整个页面上的所有非风格部分的内容不要有乱跳的变动。也就是布局统一" (done: see
+  "One layout in every look and language" in pond.md; keep it so).
+- Seasons by look: "不是所有的界面都要有荷叶蜻蜓，季节特点要符合艺术风格"; the star chart's rain is a
+  meteor shower.
+- Pictures: "每一种风格尽可能的全部用自己独有的美术资产。能定制的就定制。"
 
 ## 3. What ships when
 

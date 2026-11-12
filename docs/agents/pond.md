@@ -512,6 +512,17 @@ what each look needs, in the order to make it, so nothing has to be asked. A loo
 without its pictures and to take each one as it comes. What has been delivered is in the tables
 above; this list says what each thing is for and what is still wanted.
 
+**Each look in its own pictures.** Wherever a look shows something, it should be that look's own
+picture of it, in its own manner, not the water's thing recoloured: its water, its koi, its plants,
+what floats and what flies, its dove and spider, its seal. Where the manner has no such thing, the
+look goes without it and shows what it does have instead (the star chart has no lily pads or
+dragonflies; its rain is a shower of meteors). Glow, the blueprint and ASCII are light, ruled line and
+characters by nature, and are drawn in code. So besides the lines in each kit below, every painted
+look (ukiyo-e, Monet, 青花, Dunhuang, the relief) wants, as P1, a sheet `afloat.webp`, 1024 × 512,
+4 × 2, of what drifts on its water through the year in its own hand: two spring petals, two autumn
+leaves, a snow crystal or a frost flower, and, where the manner has one, a dragonfly or another small
+flying thing seen from above (a crane or a butterfly for Dunhuang, a bee or a swallow for the relief).
+
 **The round asked for now** (every line is already in a look's kit below, or is new there; make them
 in this order, commit each lot as it is done, and say in its table what came out):
 
@@ -523,7 +534,8 @@ in this order, commit each lot as it is done, and say in its table what came out
 6. Monet: the autumn row of lilies, then `dragonfly`.
 7. Ink: `stems`; the seals stay on hold until a seal-script face is chosen.
 8. Egyptian relief: `papyrus`, `duck`, `cartouche`.
-9. The dove and the spider dressed for each look, where a kit asks for them, last.
+9. Each painted look's `afloat` sheet (above).
+10. The dove and the spider dressed for each look, where a kit asks for them, last.
 
 **For every picture, unless its line says otherwise**
 
@@ -797,6 +809,14 @@ air) and ASCII (the pond in characters).
   runs the front for any of them. Ice and snow are drawn in each look's
   own idiom (`gIce`, `gHit`, `snowOn()`), and cracking the ice works in
   all of them.
+- **One layout in every look and language.** The blocks that hold type are sized by the page, not by
+  the face: the greeting is two lines of the water's measure (standing on its last line), the line
+  under it two lines, the contents' first column one width, the chat's pill and the phone's search
+  box one width; a frame a look draws round a block (the blueprint's title block) takes no room. So
+  a change of look or language changes the face and nothing's place. The one exception is the three
+  looks with a band or a rim (青花, Dunhuang, the relief): they lift the clock and the controls clear
+  of it, all three by the same distance. `tools/pond/layout.cjs` measures every block in every look
+  and says which differ; a new look, face or block is run through it.
 - **The page through a change:** the title page's type fades out as a look comes and back in its
   face; the controls only dim. A look that puts the page's blocks elsewhere (青花's rim, the Dunhuang
   wall's bands, a face's own measure) has them glide there from where they stood (`glide()`, the
@@ -817,11 +837,16 @@ air) and ASCII (the pond in characters).
   In a look, a press on the gold koi (mine) brings the water back, from
   the koi, before whatever lies over it. ⌘K finds the looks when
   searched, and never lists them.
+- **What a look leaves out:** the seasons' things show only where the look's manner has a place for
+  them (`NEW_WITHOUT` in `newlooks.js`): no lily pads, dragonflies or fireflies on the star chart; no
+  dragonflies or fireflies on glaze, the painted wall or carved stone. A new look says what it does
+  without, and a new seasonal thing is checked against every look.
 - **Weather:** rain falls only where the look can carry it (`RAINY`,
   `drawRain()`):
   - in ink as fine dry strokes;
   - in ukiyo-e as Hiroshige's straight lines;
-  - in ASCII as falling `|` and `/`.
+  - in ASCII as falling `|` and `/`;
+  - on the star chart (preview) as a shower of meteors, with nothing falling on the water.
 
   Glow and blueprint hold it off, and the ⌘K rain command is hidden in a
   look. In ukiyo-e the swell's bands and foam follow only large crests,

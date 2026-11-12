@@ -27,6 +27,12 @@ export const NEW_GLASS = {
 /** How much of the tree's shade lies over each: none on glaze, plaster, the night sky or carved stone. */
 export const NEW_SHADE = { monet: 0.5, qinghua: 0, dunhuang: 0, stars: 0, relief: 0 };
 
+/**
+ * What of the pond's seasons a look leaves out, because its manner has no place for it: the night sky has
+ * neither lily pads nor dragonflies, and glaze, a painted wall and carved stone have no dragonflies.
+ */
+export const NEW_WITHOUT = { stars: { pads: true, flies: true }, qinghua: { flies: true }, dunhuang: { flies: true }, relief: { flies: true } };
+
 /** 青花's pictures: the rim's lotus scroll and its corner, the koi and where a visitor's colour goes on them. */
 export const QINGHUA = {
   rim: '/pond/qinghua/rim.webp',
@@ -366,7 +372,7 @@ vec3 lookDunhuang(){
   return c;
 }
 // 星图: the night sky in the water. The koi are drawn as constellations (engine.js draws them so in this
-// look); the pads are ringed discs of faint cloud; the ripples the rings of orbits; a press is a new star
+// look); there are no lily pads in the sky; the ripples are the rings of orbits; a press is a new star
 float star4(vec2 d,float s){ float r=length(d); return exp(-r*r/(s*s))+.35*exp(-abs(d.x)*1.2/s)*exp(-abs(d.y)*9./s)+.35*exp(-abs(d.y)*1.2/s)*exp(-abs(d.x)*9./s); }
 vec3 lookStars(){
   vec2 P=gP, uv=gUv;
@@ -385,9 +391,6 @@ vec3 lookStars(){
   // orbits: the ripples as thin rings
   float ring=smoothstep(.45,.5,abs(fract(gH*14.)-.5));
   c+=vec3(.45,.6,.9)*ring*smoothstep(.015,.07,abs(gLap)*4.+abs(gH)*.7)*.3*(1.-gCalm*.9);
-  // pads: a ring, and a little cloud inside it
-  vec4 pd=textureLod(uPads,uv,0.); float pe=textureLod(uPads,uv,1.6).a;
-  c+=vec3(.42,.3,.62)*pd.a*fbm(P*.02+2.)*.3+vec3(.6,.75,1.)*clamp(abs(pd.a-pe)*3.,0.,1.)*.4;
   // the koi, already drawn as stars and the lines between them
   // (their lines join once the stars are out)
   vec4 f=textureLod(uFish,uv+gRef*.2,0.); c+=(f.rgb*1.15+vec3(.25,.4,.8)*textureLod(uFish,uv,3.).a*.3)*smoothstep(1.8,2.8,uLookT);
