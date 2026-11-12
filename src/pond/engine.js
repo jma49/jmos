@@ -2642,11 +2642,11 @@ function paintInk() {
   delete cv.dataset.on;
   import('./painting.js').then(({ paint }) =>
     setTimeout(
-      () => {
-        paint(cv, W, H, season);
-        cv.dataset.on = '';
-        if (!first) plip('cue-ink', 0.8);
-      },
+      () =>
+        paint(cv, W, H, season).then(() => {
+          cv.dataset.on = '';
+          if (!first) plip('cue-ink', 0.8);
+        }),
       first ? 0 : 900
     )
   );

@@ -271,7 +271,10 @@ In `public/pond/stars/`. One colour, `#C9D4F0`, its strength in the alpha.
 
 #### Ink
 
-In `public/pond/ink/`. Each is 1024 × 1024, near-black ink whose darkness is in the alpha (the plum keeps
+In `public/pond/ink/`, and in use: `paint()` in `painting.js` hangs the season's one at the pond's
+right edge (`hang()`), over the hills, and the ink canvas multiplies it into the paper. Each is fetched
+the first time its season shows in ink; the brushed motifs remain only as what is drawn if one can't
+be had. Each is 1024 × 1024, near-black ink whose darkness is in the alpha (the plum keeps
 its red), entering at the right edge and reaching left, the left third empty.
 
 | File | Size | What is in it (the paint, as x, y, width, height) |
@@ -325,7 +328,7 @@ light and refraction, the glass) stays in the shader.
 | Moon, sun glint | shader | Light, not an object | Keep | none |
 | The tree's shade | a texture drawn once | Good on water; wrong on the painted looks (switched off there) | Keep | none |
 | Pebble bed (water look) | `BED` shader, drawn once | Good; it is what the refraction reads from, and the first thing seen | Keep for now | A Blender-rendered bed with a normal map would be the one thing to try, behind a flag, at no cost to the first visit's budget only if it fits in about 150 KB |
-| Ink: seasonal motif | `painting.js` paths | The weakest part of the best look | Replace | delivered (`ink/plum`, `willow`, `lotus`, `reeds`): to wire in |
+| Ink: seasonal motif | `painting.js`, from pictures | Painted, and in use | Done | none |
 | Ink: far hills, mist | canvas washes, CSS | Good | Keep; hills later | `ink/hills` later |
 | Seals (ten looks and 锦程) | the brush face in CSS | A family, but running script, not seal script | Replace | `ink/seals` (asked) |
 | Ink: inscription | the brush face | Good | Keep | none |

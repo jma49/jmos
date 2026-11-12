@@ -232,16 +232,47 @@ function plum(c, W, H, s) {
 }
 const MOTIF = [willow, lotus, reeds, plum];
 
+// The season's motif is a painting (public/pond/ink/): fetched the first time its season is shown in ink,
+// and kept. Each enters at its right edge and reaches left, so it hangs at the pond's right edge. If one
+// can't be had, the motif is brushed in code as it used to be.
+const PICTURE = ['/pond/ink/willow.webp', '/pond/ink/lotus.webp', '/pond/ink/reeds.webp', '/pond/ink/plum.webp'],
+  pictures = [];
+const picture = (season) =>
+  (pictures[season] ??= new Promise((done) => {
+    const im = new Image();
+    im.onload = () => done(im);
+    im.onerror = () => done(null);
+    im.src = PICTURE[season];
+  }));
+/** Where a season's painting hangs on a pond of W by H: [x, y, size]. The willow from the top, the rest from the foot. */
+export function hang(W, H, season) {
+  if (W < 600) {
+    // on a phone it keeps to the lower right, clear of the type and above the controls
+    const size = Math.min(W * 0.86, H * 0.46);
+    return [W - size, H - size - 76, size];
+  }
+  const size = Math.min(H * 0.9, W * 0.5);
+  return [W - size, season === 0 ? 0 : season === 3 ? (H - size) * 0.5 : H - size - 24, size];
+}
+
 /** Paints the season's picture (0 spring … 3 winter) into a canvas of the pond's size. */
-export function paint(cv, W, H, season) {
+export async function paint(cv, W, H, season) {
   const dpr = Math.min(window.devicePixelRatio || 1, 2),
-    s = Math.min(1, Math.max(0.55, W / 1280));
+    s = Math.min(1, Math.max(0.55, W / 1280)),
+    im = await picture(season);
   cv.width = Math.round(W * dpr);
   cv.height = Math.round(H * dpr);
   const c = cv.getContext('2d');
   c.setTransform(dpr, 0, 0, dpr, 0, 0);
   c.clearRect(0, 0, W, H);
   hills(c, W, H, s);
+  if (im) {
+    const [x, y, size] = hang(W, H, season);
+    c.globalAlpha = 0.92;
+    c.drawImage(im, x, y, size, size);
+    c.globalAlpha = 1;
+    return;
+  }
   // on a phone the motif shrinks into the lower right corner, clear of the type
   if (W < 600) {
     c.translate(W * 0.42, H * 0.42);
