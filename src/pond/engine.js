@@ -35,6 +35,7 @@ import {
 import { FPS, IDLE_AFTER, due, learnBeat, simSteps } from './clock.js';
 import { PERF, add, count, frameDone, span } from './perf.js';
 import { strokeLifted, strokeMoving, tapsLook } from './gestures';
+import { underPainting } from './hang.js';
 import { MONET, MURAL, MURAL_LARGE, NEW_COMMANDS, NEW_GLASS, NEW_GLSL, NEW_LAY, NEW_LOOKS, NEW_SHADE, NEW_SID, muralLayout } from './newlooks.js';
 import { SocialError } from '../os/social/errors';
 import { coverOf, loadSongs, music, onMusic, play as playSongAt, setMusicMuted, toggle as toggleSong } from './music';
@@ -756,6 +757,8 @@ function drawPads() {
     const grow = kind === 2 ? sstep(0.55, 0.95, AM.lush) : sstep(0.02, 0.45, AM.lush),
       r = r0 * (0.55 + 0.45 * AM.lush) * Math.sqrt(grow);
     if (grow < 0.03) continue;
+    // in ink no pad lies under the season's painting: the painting has that part of the paper
+    if (inkOn && underPainting(x * W, y * H, W, H, inkSeason())) continue;
     // in Monet's pond the pads are painted ones, from their sheet (large, medium and small, by size)
     const lily = lilyPic && look === 'monet';
     if (lily) {
@@ -892,7 +895,7 @@ function drawPads() {
   }
 }
 function padsNow() {
-  const key = `${Math.round(AM.lush * 30)}|${Math.round(AM.brown * 20)}|${Math.round(AM.bloom * 20)}|${lilyPic && look === 'monet' ? Math.round(AM.petals * 4) + 1 : 0}`;
+  const key = `${Math.round(AM.lush * 30)}|${Math.round(AM.brown * 20)}|${Math.round(AM.bloom * 20)}|${lilyPic && look === 'monet' ? Math.round(AM.petals * 4) + 1 : 0}|${inkOn ? inkSeason() + 1 : 0}`;
   if (key === padKey) return;
   padKey = key;
   drawPads();
@@ -2609,8 +2612,8 @@ function setLook(name, from) {
   if (name !== 'water' && name !== 'ink') loadType();
   const was = look;
   look = name;
-  // (the pads are painted ones in Monet's pond, and drawn ones out of it)
-  if (name === 'monet' || was === 'monet') setTimeout(padsNow, 0);
+  // (the pads are painted ones in Monet's pond, and none lie under ink's painting)
+  setTimeout(padsNow, 0);
   inkOn = name === 'ink';
   inkAt = performance.now() / 1000;
   actx.setTransform(1, 0, 0, 1, 0, 0);
@@ -2722,9 +2725,10 @@ function placeKuan() {
 // Ink as a hanging painting: the season's motif (painting.js, loaded the first time ink comes) washes in
 // at one edge; a new season washes the old one out and the new one in, with a brush's breath.
 let painted = '';
+const inkSeason = () => Math.floor((Math.floor(seasonOf(yearGoal, south ? -1 : 1)) % 24) / 6);
 function paintInk() {
   if (!inkOn) return;
-  const season = Math.floor((Math.floor(seasonOf(yearGoal, south ? -1 : 1)) % 24) / 6),
+  const season = inkSeason(),
     key = `${season} ${Math.round(W)} ${Math.round(H)}`;
   if (key === painted) return;
   const first = !painted;

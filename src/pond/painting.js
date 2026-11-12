@@ -3,6 +3,8 @@
 // along the foot, and the centre and the title page left empty (留白). Drawn once per season and size
 // into a canvas that the page lays over the water, multiplied, only in ink.
 const rnd = (a, b) => a + Math.random() * (b - a);
+import { hang } from './hang.js';
+
 const TAU = Math.PI * 2;
 
 // a stroke of the brush along a path: tapering, then a few dry passes that break up along it
@@ -244,17 +246,6 @@ const picture = (season) =>
     im.onerror = () => done(null);
     im.src = PICTURE[season];
   }));
-/** Where a season's painting hangs on a pond of W by H: [x, y, size]. The willow from the top, the rest from the foot. */
-export function hang(W, H, season) {
-  if (W < 600) {
-    // on a phone it keeps to the lower right, clear of the type and above the controls
-    const size = Math.min(W * 0.86, H * 0.46);
-    return [W - size, H - size - 76, size];
-  }
-  const size = Math.min(H * 0.9, W * 0.5);
-  return [W - size, season === 0 ? 0 : season === 3 ? (H - size) * 0.5 : H - size - 24, size];
-}
-
 /** Paints the season's picture (0 spring … 3 winter) into a canvas of the pond's size. */
 export async function paint(cv, W, H, season) {
   const dpr = Math.min(window.devicePixelRatio || 1, 2),
@@ -268,8 +259,27 @@ export async function paint(cv, W, H, season) {
   hills(c, W, H, s);
   if (im) {
     const [x, y, size] = hang(W, H, season);
+    // the painting thins out towards its outer edges, as ink does where the brush leaves the paper, so it is
+    // never cut off square by the pond's edge
+    const px = Math.round(size * dpr),
+      one = document.createElement('canvas');
+    one.width = one.height = px;
+    const o = one.getContext('2d');
+    o.drawImage(im, 0, 0, px, px);
+    o.globalCompositeOperation = 'destination-in';
+    for (const [x0, y0, x1, y1] of [
+      [px, 0, px * 0.9, 0],
+      [0, 0, 0, px * 0.06],
+      [0, px, 0, px * 0.94]
+    ]) {
+      const g = o.createLinearGradient(x0, y0, x1, y1);
+      g.addColorStop(0, 'rgba(0,0,0,0)');
+      g.addColorStop(1, '#000');
+      o.fillStyle = g;
+      o.fillRect(0, 0, px, px);
+    }
     c.globalAlpha = 0.92;
-    c.drawImage(im, x, y, size, size);
+    c.drawImage(one, x, y, size, size);
     c.globalAlpha = 1;
     return;
   }
