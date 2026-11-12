@@ -371,6 +371,8 @@ In `public/pond/relief/`, each picture as a pair that lines up to the pixel: `-c
 | `fish-c.webp`, `fish-h.webp` | 1024 × 512, 83 KB and 35 KB | Two tilapia in profile, heads to the left, in two 512-pixel cells: blue head and back, green flank, a yellow belly line, red ochre fins. The straight one: 36, 136, 476, 376. The other: 36, 138, 476, 373; it is only slightly curved. |
 | `frieze-c.webp`, `frieze-h.webp` | 1024 × 128, 34 KB and 3 KB | An open blue lotus and a bud on a red base line, a stem looping from one to the other, four times in a tile, seamless left to right in both files. The flowers reach to 4 pixels from the top; the base line is at the bottom. |
 | `lotus-c.webp`, `lotus-h.webp` | 1024 × 512, 98 KB and 33 KB | Eight motifs in a 4 × 2 grid of 256-pixel cells, each at least 18 pixels clear of its cell's edge. Top row: two open lotus flowers, a blue bud, a green bud. Bottom row: two leaves from above, with a notch and veins, a papyrus clump, a duck facing left (18, 70, 238, 185). |
+| `koi-c.webp`, `koi-h.webp`, `koi-mask.webp` | 1024 × 1536, 181 KB, 149 KB and 14 KB | The koi sheet to the common spec, as carved fish seen from above: four rows of 384 pixels, heads to the left, each from x 62 to a tail tip at 962, the spine on its row's middle line (y 192, 576, 960, 1344); one drawing mirrored about the spine. In the paint, the body is left bare (transparent) where a koi is white: row 1 is yellow ochre with red ochre fins, row 2 bare but for its line and one red ochre spot on the head, rows 3 and 4 bare with three and four grey patches. 12% of the paint is worn away, none of the line and none of the head spot. The height is the same carving in all four rows: the face 128, the top about 30 above it (highest 158), the scales and rays cut back to 115. The mask is white over the grey patches (about 15% of each fish). The drawing is more regular than a tomb's, and its mirroring shows. |
+| `stone-h.webp` | 1024 × 1024, 167 KB | The height of a dressed limestone face, made in code, not by the image model: short parallel chisel strokes in drifting directions, fine pores, a few deeper pocks and hairline flaws. It averages 128 and stays low (nearly all within 10 of it; the deepest pock is 108, nothing is above 133), so the carvings stand well clear. It tiles on all four sides; the dressing is even all over, with no large feature to repeat. |
 
 - **The paint** is flat colour in the look's palette inside a dark line, faded a little, with 28% of
   it worn away in patches and speckle, more at the edges; where it is gone the file is transparent.
@@ -699,9 +701,8 @@ tomb under a raking light: carved, pale, cool, nothing like the Dunhuang wall's 
 Every picture comes as a pair of the same size: `-h` the height (mid grey the stone's face,
 lighter raised, darker cut in; opaque) and `-c` the faded paint over it (Egyptian blue `#3F6FA8`,
 green `#5E8F6A`, red ochre `#A8482C`, yellow `#D6A23E`, black line; transparent where bare).
-1. P1 `stone-h.webp`, 1024 × 1024, a limestone face with chisel marks and fine pitting, seamless.
-2. P0 `koi-h.webp`, `koi-c.webp` + `koi-mask.webp` to the common spec: tilapia as tomb reliefs
-   carve them, incised scales; gold in yellow ochre, the spot in red ochre.
+1. Delivered, to wire in: `stone-h.webp`, the limestone face.
+2. Delivered, to wire in: `koi-h.webp`, `koi-c.webp` + `koi-mask.webp`, to the common spec.
 3. Delivered and in use: `fish`, `lotus`, `frieze`. P1 `papyrus`, 512 × 1024, a papyrus clump; `duck`, 512 ×
    512, a duck in profile.
 4. P1 `cartouche`, 512 × 768, an empty cartouche ring, upright, for the solar term. Nothing in it.
