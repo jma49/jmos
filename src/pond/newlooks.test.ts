@@ -28,11 +28,15 @@ describe('the Dunhuang wall', () => {
       [390, 844],
       [375, 667],
       [360, 740],
-      [430, 932]
+      [430, 932],
+      [800, 500],
+      [700, 420]
     ]) {
       const { draw } = muralLayout(W, H, false),
         pipa = draw.find((d) => d[0] === 'pipa') ?? [];
       expect(pipa[6] + pipa[8] * 0.83, `${W}×${H}`).toBeLessThanOrEqual(H - MURAL_FOOT_NARROW + 0.5);
+      // (and never up over the greeting)
+      expect(pipa[6] + pipa[8] * 0.15, `${W}×${H}`).toBeGreaterThanOrEqual(H * 0.35);
     }
   });
   it('keeps every picture it places among the ones it fetches', () => {

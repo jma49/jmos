@@ -116,7 +116,8 @@ export function muralLayout(W, H, wide) {
   if (!wide) {
     // (below the contents, in the open water: at the top she would lie under the greeting)
     // (and clear of the controls: her paint ends 0.83 of the way down her picture)
-    const w = W * 1.25,
+    // On a small window that is wider than tall she is smaller, so she still fits under the greeting.
+    const w = Math.min(W * 1.25, H * 0.9),
       x = W * 0.03,
       y = Math.min(H * 0.615, H - MURAL_FOOT_NARROW - (w / 2) * 0.83);
     return {

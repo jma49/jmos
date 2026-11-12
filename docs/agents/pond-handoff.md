@@ -130,7 +130,10 @@ koi moved to the common sheet. What is left of those:
    off; gesture a zigzag of three peaks or more (add it to `gestures.ts`'s table and test every
    pair); seal 刻; its own shader pass; the delivered `relief/` lot. Then delete the blackboard.
 7. **Exits designed** where the arrival run backwards looks wrong (only the stars have their own).
-8. **A run under reduced motion**, every look in and out.
+8. **Reduced motion: seen once.** Every look was brought in and sent back under reduced motion
+   (`RM=1` with `tools/pond/pol.cjs`): each cross-fades in and out with no error. Seen as stills at
+   800 × 500 only; glow's page type is still hidden 1.5 s into leaving, where the others' has come
+   back, which may only be its longer fade.
 9. **A visitor's colour on painted koi, seen with a second visitor** (two browsers signed in, or
    presence faked), in 青花 and Monet.
 10. **The finish checklist, ink as the benchmark,** for every look: title page; every chapter

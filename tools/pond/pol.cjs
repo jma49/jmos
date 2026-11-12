@@ -1,12 +1,18 @@
 // @ts-nocheck (a scratch tool kept from the session: see docs/agents/pond-handoff.md)
 // polish shots: node pol.cjs <dist> <w> <h> <dsf> <tag> <looks,..> [phone]
+// (RM=1 runs under reduced motion and also pictures each look leaving and gone)
 const { chromium } = require('playwright');
 (async () => {
   const [, , dir, w, h, dsf, tag, looks, phone] = process.argv;
   const { serveDist } = await import(require('node:url').pathToFileURL(require('node:path').join(__dirname, '../../scripts/serve-dist.mjs')).href);
   const srv = await serveDist({ dir });
   const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
-  const ctx = await b.newContext({ viewport: { width: +w, height: +h }, deviceScaleFactor: +dsf, ...(phone ? { hasTouch: true, isMobile: true } : {}) });
+  const ctx = await b.newContext({
+    viewport: { width: +w, height: +h },
+    deviceScaleFactor: +dsf,
+    ...(phone ? { hasTouch: true, isMobile: true } : {}),
+    ...(process.env.RM ? { reducedMotion: 'reduce' } : {})
+  });
   if (process.env.DATE)
     await ctx.addInitScript((m) => {
       const RD = Date,
@@ -40,6 +46,18 @@ const { chromium } = require('playwright');
     }
     await p.waitForTimeout(+(process.env.WAIT || 9000));
     await p.screenshot({ path: `${__dirname}/pol/${tag}-${l}.png`, timeout: 180000 });
+    if (process.env.RM) {
+      // under reduced motion: a moment into the cross-fade in, then back to the water and a moment into that
+      await p.evaluate(() => {
+        const s = document.querySelector('.preview [data-k=look]');
+        s.value = 'water';
+        s.dispatchEvent(new Event('input', { bubbles: true }));
+      });
+      await p.waitForTimeout(1500);
+      await p.screenshot({ path: `${__dirname}/pol/${tag}-${l}-leaving.png`, timeout: 180000 });
+      await p.waitForTimeout(+(process.env.WAIT || 9000));
+      await p.screenshot({ path: `${__dirname}/pol/${tag}-${l}-left.png`, timeout: 180000 });
+    }
     if (process.env.SHEET) {
       await p.evaluate(() => document.querySelector('[data-sheet=about]').click());
       await p.waitForTimeout(3500);
