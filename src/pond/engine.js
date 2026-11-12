@@ -12,6 +12,7 @@
 import { report } from '../os/core/report';
 import { load, save } from '../os/core/storage';
 import { effectsOf, loadWeather, minutesAt, phaseAt, seasonOf } from './weather';
+import { SHEETS as SPRITES, doveFrame, lit as litLook, loadSprites, spiderFrame } from './sprites.js';
 import { PREVIEW, WELCOME_BACK, festivalDate, festivalOn, moonAge, moonLit, panel, returning } from './preview.js';
 // the looks' type, as a stylesheet of its own: linked only once a look or 日 is chosen (loadType)
 import LOOKS_CSS from './looks.css?url';
@@ -2240,11 +2241,34 @@ function showBoat(b) {
   tip.style.transform = `translate3d(${clamp(b.x - tip.offsetWidth / 2, 8, W - tip.offsetWidth - 8)}px,${Math.max(8, b.y - tip.offsetHeight - 26)}px,0)`;
 }
 
-/* ================= Devot's dove and ocra's spider, as models ================= */
+/* ================= Devot's dove and ocra's spider, as models or as sprites ================= */
 // three.js and the models (life.js) arrive once the pond has settled; until then, and where they can't run,
-// the pond does without them.
+// the pond does without them. A preview build draws the two from rendered sprite sheets instead
+// (sprites.js), and never fetches three.js or the models: `life.pic` is then how a sheet is had.
 let life = null,
   lifeDt = 0.016;
+// the light the time of day gives a sprite, in steps coarse enough that a sheet is dressed again only now and then
+const spriteLight = () => {
+  const q = (i) => Math.round((0.5 + 0.5 * (cur ? cur.tint[i] : 1)) * (0.3 + 0.7 * (cur ? cur.amb : 1)) * 16) * 16;
+  return `rgb(${Math.min(255, q(0))},${Math.min(255, q(1))},${Math.min(255, q(2))})`;
+};
+// one cell of a creature's sheet, laid where it stands and turned to its heading, on the soft shadow the
+// ground gave the model where the look keeps its light
+function drawCell(c, which, [row, i], x, y, a, half, shadow) {
+  const n = SPRITES[which].cell;
+  c.save();
+  c.translate(x, y);
+  if (shadow > 0 && litLook(look)) {
+    const g = c.createRadialGradient(half * 0.05, half * 0.08, 0, half * 0.05, half * 0.08, half * 0.5);
+    g.addColorStop(0, `rgba(8,20,22,${0.42 * shadow})`);
+    g.addColorStop(1, 'rgba(8,20,22,0)');
+    c.fillStyle = g;
+    c.fillRect(-half, -half, half * 2, half * 2);
+  }
+  c.rotate(a);
+  laidIn(c, () => c.drawImage(life.pic(which, look, spriteLight()), i * n, row * n, n, n, -half, -half, half * 2, half * 2));
+  c.restore();
+}
 
 /* ================= ocra's spider: a jumping spider that keeps to the lily pads ================= */
 // It reads before it moves. Its eyes follow a pointer nearby and anything that lands; then it
@@ -2372,6 +2396,8 @@ function stepSpider(dt) {
       }
   }
   const look = spider.prey || (ptr.moved && Math.hypot(ptr.x - spider.x, ptr.y - spider.y) < 340 ? ptr : null);
+  // what has its eye: prey, or a pointer that has just moved close by
+  spider.alert = !!spider.prey || (ptr.moved && T - ptr.at < 1.5 && Math.hypot(ptr.x - spider.x, ptr.y - spider.y) < 160);
   const face = (x, y, rate) => {
     let da = Math.atan2(y - spider.y, x - spider.x) - spider.a;
     da = Math.atan2(Math.sin(da), Math.cos(da));
@@ -2416,6 +2442,8 @@ function stepSpider(dt) {
     } else if (face(spider.wx, spider.wy, 6) < 0.6) {
       spider.x += Math.cos(spider.a) * 44 * dt;
       spider.y += Math.sin(spider.a) * 44 * dt;
+      // in strides: the sprite's walk is one loop to half a unit of the spider's own size
+      spider.gone = ((spider.gone || 0) + (44 * dt) / (S * 0.23)) % 1;
     }
   } else if (spider.state === 'crouch') {
     face(spider.tx, spider.ty, 9);
@@ -2649,7 +2677,7 @@ function setLook(name, from) {
   lookTimer = setTimeout(
     () => {
       pond.toggleAttribute('data-ink', inkOn);
-      if (life) {
+      if (life && life.dress) {
         life.dress(name);
         spiderSig = '';
       }
@@ -2780,6 +2808,12 @@ function drawSpider(c) {
     up = spider.state === 'jump' ? Math.sin(spider.jump * Math.PI) : 0,
     half = life.SPIDER * u * (1 + up * 0.3),
     n = life.size / 2;
+  if (life.pic) {
+    c.globalAlpha = spider.alpha;
+    drawCell(c, 'spider', spiderFrame(spider), spider.x, spider.y, spider.a, half, spider.state === 'jump' ? 0 : 0.9);
+    c.globalAlpha = 1;
+    return;
+  }
   const sig = `${spider.state} ${spider.a.toFixed(2)} ${spider.crouch.toFixed(2)} ${up.toFixed(2)} ${spider.feet.map((f) => Math.round(f.x - spider.x) + ',' + Math.round(f.y - spider.y)).join(' ')}`;
   if (!spiderPic) {
     spiderPic = document.createElement('canvas');
@@ -2817,6 +2851,8 @@ const dove = { state: 'away', x: 0, y: 0, a: 0, h: 1, spread: 1, ph: 0, dip: 0, 
 const flies = [0, 1].map((i) => ({ x: -50, y: -50, a: 0, tx: 0, ty: 0, next: 0, tone: i ? '#d6503a' : '#3aa7c9', a2: 0 })),
   flakes = Array.from({ length: 60 }, (_, i) => ({ x: Math.random(), y: Math.random(), z: Math.random(), i: i / 60, s: rnd(0.7, 1.4) }));
 const doveSize = () => (big ? 64 : 48);
+// with ?perf, where the two are and what they are doing, for a tool that pictures them (tools/pond/life.cjs)
+if (PERF) window.__pond = { dove, spider };
 function callDove() {
   if (!life || dove.state !== 'away') return;
   const spots = padSpots.filter((_, i) => i !== spider.pad),
@@ -2880,6 +2916,7 @@ function stepAir(dt) {
       }
       if ((dove.sips >= 4 && dove.t > 11) || (ptr.moved && T - ptr.at < 0.3 && Math.hypot(ptr.x - dove.x, ptr.y - dove.y) < 46)) {
         dove.state = 'out';
+        dove.t = 0;
         dove.tx = dove.x < W / 2 ? -170 : W + 170;
         dove.ty = rnd(-110, H * 0.4);
         drop(dove.x, dove.y, 3, -0.7);
@@ -2944,6 +2981,20 @@ function drawDove(c) {
     n = life.size,
     now = performance.now(),
     sits = dove.state === 'sit';
+  if (life.pic) {
+    count('dove');
+    drawCell(
+      c,
+      'dove',
+      doveFrame({ state: dove.state, t: dove.t, h: dove.h, ph: dove.ph, idle: dove.sips >= 4 }),
+      dove.x,
+      dove.y,
+      dove.a,
+      half,
+      1 - clamp(dove.h * 4, 0, 1)
+    );
+    return;
+  }
   doveOwed += lifeDt;
   if (!dovePic) {
     dovePic = document.createElement('canvas');
@@ -6180,19 +6231,27 @@ const crackU = new Float32Array(24),
 $('#tags').append(doveTag, spiderTag);
 // Settled: the opening has played and the browser is idle. What isn't on the first screen loads then.
 const settled = new Promise((resolve) => setTimeout(() => (window.requestIdleCallback || ((f) => setTimeout(f, 1)))(() => resolve()), 2600));
-settled
-  .then(() => import('./life.js'))
-  .then(
-    (L) => {
-      try {
-        life = L.makeLife();
-        life.dress(look);
-      } catch (err) {
-        report(err, 'pond models');
-      }
+if (PREVIEW)
+  settled.then(loadSprites).then(
+    (sprites) => {
+      life = { DOVE: SPRITES.dove.half, SPIDER: SPRITES.spider.half, size: 0, pic: sprites.pic };
     },
-    (err) => report(err, 'pond models')
+    (err) => report(err, 'pond sprites')
   );
+else
+  settled
+    .then(() => import('./life.js'))
+    .then(
+      (L) => {
+        try {
+          life = L.makeLife();
+          life.dress(look);
+        } catch (err) {
+          report(err, 'pond models');
+        }
+      },
+      (err) => report(err, 'pond models')
+    );
 settled.then(loadSongs);
 settled.then(() => hintSoon(20000));
 // The weather where the visitor is: once the pond has settled, so it never holds up the title page; again
