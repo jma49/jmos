@@ -66,7 +66,7 @@ const $ = (s) => document.querySelector(s);
 const D = JSON.parse($('#pond-data').textContent);
 const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
 // With ?preview: the real moon, the wind, the festivals, fireflies, stars, a welcome back (preview.js)
-const pv = { age: moonAge(), fest: PREVIEW ? festivalOn() : null, flies: [], fliesOn: false, windX: 13, windY: 6, boatAt: -1e9, lanterns: [] };
+const pv = { age: moonAge(), fest: PREVIEW ? festivalOn() : null, flies: [], fliesOn: false, windX: 13, windY: 6, boatAt: -1e9, wakeAt: 0, lanterns: [] };
 const MAC = /Mac|iPhone|iPad/.test(navigator.userAgent);
 const pond = $('#pond'),
   glc = $('#gl');
@@ -2205,6 +2205,24 @@ function drawTop() {
 // The festivals, on the water: a few red lanterns at the Spring Festival, river lanterns at Mid-Autumn,
 // a dragon boat far off now and then at Dragon Boat. Drawn with the top layer, ten times a second.
 let festAt = 0;
+// The festivals' own pictures (public/pond/water/): the dragon boat in two paddling frames, the two
+// lanterns. Each is asked for the first time its festival draws, and what is drawn in code stands until
+// it has come, or for good if it never does.
+const festPics = {};
+function festPic(name) {
+  if (!(name in festPics)) {
+    festPics[name] = null;
+    const im = new Image();
+    im.onload = () => {
+      festPics[name] = im;
+      invalidate();
+    };
+    // (not having the picture is no fault: the drawn one is kept)
+    im.onerror = () => {};
+    im.src = `/pond/water/${name}.webp`;
+  }
+  return festPics[name];
+}
 function drawFestival(c) {
   const now = performance.now() / 1000,
     dt = Math.min(0.5, now - (festAt || now));
@@ -2218,6 +2236,19 @@ function drawFestival(c) {
     q.y += (pv.windY * 0.35 + Math.cos(now * 0.25 + q.p) * 2) * dt;
     if (q.x > W + 30) q.x = W * 0.45;
     if (q.y > H + 30) q.y = H * 0.1;
+    const lamp = festPic('lanterns');
+    if (lamp) {
+      // from the picture: the river lantern with the light the pond gives it, or the red paper one
+      if (f !== 'spring') {
+        const g = c.createRadialGradient(q.x, q.y, 0, q.x, q.y, 30);
+        g.addColorStop(0, 'rgba(255,214,140,0.6)');
+        g.addColorStop(1, 'rgba(255,170,80,0)');
+        c.fillStyle = g;
+        c.fillRect(q.x - 30, q.y - 30, 60, 60);
+      }
+      c.drawImage(shrunk(lamp, 0.5), f === 'spring' ? 128 : 0, 0, 128, 128, q.x - 22, q.y - 22, 44, 44);
+      continue;
+    }
     c.save();
     c.translate(q.x, q.y);
     c.scale(1.5, 1.5);
@@ -2264,7 +2295,19 @@ function drawFestival(c) {
     // far off near the top: once every few minutes, a slow crossing of some forty seconds
     if (now - pv.boatAt > 200) pv.boatAt = now;
     const k = (now - pv.boatAt) / 40;
-    if (k < 1) {
+    const boat = festPic('dragon-boat');
+    if (k < 1 && boat) {
+      // from the picture, a quarter of its size: the two frames of the stroke in turn, to the drum's beat,
+      // and a wake in the water behind it
+      const bx = -160 + k * (W + 320),
+        by = H * 0.16,
+        frame = Math.floor(now / 0.55) % 2;
+      c.drawImage(shrunk(boat, 0.25), 0, frame * 64, 256, 64, bx - 128, by - 32, 256, 64);
+      if (now - pv.wakeAt > 0.35) {
+        pv.wakeAt = now;
+        drop(bx - 118, by, 2.2, 0.5);
+      }
+    } else if (k < 1) {
       c.save();
       c.translate(-160 + k * (W + 320), H * 0.16);
       c.scale(1.7, 1.7);

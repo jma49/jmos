@@ -376,3 +376,31 @@
     bottom: 36px;
   }
 }
+
+/* the command bar on the three light grounds (glaze, plaster, stone): the look's own ground instead of dark
+   glass, so its dark type reads */
+#pond[data-look='qinghua'] .pal-wrap,
+#pond[data-look='dunhuang'] .pal-wrap,
+#pond[data-look='relief'] .pal-wrap {
+  background: color-mix(in srgb, var(--mist) 10%, transparent);
+}
+#pond[data-look='qinghua'] .pal,
+#pond[data-look='dunhuang'] .pal,
+#pond[data-look='relief'] .pal {
+  background: color-mix(in srgb, var(--deep) 92%, transparent);
+  box-shadow:
+    inset 0 0 0 1px var(--hair),
+    0 30px 70px color-mix(in srgb, var(--mist) 22%, transparent);
+}
+#pond[data-look='qinghua'] .pal li[aria-selected='true'],
+#pond[data-look='dunhuang'] .pal li[aria-selected='true'],
+#pond[data-look='relief'] .pal li[aria-selected='true'] {
+  background: var(--lift);
+  box-shadow: inset 0 0 0 1px var(--hair);
+}
+#pond[data-look='qinghua'] .pal mark,
+#pond[data-look='dunhuang'] .pal mark,
+#pond[data-look='relief'] .pal mark {
+  color: var(--koi);
+  background: none;
+}

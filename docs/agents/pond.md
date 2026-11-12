@@ -512,6 +512,19 @@ what each look needs, in the order to make it, so nothing has to be asked. A loo
 without its pictures and to take each one as it comes. What has been delivered is in the tables
 above; this list says what each thing is for and what is still wanted.
 
+**The round asked for now** (every line is already in a look's kit below, or is new there; make them
+in this order, commit each lot as it is done, and say in its table what came out):
+
+1. Water: `dragon-boat`, `lanterns` (new), then `afloat` and `dragonfly`.
+2. Ukiyo-e: `bed` (new: the look has no painted water of its own), then `paper` and `lilies`.
+3. 青花: `lotus`, then `medallion`.
+4. Dunhuang: `lotus`.
+5. Star chart: `nebulae`.
+6. Monet: the autumn row of lilies, then `dragonfly`.
+7. Ink: `stems`; the seals stay on hold until a seal-script face is chosen.
+8. Egyptian relief: `papyrus`, `duck`, `cartouche`.
+9. The dove and the spider dressed for each look, where a kit asks for them, last.
+
 **For every picture, unless its line says otherwise**
 
 - WebP. Transparent ground with straight (not premultiplied) alpha; a ground the line calls opaque
@@ -661,7 +674,17 @@ is most of it.
 
 **Ukiyo-e.** Judge it by: a Hokusai or Hiroshige print at arm's length: flat colour, a key line,
 bokashi gradation, paper showing.
-1. P1 `paper.webp`, 512 × 512, washi grain with a few long fibres, greyscale, opaque, seamless.
+1. **P0, new:** `bed.webp`, 2048 × 1152, opaque to every edge, with `bed-tall.webp`, 1080 × 1920, the
+   same water painted again upright (not a crop). The water of a print, seen from above, with nothing
+   in it: flat Prussian blue in three or four tones (`#16365f`, `#1f4a7a`, `#33638c`, a little
+   `#8fb4c8`), the swell as long carved contour lines that run in parallel bands and curl at their
+   ends, bokashi gradation from dark at the left to lighter at the right, a keyline `#0c1b27`. No
+   foam crests, no boats, no fish, no sky, no text, no seal. The left third (the top third of the
+   upright one) quieter and darker, with fewer lines: the title's type stands there. In the manner
+   of Hokusai's and Hiroshige's water, not a copy of a print. It replaces the shader's bands, which
+   read as blotches; the shader keeps the moving foam and the press. Under 300 KB and 120 KB (a bed
+   may pass the budget, with its line in the size check).
+   P1 `paper.webp`, 512 × 512, washi grain with a few long fibres, greyscale, opaque, seamless.
 2. Delivered and in use: `koi.webp` + mask, as a carp print.
 3. P1 `lilies.webp`, 1024 × 512, 4 × 2: lotus leaves and flowers as a print draws them from above;
    maple leaves and cherry petals for the seasons.

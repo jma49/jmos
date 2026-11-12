@@ -46,6 +46,7 @@ pass, and the move from drawing things in code to painted pictures. How the pond
 | `life.cjs` | The dove and the spider through their states, as strips of crops round each, in the looks given (`HOUR` sets the time of day). It opens the page with `?perf`, which hands their places to `window.__pond`. Slow: six minutes a look and more. |
 | `virtual.cjs` | The virtual clock the newer tools share. |
 | `glide.cjs` | The layout glide between looks, measured: where each block stood, where it is drawn the moment the look's styles apply, where it ends. |
+| `finish.cjs` | The finish checklist as contact sheets: each look's title page, chapters, album and command bar, and a phone sheet. About three minutes a look. |
   | `terms.cjs` | Ink in each of the 24 solar terms. |
   | `ab.cjs`, `abdiff.py` | A deterministic A/B of two builds (seeded random, virtual clock, frames stepped by hand) and the largest pixel difference. |
   | `gest5.cjs` | Each look's gesture made with a real pointer, and which look arrives. |
@@ -146,14 +147,23 @@ koi moved to the common sheet. What is left of those:
    under the cobalt wash and is pale, paler still under the title. Whether 青花 should show a
    visitor's colour more strongly, or keep to cobalt, is Jincheng's to say. Not done with two real
    browsers signed in.
-10. **The finish checklist, ink as the benchmark,** for every look: title page; every chapter
-    (Timeline, Photos, Music, Notes, Chat, About, Account, ⌘K, the album) with rules, buttons, focus
-    rings, scrollbars, selection, hover, the photo viewer; the press; tags; gauge; clock and term;
-    dove and spider; seasons and weather; the stamp; sounds; phone. Report fixes by look.
+10. **The finish checklist: one pass done from contact sheets.** `tools/pond/finish.cjs` makes, for each
+    look, a sheet of the title page, every chapter, the album and the command bar at 1280 × 800, and a
+    phone sheet. All ten were looked at (in winter, English). Fixed: the command bar was dark glass
+    under dark type in 青花, Dunhuang and the relief. Seen and left, for Jincheng or a real screen:
+    the timeline's filter bar keeps its dark green in every dark look; on a phone a painted koi
+    crosses the contents at full strength in ukiyo-e, and ink's koi cross the greeting, as on the
+    water; the Preview pill sits on the search box on a phone (preview builds only). Not covered by
+    the sheets: hover, focus rings, scrollbars, selection, the photo viewer, sounds, the other
+    seasons and languages.
 11. **The final review by an independent reviewer:** looks × seasons × weather × chapters ×
     desktop and phone × En, 中, 日.
 12. **Performance on a real Mac with `?perf`:** frame rate, GPU time and scale in each look and
     through each arrival. Nothing here could measure that (see the traps).
+
+Asked of the local thread now, as one round in a set order ("The round asked for now" in the art
+brief): the dragon boat and the lanterns (the festival code takes them the moment they come), a
+painted bed for ukiyo-e, and the P1 lines of every look's kit.
 
 Asked of the local thread since this page was first written, delivered, and in use: the relief's koi
 sheet and stone face, then a lighter lily sheet for the water, a grid that tiles for the star chart,
