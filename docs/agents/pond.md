@@ -65,6 +65,9 @@ for; keep it true when the file changes.
   - Frames fall on the display's own beats, every nth (`due()`), so they come evenly; a timer that
     waited and then caught the next beat made the koi judder.
   - None while the tab is hidden. Under reduced motion the koi still swim, at the quiet pace.
+  - The quiet pace too while the window is in the background, the battery is low and not charging, or
+    a chapter or the palette is open (there only what was just touched keeps 60). A look coming in, and
+    a finger held down, are always drawn at 60.
   - The ripples step on time, 120 steps a second (scaled by ink's slow time), so they run at the same
     speed at 60 and 120 Hz.
   - A frame touches the page only when what it shows changes: the panes are read only while something
@@ -72,7 +75,20 @@ for; keep it true when the file changes.
   - Textures are made once for each size and then only refilled. The top layer is drawn ten times a
     second. The glass blurs a quarter-size copy of the scene, and the tree's shade is drawn in the
     glass pass, not by a blurred, blended layer.
-  - At most about two megapixels are drawn, fewer if frames run slow.
+  - The water pass is built three ways from one source (`fsPart()`): whole, while a look comes in or
+    goes; the water alone, with no look shown; a look alone, once it covers the water. The two smaller
+    builds compile in the background and draw exactly what the whole would (the A/B was pixel-identical
+    in every look), at about half its cost under a software renderer. The reflected canopy is skipped
+    with the focus up close, where none of it shows. A change to the pass goes in the one source and
+    must stay right in all three.
+  - The dove's model is drawn every frame in flight and at most 30 times a second while it sits; the
+    spider's only when its pose changes.
+  - At most about two megapixels are drawn. Where the browser can time the GPU
+    (`EXT_disjoint_timer_query_webgl2`), fewer only when the two passes take over 70% of a frame for a
+    while, a tenth at a time and never below 0.8 of full, and back up as soon as the next step would
+    fit in half a frame; elsewhere, fewer if frames run slow.
+  - `?perf` (or a build with `PUBLIC_POND_PERF=1`) shows the real numbers in a corner: frames a
+    second, each part's CPU time, the GPU's time, which build of the pass, the size drawn.
   - The sound sleeps when muted, hidden or idle for a minute.
 
   A new animation must be time-based (scale by `dt`), and anything that changes the picture without

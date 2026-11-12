@@ -3242,3 +3242,22 @@ button.more:hover {
 #pond[data-ink][data-fog] .mist i {
   background: linear-gradient(180deg, rgba(246, 242, 232, 0), rgba(246, 242, 232, 0.66), rgba(246, 242, 232, 0));
 }
+/* with ?perf: the pond's numbers (perf.js) */
+.perf {
+  position: fixed;
+  z-index: 20;
+  left: 8px;
+  top: 8px;
+  margin: 0;
+  padding: 6px 8px;
+  border-radius: 6px;
+  font:
+    11px / 1.35 ui-monospace,
+    'SF Mono',
+    Menlo,
+    monospace;
+  color: #eef4f1;
+  background: rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+  white-space: pre;
+}
