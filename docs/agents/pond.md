@@ -277,6 +277,29 @@ its red), entering at the right edge and reaching left, the left third empty.
 | `reeds.webp` | 75 KB | Reeds bending from the right, a goose flying in at the top and one standing among them: 364, 90, 660, 840. |
 
 
+#### Egyptian relief
+
+In `public/pond/relief/`, each picture as a pair that lines up to the pixel: `-c.webp` the paint,
+`-h.webp` the height.
+
+| Pair | Size | What is in it (each motif within its cell, as left, top, right, bottom) |
+| --- | --- | --- |
+| `fish-c.webp`, `fish-h.webp` | 1024 × 512, 83 KB and 35 KB | Two tilapia in profile, heads to the left, in two 512-pixel cells: blue head and back, green flank, a yellow belly line, red ochre fins. The straight one: 36, 136, 476, 376. The other: 36, 138, 476, 373; it is only slightly curved. |
+| `frieze-c.webp`, `frieze-h.webp` | 1024 × 128, 34 KB and 3 KB | An open blue lotus and a bud on a red base line, a stem looping from one to the other, four times in a tile, seamless left to right in both files. The flowers reach to 4 pixels from the top; the base line is at the bottom. |
+| `lotus-c.webp`, `lotus-h.webp` | 1024 × 512, 98 KB and 33 KB | Eight motifs in a 4 × 2 grid of 256-pixel cells, each at least 18 pixels clear of its cell's edge. Top row: two open lotus flowers, a blue bud, a green bud. Bottom row: two leaves from above, with a notch and veins, a papyrus clump, a duck facing left (18, 70, 238, 185). |
+
+- **The paint** is flat colour in the look's palette inside a dark line, faded a little, with 28% of
+  it worn away in patches and speckle, more at the edges; where it is gone the file is transparent.
+- **The height** is not drawn by the image model, which can only draw a carving already lit. It is
+  worked out from the same drawing, so the pair can't be out of register: the stone's face is exactly
+  128; inside a motif's outline the surface rises over a shoulder 6 to 8 pixels wide to a nearly flat
+  top about 30 above the face (the highest point is 162), and the drawing's inner lines (scales, fin
+  rays, veins) are cut back into it as shallow grooves (the lowest point is 119). Nothing is lit or
+  shaded in it. Low relief was the aim: scale it in the shader for more.
+- Seen under a raking light, the scales and the narrow petals read a little rounded, and the papyrus
+  rays are fine for this size. The drawing is cleaner and more regular than a tomb wall's.
+
+
 #### Wanted, by look
 
 A first small lot for each look: the two or three pictures that would lift it most. ★ marks the ones
@@ -336,12 +359,6 @@ continuous tone, opaque), and `<name>-c.webp`, the faded mineral paint that lies
 `#3F6FA8`, green `#5E8F6A`, red ochre `#A8482C`, yellow `#D6A23E`, black line), transparent where the
 stone is bare, worn in patches. No shading or cast shadow in either: the look lights the height itself.
 
-- ★ `fish`, 1024 × 512, a 2 × 1 sheet: two fish in profile as tomb reliefs carve them (tilapia, with
-  incised scales, fins and eye), heads to the left, one straight and one gently curved.
-- ★ `frieze`, 1024 × 128, a band of lotus flower and bud alternating, seamless left to right, for
-  the top and bottom of the wall.
-- ★ `lotus`, 1024 × 512, a 4 × 2 sheet: two open lotus flowers, two buds, two leaves seen from
-  above, a papyrus clump, a duck in profile facing left.
 - `cartouche`, 512 × 768, an empty cartouche frame (the rope ring and its bar), upright, to hold
   the solar term. Nothing written in it.
 - No inscriptions anywhere: no hieroglyphic text, real or invented.
