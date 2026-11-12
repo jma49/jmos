@@ -72,7 +72,10 @@ for; keep it true when the file changes.
   - The ripples step on time, 120 steps a second (scaled by ink's slow time), so they run at the same
     speed at 60 and 120 Hz.
   - A frame touches the page only when what it shows changes: the panes are read only while something
-    there moves, and tags, the knob and the gauge are written only on change.
+    there moves, and tags, the knob and the gauge are written only on change. Twice a second one
+    control's place is looked at, since a phone's browser can move the controls with no event (its
+    bars hiding, an in-app browser's safe area): if it isn't where the glass was drawn, the panes are
+    read again, and the water refitted if the pond's size changed.
   - Textures are made once for each size and then only refilled. The top layer is drawn ten times a
     second. The glass blurs a quarter-size copy of the scene, and the tree's shade is drawn in the
     glass pass, not by a blurred, blended layer.

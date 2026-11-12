@@ -1889,8 +1889,31 @@ for (const ev of ['transitionrun', 'transitionend', 'animationstart', 'animation
     { capture: true, passive: true }
   );
 addEventListener('resize', panesLive);
+// The panes are read only while something says they may move. A browser can move them and say nothing: a
+// phone's in-app browser hides its bars or changes the safe area with no resize event, and the glass was
+// then drawn where the controls had been. So twice a second one control's place is looked at, and if it
+// isn't where the glass was last drawn for it, the panes are read again.
+let paneSeen = '',
+  paneLooked = 0;
+const paneAt = () => {
+  const el = paneEls.find((e) => e.id === 'cmdBtn') || paneEls[0];
+  if (!el) return '';
+  const r = el.getBoundingClientRect(),
+    pr = pond.getBoundingClientRect();
+  return `${Math.round(r.left - pr.left)} ${Math.round(r.top - pr.top)} ${Math.round(r.width)} ${Math.round(pr.width)} ${Math.round(pr.height)}`;
+};
+function panesMoved(now) {
+  if (now - paneLooked < 500) return;
+  paneLooked = now;
+  if (paneAt() === paneSeen) return;
+  // (the pond itself may be another size: the water is fitted to it again before the glass is read)
+  const pr = pond.getBoundingClientRect();
+  if (Math.abs(pr.width - W) > 0.5 || Math.abs(pr.height - H) > 0.5) fit();
+  panesLive();
+}
 function panes() {
   if (performance.now() > panesUntil) return;
+  paneSeen = paneAt();
   const pr = pond.getBoundingClientRect();
   paneN = boxN = 0;
   for (const el of paneEls) {
@@ -6286,6 +6309,7 @@ function tick1(raw) {
   const dt = raw * timeScale;
   T += dt;
   lifeDt = dt;
+  panesMoved(performance.now());
   panes();
   stepYear(dt);
   holes();
@@ -6804,15 +6828,21 @@ function start() {
     if (CHAPTERS[ch]) setTimeout(() => openSheet(ch, at), 1400);
   }
   let rt = 0;
-  addEventListener('resize', () => {
+  const refit = () => {
     clearTimeout(rt);
-    rt = setTimeout(() => {
-      resize();
-      panesLive();
-      invalidate();
-      paintInk();
-      makePetals();
-    }, 150);
-  });
+    rt = setTimeout(fit, 150);
+  };
+  addEventListener('resize', refit);
+  // the pond can change size with no resize of the window (a phone's browser bars, an in-app browser's own)
+  window.visualViewport?.addEventListener('resize', refit);
+  if (window.ResizeObserver) new ResizeObserver(refit).observe(pond);
+}
+// the water, the glass and what is painted for the pond's size, fitted to the size it is now
+function fit() {
+  resize();
+  panesLive();
+  invalidate();
+  paintInk();
+  makePetals();
 }
 start();
