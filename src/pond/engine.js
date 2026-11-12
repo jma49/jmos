@@ -14,7 +14,8 @@ import { load, save } from '../os/core/storage';
 import { effectsOf, loadWeather, minutesAt, phaseAt, seasonOf } from './weather';
 // the looks' type, as a stylesheet of its own: linked only once a look or 日 is chosen (loadType)
 import LOOKS_CSS from './looks.css?url';
-import { IDLE_AFTER, due, learnBeat, simSteps } from './clock.js';
+import { FPS, IDLE_AFTER, due, learnBeat, simSteps } from './clock.js';
+import { PERF, add, count, frameDone, span } from './perf.js';
 import { SocialError } from '../os/social/errors';
 import { coverOf, loadSongs, music, onMusic, play as playSongAt, setMusicMuted, toggle as toggleSong } from './music';
 import * as people from './people';
@@ -1123,6 +1124,15 @@ void main(){
   float lb=soft(1.)+ice*1.7, lf=soft(.55)+ice*2., ls=soft(0.);
   // where the type stands: the left of a wide pond, all of a narrow one
   float calm=uCalm.y*(uCalm.x<.5?1.-smoothstep(.26,.64,uv.x):.82); lb+=calm*2.7; lf+=calm*2.3; ls+=calm*1.7;
+#if PART==2
+  // a look that has come in all the way covers the water, and draws only from what is worked out above:
+  // the water's own colour isn't needed (the same picture, for much less work)
+  {
+    gP=P; gUv=uv; gG=g; gIa=ia; gRef=ref; gLap=lap; gH=h; gLs=ls; gCalm=calm; gWater=vec3(0.); gp=p; gHit=hit;
+    gIce=max(ice,hit.y>0.?smoothstep(0.,.25,hit.z)*hit.y:0.);
+    o=vec4(look(uStyle),1.); return;
+  }
+#endif
   vec3 bed=vec3(textureLod(uBed,uv+ref*1.14,lb).r,textureLod(uBed,uv+ref,lb).g,textureLod(uBed,uv+ref*.86,lb).b);
   float ca=caustic(p*2.1+g*.9,uTime*.4)*(1.-ice*.85)/(1.+lb*.9);
   float focus=clamp(-lap*3.2,-.4,1.);
@@ -1139,9 +1149,11 @@ void main(){
   col=fc+col*(1.-f.a);
   // the canopy and the sky above, mirrored in the water: it comes forward as the focus rises
   float up=pow(clamp((.52-uFocus)/.52,0.,1.),1.3)*(1.-ice);
-  vec2 rp=p*1.25+g*3.2+vec2(uTime*.008,0.);
-  float canopy=smoothstep(.5,.62,fbm(rp*2.3+3.)), cloud=fbm(rp*.9+vec2(uTime*.015,5.));
-  col=mix(col,mix(uSky*.85,vec3(1.),cloud*.55)*(1.-canopy*.84),up*.56);
+  if(up>0.){   // (with the focus up close, as it mostly is, there's nothing of it to see)
+    vec2 rp=p*1.25+g*3.2+vec2(uTime*.008,0.);
+    float canopy=smoothstep(.5,.62,fbm(rp*2.3+3.)), cloud=fbm(rp*.9+vec2(uTime*.015,5.));
+    col=mix(col,mix(uSky*.85,vec3(1.),cloud*.55)*(1.-canopy*.84),up*.56);
+  }
   vec3 n=normalize(vec3(-g*5.,1.)); vec3 hv=normalize(normalize(vec3(-.45,-.55,.7))+vec3(0.,0.,1.));
   float spec=pow(max(dot(n,hv),0.),90.)*(1.-ice);
   col=mix(col,uSky,clamp(length(g)*2.2,0.,1.)*.26*(1.-ice));
@@ -1176,6 +1188,7 @@ void main(){
   // fog: a soft haze over the water
   col=mix(col,vec3(.55,.61,.63)*(uAmb*.6+.4),uFog*.36);
   // ---------- the looks: a front brings one look in over another (ink, ukiyo-e, glow, blueprint) ----------
+#if PART!=1
   if(uInk.w>0.){
     gP=P; gUv=uv; gG=g; gIa=ia; gRef=ref; gLap=lap; gH=h; gLs=ls; gCalm=calm; gWater=col; gp=p; gHit=hit;
     gIce=max(ice,hit.y>0.?smoothstep(0.,.25,hit.z)*hit.y:0.);
@@ -1184,8 +1197,13 @@ void main(){
     col=mix(base,top,m);
     col=mix(col,edgeCol(uStyle),e);
   }
+#endif
   o=vec4(col,1.);
 }`;
+// The water pass is built three ways from the one source: all of it (PART 0), for while a look comes in or
+// goes; the water alone (1), with no look shown; and a look alone (2), once one has come in all the way and
+// covers the water. Each draws exactly what the whole would, without the work that wouldn't be seen.
+const fsPart = (n) => FS.replace('\n', `\n#define PART ${n}\n`);
 // The second pass. Inside a pane the picture is blurred and smoked; towards the rim it is
 // pulled sideways as through the edge of a lens, and the rim itself catches the light. In
 // the cold, frost gathers along the rim.
@@ -1237,6 +1255,12 @@ let gl,
   bedProg,
   glassProg,
   U = {},
+  progs = [],
+  progOK = [],
+  progU = new Map(),
+  pcx = null,
+  progAt = 0,
+  passNow = 0,
   UG = {},
   texH,
   texFish,
@@ -1255,21 +1279,71 @@ let gl,
   sceneFbo,
   glOK = false,
   glDpr = 1;
-function sh(type, src) {
+function sh(type, src, later) {
   const s = gl.createShader(type);
   gl.shaderSource(s, src);
   gl.compileShader(s);
-  if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
+  if (!later && !gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
   return s;
 }
-function mk(fs) {
+function mk(fs, later) {
   const p = gl.createProgram();
-  gl.attachShader(p, sh(gl.VERTEX_SHADER, VS));
-  gl.attachShader(p, sh(gl.FRAGMENT_SHADER, fs));
+  gl.attachShader(p, sh(gl.VERTEX_SHADER, VS, later));
+  gl.attachShader(p, sh(gl.FRAGMENT_SHADER, fs, later));
   gl.bindAttribLocation(p, 0, 'a');
   gl.linkProgram(p);
-  if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p));
+  if (!later && !gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p));
   return p;
+}
+// the water pass's uniforms, looked up once a build is ready (asking sooner would wait for it)
+const FS_U = [
+  'uBed',
+  'uH',
+  'uFish',
+  'uPads',
+  'uTop',
+  'uIceN',
+  'uRes',
+  'uGrid',
+  'uMoonPos',
+  'uCss',
+  'uTime',
+  'uAmb',
+  'uCaI',
+  'uMoon',
+  'uSwell',
+  'uFocus',
+  'uIce',
+  'uSnow',
+  'uTint',
+  'uCaC',
+  'uSky',
+  'uSeason',
+  'uBox',
+  'uBoxB',
+  'uBoxN',
+  'uCrack',
+  'uBroke',
+  'uCalm',
+  'uInk',
+  'uBlot',
+  'uStyle',
+  'uPrev',
+  'uGlint',
+  'uFog'
+];
+const locs = (p) => Object.fromEntries(FS_U.map((n) => [n, gl.getUniformLocation(p, n)]));
+// Which build of the water pass draws this frame: a part is used once it has been built (asked without
+// waiting where the browser can say, else after a few seconds); one that failed is never used.
+function waterProg(part) {
+  const p = progs[part];
+  if (!part || !p) return prog;
+  if (progOK[part] === undefined) {
+    if (pcx ? !gl.getProgramParameter(p, pcx.COMPLETION_STATUS_KHR) : performance.now() - progAt < 4000) return prog;
+    progOK[part] = !!gl.getProgramParameter(p, gl.LINK_STATUS);
+    if (progOK[part]) progU.set(p, locs(p));
+  }
+  return progOK[part] ? p : prog;
 }
 function tex(filter) {
   const t = gl.createTexture();
@@ -1292,51 +1366,20 @@ function deep() {
 function initGL() {
   gl = glc.getContext('webgl2', { antialias: false, alpha: false, powerPreference: 'high-performance' });
   if (!gl) return;
-  prog = mk(FS);
+  prog = mk(fsPart(0));
   bedProg = mk(BED);
   glassProg = mk(GLASS);
+  // the water alone and a look alone are built in the background, and used once they're ready
+  progs = [prog, mk(fsPart(1), true), mk(fsPart(2), true)];
+  pcx = gl.getExtension('KHR_parallel_shader_compile');
+  progAt = performance.now();
   const vb = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, vb);
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
   gl.enableVertexAttribArray(0);
   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
-  for (const n of [
-    'uBed',
-    'uH',
-    'uFish',
-    'uPads',
-    'uTop',
-    'uIceN',
-    'uRes',
-    'uGrid',
-    'uMoonPos',
-    'uCss',
-    'uTime',
-    'uAmb',
-    'uCaI',
-    'uMoon',
-    'uSwell',
-    'uFocus',
-    'uIce',
-    'uSnow',
-    'uTint',
-    'uCaC',
-    'uSky',
-    'uSeason',
-    'uBox',
-    'uBoxB',
-    'uBoxN',
-    'uCrack',
-    'uBroke',
-    'uCalm',
-    'uInk',
-    'uBlot',
-    'uStyle',
-    'uPrev',
-    'uGlint',
-    'uFog'
-  ])
-    U[n] = gl.getUniformLocation(prog, n);
+  progU.set(prog, locs(prog));
+  U = progU.get(prog);
   for (const n of [
     'uScene',
     'uCss',
@@ -1370,6 +1413,7 @@ function initGL() {
   sceneFbo = gl.createFramebuffer();
   blurFbo = gl.createFramebuffer();
   glOK = true;
+  tq = gl.getExtension('EXT_disjoint_timer_query_webgl2');
 }
 function sizeGL() {
   // at most 1.5 pixels to a CSS pixel, at most about two megapixels in all, and less if frames run slow
@@ -2389,6 +2433,7 @@ function drawSpider(c) {
     spiderHot = T + 0.8;
   }
   if (T < spiderHot) {
+    count('spider');
     life.spider(lifeDt, {
       a: spider.a,
       feet: spider.feet.map((f) => [(f.x - spider.x) / u, (f.y - spider.y) / u]),
@@ -2529,12 +2574,35 @@ function stepAir(dt) {
   }
 }
 // The dove is laid into the air over the pond, larger the higher it flies; its light follows the time of day.
+// In flight it is drawn every frame; sitting, it barely moves, and its picture is drawn again at most
+// thirty times a second and kept in between (time it didn't draw is given to the next drawing).
+let dovePic = null,
+  doveAt = 0,
+  doveOwed = 0;
 function drawDove(c) {
   if (!life || dove.state === 'away') return;
   const u = doveSize() * 0.34 * (1 + dove.h * 0.28),
-    half = life.DOVE * u;
-  life.dove(lifeDt, { a: dove.a, fly: dove.state !== 'sit', dip: dove.dip, h: dove.h, amb: cur ? cur.amb : 1, tint: cur ? cur.tint : [1, 1, 1] });
-  laidIn(c, () => c.drawImage(life.canvas, dove.x - half, dove.y - half, half * 2, half * 2));
+    half = life.DOVE * u,
+    n = life.size,
+    now = performance.now(),
+    sits = dove.state === 'sit';
+  doveOwed += lifeDt;
+  if (!dovePic) {
+    dovePic = document.createElement('canvas');
+    dovePic.width = dovePic.height = n;
+  }
+  if (!sits || now - doveAt > 1000 / 30 - 4) {
+    count('dove');
+    life.dove(doveOwed, { a: dove.a, fly: !sits, dip: dove.dip, h: dove.h, amb: cur ? cur.amb : 1, tint: cur ? cur.tint : [1, 1, 1] });
+    doveOwed = 0;
+    doveAt = now;
+    if (sits) {
+      const x = dovePic.getContext('2d');
+      x.clearRect(0, 0, n, n);
+      x.drawImage(life.canvas, 0, 0);
+    } else doveAt = 0;
+  }
+  laidIn(c, () => c.drawImage(sits && doveAt ? dovePic : life.canvas, dove.x - half, dove.y - half, half * 2, half * 2));
 }
 // how the look lays the two into the air: ink soaks into the paper, glow adds light; the rest as they are
 const LAY = { ink: ['multiply', 0.8], glow: ['lighter', 0.65], ascii: ['source-over', 0.6] };
@@ -4777,7 +4845,29 @@ let last = 0,
   energyAt = 0,
   slow = 0,
   quality = 1,
-  lifeRaw = 0.033;
+  gpuMs = null,
+  lifeRaw = 0.033,
+  // the GPU's own time for the water and glass passes, where the browser can measure it (one query at a time)
+  tq = null,
+  tqQ = null,
+  tqOn = false,
+  gpuAvg = null,
+  hot = 0,
+  cool = 0,
+  // the window in the background, or the battery low and not charging: the pond keeps the quiet pace
+  away = false,
+  saving = false;
+addEventListener('blur', () => (away = true));
+addEventListener('focus', () => ((away = false), invalidate()));
+navigator
+  .getBattery?.()
+  .then((b) => {
+    const f = () => ((saving = !b.charging && b.level <= 0.2), invalidate());
+    f();
+    b.addEventListener('chargingchange', f);
+    b.addEventListener('levelchange', f);
+  })
+  .catch(() => {});
 function invalidate() {
   wokeAt = performance.now();
   if (AC && AC.state === 'suspended' && !muted && !document.hidden) AC.resume();
@@ -4797,6 +4887,11 @@ function stirred(now) {
   return calmAt;
 }
 function busy(now) {
+  // a look coming in is always drawn at the full pace, and so is a finger or pointer held down
+  if (top !== base || (look === 'water' && inkR > 0) || gest.down) return true;
+  if (away || saving) return false;
+  // under a chapter or the palette the pond is mostly hidden: only what was just touched keeps the pace up
+  if (sheetOpen() || palOpen()) return now - wokeAt < 1500;
   return (
     now - wokeAt < IDLE_AFTER * 1000 ||
     now - stirred(now) < 2000 ||
@@ -4808,10 +4903,45 @@ function busy(now) {
     now < panesUntil
   );
 }
+// Where the GPU's time can be read, the water draws fewer pixels only when the GPU is short of time: its
+// two passes taking more than 70% of a frame for a while, steps of a tenth, never below 0.8; and back up as
+// soon as the next step up would fit in half a frame. Elsewhere, frames whose own work runs long draw fewer.
+function gpuTime() {
+  if (tqOn) {
+    gl.endQuery(tq.TIME_ELAPSED_EXT);
+    tqOn = false;
+  }
+  if (!tqQ || !gl.getQueryParameter(tqQ, gl.QUERY_RESULT_AVAILABLE)) return;
+  const ok = !gl.getParameter(tq.GPU_DISJOINT_EXT);
+  if (ok) gpuMs = gl.getQueryParameter(tqQ, gl.QUERY_RESULT) / 1e6;
+  gl.deleteQuery(tqQ);
+  tqQ = null;
+  if (!ok) return;
+  gpuAvg = gpuAvg == null ? gpuMs : gpuAvg * 0.8 + gpuMs * 0.2;
+  const frameMs = 1000 / FPS,
+    up = Math.min(1, quality / 0.9);
+  if (gpuAvg > frameMs * 0.7 && quality > 0.8) {
+    cool = 0;
+    if (++hot > 20) {
+      quality = Math.max(0.8, quality * 0.9);
+      hot = 0;
+      gpuAvg = null;
+      sizeGL();
+    }
+  } else if (quality < 1 && gpuAvg * (up / quality) ** 2 < frameMs * 0.5) {
+    hot = 0;
+    if (++cool > 30) {
+      quality = up;
+      cool = 0;
+      gpuAvg = null;
+      sizeGL();
+    }
+  } else hot = Math.max(0, hot - 1);
+}
 function afterFrame(started) {
   const now = performance.now();
-  // frames whose own work runs long draw fewer pixels
-  if (now - started > 45) {
+  if (tq) gpuTime();
+  else if (now - started > 45) {
     if (++slow > 45 && quality > 0.7) {
       quality = Math.max(0.7, quality * 0.85);
       slow = 0;
@@ -4846,9 +4976,10 @@ function frame(now) {
   last = now;
   lifeRaw = raw;
   try {
-    tick1(raw);
+    span('frame', () => tick1(raw));
   } finally {
     afterFrame(started);
+    if (PERF) frameDone(now, { gpu: gpuMs, scale: `${glc.width}×${glc.height}`, quality, pass: ['whole', 'water', 'look'][passNow] });
   }
 }
 function tick1(raw) {
@@ -4888,11 +5019,15 @@ function tick1(raw) {
     flashAt = T;
     plip('thunder');
   }
-  for (const k of kois) k.update(dt);
+  span('koi', () => {
+    for (const k of kois) k.update(dt);
+  });
   // the ripples step on time: the same speed whatever the frame rate
   const [steps, left] = simSteps(simAcc, raw, timeScale);
   simAcc = left;
-  for (let i = 0; i < steps; i++) stepSim();
+  span('sim', () => {
+    for (let i = 0; i < steps; i++) stepSim();
+  });
   stepAfloat(dt);
   stepSpider(dt);
   stepAir(dt);
@@ -4922,18 +5057,30 @@ function tick1(raw) {
     if (on) setStyle(tag, 'transform', `translate3d(${Math.round(x)}px,${Math.round(y)}px,0)`);
     if (on !== 'on' in tag.dataset) tag.toggleAttribute('data-on', on);
   }
-  drawAir();
+  span('air', drawAir);
   if (!glOK) return;
-  drawKoi();
+  span('fish', drawKoi);
   // the top layer (boats, food, petals, leaves) changes slowly: drawn and sent ten times a second
   const topNow = performance.now() - topAt > 100;
   if (topNow) {
     topAt = performance.now();
-    drawTop();
+    span('top', drawTop);
+  }
+  const glAt = PERF ? performance.now() : 0;
+  if (tq && !tqQ) {
+    tqQ = gl.createQuery();
+    gl.beginQuery(tq.TIME_ELAPSED_EXT, tqQ);
+    tqOn = true;
   }
   gl.bindFramebuffer(gl.FRAMEBUFFER, sceneFbo);
   gl.viewport(0, 0, glc.width, glc.height);
-  gl.useProgram(prog);
+  // with no look shown the water alone is drawn, and a look alone once it covers the water
+  const shown = top !== 'water' && SID[top] !== SID[base] ? inkR : SID[top] ? inkMax : 0,
+    inkW = shown > 0 ? (look !== 'water' && inkR >= inkMax ? 1 : 0.5) : 0,
+    wp = waterProg(inkW === 0 ? 1 : inkW === 1 ? 2 : 0);
+  U = progU.get(wp);
+  passNow = progs.indexOf(wp);
+  gl.useProgram(wp);
   gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
   // textures are made once for each size, and after that only their contents are sent
   const key = `${GW}x${GH} ${fishCv.width}x${fishCv.height}`,
@@ -4971,8 +5118,7 @@ function tick1(raw) {
   gl.uniform2f(U.uRes, glc.width, glc.height);
   gl.uniform2f(U.uGrid, GW, GH);
   gl.uniform2f(U.uMoonPos, big ? 0.6 : 0.74, big ? 0.1 : 0.12);
-  const shown = top !== 'water' && SID[top] !== SID[base] ? inkR : SID[top] ? inkMax : 0;
-  gl.uniform4f(U.uInk, shown, inkO[0], inkO[1], shown > 0 ? (look !== 'water' && inkR >= inkMax ? 1 : 0.5) : 0);
+  gl.uniform4f(U.uInk, shown, inkO[0], inkO[1], inkW);
   gl.uniform1i(U.uStyle, SID[top]);
   gl.uniform1i(U.uPrev, SID[base]);
   gl.uniform1f(U.uGlint, (1 + gest.glint) * fx.glint);
@@ -5053,6 +5199,7 @@ function tick1(raw) {
   gl.uniform4fv(UG.uPaneB, paneB);
   gl.uniform1i(UG.uPaneN, paneN);
   gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+  if (PERF) add('gl', performance.now() - glAt);
 }
 // write a style only when it changes
 const setStyle = (el, k, v) => {
