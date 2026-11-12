@@ -13,6 +13,7 @@ import { report } from '../os/core/report';
 import { load, save } from '../os/core/storage';
 // the looks' type, as a stylesheet of its own: linked only once a look or 日 is chosen (loadType)
 import LOOKS_CSS from './looks.css?url';
+import { IDLE_AFTER, frameGap, simSteps } from './clock.js';
 import { SocialError } from '../os/social/errors';
 import { coverOf, loadSongs, music, onMusic, play as playSongAt, setMusicMuted, toggle as toggleSong } from './music';
 import * as people from './people';
@@ -796,7 +797,9 @@ function setYear(y) {
 const TERM_JA = { 惊蛰: '啓蟄', 谷雨: '穀雨', 小满: '小満', 芒种: '芒種', 处暑: '処暑' };
 function showTerm() {
   const i = Math.floor(yearGoal) % 24;
-  $('#kuanTxt').textContent = `${TERMS[i][0]} 画池塘`;
+  // one character a cell, each centred by its ink (alignInk), so the column stands straight
+  $('#kuanTxt').innerHTML = [...`${TERMS[i][0]}画池塘`].map((ch) => `<span>${ch}</span>`).join('');
+  placeKuan();
   paintInk();
   $('#termV').innerHTML = [...((lang === 'ja' && TERM_JA[TERMS[i][0]]) || TERMS[i][0])].map((ch) => `<span>${ch}</span>`).join('');
   $('#termTxt').textContent = zhOn ? '' : TERMS[i][1];
@@ -1182,10 +1185,12 @@ void main(){
 // the cold, frost gathers along the rim.
 const GLASS = `#version 300 es
 precision highp float; in vec2 vUv; out vec4 o;
-uniform sampler2D uScene,uAtlas; uniform vec2 uCss,uCell; uniform float uLod,uFrost; uniform vec4 uAscii; uniform vec3 uGlass;
+uniform sampler2D uScene,uAtlas,uBlur,uShade; uniform vec2 uCss,uCell; uniform vec3 uSh0,uSh1; uniform float uShK; uniform float uLod,uFrost; uniform vec4 uAscii; uniform vec3 uGlass;
 uniform vec4 uPane[12]; uniform vec4 uPaneB[12]; uniform int uPaneN;
 float sd(vec2 p,vec4 b,float r){ vec2 q=abs(p-b.xy)-b.zw+r; return length(max(q,0.))+min(max(q.x,q.y),0.)-r; }
 vec3 scene(vec2 P,float lod){ return textureLod(uScene,vec2(P.x/uCss.x,1.-P.y/uCss.y),lod).rgb; }
+// the soft copy the glass blurs: a quarter-size picture of the pond, with its own smaller copies
+vec3 soft(vec2 P,float lod){ return textureLod(uBlur,vec2(P.x/uCss.x,1.-P.y/uCss.y),max(lod-2.,0.)).rgb; }
 float grain(vec2 P){ return fract(sin(dot(floor(P),vec2(12.9898,78.233)))*43758.5453); }
 void main(){
   vec2 P=vUv*uCss; vec3 col=scene(P,0.);
@@ -1207,7 +1212,7 @@ void main(){
     vec2 n=vec2(sd(P+vec2(1.,0.),b,r)-sd(P-vec2(1.,0.),b,r),sd(P+vec2(0.,1.),b,r)-sd(P-vec2(0.,1.),b,r)); n/=max(length(n),1e-4);
     float e=smoothstep(-24.,0.,d); e*=e;
     vec2 Q=P-n*e*24.;
-    vec3 g=(scene(Q,uLod)*2.+scene(Q+vec2(7.,5.),uLod-.7)+scene(Q+vec2(-6.,6.),uLod-.7)+scene(Q+vec2(5.,-7.),uLod-.7)+scene(Q+vec2(-7.,-5.),uLod-.7))/6.;
+    vec3 g=(soft(Q,uLod)*2.+soft(Q+vec2(7.,5.),uLod-.7)+soft(Q+vec2(-6.,6.),uLod-.7)+soft(Q+vec2(5.,-7.),uLod-.7)+soft(Q+vec2(-7.,-5.),uLod-.7))/6.;
     g=mix(g,uGlass,.43)*1.05;
     g+=vec3(.055)*(1.-clamp((P.y-(b.y-b.w))/(2.*b.w),0.,1.));
     float rim=smoothstep(-3.2,-.4,d), lit=clamp(dot(n,normalize(vec2(-.55,-.83))),0.,1.), dark=clamp(dot(n,normalize(vec2(.55,.83))),0.,1.);
@@ -1217,6 +1222,8 @@ void main(){
     float fr=smoothstep(-38.,-2.,d); g=mix(g,vec3(.86,.93,.97),uFrost*fr*fr*(.12+.5*grain(P*.7)*grain(P*.31+3.)));
     col=mix(col,g,smoothstep(.7,-.7,d)*a);
   }
+  // the shade of a tree over everything, swaying (it multiplies, as the shade over the water always did)
+  col*=mix(vec3(1.),texture(uShade,vec2(dot(uSh0,vec3(P,1.)),dot(uSh1,vec3(P,1.)))).rgb,uShK);
   o=vec4(col,1.);
 }`;
 let gl,
@@ -1232,6 +1239,12 @@ let gl,
   texTop,
   texIce,
   texScene,
+  texBlur,
+  texShade,
+  blurFbo,
+  blurW = 1,
+  blurH = 1,
+  upKey = '',
   fbo,
   sceneFbo,
   glOK = false,
@@ -1317,7 +1330,24 @@ function initGL() {
     'uGlint'
   ])
     U[n] = gl.getUniformLocation(prog, n);
-  for (const n of ['uScene', 'uCss', 'uLod', 'uFrost', 'uGlass', 'uPane', 'uPaneB', 'uPaneN', 'uAscii', 'uCell', 'uAtlas'])
+  for (const n of [
+    'uScene',
+    'uCss',
+    'uLod',
+    'uFrost',
+    'uGlass',
+    'uPane',
+    'uPaneB',
+    'uPaneN',
+    'uAscii',
+    'uCell',
+    'uAtlas',
+    'uBlur',
+    'uShade',
+    'uSh0',
+    'uSh1',
+    'uShK'
+  ])
     UG[n] = gl.getUniformLocation(glassProg, n);
   texH = tex(gl.LINEAR);
   texIce = tex(gl.LINEAR);
@@ -1325,13 +1355,18 @@ function initGL() {
   texPads = deep();
   texBed = deep();
   texTop = deep();
-  texScene = deep();
+  // the scene is read sharp; the glass blurs a quarter-size copy of it, which keeps the smaller copies
+  texScene = tex(gl.LINEAR);
+  texBlur = deep();
+  texShade = tex(gl.LINEAR);
   fbo = gl.createFramebuffer();
   sceneFbo = gl.createFramebuffer();
+  blurFbo = gl.createFramebuffer();
   glOK = true;
 }
 function sizeGL() {
-  const dpr = (glDpr = Math.min(window.devicePixelRatio || 1, 1.5));
+  // at most 1.5 pixels to a CSS pixel, at most about two megapixels in all, and less if frames run slow
+  const dpr = (glDpr = Math.min(window.devicePixelRatio || 1, 1.5, Math.sqrt(2e6 / (W * H))) * quality);
   glc.width = Math.round(W * dpr);
   glc.height = Math.round(H * dpr);
   const fs = big ? 0.8 : 1;
@@ -1339,7 +1374,7 @@ function sizeGL() {
   fishCv.height = topCv.height = Math.round(H * fs);
   padCv.width = Math.round(W * Math.min(dpr, 1.25));
   padCv.height = Math.round(H * Math.min(dpr, 1.25));
-  adpr = Math.min(window.devicePixelRatio || 1, 2);
+  adpr = Math.min(window.devicePixelRatio || 1, 1.5);
   air.width = Math.round(W * adpr);
   air.height = Math.round(H * adpr);
   padKey = '';
@@ -1360,7 +1395,15 @@ function sizeGL() {
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, glc.width, glc.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
   gl.bindFramebuffer(gl.FRAMEBUFFER, sceneFbo);
   gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texScene, 0);
+  blurW = Math.max(1, Math.ceil(glc.width / 4));
+  blurH = Math.max(1, Math.ceil(glc.height / 4));
+  gl.bindTexture(gl.TEXTURE_2D, texBlur);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, blurW, blurH, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, blurFbo);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texBlur, 0);
   gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  upKey = '';
+  shadeTex();
 }
 // Ice: a field of slow noise over the ripple grid says where it reaches first. The picture and
 // the simulation read the same field, so the water is still exactly where the ice is drawn.
@@ -1466,7 +1509,24 @@ const paneA = new Float32Array(48),
 let paneN = 0,
   boxN = 0,
   paneEls = [];
+// The panes are read from the page only while something there is moving (a transition, an animation,
+// a resize or a scroll); otherwise the last reading stands, and the frame touches no style or layout.
+let panesUntil = 0;
+const panesLive = () => (panesUntil = performance.now() + 700);
+for (const ev of ['transitionrun', 'transitionend', 'animationstart', 'animationend', 'scroll'])
+  addEventListener(
+    ev,
+    (e) => {
+      // the koi's name tags fade in and out over the water all the time: they move no pane
+      if (e.target.closest?.('#tags, .bars')) return;
+      panesLive();
+      invalidate();
+    },
+    { capture: true, passive: true }
+  );
+addEventListener('resize', panesLive);
 function panes() {
+  if (performance.now() > panesUntil) return;
   const pr = pond.getBoundingClientRect();
   paneN = boxN = 0;
   for (const el of paneEls) {
@@ -2121,8 +2181,13 @@ function langBtn() {
 // Each label's ink, measured, set on the centre of its cell: line boxes centre the em box, not the glyph,
 // and 'En' in the sans and 中/日 in the brush each sit off it differently. Run once the faces have come.
 function alignSeg() {
+  alignInk('#langBtn button span');
+  alignInk('.kuan .seal span');
+  alignInk('#kuanTxt span');
+}
+function alignInk(sel) {
   const c = document.createElement('canvas').getContext('2d');
-  for (const s of $('#langBtn').querySelectorAll('button span')) {
+  for (const s of document.querySelectorAll(sel)) {
     const st = getComputedStyle(s),
       size = parseFloat(st.fontSize);
     c.font = `${st.fontWeight} ${st.fontSize} ${st.fontFamily}`;
@@ -2173,7 +2238,11 @@ function setLook(name, from) {
   lookTimer = setTimeout(
     () => {
       pond.toggleAttribute('data-ink', inkOn);
-      if (inkOn) paintInk();
+      if (inkOn) {
+        paintInk();
+        placeKuan();
+        alignSeg();
+      }
       if (name === 'water') delete pond.dataset.look;
       else pond.dataset.look = name;
       speak();
@@ -2219,6 +2288,28 @@ function atlas() {
   loadType()
     .then(() => document.fonts?.load(`500 40px 'JetBrains Mono'`))
     .then(draw, () => {});
+}
+// The inscription and the seal hang on the solar term's own axis, centred under its characters.
+function placeKuan() {
+  const k = $('.kuan');
+  if (!inkOn || !k) return;
+  const a = $('.alm').getBoundingClientRect(),
+    t = $('#termV').getBoundingClientRect(),
+    // a brushed character's ink sits off the middle of its box: the axis is the ink's, for both columns
+    off = (el) => {
+      const st = getComputedStyle(el),
+        c = document.createElement('canvas').getContext('2d');
+      c.font = `${st.fontWeight} ${st.fontSize} ${st.fontFamily}`;
+      const chars = [...el.textContent].filter((ch) => ch.trim());
+      return (
+        chars.reduce((sum, ch) => {
+          const m = c.measureText(ch);
+          return sum + (m.actualBoundingBoxRight - m.actualBoundingBoxLeft) / 2 - m.width / 2;
+        }, 0) / (chars.length || 1)
+      );
+    },
+    axis = t.left + t.width / 2 + off($('#termV'));
+  k.style.right = `${(a.right - axis - k.offsetWidth / 2).toFixed(2)}px`;
 }
 // Ink as a hanging painting: the season's motif (painting.js, loaded the first time ink comes) washes in
 // at one edge; a new season washes the old one out and the new one in, with a brush's breath.
@@ -2478,7 +2569,7 @@ function drawDims(c) {
     c.restore();
   }
   for (const b of blots) {
-    const t = T - b.at,
+    const t = wall() - b.at,
       R = 12 + 50 * Math.sqrt(t);
     if (t > 20) continue;
     c.beginPath();
@@ -2492,6 +2583,8 @@ function drawDims(c) {
 // Rain falls where a look can carry it: on the water, in ink (fine dry strokes, and soft blooms where it
 // lands), in the print (Hiroshige's straight lines) and in ASCII (falling | and /). Glow and blueprint
 // hold it off: the drops stop and the ripples settle, and it comes back with the water.
+// presses, splashes and blooms keep the clock on the wall, not the frames: a slow frame never stretches them
+const wall = () => performance.now() / 1000;
 const RAINY = { water: 1, ink: 1, ukiyo: 1, ascii: 1 },
   blooms = [],
   rainNow = () => raining && RAINY[look] === 1;
@@ -2501,7 +2594,7 @@ function drawRain(c) {
   c.save();
   if (look === 'ink') {
     for (const b of blooms) {
-      const a = T - b.at,
+      const a = wall() - b.at,
         r = b.r * (1 + Math.min(a, 3) * 0.6),
         o = 0.13 * Math.max(0, 1 - a / 5);
       if (o <= 0) continue;
@@ -2547,13 +2640,38 @@ function drawRain(c) {
   }
   c.restore();
 }
+// Whether anything is in the air this frame; when nothing is, the canvas is cleared once and hidden.
+let airShown = true;
+const airWanted = () =>
+  (look === 'blueprint' && inkR >= inkMax * 0.9) ||
+  (look !== 'water' && rainNow()) ||
+  gest.down ||
+  gest.letters.length > 0 ||
+  gest.glint > 0.05 ||
+  AM.snow > 0.02 ||
+  (rainNow() && AM.ice > 0.3) ||
+  flies.some((f) => f.a2 >= 0.02) ||
+  (life && dove.state !== 'away');
 function drawAir() {
   const c = actx;
+  stepGesture();
+  if (!airWanted()) {
+    if (airShown) {
+      c.setTransform(1, 0, 0, 1, 0, 0);
+      c.clearRect(0, 0, air.width, air.height);
+      air.style.visibility = 'hidden';
+      airShown = false;
+    }
+    return;
+  }
+  if (!airShown) {
+    air.style.visibility = '';
+    airShown = true;
+  }
   c.setTransform(adpr, 0, 0, adpr, 0, 0);
   c.clearRect(0, 0, W, H);
   if (look === 'blueprint' && inkR >= inkMax * 0.9) drawDims(c);
   drawRain(c);
-  stepGesture();
   drawGesture(c);
   if (AM.snow > 0.02 || (rainNow() && AM.ice > 0.3)) {
     const n = Math.max(AM.snow, rainNow() && AM.ice > 0.3 ? 0.7 : 0);
@@ -2604,7 +2722,10 @@ function drawAir() {
   drawDove(c);
 }
 
-// The shade of a tree over the pond: boughs of leaves drawn once, blurred and swayed by CSS.
+// The shade of a tree over the pond: boughs of leaves drawn once and blurred once into a texture; the
+// glass pass multiplies the pond by it, swaying as the CSS shade did (`.shade i + i`, the bough on top:
+// it was opaque, so it was the one seen). Without WebGL the CSS shade still shows.
+let shadeCv = null;
 function makeShade() {
   document.querySelectorAll('.shade i').forEach((el, n) => {
     const cv = document.createElement('canvas');
@@ -2629,8 +2750,57 @@ function makeShade() {
         }
       }
     }
-    el.style.backgroundImage = `url(${cv.toDataURL()})`;
+    if (n) shadeCv = cv;
+    if (!glOK) el.style.backgroundImage = `url(${cv.toDataURL()})`;
   });
+  shadeTex();
+}
+// the bough blurred as the CSS blur did (13 px on the page), into the shade texture
+function shadeTex() {
+  if (!glOK || !shadeCv) return;
+  const cv = document.createElement('canvas');
+  cv.width = 640;
+  cv.height = 400;
+  const x = cv.getContext('2d');
+  x.fillStyle = '#fff';
+  x.fillRect(0, 0, 640, 400);
+  x.filter = `blur(${((13 * 640) / (W * 1.24)).toFixed(2)}px)`;
+  x.drawImage(shadeCv, 0, 0);
+  gl.activeTexture(gl.TEXTURE8);
+  gl.bindTexture(gl.TEXTURE_2D, texShade);
+  gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, cv);
+  gl.activeTexture(gl.TEXTURE0);
+}
+// The sway, as the CSS keyframes had it: 27 s each way, eased, from one pose to the other; and the
+// shade's strength, eased over 2.5 s as its opacity was, by the time of day and the look.
+let shadeK = 0.9;
+function shadeUniforms(dt) {
+  const goal = 'bare' in pond.dataset ? 0.25 : inkOn ? 0.35 : ({ night: 0.3, dawn: 0.6, dusk: 0.6 }[phase] ?? 0.9);
+  shadeK += clamp(goal - shadeK, -dt / 2.5, dt / 2.5);
+  let u = RM ? -1 : (performance.now() / 27000) % 2;
+  u = u < 0 ? 0 : u > 1 ? 2 - u : u;
+  u = 1 - u; // alternate-reverse: it starts at the far pose
+  const e = u * u * (3 - 2 * u),
+    tx = lerpN(-0.013, 0.015, e) * W * 1.24,
+    ty = lerpN(-0.008, 0.01, e) * H * 1.24,
+    r = (lerpN(-0.7, 0.8, e) * Math.PI) / 180,
+    sc = lerpN(1.02, 1.06, e),
+    ok = RM ? [0, 0, 0, 1] : [tx, ty, r, sc],
+    [ax, ay, ar, as] = ok,
+    c = Math.cos(-ar) / as,
+    sn = Math.sin(-ar) / as,
+    cx = W / 2 + ax,
+    cy = H / 2 + ay,
+    w = W * 1.24,
+    h = H * 1.24,
+    ox = -0.12 * W,
+    oy = -0.12 * H;
+  // screen point → the bough's own frame (undo translate, rotate, scale about the centre) → its texture
+  gl.uniform3f(UG.uSh0, c / w, -sn / w, (W / 2 - c * cx + sn * cy - ox) / w);
+  gl.uniform3f(UG.uSh1, sn / h, c / h, (H / 2 - sn * cx - c * cy - oy) / h);
+  gl.uniform1f(UG.uShK, shadeK);
+  gl.uniform1i(UG.uShade, 8);
 }
 
 /* ================= the focus: which depth is sharp ================= */
@@ -3989,6 +4159,8 @@ function plip(kind, vol) {
 function setMuted(on) {
   muted = on;
   if (out) out.gain.setTargetAtTime(on ? 0 : 1, AC.currentTime, 0.05);
+  // muted, the sound has nothing to do: it sleeps once the fade is done
+  if (AC) on ? setTimeout(() => muted && AC.state === 'running' && AC.suspend(), 400) : AC.resume();
   setMusicMuted(on);
   saveMuted(on);
   $('#snd').setAttribute('aria-pressed', String(!on));
@@ -4186,7 +4358,7 @@ pond.addEventListener('pointerdown', (e) => {
   }
   if (look !== 'water') {
     // on paper a press leaves a blot that spreads (in the other looks, rings or a burst), and the fish still come to it
-    blots.unshift({ x, y, at: T });
+    blots.unshift({ x, y, at: wall() });
     blots.length = Math.min(blots.length, 6);
     drop(x, y, 2, -0.5);
     feed(x, y);
@@ -4205,7 +4377,23 @@ pond.addEventListener('pointerdown', (e) => {
 // moon's, or the sun's glint). Blueprint: draw a long straight line. ASCII: type five letters. In a look,
 // the same gesture does nothing; pressing the gold koi (mine) brings the water back, from the koi. Each
 // builds up a cue first, so an ordinary press or stroke never surprises.
-const gest = { down: false, holdTimer: 0, pts: [], t0: 0, x0: 0, y0: 0, hold: 0, turn: 0, len: 0, glint: 0, near: false, keys: [], letters: [], typed: 0 };
+const gest = {
+  down: false,
+  strayed: false,
+  holdTimer: 0,
+  pts: [],
+  t0: 0,
+  x0: 0,
+  y0: 0,
+  hold: 0,
+  turn: 0,
+  len: 0,
+  glint: 0,
+  near: false,
+  keys: [],
+  letters: [],
+  typed: 0
+};
 const toggleLook = (name, at) => {
   gest.down = false;
   gest.pts = [];
@@ -4213,6 +4401,7 @@ const toggleLook = (name, at) => {
 };
 const glintAt = () => [W * (big ? 0.6 : 0.74), H * (big ? 0.1 : 0.12)];
 const HOLD = 1.2,
+  HOLD_PX = 8,
   KEYS_TO_TYPE = 5,
   KEYS_WITHIN = 3,
   SHORTCUT = /^[iglfm]$/i;
@@ -4221,12 +4410,18 @@ const HOLD = 1.2,
     if (e.target.closest(DRY) || e.button > 0) return;
     const [x, y] = spot(e);
     if (look !== 'water' && onHost(x, y)) return;
-    Object.assign(gest, { down: true, pts: [[x, y]], t0: performance.now() / 1000, x0: x, y0: y, hold: 0, turn: 0, len: 0 });
-    // held still long enough: the ink comes (a timer, so it doesn't wait on a slow frame)
+    Object.assign(gest, { down: true, pts: [[x, y]], t0: e.timeStamp / 1000, x0: x, y0: y, hold: 0, turn: 0, len: 0, strayed: false });
+    // A hold is decided by the pointer's own events: it must stay within HOLD_PX of where it went down for
+    // HOLD seconds, by the events' timestamps. When the time is up, the decision waits for the next frame,
+    // because pointer moves are delivered with frames: any move still queued from a busy frame comes first.
     clearTimeout(gest.holdTimer);
-    gest.holdTimer = setTimeout(() => {
-      if (gest.down && gest.len < 10) toggleLook('ink', [gest.x0, gest.y0]);
-    }, HOLD * 1000);
+    gest.holdTimer = setTimeout(
+      () =>
+        requestAnimationFrame(() => {
+          if (gest.down && !gest.strayed) toggleLook('ink', [gest.x0, gest.y0]);
+        }),
+      Math.max(0, HOLD * 1000 - (performance.now() - e.timeStamp))
+    );
   });
   pond.addEventListener('pointermove', (e) => {
     if (!gest.down) {
@@ -4237,7 +4432,15 @@ const HOLD = 1.2,
       return;
     }
     // every point the pointer passed, even those a busy frame folded into one event
-    for (const q of e.getCoalescedEvents?.() || [e]) if (gest.down) stroke(q);
+    for (const q of e.getCoalescedEvents?.() || [e]) {
+      if (!gest.down) break;
+      // (a move from before the press, delivered late with its frame, is no part of it)
+      if (q.timeStamp / 1000 < gest.t0) continue;
+      // past HOLD_PX within the hold's time, and this press is no longer a hold
+      const [x, y] = spot(q);
+      if (q.timeStamp / 1000 - gest.t0 < HOLD && Math.hypot(x - gest.x0, y - gest.y0) > HOLD_PX) gest.strayed = true;
+      stroke(q);
+    }
   });
   const stroke = (q) => {
     const [x, y] = spot(q),
@@ -4360,10 +4563,11 @@ function straightness() {
 // the cues, drawn in the air: ink gathering under a held finger, the stirred path, a ruler, the typed letters
 function stepGesture() {
   const now = performance.now() / 1000;
-  gest.glint += ((gest.near ? 1 : 0) - gest.glint) * 0.12;
-  if (gest.down && gest.len < 10) {
-    if (gest.hold < 0.3 && now - gest.t0 >= 0.3 && look !== 'ink') plip('cue-ink');
-    gest.hold = now - gest.t0;
+  gest.glint += ((gest.near ? 1 : 0) - gest.glint) * Math.min(1, lifeRaw * 7);
+  if (gest.down && !gest.strayed) {
+    const held = performance.now() / 1000 - gest.t0;
+    if (gest.hold < 0.3 && held >= 0.3 && look !== 'ink') plip('cue-ink');
+    gest.hold = held;
   } else gest.hold = 0;
 }
 function drawGesture(c) {
@@ -4505,11 +4709,92 @@ function resize() {
   sizeGL();
   makeIce();
 }
-let last = 0;
-function frame(now) {
+/* ================= the loop's pace =================
+   At most 30 frames a second while something happens, 10 once nothing has for a while (no input, the
+   water settled, no look coming in, no rain); none while the tab is hidden; under reduced motion, frames
+   only for a moment after something changes. invalidate() wakes it. */
+let last = 0,
+  running = false,
+  loopTimer = 0,
+  wokeAt = 0,
+  calmAt = 0,
+  energyAt = 0,
+  slow = 0,
+  quality = 1,
+  lifeRaw = 0.033;
+function invalidate() {
+  wokeAt = performance.now();
+  if (AC && AC.state === 'suspended' && !muted && !document.hidden) AC.resume();
+  if (running || document.hidden) return;
+  running = true;
+  last = 0;
   requestAnimationFrame(frame);
-  const raw = Math.min(0.05, (now - last) / 1000 || 0.016);
+}
+// how much the water is moving, looked at twice a second: a press's rings keep the pace up until they settle
+function stirred(now) {
+  if (now - energyAt < 500) return calmAt;
+  energyAt = now;
+  let m = 0;
+  for (let k = 0; k < hA.length; k += 7) m = Math.max(m, Math.abs(hA[k]));
+  if (m > 0.12) calmAt = now;
+  return calmAt;
+}
+function busy(now) {
+  return (
+    now - wokeAt < IDLE_AFTER * 1000 ||
+    now - stirred(now) < 2000 ||
+    rainNow() ||
+    top !== base ||
+    (look === 'water' && inkR > 0) ||
+    gest.down ||
+    gest.letters.length > 0 ||
+    now < panesUntil
+  );
+}
+function nextFrame(started) {
+  const now = performance.now();
+  if (document.hidden) return (running = false);
+  // reduced motion: draw for a moment after a change, then stop until the next
+  if (RM && now - wokeAt > 1500 && now > panesUntil) return (running = false);
+  // frames that keep running long at the busy pace draw fewer pixels
+  if (now - started > 45) {
+    if (++slow > 45 && quality > 0.7) {
+      quality = Math.max(0.7, quality * 0.85);
+      slow = 0;
+      sizeGL();
+    }
+  } else slow = Math.max(0, slow - 1);
+  // a minute with nothing happening, and the sound sleeps until the next touch
+  if (AC && AC.state === 'running' && now - wokeAt > 60000 && !music().playing) AC.suspend();
+  clearTimeout(loopTimer);
+  loopTimer = setTimeout(() => requestAnimationFrame(frame), frameGap(started, now, busy(now)));
+}
+for (const ev of ['pointerdown', 'pointermove', 'keydown', 'wheel', 'touchstart']) addEventListener(ev, invalidate, { capture: true, passive: true });
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    clearTimeout(loopTimer);
+    running = false;
+    if (AC && AC.state === 'running') AC.suspend();
+  } else {
+    invalidate();
+    if (AC && !muted) AC.resume();
+  }
+});
+new MutationObserver(invalidate).observe(pond, { attributes: true });
+// a pane shown, hidden or opened without a transition is read again too
+new MutationObserver(() => (panesLive(), invalidate())).observe(pond, { attributes: true, subtree: true, attributeFilter: ['hidden', 'class', 'data-open'] });
+function frame(now) {
+  const started = performance.now();
+  const raw = last ? Math.min(0.05, (now - last) / 1000) : 1 / 30;
   last = now;
+  lifeRaw = raw;
+  try {
+    tick1(raw);
+  } finally {
+    nextFrame(started);
+  }
+}
+function tick1(raw) {
   stepInk(raw);
   // in ink, time runs slow: everything that moves is stepped by dt
   const dt = raw * timeScale;
@@ -4519,8 +4804,11 @@ function frame(now) {
   stepYear(dt);
   holes();
   focus += (focusGoal - focus) * Math.min(1, dt * 6);
-  $('#knob').style.top = focus * 100 + '%';
-  $('#gauge').toggleAttribute('data-live', T < focusLive);
+  // the page is written only when what it shows changes
+  const knobAt = (Math.round(focus * 1000) / 10).toFixed(1) + '%';
+  if (knobAt !== knobWas) knobEl.style.top = knobWas = knobAt;
+  const live = T < focusLive;
+  if (live !== gaugeWas) gaugeEl.toggleAttribute('data-live', (gaugeWas = live));
   // rain over open water; over ice it comes as snow instead
   // in a look the drops are smaller and fewer: a soft bloom in ink, a small ring in the print, a dot in ASCII
   if (rainNow() && AM.ice < 0.3) {
@@ -4531,17 +4819,16 @@ function frame(now) {
           y = rnd(0, H);
         // on paper a drop doesn't ring: it blooms, a soft grey that spreads and dries
         if (look === 'ink') {
-          blooms.push({ x, y, at: T, r: rnd(5, 11) });
+          blooms.push({ x, y, at: wall(), r: rnd(5, 11) });
           if (blooms.length > 28) blooms.shift();
         } else drop(x, y, 1.1, -rnd(0.25, 0.7) * k);
       }
   }
   for (const k of kois) k.update(dt);
-  simAcc += 2 * timeScale;
-  while (simAcc >= 1) {
-    stepSim();
-    simAcc -= 1;
-  }
+  // the ripples step on time: the same speed whatever the frame rate
+  const [steps, left] = simSteps(simAcc, raw, timeScale);
+  simAcc = left;
+  for (let i = 0; i < steps; i++) stepSim();
   stepAfloat(dt);
   stepSpider(dt);
   stepAir(dt);
@@ -4553,8 +4840,10 @@ function frame(now) {
   for (const k of kois) {
     const near = ptr.moved && k !== you && Math.hypot(k.x - ptr.x, k.y - ptr.y) < 110,
       hid = underGlass(k.x + 30, k.y + 24) || k.alpha < 0.5;
-    k.tag.style.transform = `translate3d(${k.x + 16}px,${k.y + 18}px,0)`;
-    k.tag.style.opacity = hid ? 0 : (k === you || k === host) && 'on' in k.tag.dataset ? '' : near ? 1 : '';
+    const op = hid ? '0' : (k === you || k === host) && 'on' in k.tag.dataset ? '' : near ? '1' : '';
+    // a tag that shows moves with its koi; one that doesn't is left alone
+    if (op !== '0' && (op !== '' || 'on' in k.tag.dataset)) setStyle(k.tag, 'transform', `translate3d(${Math.round(k.x + 16)}px,${Math.round(k.y + 18)}px,0)`);
+    setStyle(k.tag, 'opacity', op);
   }
   // the two visitors carry their projects' names
   for (const [tag, x, y, on] of [
@@ -4566,29 +4855,43 @@ function frame(now) {
       spider.alpha > 0.6 && ptr.moved && Math.hypot(ptr.x - spider.x, ptr.y - spider.y) < 90 && !underGlass(spider.x, spider.y)
     ]
   ]) {
-    tag.style.transform = `translate3d(${x}px,${y}px,0)`;
-    tag.toggleAttribute('data-on', on);
+    if (on) setStyle(tag, 'transform', `translate3d(${Math.round(x)}px,${Math.round(y)}px,0)`);
+    if (on !== 'on' in tag.dataset) tag.toggleAttribute('data-on', on);
   }
   drawAir();
   if (!glOK) return;
   drawKoi();
-  drawTop();
+  // the top layer (boats, food, petals, leaves) changes slowly: drawn and sent ten times a second
+  const topNow = performance.now() - topAt > 100;
+  if (topNow) {
+    topAt = performance.now();
+    drawTop();
+  }
   gl.bindFramebuffer(gl.FRAMEBUFFER, sceneFbo);
   gl.viewport(0, 0, glc.width, glc.height);
   gl.useProgram(prog);
   gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+  // textures are made once for each size, and after that only their contents are sent
+  const key = `${GW}x${GH} ${fishCv.width}x${fishCv.height}`,
+    fresh = key !== upKey;
+  upKey = key;
   gl.activeTexture(gl.TEXTURE1);
   gl.bindTexture(gl.TEXTURE_2D, texH);
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.R16F, GW, GH, 0, gl.RED, gl.FLOAT, hA);
+  if (fresh) gl.texImage2D(gl.TEXTURE_2D, 0, gl.R16F, GW, GH, 0, gl.RED, gl.FLOAT, hA);
+  else gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, GW, GH, gl.RED, gl.FLOAT, hA);
   gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
   gl.activeTexture(gl.TEXTURE2);
   gl.bindTexture(gl.TEXTURE_2D, texFish);
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, fishCv);
+  if (fresh) gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, fishCv);
+  else gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, gl.RGBA, gl.UNSIGNED_BYTE, fishCv);
   gl.generateMipmap(gl.TEXTURE_2D);
   gl.activeTexture(gl.TEXTURE5);
   gl.bindTexture(gl.TEXTURE_2D, texTop);
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, topCv);
-  gl.generateMipmap(gl.TEXTURE_2D);
+  if (fresh || topNow) {
+    if (fresh) gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, topCv);
+    else gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, gl.RGBA, gl.UNSIGNED_BYTE, topCv);
+    gl.generateMipmap(gl.TEXTURE_2D);
+  }
   gl.activeTexture(gl.TEXTURE3);
   gl.bindTexture(gl.TEXTURE_2D, texPads);
   gl.activeTexture(gl.TEXTURE6);
@@ -4611,7 +4914,7 @@ function frame(now) {
   gl.uniform1f(U.uGlint, 1 + gest.glint);
   for (let i = 0; i < 10; i++) {
     const b = blots[i];
-    blotU.set(b ? [b.x, b.y, T - b.at] : [0, 0, -1], i * 3);
+    blotU.set(b ? [b.x, b.y, wall() - b.at] : [0, 0, -1], i * 3);
   }
   gl.uniform3fv(U.uBlot, blotU);
   calmNow += (('clear' in pond.dataset ? 0 : 1) - calmNow) * Math.min(1, lifeDt * 3);
@@ -4642,11 +4945,27 @@ function frame(now) {
   gl.uniform3fv(U.uSky, cur.sky);
   gl.uniform3fv(U.uSeason, AM.tint);
   gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+  // the glass's soft copy: the scene shrunk to a quarter, and its smaller copies made from that
+  if (paneN) {
+    gl.bindFramebuffer(gl.READ_FRAMEBUFFER, sceneFbo);
+    gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, blurFbo);
+    gl.blitFramebuffer(0, 0, glc.width, glc.height, 0, 0, blurW, blurH, gl.COLOR_BUFFER_BIT, gl.LINEAR);
+    gl.bindFramebuffer(gl.READ_FRAMEBUFFER, null);
+    gl.activeTexture(gl.TEXTURE9);
+    gl.bindTexture(gl.TEXTURE_2D, texBlur);
+    gl.generateMipmap(gl.TEXTURE_2D);
+  }
   gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  gl.viewport(0, 0, glc.width, glc.height);
   gl.useProgram(glassProg);
   gl.activeTexture(gl.TEXTURE4);
   gl.bindTexture(gl.TEXTURE_2D, texScene);
-  gl.generateMipmap(gl.TEXTURE_2D);
+  gl.activeTexture(gl.TEXTURE9);
+  gl.bindTexture(gl.TEXTURE_2D, texBlur);
+  gl.uniform1i(UG.uBlur, 9);
+  gl.activeTexture(gl.TEXTURE8);
+  gl.bindTexture(gl.TEXTURE_2D, texShade);
+  shadeUniforms(lifeDt);
   gl.uniform1i(UG.uScene, 4);
   gl.uniform2f(UG.uCss, W, H);
   gl.uniform1f(UG.uLod, 2.4 + Math.log2(glDpr));
@@ -4669,6 +4988,15 @@ function frame(now) {
   gl.uniform1i(UG.uPaneN, paneN);
   gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 }
+// write a style only when it changes
+const setStyle = (el, k, v) => {
+  if (el.style[k] !== v) el.style[k] = v;
+};
+let topAt = -1e9,
+  knobWas = '',
+  gaugeWas = null;
+const knobEl = $('#knob'),
+  gaugeEl = $('#gauge');
 const crackU = new Float32Array(24),
   brokeU = new Float32Array(6),
   doveTag = Object.assign(document.createElement('span'), { className: 'tag', textContent: 'Devot' }),
@@ -4738,7 +5066,8 @@ function start() {
   setInterval(tick, 20000);
   if (glOK) glc.dataset.on = '';
   intro();
-  requestAnimationFrame(frame);
+  panesLive();
+  invalidate();
   {
     const [ch, at] = location.hash.slice(1).split('/');
     if (CHAPTERS[ch]) setTimeout(() => openSheet(ch, at), 1400);
@@ -4748,6 +5077,8 @@ function start() {
     clearTimeout(rt);
     rt = setTimeout(() => {
       resize();
+      panesLive();
+      invalidate();
       paintInk();
       makePetals();
     }, 150);
