@@ -459,7 +459,12 @@ the revised renders are approved.
   Row 2, autumn, the same four withered: yellowing with a brown curled edge, brown and torn with a
   notch, brown with a notch, small and yellow-brown. Row 3: a white flower and a pink one, open (150
   across), a bud (98 × 120), and an empty cell. The leaves are closer to lotus leaves than to a water
-  lily's, their sheen is slight, and the flowers are a little cupped. Not used yet.
+  lily's, their sheen is slight, and the flowers are a little cupped. In use in a preview build:
+  `drawPads()` draws the water's pads from it (whole or notched by size, the withered row laid over the
+  green as autumn comes) and their flowers (a bud as summer comes, open at its height, none in autumn).
+  The sheet is fetched once the pond has settled, never on the first screen, and the drawn pads stand
+  until it has come. To ship it, the first visit's image budget has to take its 157 KB or the sheet has
+  to be smaller.
 
 
 #### What is drawn by code, and what should be a picture
@@ -472,7 +477,7 @@ light and refraction, the glass) stays in the shader.
 | Element | Drawn in | How it reads now | Verdict | Picture wanted |
 | --- | --- | --- | --- | --- |
 | Koi | `Koi.draw()` on the fish canvas, restyled by each look's shader; from a painted sheet in ukiyo-e, Monet, 青花 and Dunhuang (preview) | Good in water and ink; a silhouette restyled in glow, blueprint and ASCII, which suits them | Painted per look where a sheet has come; keep in water (and in ink unless a painted one is clearly better) | A sheet per look, bent along the live spine: see the koi sheet in the brief |
-| Lily pads, lotus flowers and buds | `padsNow()` on the pads canvas | Flat discs with a notch, flowers a few ellipses; the weakest thing on the water look | Replace | `water/lilies`, then one per painted look |
+| Lily pads, lotus flowers and buds | `padsNow()` on the pads canvas; from `water/lilies` on the water in a preview build, from `monet/lilies` in Monet | Drawn, flat discs with a notch and flowers of a few ellipses: the weakest thing on the water look | Replaced on the water in a preview build | one per painted look still wanted |
 | Petals, autumn leaves | `drawTop()` paths | Leaves pass; petals are two ellipses | Replace petals and leaves together | `water/afloat` sheet |
 | Snowflakes | dots on the air canvas | Fine: they are small and moving | Keep | none |
 | Dragonflies | paths on the air canvas | Stiff; wings are plain ellipses | Replace | `water/dragonfly` sprite, 4 wing frames |
@@ -600,7 +605,7 @@ like clear water over stones, nothing looks pasted on.
    a normal map `bed-n.webp`, 2048 × 1152, opaque, river pebbles from straight above in soft even
    light, seamless left to right, under 150 KB together.
 2. Koi: keep the pond's own. No sheet wanted.
-3. Delivered, to wire in: `lilies.webp` (summer pads, autumn pads, two flowers and a bud). P1
+3. Delivered and in use (preview): `lilies.webp` (summer pads, autumn pads, two flowers and a bud). P1
    `afloat.webp`, 1024 × 512, 4 × 2: two cherry petals, three autumn leaves (maple, ginkgo, oak), a
    folded paper boat from above in three tones.
 4. Ornaments: none.

@@ -776,6 +776,9 @@ const mixHex = (a, b, t) => {
     y = n(b);
   return `rgb(${x.map((v, i) => Math.round(v + (y[i] - v) * t)).join(',')})`;
 };
+// The water's own lily pads and flowers as pictures (public/pond/water/lilies.webp): a preview build
+// fetches the sheet once the pond has settled, never on the first screen, and the drawn pads stand until then.
+let waterLily = null;
 function drawPads() {
   const c = padCv.getContext('2d'),
     s = padCv.width / W;
@@ -789,9 +792,26 @@ function drawPads() {
     if (grow < 0.03) continue;
     // in ink no pad lies under the season's painting: the painting has that part of the paper
     if (inkOn && crowdsPainting(x * W, y * H, W, H, inkSeason())) continue;
+    // on the water (a preview build) the pads are pictures of real ones, from their sheet: whole or
+    // notched, by size, the withered ones laid over the green as autumn comes
+    const real = waterLily && look === 'water';
+    if (real) {
+      const n = Math.floor(r0 * 7 + rot * 3),
+        [ci, d] = r > 58 ? [n % 2, r * 2.42] : r > 34 ? [2, r * 3.08] : [3, r * 4.38];
+      c.save();
+      c.translate(x * W, y * H);
+      c.rotate(rot);
+      c.globalAlpha = Math.min(1, grow * 1.6);
+      c.drawImage(waterLily, ci * 256, 0, 256, 256, -d / 2, -d / 2, d, d);
+      if (AM.brown > 0.02) {
+        c.globalAlpha = Math.min(1, grow * 1.6) * Math.min(1, AM.brown * 1.25);
+        c.drawImage(waterLily, ci * 256, 256, 256, 256, -d / 2, -d / 2, d, d);
+      }
+      c.restore();
+    }
     // in Monet's pond the pads are painted ones, from their sheet (large, medium and small, by size)
-    const lily = lilyPic && look === 'monet';
-    if (lily) {
+    const lily = (lilyPic && look === 'monet') || real;
+    if (lilyPic && look === 'monet') {
       const n = Math.floor(r0 * 7 + rot * 3),
         [ci, cj] =
           r > 58
@@ -888,7 +908,15 @@ function drawPads() {
       py = cy + (ay / al) * r * off;
     if (r > 26 && Math.hypot(px - x * W, py - y * H) < r * 0.8) padSpots.push({ x: px, y: py, r: r * 0.36 });
     // and their flowers: a bud in spring, half open as summer comes, open at its height, in white or pink
-    if (lily && kind === 1 && (AM.bloom > 0.05 || AM.petals > 0.3)) {
+    if (real && kind === 1 && AM.bloom > 0.05) {
+      // (in bud as summer comes, open at its height, in white or pink)
+      const open = AM.bloom > 0.55,
+        ci = open ? Math.floor(r0 * 5) % 2 : 2,
+        d = (big ? 92 : 72) * (0.6 + 0.4 * AM.bloom) * (open ? 1 : 0.8);
+      c.drawImage(waterLily, ci * 256, 512, 256, 256, clamp(x * W, d / 2, W - d / 2) - d / 2 + Math.cos(rot) * r * 0.1, y * H - r * 0.12 - d / 2, d, d);
+    } else if (real) {
+      // (no flower out of its season)
+    } else if (lily && kind === 1 && (AM.bloom > 0.05 || AM.petals > 0.3)) {
       const pink = Math.floor(r0 * 5) % 2,
         [ci, cj] = AM.bloom > 0.55 ? (pink ? [1, 2] : [3, 1]) : AM.bloom > 0.05 ? (pink ? [2, 2] : [0, 2]) : [3, 2],
         d = (big ? 96 : 76) * (0.6 + 0.4 * Math.max(AM.bloom, 0.3));
@@ -925,7 +953,7 @@ function drawPads() {
   }
 }
 function padsNow() {
-  const key = `${Math.round(AM.lush * 30)}|${Math.round(AM.brown * 20)}|${Math.round(AM.bloom * 20)}|${lilyPic && look === 'monet' ? Math.round(AM.petals * 4) + 1 : 0}|${inkOn ? inkSeason() + 1 : 0}`;
+  const key = `${Math.round(AM.lush * 30)}|${Math.round(AM.brown * 20)}|${Math.round(AM.bloom * 20)}|${lilyPic && look === 'monet' ? Math.round(AM.petals * 4) + 1 : 0}|${waterLily && look === 'water' ? 1 : 0}|${inkOn ? inkSeason() + 1 : 0}`;
   if (key === padKey) return;
   padKey = key;
   drawPads();
@@ -6513,6 +6541,17 @@ const crackU = new Float32Array(24),
 $('#tags').append(doveTag, spiderTag);
 // Settled: the opening has played and the browser is idle. What isn't on the first screen loads then.
 const settled = new Promise((resolve) => setTimeout(() => (window.requestIdleCallback || ((f) => setTimeout(f, 1)))(() => resolve()), 2600));
+if (PREVIEW)
+  settled.then(() => {
+    const im = new Image();
+    im.onload = () => {
+      waterLily = im;
+      padsNow();
+      invalidate();
+    };
+    im.onerror = () => report(new Error('no picture at /pond/water/lilies.webp'), 'pond pictures');
+    im.src = '/pond/water/lilies.webp';
+  });
 if (PREVIEW)
   settled.then(loadSprites).then(
     (sprites) => {
