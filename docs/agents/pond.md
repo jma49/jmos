@@ -300,6 +300,86 @@ In `public/pond/relief/`, each picture as a pair that lines up to the pixel: `-c
   rays are fine for this size. The drawing is cleaner and more regular than a tomb wall's.
 
 
+#### What is drawn by code, and what should be a picture
+
+Painted pictures are the default wherever drawing in code falls short, in every look, the water
+included. This is everything the pond draws by code, judged; the pictures it calls for are in the
+list below, in the order they would help most. What must answer to physics (the water, its ripples,
+light and refraction, the glass) stays in the shader.
+
+| Element | Drawn in | How it reads now | Verdict | Picture wanted |
+| --- | --- | --- | --- | --- |
+| Koi | `Koi.draw()` on the fish canvas, restyled by each look's shader | Good in water and ink; a silhouette restyled in the other looks, which is where they look least like the look | Replace per look, keep in water (and in ink unless a painted one is clearly better) | A sheet per look, bent along the live spine: see "Koi for each look" |
+| Lily pads, lotus flowers and buds | `padsNow()` on the pads canvas | Flat discs with a notch, flowers a few ellipses; the weakest thing on the water look | Replace | `water/lilies`, then one per painted look |
+| Petals, autumn leaves | `drawTop()` paths | Leaves pass; petals are two ellipses | Replace petals and leaves together | `water/afloat` sheet |
+| Snowflakes | dots on the air canvas | Fine: they are small and moving | Keep | none |
+| Dragonflies | paths on the air canvas | Stiff; wings are plain ellipses | Replace | `water/dragonfly` sprite, 4 wing frames |
+| Fireflies (preview) | soft dots | Fine | Keep | none |
+| Devot's dove, ocra's spider | three.js models built in code (`life.js`), rendered into a small canvas | Rough close up, and each look can only tint them | Replace with rendered sprites; this also removes the per-frame 3D | Blender job, below |
+| Paper boats | three paths in `drawTop()` | Read as boats; a little bare | Replace when convenient | in `water/afloat` |
+| Moon, sun glint | shader | Light, not an object | Keep | none |
+| The tree's shade | a texture drawn once | Good on water; wrong on the painted looks (switched off there) | Keep | none |
+| Pebble bed (water look) | `BED` shader, drawn once | Good; it is what the refraction reads from, and the first thing seen | Keep for now | A Blender-rendered bed with a normal map would be the one thing to try, behind a flag, at no cost to the first visit's budget only if it fits in about 150 KB |
+| Ink: seasonal motif | `painting.js` paths | The weakest part of the best look | Replace | delivered (`ink/plum`, `willow`, `lotus`, `reeds`): to wire in |
+| Ink: far hills, mist | canvas washes, CSS | Good | Keep; hills later | `ink/hills` later |
+| Seals (ten looks and 锦程) | the brush face in CSS | A family, but running script, not seal script | Replace | `ink/seals` (asked) |
+| Ink: inscription | the brush face | Good | Keep | none |
+| Festival things (preview) | canvas paths | Lanterns pass; the dragon boat is crude | Replace the boat and the river lanterns | `water/festival` sheet, later |
+| Borders and frames | shader (青花 beads, Dunhuang band) | 青花's beads are plain | Replace | delivered (`qinghua/rim`, `corner`; `dunhuang/border`) |
+| Solar-term block, chapter headers, the album's paper | type and CSS | In keeping | Keep | per look only where asked below |
+| Presses | shader, per look | Good where they are physics (rings, blots); ukiyo-e's claws are stiff | Replace ukiyo-e's | delivered (`ukiyo/waves`) |
+| The pond's mark, timeline marks | PNG files already | n/a | Keep | none |
+
+Highest value, in order: Monet's painted bed; a koi sheet per look (one look first, as the proof);
+lily pads and flowers for the water look; the dove and the spider as rendered sprites; the seals in
+true seal script.
+
+#### Koi for each look
+
+A straight, top-view koi is cut into slices along its length and each slice drawn along the koi's
+live spine, so it swims and turns as the drawn koi does; fins and tail follow the same motion. Who is
+who must survive: the gold koi (Jincheng), the visitor's own (white with the red spot), and other
+visitors in their colours. One loader reads every look's sheet, so every sheet is the same:
+
+- `public/pond/<look>/koi.webp`, 1024 × 1536, transparent, four rows of 1024 × 384, one koi in each:
+  seen from directly above, head to the left, the body straight along the row's middle line, 900
+  pixels from nose to tail tip, fins and tail spread naturally and symmetrically, no shadow, no
+  water, a margin of 4%. Rows: (1) the gold koi; (2) white with one red spot on the head; (3) and
+  (4) two koi to be tinted, painted in greys only (light to dark as the look's manner needs).
+- `public/pond/<look>/koi-mask.webp`, the same size and layout: white where a visitor's colour
+  goes on rows 3 and 4 (the patches), black elsewhere; rows 1 and 2 black.
+
+Asked for one look first, as the proof of the method; the rest once it swims well, in case the
+method wants different numbers:
+
+- ★ `koi.webp` and `koi-mask.webp` for 青花 (in `public/pond/qinghua/`): cobalt line and wash, a scale pattern drawn in line,
+  the blue pooling at line ends; the gold koi as the same drawing with its patches left for a gold
+  wash (`#C9A24A`), the white one with its spot in the deep cobalt.
+
+Then, in each look's manner: ukiyo-e (flat colour inside a key line, as a carp print); Monet (a few
+loaded dabs); Dunhuang (mineral colour in an iron-wire line); the relief (with a height sheet,
+`koi-h.webp`, for the raking light); blueprint (a white line drawing with a centre line and the
+fins' construction lines); ink only if a painted one beats the pond's own, which is liked; stars
+have their engraved figures; glow stays as light; ASCII has none.
+
+#### Blender jobs
+
+Where a model beats a flat picture, the same list asks for it, saying it is a Blender job and what
+comes out. Sprites are preferred wherever they take 3D out of the frame.
+
+- ★ The dove (Devot's) and the jumping spider (ocra's), modelled properly and rendered from straight
+  above with one soft light from the upper left, transparent, as sprite sheets:
+  `dove.webp` (in `public/pond/water/`), cells of 256 × 256: sitting (4 frames: still, head turn left, head turn right,
+  preen), take-off (6), flight (8, a wing-beat loop), landing (6);
+  `spider.webp` (the same folder), cells of 192 × 192: sitting (2), walking (8, a loop), crouch (2), jump (4).
+  Neutral colour, so a look can tint or line them.
+- Height and normal maps for the relief's carvings (fish, lotus, papyrus, frieze), 16-bit greys
+  rendered from the delivered drawings as shallow sunk relief, so the raking light is true:
+  `<name>-n.webp` beside each, the same size and framing as each `-h` file.
+- A carved seal's height map, 512 × 512, for the stamp's press: `seal-h.webp`, with the ink look's pictures.
+- Later, if the pebble bed is tried: `bed.webp` and `bed-n.webp` for the water look, 2048 × 1152, river
+  pebbles from above under shallow water light, seamless left to right.
+
 #### Wanted, by look
 
 A first small lot for each look: the two or three pictures that would lift it most. ★ marks the ones
