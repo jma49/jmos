@@ -28,7 +28,8 @@ pass, and the move from drawing things in code to painted pictures. How the pond
   ```
 
   Then publish `/tmp/pond-looks.html` to that artifact's URL (keep the same URL). The inliner needs
-  `pyftsubset` (fontTools) on the path. It inlines every picture under `/pond/<look>/` it finds named
+  `pyftsubset` (fontTools) on the path, and `esbuild`, which is no longer among the site's dependencies
+  (`npm i --no-save esbuild`). It inlines every picture under `/pond/<look>/` it finds named
   in the script, so a new look's folder must be added to the list in its `swap` line. The build flag
   turns on the preview looks and the Preview panel (bottom centre: every look, the album, "Stamp all
   seals", "Clear seals", dates, weather).
