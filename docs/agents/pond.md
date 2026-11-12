@@ -150,8 +150,9 @@ commands; their seals are marked `preview` in `seals.ts`.
 ### Pictures for the Dunhuang look
 
 The flying figures (飞天) can't be drawn well in a shader, so they are pictures, in
-`public/pond/dunhuang/`. They are delivered but not yet used: `lookDunhuang()` still draws only the two
-ribbons the figures would trail.
+`public/pond/dunhuang/`. They are in use: `muralLayout()` in `newlooks.js` places them for the wall's size, `paintMural()` in
+`engine.js` lays them into one canvas and sends it to the GPU once (again only on a resize), and
+`lookDunhuang()` draws that texture (`uMural`) under its wear.
 
 | File | Size | What is in it (pixels with any paint, as x, y, width, height) |
 | --- | --- | --- |
@@ -188,9 +189,36 @@ tool, asked from there), not from an agent in the cloud. So the work is split:
 
 Wanted:
 
+- `feitian-pipa` again, larger: the same figure, pose and facing (flying left, ribbons right), 2560 ×
+  1280. It is the centrepiece, drawn up to half the wall's width, and on a 2000-pixel window at 2× the
+  1536 one is stretched past its sharpness. At this size it will pass 200 KB: `check-public-sizes.mjs`
+  would need a line for `pond/dunhuang/` (say 450 KB a picture), the reason being that these load
+  only when this one look is first chosen, never on a first visit.
+- A border strip for the top and bottom of the wall: a band of 卷草纹 (scrolling vine) between two rows
+  of 连珠 beads, the same palette and line, 1024 × 128, transparent, and seamless where its left end
+  meets its right, since it is tiled across. It runs the full width at the very top and bottom.
+- A ceiling medallion (藻井), simpler than the three hares: a lotus in the middle, concentric square
+  bands round it, a 角花 in each corner, square, 1024 × 1024. For the quiet lower middle-left of the
+  wall at low strength; it will be tried there and left out if it crowds the title.
+- One small, far-off 飞天, about a third the size of the others (768 × 384), simpler, flying to the
+  right (the others fly left), for depth on wide walls: it sits small, high and left of centre.
+- If they come easily: a halo (光环) disc, 512 × 512, and a long trail of cloud (长云), 1024 × 256, to
+  sit behind a figure.
 - A ceiling medallion (藻井) with the three hares that share three ears (cave 407), square, for the
   quiet middle of the wall. One was made and turned down: the ears came out as three spindles
   joining the hares' noses. Wanted only if the look has a place for it.
+
+What worked, and what was changed in use (2026-11-12): the three pictures are good, well drawn and in
+the wall's own manner, and are used as they came. Both figures are used facing left,
+unmirrored. The pipa player sits high in the right half and the flower-scatterer lower right;
+her three falling lotus are continued by a lotus, a bud and petals from `sky-flowers` towards the
+pond. Three clouds and the pearl are placed by the figures; the half-open lotus and the green cloud's
+twin are unused so far. On a narrow wall only the pipa player is drawn, at the top, 1.3 walls wide so
+her body fills the width and the ribbons run off the right edge. Faces are kept from flaking by
+position (`faces` in `muralLayout()`): if a picture is redrawn with the head elsewhere, say where. The
+ochre (`#CC8F38`) is read as gold leaf and made to glint, so anything meant as gold should keep that
+colour and anything not meant as gold should avoid it. The loose flowers are fixed on the wall, not
+adrift: riding the petals' wind would need them as sprites on the top layer, which is a later step.
 
 ## Languages
 
