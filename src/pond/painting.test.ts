@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-// @ts-expect-error a plain script, no types
 import { hang } from './painting.js';
 
 describe("where a season's painting hangs", () => {
