@@ -248,6 +248,29 @@ What the conditions do (`effectsOf()`):
 **Privacy:** the place goes only to Open-Meteo, to ask for its weather, and is kept only in this
 browser's half-hour cache (`pond-weather`). Nothing about it is stored or sent anywhere else.
 
+## Next, with `?preview`
+
+`?preview` in the address (or a build with `PUBLIC_POND_PREVIEW=1`, as the single-file demo is) turns
+on details being tried before they ship (`preview.js`). Without it, none of them does anything.
+
+- **The moon:** the moon shows its real phase (`moonAge()`, from a known new moon). It also shows in
+  each look at night, drawn in that look's idiom.
+- **Wind:** the wind from the same Open-Meteo answer drifts the petals, leaves, snow and the rain's
+  slant.
+- **Festivals:** dated from a small table for 2026 to 2030 (`festivalOn()`):
+  - Spring Festival: a few red lanterns;
+  - Qingming: softer light, and drizzle if the sky allows;
+  - Dragon Boat: a dragon boat far off now and then;
+  - Mid-Autumn: a full, brighter moon and river lanterns.
+- **Fireflies:** a few on summer nights. A press sends them off.
+- **Stars:** sparse stars on clear nights, shaken by the ripples.
+- **Welcome back:** a returning visitor (`pond-visits`) is welcomed back, and my koi comes over to
+  theirs once.
+- **Ambience:** under the sound switch, very quiet: cicadas on summer days, crickets on summer and
+  autumn nights, rain on the water. Each is a short loop made in code.
+- **The panel:** a small panel at the top forces each of these, with the time of day, the weather and
+  the look.
+
 ## Changing it
 
 - **Wording, a job, a school, a project's highlights:** `content.ts`; a

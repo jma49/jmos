@@ -12,6 +12,7 @@
 import { report } from '../os/core/report';
 import { load, save } from '../os/core/storage';
 import { effectsOf, loadWeather, minutesAt, phaseAt, seasonOf } from './weather';
+import { PREVIEW, WELCOME_BACK, festivalDate, festivalOn, moonAge, moonLit, panel, returning } from './preview.js';
 // the looks' type, as a stylesheet of its own: linked only once a look or 日 is chosen (loadType)
 import LOOKS_CSS from './looks.css?url';
 import {
@@ -43,6 +44,8 @@ const $ = (s) => document.querySelector(s);
 /** What the page gathered at build time: the timeline, the photos, the About chapter. */
 const D = JSON.parse($('#pond-data').textContent);
 const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+// With ?preview: the real moon, the wind, the festivals, fireflies, stars, a welcome back (preview.js)
+const pv = { age: moonAge(), fest: PREVIEW ? festivalOn() : null, flies: [], fliesOn: false, windX: 13, windY: 6, boatAt: -1e9, lanterns: [] };
 const MAC = /Mac|iPhone|iPad/.test(navigator.userAgent);
 const pond = $('#pond'),
   glc = $('#gl');
@@ -140,6 +143,12 @@ class Koi {
   update(dt) {
     if (this.mode === 'wander' && (T > this.next || Math.hypot(this.tx - this.x, this.ty - this.y) < 110)) this.wander();
     // Round the pointer, not at it: the point made for is always a little further along a circle about it.
+    if (this.mode === 'greet') {
+      // swims over to the visitor's koi and round it once
+      const a = T * 0.9;
+      this.tx = you.x + Math.cos(a) * 80;
+      this.ty = you.y + Math.sin(a) * 80;
+    }
     if (this.mode === 'you' || this.mode === 'visit') {
       const R = this.mode === 'you' ? 74 : 124,
         ang = Math.atan2(this.y - ptr.y, this.x - ptr.x) + (this.mode === 'you' ? 0.9 : -0.9);
@@ -837,9 +846,8 @@ const TERMS = [
   ['大寒', 'Major Cold', 1, 20]
 ];
 // where today falls among the terms: the term's index, and how far through it
-function yearToday() {
+function yearToday(now = new Date()) {
   const doy = (m, d) => Math.round((Date.UTC(2001, m - 1, d) - Date.UTC(2001, 0, 1)) / 864e5),
-    now = new Date(),
     t = doy(now.getMonth() + 1, now.getDate()),
     at = TERMS.map(([, , m, d]) => doy(m, d));
   for (let i = 0; i < 24; i++) {
@@ -911,8 +919,6 @@ function stepYear(dt) {
   pond.toggleAttribute('data-bare', AM.lush < 0.2);
 }
 
-// a preview build has the looks that are still being made (newlooks.js) and their seals
-const PREVIEW = !!import.meta.env.PUBLIC_POND_PREVIEW;
 /* ================= WebGL: the pond into a texture, then the glass over it ================= */
 const VS = `#version 300 es
 in vec2 a; out vec2 vUv; void main(){ vUv=vec2(a.x*.5+.5,.5-a.y*.5); gl_Position=vec4(a,0.,1.); }`;
@@ -967,7 +973,7 @@ void main(){
 const FS_SRC = `#version 300 es
 precision highp float; in vec2 vUv; out vec4 o;
 uniform sampler2D uBed,uH,uFish,uPads,uTop,uIceN;
-uniform vec2 uRes,uGrid,uMoonPos,uCss; uniform float uTime,uAmb,uCaI,uMoon,uSwell,uFocus,uIce,uSnow,uFog; uniform vec2 uCalm;
+uniform vec2 uRes,uGrid,uMoonPos,uCss; uniform float uTime,uAmb,uCaI,uMoon,uSwell,uFocus,uIce,uSnow,uFog,uStars; uniform vec3 uMoonPh; uniform vec2 uCalm;
 uniform vec3 uTint,uCaC,uSky,uSeason;
 uniform vec4 uBox[12]; uniform vec4 uBoxB[12]; uniform int uBoxN; uniform vec4 uCrack[6]; uniform float uBroke[6]; uniform vec4 uInk; uniform vec3 uBlot[10]; uniform int uStyle, uPrev; uniform float uGlint;
 float hash1(vec2 p){ return fract(sin(dot(p,vec2(41.3,289.1)))*43758.5453); }
@@ -1253,7 +1259,12 @@ void main(){
   vec2 md=(uv-uMoonPos)*vec2(asp,1.)+g*2.4;
   // the sun's glint by day where the moon's light lies at night: pressed, the lights go out (glow)
   col+=uGlint*(1.-uMoon)*(1.-ice*.7)*(vec3(1.,.98,.92)*smoothstep(.022,.006,length(md))*.55+vec3(1.,.95,.85)*exp(-dot(md,md)*160.)*.22);
-  col+=uMoon*(1.-ice*.7)*(vec3(.95,.97,1.)*smoothstep(.05,.018,length(md))*.6+vec3(.5,.62,.85)*exp(-dot(md,md)*60.)*.3);
+  // the moon's phase (uMoonPh: how much is lit, and which side): the dark part of the disc is cut away
+  float mlit=smoothstep(-.12,.12,uMoonPh.y*md.x/.034-(1.-2.*uMoonPh.x));
+  col+=uMoon*(1.-ice*.7)*(vec3(.95,.97,1.)*smoothstep(.05,.018,length(md))*.6*mlit+vec3(.5,.62,.85)*exp(-dot(md,md)*60.)*.3*(.2+.8*uMoonPh.x));
+  // stars on a clear night, a few, shaken by the ripples
+  if(uStars>0.){ vec2 sp=(P+g*40.)/6., sc=floor(sp); float st=step(.9965,hash1(sc+7.1))*(.55+.45*sin(uTime*2.3+hash1(sc)*40.));
+    col+=vec3(.82,.88,1.)*st*smoothstep(1.,.25,length(fract(sp)-.5)*6.)*uStars*(1.-ice)*(1.-calm*.8)*.9; }
   if(ice>0.){
     vec3 ic=mix(col,vec3(.8,.89,.94),.2+.16*noise(p*9.));
     ic+=vec3(.9,.97,1.)*(seams(p*1.7)*.2*smoothstep(.35,.7,noise(p*1.1+2.))+seams(p*4.6+4.)*.05);
@@ -1288,6 +1299,15 @@ void main(){
     vec3 top=look(uStyle), base=m<.999?look(uPrev):top;
     col=mix(base,top,m);
     col=mix(col,edgeCol(uStyle),e);
+    // the moon in a look, at night: a pale wash in ink, a cream disc in the print, a lit disc in glow,
+    // a drawn circle in the blueprint, a bright round in ASCII
+    if(uMoonPh.z>0.&&uMoon>.01&&uStyle>0){
+      float dm=length(md), disc=smoothstep(.036,.03,dm)*mlit;
+      if(uStyle==4) disc=smoothstep(.0016,0.,abs(dm-.033));
+      vec3 mc=uStyle==1?vec3(.82,.8,.74):uStyle==2?vec3(.96,.93,.84):uStyle==3?vec3(.7,1.,.98):uStyle==4?vec3(.95,.98,1.):vec3(.9);
+      col=mix(col,mc,disc*uMoon*m);
+      if(uStyle==3) col+=vec3(.2,.6,.6)*exp(-dm*dm*900.)*uMoon*m*uMoonPh.x;
+    }
   }
 #endif
   o=vec4(col,1.);
@@ -1428,7 +1448,9 @@ const FS_U = [
   'uStyle',
   'uPrev',
   'uGlint',
-  'uFog'
+  'uFog',
+  'uStars',
+  'uMoonPh'
 ];
 const locs = (p) => Object.fromEntries(FS_U.map((n) => [n, gl.getUniformLocation(p, n)]));
 // Which build of the water pass draws this frame: a part is used once it has been built (asked without
@@ -1832,8 +1854,8 @@ function drift(list, amount, dt) {
       [gx, gy] = slopeAt(clamp(q.x, 2, W - 2), clamp(q.y, 2, H - 2)),
       wind = RM ? 0 : 1 - frozen;
     q.a += ((q.i < amount ? 1 : 0) - q.a) * Math.min(1, dt * 1.5);
-    q.vx += (-gx * 1100 + 13 * wind - q.vx * 1.2) * dt;
-    q.vy += (-gy * 1100 + 6 * wind - q.vy * 1.2) * dt;
+    q.vx += (-gx * 1100 + pv.windX * wind - q.vx * 1.2) * dt;
+    q.vy += (-gy * 1100 + pv.windY * wind - q.vy * 1.2) * dt;
     q.x += q.vx * dt * (1 - frozen);
     q.y += q.vy * dt * (1 - frozen);
     q.r += (q.vr * wind + gx * 9) * dt;
@@ -1960,8 +1982,100 @@ function drawTop() {
     c.arc(q.x - 0.9, q.y - 1, 1.3, 0, TAU);
     c.fill();
   }
+  if (PREVIEW) drawFestival(c);
   drawBugs(c);
   drawSpider(c);
+}
+// The festivals, on the water: a few red lanterns at the Spring Festival, river lanterns at Mid-Autumn,
+// a dragon boat far off now and then at Dragon Boat. Drawn with the top layer, ten times a second.
+let festAt = 0;
+function drawFestival(c) {
+  const now = performance.now() / 1000,
+    dt = Math.min(0.5, now - (festAt || now));
+  festAt = now;
+  const f = pv.fest;
+  if ((f === 'spring' || f === 'midautumn') && pv.lanterns.length === 0)
+    pv.lanterns = Array.from({ length: f === 'spring' ? 4 : 6 }, () => ({ x: rnd(0.5, 0.95) * W, y: rnd(0.15, 0.85) * H, p: rnd(0, TAU) }));
+  if (f !== 'spring' && f !== 'midautumn') pv.lanterns = [];
+  for (const q of pv.lanterns) {
+    q.x += (pv.windX * 0.35 + Math.sin(now * 0.3 + q.p) * 3) * dt;
+    q.y += (pv.windY * 0.35 + Math.cos(now * 0.25 + q.p) * 2) * dt;
+    if (q.x > W + 30) q.x = W * 0.45;
+    if (q.y > H + 30) q.y = H * 0.1;
+    c.save();
+    c.translate(q.x, q.y);
+    c.scale(1.5, 1.5);
+    if (f === 'spring') {
+      // a red paper lantern seen from above: a round with gold at its top and a tassel
+      c.fillStyle = 'rgba(206,40,32,0.92)';
+      c.beginPath();
+      c.ellipse(0, 0, 9, 8, 0, 0, TAU);
+      c.fill();
+      c.strokeStyle = 'rgba(120,20,16,0.6)';
+      c.lineWidth = 0.8;
+      for (const k of [-4, 0, 4]) {
+        c.beginPath();
+        c.ellipse(k * 0.6, 0, Math.abs(k) ? 6 : 1, 8, 0, 0, TAU);
+        c.stroke();
+      }
+      c.fillStyle = '#e8b04a';
+      c.fillRect(-4, -9.5, 8, 2.5);
+      c.fillRect(-4, 7.2, 8, 2.5);
+    } else {
+      // a river lantern: a little paper lotus with a warm light in it
+      const g = c.createRadialGradient(0, 0, 0, 0, 0, 16);
+      g.addColorStop(0, 'rgba(255,214,140,0.7)');
+      g.addColorStop(1, 'rgba(255,170,80,0)');
+      c.fillStyle = g;
+      c.beginPath();
+      c.arc(0, 0, 16, 0, TAU);
+      c.fill();
+      c.fillStyle = 'rgba(250,236,214,0.95)';
+      for (let i = 0; i < 6; i++) {
+        c.rotate(TAU / 6);
+        c.beginPath();
+        c.ellipse(0, -5, 2.6, 5, 0, 0, TAU);
+        c.fill();
+      }
+      c.fillStyle = '#ffcf6e';
+      c.beginPath();
+      c.arc(0, 0, 2.2, 0, TAU);
+      c.fill();
+    }
+    c.restore();
+  }
+  if (f === 'dragon') {
+    // far off near the top: once every few minutes, a slow crossing of some forty seconds
+    if (now - pv.boatAt > 200) pv.boatAt = now;
+    const k = (now - pv.boatAt) / 40;
+    if (k < 1) {
+      c.save();
+      c.translate(-160 + k * (W + 320), H * 0.16);
+      c.scale(1.7, 1.7);
+      c.fillStyle = 'rgba(178,34,30,0.9)';
+      c.beginPath();
+      c.moveTo(-70, 0);
+      c.quadraticCurveTo(0, -9, 70, -2);
+      c.quadraticCurveTo(0, 9, -70, 0);
+      c.fill();
+      // the dragon's head at the bow and the tail at the stern, in gold
+      c.fillStyle = '#d9a640';
+      c.beginPath();
+      c.moveTo(70, -2);
+      c.lineTo(84, -7);
+      c.lineTo(80, 2);
+      c.closePath();
+      c.fill();
+      c.fillRect(-76, -2, 7, 3);
+      c.fillStyle = 'rgba(40,24,18,0.75)';
+      for (let i = -50; i <= 50; i += 12) {
+        c.beginPath();
+        c.arc(i, 0, 1.8, 0, TAU);
+        c.fill();
+      }
+      c.restore();
+    }
+  }
 }
 // what flies over the pond throws its shadow down through the water: soft, and further off the higher it is
 function drawShades(c) {
@@ -2672,8 +2786,8 @@ function stepAir(dt) {
   });
   for (const q of flakes) {
     q.z -= dt * 0.35 * q.s;
-    q.x += dt * 0.012;
-    q.y += dt * 0.02;
+    q.x += dt * 0.012 * (pv.windX / 13);
+    q.y += dt * 0.02 * (pv.windY / 6);
     if (q.z <= 0) {
       q.z = 1;
       q.x = Math.random();
@@ -2824,7 +2938,7 @@ function drawRain(c) {
       c.lineWidth = rnd(0.6, 1.4);
       c.beginPath();
       c.moveTo(x, y);
-      c.lineTo(x + l * 0.26, y + l);
+      c.lineTo(x + l * 0.26 * (pv.windX / 13), y + l);
       c.stroke();
     }
   } else if (look === 'ukiyo') {
@@ -2836,7 +2950,7 @@ function drawRain(c) {
         y = rnd(-H * 0.3, H),
         l = rnd(H * 0.12, H * 0.32);
       c.moveTo(x, y);
-      c.lineTo(x + l * 0.09, y + l);
+      c.lineTo(x + l * 0.09 * (pv.windX / 13), y + l);
     }
     c.stroke();
   } else if (look === 'ascii') {
@@ -2847,6 +2961,29 @@ function drawRain(c) {
       c.fillText(Math.random() < 0.7 ? '|' : '/', Math.floor(rnd(0, W) / CELL[0]) * CELL[0], Math.floor(rnd(0, H) / CELL[1]) * CELL[1]);
   }
   c.restore();
+}
+// Summer nights: a handful of soft lights that drift and blink; a press near them sends them off.
+const fireflies = () => pv.fliesOn || (AM.flies > 0.3 && phase === 'night' && look !== 'blueprint');
+function drawFireflies(c) {
+  if (!fireflies()) return (pv.flies.length = 0);
+  if (!pv.flies.length) pv.flies = Array.from({ length: big ? 9 : 5 }, () => ({ x: rnd(0.45, 0.95) * W, y: rnd(0.1, 0.9) * H, vx: 0, vy: 0, p: rnd(0, TAU) }));
+  const now = performance.now() / 1000;
+  for (const q of pv.flies) {
+    q.vx += (Math.sin(now * 0.7 + q.p) * 6 - q.vx * 0.6) * lifeRaw;
+    q.vy += (Math.cos(now * 0.55 + q.p * 1.3) * 6 - q.vy * 0.6) * lifeRaw;
+    q.x = clamp(q.x + q.vx * lifeRaw, 10, W - 10);
+    q.y = clamp(q.y + q.vy * lifeRaw, 10, H - 10);
+    const a = Math.max(0, Math.sin(now * 1.3 + q.p * 5)) ** 2;
+    if (a < 0.03) continue;
+    const g = c.createRadialGradient(q.x, q.y, 0, q.x, q.y, 13);
+    g.addColorStop(0, `rgba(240,255,180,${a})`);
+    g.addColorStop(0.25, `rgba(220,255,150,${0.6 * a})`);
+    g.addColorStop(1, 'rgba(200,255,140,0)');
+    c.fillStyle = g;
+    c.beginPath();
+    c.arc(q.x, q.y, 13, 0, TAU);
+    c.fill();
+  }
 }
 // Whether anything is in the air this frame; when nothing is, the canvas is cleared once and hidden.
 let airShown = true;
@@ -2860,6 +2997,7 @@ const airWanted = () =>
   fx.snow > 0.02 ||
   (rainNow() && AM.ice > 0.3) ||
   flies.some((f) => f.a2 >= 0.02) ||
+  (PREVIEW && fireflies()) ||
   (life && dove.state !== 'away');
 function drawAir() {
   const c = actx;
@@ -2881,6 +3019,7 @@ function drawAir() {
   c.clearRect(0, 0, W, H);
   if (look === 'blueprint' && inkR >= inkMax * 0.9) drawDims(c);
   drawRain(c);
+  if (PREVIEW) drawFireflies(c);
   drawGesture(c);
   if (Math.max(AM.snow, fx.snow) > 0.02 || (rainNow() && AM.ice > 0.3)) {
     const n = Math.max(AM.snow, fx.snow, rainNow() && AM.ice > 0.3 ? 0.7 : 0);
@@ -4642,6 +4781,21 @@ function place() {
   }
   return /\//.test(tz) && !/^Etc/.test(tz) ? tz.split('/').pop().replace(/_/g, ' ') : '';
 }
+// With ?preview, a visitor who has been before is welcomed back, and my koi comes over once.
+const backGreeting = () => {
+  const pool = WELCOME_BACK[lang] || WELCOME_BACK.en;
+  return pool[(Math.random() * pool.length) | 0];
+};
+function greetVisitor() {
+  host.mode = 'greet';
+  setTimeout(() => {
+    if (host.mode === 'greet') {
+      host.mode = 'wander';
+      host.wander();
+    }
+  }, 7000);
+}
+if (PREVIEW) pv.back = returning();
 // A word for whoever came: some for the hour, some for any hour, one picked each time.
 function salute() {
   const h = new Date().getHours();
@@ -4721,7 +4875,8 @@ function arrival() {
     [hello, sub] = salute(),
     el = $('#greet'),
     cards = [...document.querySelectorAll('.home .rise')];
-  $('#hero').textContent = hello;
+  $('#hero').textContent = PREVIEW && pv.back ? backGreeting() : hello;
+  if (PREVIEW && pv.back) later(1800, greetVisitor, id);
   el.innerHTML = sub;
   const words = [...el.querySelectorAll('w')];
   if (RM) {
@@ -4802,6 +4957,14 @@ pond.addEventListener('pointerdown', (e) => {
     setLook('water', [host.x, host.y]);
     plip('drop', 0.8);
     return;
+  }
+  // fireflies near a press take off
+  for (const q of pv.flies) {
+    const d = Math.hypot(q.x - x, q.y - y);
+    if (d < 160) {
+      q.vx += ((q.x - x) / (d || 1)) * 90;
+      q.vy += ((q.y - y) / (d || 1)) * 90;
+    }
   }
   if (iceAt(x, y) > 0.5) {
     crack(x, y);
@@ -5488,8 +5651,12 @@ function tick1(raw) {
   const flash = Math.exp(-(T - flashAt) * 7) * 0.9;
   gl.uniform1f(U.uAmb, cur.amb * fx.light + flash);
   gl.uniform1f(U.uCaI, cur.cai * AM.light * fx.light);
-  gl.uniform1f(U.uMoon, cur.moon * Math.max(0.15, fx.glint));
+  gl.uniform1f(U.uMoon, cur.moon * Math.max(0.15, fx.glint) * (pv.fest === 'midautumn' ? 1.35 : 1));
   gl.uniform1f(U.uFog, fx.fog);
+  // the moon as it is tonight (full, and brighter, at Mid-Autumn); stars on a clear night
+  const age = pv.fest === 'midautumn' ? 0.5 : pv.age;
+  gl.uniform3f(U.uMoonPh, PREVIEW ? moonLit(age) : 1, age < 0.5 ? 1 : -1, PREVIEW ? 1 : 0);
+  gl.uniform1f(U.uStars, PREVIEW && phase === 'night' && fx.glint > 0.9 ? Math.min(1, cur.moon) : 0);
   gl.uniform4fv(U.uBox, boxA);
   gl.uniform4fv(U.uBoxB, boxB);
   gl.uniform1i(U.uBoxN, boxN);
@@ -5605,6 +5772,15 @@ function weatherIn(w) {
   if (!w) return;
   wx = w;
   fx = effectsOf(w.condition);
+  if (PREVIEW) {
+    // the wind, gently: its direction is where it blows from, so the drift goes the other way
+    const k = (Math.min(40, w.windSpeed) / 40) * 26 + 3,
+      th = (w.windFrom * Math.PI) / 180;
+    pv.windX = -Math.sin(th) * k;
+    pv.windY = Math.cos(th) * k;
+    // Qingming: softer light, and a drizzle if the sky allows
+    if (pv.fest === 'qingming') fx = { ...fx, rain: Math.max(fx.rain, w.condition === 'clear' ? 0 : 0.5), light: fx.light * 0.9 };
+  }
   if (!rainChosen) raining = fx.rain > 0;
   pond.toggleAttribute('data-fog', fx.fog > 0);
   if (south !== w.latitude < 0) {
@@ -5618,6 +5794,143 @@ function weatherIn(w) {
   invalidate();
 }
 settled.then(() => loadWeather().then(weatherIn));
+// With ?preview, quiet ambience under the sound switch: cicadas on summer days, crickets on summer and
+// autumn nights, soft rain on the water. Each a short loop made once in code; looked at every two seconds.
+const amb = {};
+function ambLoop(name, secs, fill, gainTo) {
+  if (!amb[name]) {
+    const buf = AC.createBuffer(1, Math.round(AC.sampleRate * secs), AC.sampleRate),
+      d = buf.getChannelData(0);
+    fill(d, AC.sampleRate);
+    const src = AC.createBufferSource(),
+      g = AC.createGain();
+    src.buffer = buf;
+    src.loop = true;
+    g.gain.value = 0;
+    src.connect(g);
+    g.connect(sfx);
+    src.start();
+    amb[name] = g;
+  }
+  amb[name].gain.setTargetAtTime(gainTo, AC.currentTime, 1.5);
+}
+function ambience() {
+  if (!PREVIEW || !AC || muted || document.hidden) return;
+  const summer = AM.flies > 0.3,
+    autumn = AM.leaves > 0.3;
+  ambLoop(
+    'cicadas',
+    3,
+    (d, sr) => {
+      for (let i = 0; i < d.length; i++) {
+        const t = i / sr,
+          buzz = 0.5 + 0.5 * Math.sin(t * 2 * Math.PI * 140);
+        d[i] = (Math.random() * 2 - 1) * buzz * buzz * (0.6 + 0.4 * Math.sin(t * 2 * Math.PI * 0.33)) * 0.5;
+      }
+      // pushed up into the cicadas' range by a simple high pass
+      let p = 0;
+      for (let i = 0; i < d.length; i++) {
+        const x = d[i];
+        d[i] = x - p;
+        p = x;
+      }
+    },
+    summer && phase === 'day' ? 0.006 : 0
+  );
+  ambLoop(
+    'crickets',
+    2,
+    (d, sr) => {
+      for (let i = 0; i < d.length; i++) {
+        const t = i / sr,
+          beat = t % 0.8,
+          on = beat < 0.21 && beat % 0.07 < 0.035;
+        d[i] = on ? Math.sin(t * 2 * Math.PI * 4300) * 0.5 * Math.sin(((beat % 0.07) * Math.PI) / 0.035) : 0;
+      }
+    },
+    (summer || autumn) && phase === 'night' ? 0.008 : 0
+  );
+  ambLoop(
+    'rain',
+    4,
+    (d) => {
+      let v = 0;
+      for (let i = 0; i < d.length; i++) {
+        v = v * 0.86 + (Math.random() * 2 - 1) * 0.14;
+        d[i] = v * Math.min(1, i / 4000, (d.length - i) / 4000);
+      }
+    },
+    raining && look === 'water' ? 0.025 * Math.max(0.5, fx.rain || 1) : 0
+  );
+}
+if (PREVIEW) setInterval(ambience, 2000);
+// The preview panel: force each state, to see it now
+if (PREVIEW)
+  pond.append(
+    panel({
+      looks: LOOKS,
+      album: () => openSheet('seals'),
+      stampAll: () => VOLS.flatMap((v) => v.seals).forEach((x, i) => setTimeout(() => reached(x.id), i * 3400)),
+      clearSeals: () => setAlbum(clearSeals(album)),
+      festival(name) {
+        pv.fest = name;
+        pv.lanterns = [];
+        pv.boatAt = -1e9;
+        setYear(name ? yearToday(festivalDate(name)) : undefined);
+        if (name === 'midautumn') setPhase('night');
+        if (wx) weatherIn(wx);
+        invalidate();
+      },
+      phase(v) {
+        setPhase(v);
+        invalidate();
+      },
+      moon(v) {
+        if (v === undefined) return pv.age;
+        pv.age = v;
+        invalidate();
+      },
+      weather(v) {
+        rainChosen = false;
+        if (!v) return loadWeather().then(weatherIn);
+        weatherIn({
+          ...(wx || {
+            temp: 12,
+            unit: 'C',
+            city: 'San Jose',
+            latitude: 37.3,
+            timeZone: 'America/Los_Angeles',
+            sunrise: 400,
+            sunset: 1020,
+            windSpeed: 10,
+            windFrom: 250
+          }),
+          condition: v
+        });
+      },
+      wind(from, speed) {
+        weatherIn({
+          ...(wx || { condition: 'clear', temp: 12, unit: 'C', city: 'San Jose', latitude: 37.3, timeZone: 'America/Los_Angeles', sunrise: 400, sunset: 1020 }),
+          windFrom: from,
+          windSpeed: speed
+        });
+      },
+      look(v) {
+        setLook(v);
+      },
+      fireflies() {
+        pv.fliesOn = true;
+        setYear(11.2);
+        setPhase('night');
+        invalidate();
+      },
+      welcomeBack() {
+        $('#hero').textContent = backGreeting();
+        greetVisitor();
+        invalidate();
+      }
+    })
+  );
 setInterval(() => document.hidden || loadWeather().then(weatherIn), 30 * 60_000);
 people.startPeople(
   {
