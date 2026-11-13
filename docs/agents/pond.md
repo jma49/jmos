@@ -498,6 +498,50 @@ their own picture of the two, that picture is drawn instead.
   read as knobs at the knees. The loops were judged from still frames laid side by side, not played.
   Both are clearly better than the 3D ones in flight and for the spider; the sitting dove only a
   little.
+
+**The second version** (`-v2`), delivered and to wire in: the approved models rendered through every
+row asked for, in cells of 384 × 384, each sheet split by rows into three files of one width since
+neither fits one file under the budget. Stack a creature's files in order and the rows are the
+sheet's.
+
+| File | Size | Rows it holds, left-aligned, the rest of each row empty |
+| --- | --- | --- |
+| `dove-v2-1.webp` | 4608 × 768, 112 KB | 1 at rest (5), 2 take-off (6) |
+| `dove-v2-2.webp` | 4608 × 384, 164 KB | 3 flight (12) |
+| `dove-v2-3.webp` | 4608 × 768, 123 KB | 4 landing (6), 5 walking (6) |
+| `spider-v2-1.webp` | 3072 × 384, 95 KB | 1 at rest (4) |
+| `spider-v2-2.webp` | 3072 × 384, 184 KB | 2 walking (8) |
+| `spider-v2-3.webp` | 3072 × 768, 134 KB | 3 crouch (2), 4 jump (4) |
+
+- **Framing is the first sheets' at one and a half times the size for the dove and twice for the
+  spider:** 12 columns for the dove, 8 for the spider; the creature faces the right of its cell, its
+  place on the ground is the cell's centre (192, 192), and a cell spans 4 units either side of it
+  for the dove (48 pixels a unit) and 2.7 for the spider (71.1). The paint sits behind that point as
+  before: the dove at rest is 206 pixels from beak to tail (80, 152 to 286, 232), the spider 262
+  with its legs (42, 86 to 304, 298). The least clear margin is 25 pixels (the dove's landing 2) and
+  32 (the spider's crouch 2).
+- **The dove's frames:** at rest 1 still, 2 head turned to its left (up in the cell), 3 to its
+  right, 4 preening with the head laid back into the shoulder, 5 a head-bob, the head pushed
+  forward. Take-off 1 the push, 2 and 3 wings opening, 4 to 6 steep first beats, leading into
+  flight. Flight is one beat that loops: 1 to 7 the wing spread and coming down, 8 to 12 the
+  upstroke, wrists flexed and primaries parted. Landing 1 and 2 braking with the tail fanned (2 is
+  the widest frame), 3 and 4 wings half folded, 5 folding, 6 settled, close to rest 1. Walking is a
+  loop of 6, wings folded, the feet showing in turn beside the breast, the head bobbing with the
+  step.
+- **The spider's frames:** at rest 1 still, 2 looking up (the front body tilted, palps lifted, front
+  legs drawn in), 3 turned to its left, 4 to its right. Walking is a loop of 8; one loop is a stride
+  of half a unit (36 pixels at the cell's scale), each foot planted for five frames. Crouch 1
+  lowering, 2 gathered and drawn back. Jump 1 launch, 2 legs extended in the air, 3 reaching, 4
+  landed and splayed; drawn in place, for the pond to move. The orange is on the pedipalps.
+- **Light and colour:** even light from the whole sky with occlusion only, no ground or shadow;
+  straight alpha with the edge colour under the transparent pixels, as the first sheets have.
+- **What is weak:** the dove's half-open wings (take-off 2 and 3, landing 3 and 4) are a folding
+  wing less finely feathered than the folded and the spread ones, and the change between the two
+  shows from take-off 1 to 2 and landing 4 to 5; on the upstroke the arm's coverts make a zigzag
+  that looks mechanical; the walking feet are only two or three pixels thick, so the bob carries the
+  walk; the legs never show in the air. The spider's walk is a small shuffle (its stride is short
+  against its size), looking up is subtle from above, and jump 3 is close to jump 2. The loops were
+  judged from frames side by side, not played.
 - **To change them:** they are made by scripts kept on the owner's machine (one command a sheet,
   about two minutes), so a different facing, size, frame count or light is cheap to ask for.
 - **`lilies-768.webp`**, 768 × 576, 77 KB: eleven motifs in a 4 × 3 grid of 192-pixel cells, from
@@ -667,29 +711,14 @@ pads and flowers as these sets: spring (small young pads), summer (full pads, bu
   keep the spine dead straight and paint nothing that only makes sense straight (no long straight
   highlight down the back). 青花's sheet is the model of a correct one.
 
-**The dove and the spider: the second version is approved.** Jincheng has said yes to the stills of
-the revised dove and spider: render the whole `-v2` sheets now. So that the code can take them
-without a question:
-
-- Files `dove-v2.webp` and `spider-v2.webp` in `public/pond/water/`; if a sheet can't stay under
-  200 KB, split it by rows into `dove-v2-1.webp`, `dove-v2-2.webp` and so on, the rows in the order
-  below, every file the same width.
-- Cells of 384 × 384 for both (the dove is drawn about 220 pixels across at most, so 512 is more
-  than is shown and costs twice the weight). The creature faces the right of its cell, its place on
-  the ground at the cell's centre, the same scale in every cell, at least 18 pixels clear.
-- The dove's rows, in this order, each left-aligned: (1) at rest: still, head turned left, head
-  turned right, preening, a head-bob; (2) take-off, 6 frames; (3) flight, one wing-beat that loops,
-  12 frames; (4) landing, 6 frames, the last close to the first of row 1; (5) walking, 6 frames,
-  the feet showing.
-- The spider's rows: (1) at rest: still, looking up, turning to its left, turning to its right;
-  (2) the walk, a loop of 8, one loop a stride of half a unit; (3) the wind-up crouch, 2 frames;
-  (4) the jump, 4 frames, the last landed and settling. The orange on the pedipalps.
-- Say in the table under "Water" the columns each row holds and the units a cell spans either side
-  of its centre, as the first sheets' note does.
+**The dove and the spider: the second version is delivered**, as `dove-v2-1.webp` to `-3` and
+`spider-v2-1.webp` to `-3` in `public/pond/water/`: cells of 384, the rows in the order asked for,
+the orange on the pedipalps. The table under "Water" has the files, the rows each holds, the
+framing and what is weak.
 
 What follows is the brief the stills were made to.
 
-**The dove and the spider** (Blender; in `public/pond/water/`). **Status: approved, to render.** The first sheets
+**The dove and the spider** (Blender; in `public/pond/water/`). **Status: delivered.** The first sheets
 (`dove.webp`, `spider.webp`, under "Water" above) are clean and correct in outline, but Jincheng's
 review is that the dove is not detailed or lifelike enough and the spider needs more detail. They
 are used only as placeholders while the pond's sprite path is built; they are not final. Before
@@ -719,15 +748,8 @@ ground, straight alpha; the same file names with `-v2`; and a note of the grid a
     a jump with the legs extended; a landing that settles.
   - Larger cells too (384 × 384 or more). Give the grid.
 
-Where the revision stands: one still of each has been made at full size (the dove at rest and
-spread, in 512-pixel cells; the spider at rest in a 384-pixel cell, with the orange on its palps and,
-as a second choice, on its abdomen) and shown to Jincheng on his machine; they are not in the
-repository. No `-v2` sheet is rendered until he has said yes. What he is choosing between: the
-spider is much closer (a coat of hair that carries the pattern, banded legs, eyes in sockets); the
-dove now has real feather tracts but is still stylised plumage, weakest at rest. The sheets as
-asked would not fit one file each: at these cell sizes the dove's 42 frames come to about 670 KB
-(five files under the budget) and the spider's 28 to about 670 KB (four files); 384-pixel cells for
-the dove would halve that. Which matters more, the size it holds at or the weight, is his to say.
+Where the revision stands: the stills were approved and the whole sheets are rendered, in cells of
+384 for both, since that is more than the size the dove is drawn at and half the weight of 512.
 
 Each look below says how it wants them dressed; where a look only says "tinted", the neutral sheet
 is tinted in code and nothing more is needed.
