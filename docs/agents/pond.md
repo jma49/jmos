@@ -367,6 +367,7 @@ its red), entering at the right edge and reaching left, the left third empty.
 | `lotus.webp` | 77 KB | A lotus leaf in wet wash, a flower in line above it and a bud, on stems from the lower right: 358, 194, 666, 636. |
 | `reeds.webp` | 75 KB | Reeds bending from the right, a goose flying in at the top and one standing among them: 364, 90, 660, 840. |
 | `stems.webp` | 42 KB | Withered lotus (残荷), 1024 × 1024 like the others and stored the same way (near-black, the tone in the alpha): three dry stems entering from the right edge and folding over, a seed-pod hanging at 538, 236 and a curled dead leaf below it; the paint is 538, 236, 486, 587, and the left half is empty. Sparse, as asked; the stems are thin, so it may want more strength than the reeds when multiplied in. |
+| `seals.webp` | 94 KB | 1024 × 768, cells of 256, 4 × 3, vermilion `#B8382A` with the tone in the alpha. Row 1: 墨 (square, white characters out of red), 浮世 (tall, red characters and border), 莲 (round, white), 青花 (tall, white). Row 2: 敦煌 (tall, red), 光 (round, red), 图 (square, white), 字 (square, red). Row 3: 星 (round, white), 刻 (square, white), 锦程 (tall, white, 锦 over 程), one cell empty. Square and round seals are 232 across, centred; tall ones 150 × 246. Small seal script from the Shuowen Jiezi face of Taiwan's CNS 11643 character set (an open-data font, not in the repository), cut as a seal carver writes them: 蓮, 圖 and 錦 in their full forms, 花 as 華 (the Shuowen has no 花), and 星 as three suns over 生. The edges, chips and pinholes are made in code, so every stone is worn alike; the characters are a dictionary's even line, not a carver's hand. |
 | `dove.webp`, `spider.webp` | 16 KB and 27 KB | 768 × 256 each, three poses in 256-pixel cells, from above, facing right, at one scale, stored as the others are. The dove left as bare paper inside a few dark strokes at wing tips and tail: sitting (115 × 54), wings half open (117 × 134), flying (117 × 234). The spider in wet grey and black: sitting (193 × 94), walking (189 × 144), jumping (234 × 170). The dove's body has no tone of its own, so on the paper only its edges and tips show. |
 
 
@@ -625,7 +626,7 @@ entry to `LOOK_ART`; a new kind of thing adds a key there and a place that draws
 4. Dunhuang: `lotus`.
 5. Star chart: `nebulae`.
 6. Monet: `lilies-autumn`, `dragonfly`.
-7. Ink: `stems`; the seals stay on hold until a seal-script face is chosen.
+7. Ink: `stems`, and the seals (`seals.webp`).
 8. Egyptian relief: `papyrus`, `duck`, `cartouche`, each as a pair.
 9. Each painted look's `afloat` sheet (above).
 10. The dove and the spider dressed for ink, Monet, 青花, Dunhuang, the star chart, the blueprint
@@ -772,7 +773,7 @@ is most of it.
 6. Dove and spider: delivered and in use: each as three ink-wash poses on one sheet `dove.webp` / `spider.webp`,
    768 × 256 (sitting, moving, wings or legs spread), in the manner of Bada Shanren's birds:
    a few wet strokes, black and grey. Multiplied into the paper.
-7. P0 `seals.webp`, 1024 × 768, 4 × 3, true seal script (篆书), vermilion `#B8382A`, the stone's
+7. Delivered, to wire in: `seals.webp`, 1024 × 768, 4 × 3, true seal script (篆书), vermilion `#B8382A`, the stone's
    uneven edge, white characters out of red (白文) or red characters and border on transparent
    (朱文): 墨 (square, 白), 浮世 (tall, 朱), 莲 (round, 白), 青花 (tall, 白), 敦煌 (tall, 朱), 光
    (round, 朱), 图 (square, 白), 字 (square, 朱), 星 (round, 白), 刻 (square, 白, for the relief),
