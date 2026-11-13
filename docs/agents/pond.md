@@ -800,7 +800,7 @@ is most of it.
    under the solar term.
 9. **Asked of the local thread: the lilies' clue, painted.** In Monet's pond a small mark should
    point to the porcelain bowl's gesture (once round the rim). Drawn in code over the painting it
-   read as a fault, so there is none for now. Wanted: `public/pond/monet/clue.webp`, about 320 × 240
+   read as a fault, so there is none for now. Wanted: a file named clue.webp in the Monet folder under `public/pond/`, about 320 × 240
    with alpha, one lily pad seen from above in the painting's own hand and palette, its rim alone
    picked out in the bowl's cobalt (`#1c3f9a`) as a loaded brush would lay it, edges feathered to
    nothing so it sits in the canvas. The same goes for any look whose clue should be a picture
