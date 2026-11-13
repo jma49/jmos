@@ -7,8 +7,8 @@
 Jincheng Ma's own place on the web: a hideout rather than a portfolio.
 
 **The pond** is the home page: a pond seen from above, where every
-visitor is a koi, with a title page on the water and chapters (a timeline
-of work, projects and school; photos; music; the guestbook; the chat)
+visitor is a koi, with a title page on the water and chapters (the album of
+seals its looks leave; music; the guestbook; the chat)
 that open as a sheet of glass drawn with the water. It reads in
 English, 中文 or 日本語, and turns into other looks, each found by a
 gesture on the water: an ink painting on xuan paper (hold still), a
@@ -141,7 +141,7 @@ tests/             the Vercel Functions' unit tests (api/; not in api/, or Verce
 supabase/          migrations, the schema generated from them, Edge Functions (deployed as config.toml says), database tests
 scripts/           preview capture, photo refresh, favicon and portrait builders, bot setup
 public/os/         icons, fonts and desktop pictures (from ryOS, see NOTICE)
-public/pond/       the marks of the companies, schools and projects on the pond's timeline
+public/pond/       the pond's pictures, a folder for each look
 docs/agents/       guidance for coding agents, by part (AGENTS.md is the entry point)
 docs/decisions/    decision records: what was chosen, what was turned down and why
 ```

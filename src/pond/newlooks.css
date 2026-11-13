@@ -104,16 +104,9 @@
 #pond[data-look='dunhuang'] .link {
   background: var(--lift);
 }
-#pond[data-look='qinghua'] .filt,
-#pond[data-look='dunhuang'] .filt {
-  background: color-mix(in srgb, var(--deep) 94%, transparent);
-  box-shadow: inset 0 0 0 1px var(--hair);
-}
-#pond[data-look='qinghua'] .filt button[aria-pressed='true'],
 #pond[data-look='qinghua'] .sheet .chap button[aria-current],
 #pond[data-look='qinghua'] .rooms button[aria-selected='true'],
 #pond[data-look='qinghua'] .seg-on,
-#pond[data-look='dunhuang'] .filt button[aria-pressed='true'],
 #pond[data-look='dunhuang'] .sheet .chap button[aria-current],
 #pond[data-look='dunhuang'] .rooms button[aria-selected='true'],
 #pond[data-look='dunhuang'] .seg-on {
@@ -322,11 +315,6 @@
 #pond[data-look='relief'] .link {
   background: var(--lift);
 }
-#pond[data-look='relief'] .filt {
-  background: color-mix(in srgb, var(--deep) 94%, transparent);
-  box-shadow: inset 0 0 0 1px var(--hair);
-}
-#pond[data-look='relief'] .filt button[aria-pressed='true'],
 #pond[data-look='relief'] .sheet .chap button[aria-current],
 #pond[data-look='relief'] .rooms button[aria-selected='true'],
 #pond[data-look='relief'] .seg-on {

@@ -26,7 +26,9 @@ const preview = volumes(false),
 
 describe('the volumes', () => {
   it('hold every look in a release build, five to a volume', () => {
-    expect(volumes(false)).toEqual(volumes(true));
+    // (a preview build adds the trial volume of occasions and nothing else)
+    expect(volumes(true).slice(0, 2)).toEqual(volumes(false));
+    expect(volumes(true).map((v) => v.id)).toEqual(['painted', 'drawn', 'hours']);
     expect(live.map((v) => v.seals.map((s) => s.id))).toEqual([
       ['ink', 'ukiyo'],
       ['glow', 'blueprint', 'ascii']

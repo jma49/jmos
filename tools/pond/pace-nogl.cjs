@@ -50,7 +50,7 @@ const { chromium } = require('playwright');
   await read('active', 3000);
   await p.waitForTimeout(6000);
   await read('idle');
-  await p.evaluate(() => document.querySelector('[data-sheet=career]').click());
+  await p.evaluate(() => document.querySelector('[data-sheet=music]').click());
   await p.waitForTimeout(500);
   await poke();
   await read('chapter, touched', 1200);

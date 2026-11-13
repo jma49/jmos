@@ -12,7 +12,7 @@ in [AGENTS.md](AGENTS.md)), and how we'll know it's done.
 
 **Why.** Decided 2026-11-11 ([decision 0025](docs/decisions/0025-the-pond.md)):
 the pond replaces the desktop as the home page. Done: the pond, its
-title page and chapters, the photos, the music, accounts, presence, the
+title page and chapters, the music, accounts, presence, the
 guestbook and the chat, the swap (the pond at `/`, the desktop at
 `/os`, `/?open=…` links redirected there), and the looks and languages
 ([decision 0026](docs/decisions/0026-looks-and-gestures.md)). Left:

@@ -24,10 +24,13 @@ import {
   count as sealCount,
   dayOf,
   entryShows,
+  dayText,
   full,
+  has as hasSeal,
   markSealed,
   mayHint,
   readAlbum,
+  sealCell,
   sealMark,
   stamp,
   volumes,
@@ -64,7 +67,7 @@ import { coverOf, loadSongs, music, onMusic, play as playSongAt, setMusicMuted, 
 import * as people from './people';
 
 const $ = (s) => document.querySelector(s);
-/** What the page gathered at build time: the timeline, the photos, the About chapter. */
+/** What the page gathered at build time: the About chapter, and the pond's words in Chinese and Japanese. */
 const D = JSON.parse($('#pond-data').textContent);
 const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
 // With ?preview: the real moon, the wind, the festivals, fireflies, stars, a welcome back (preview.js)
@@ -2855,7 +2858,6 @@ const blotU = new Float32Array(30),
 // The words on the page, in English as the markup has them, and in Chinese from ZH.
 const HOME = {
   say: $('.say').innerHTML,
-  toc: [...document.querySelectorAll('.toc .go b')].map((b) => b.textContent),
   long: $('#cmdBtn .long').textContent,
   short: $('#cmdBtn .short').textContent,
   talk: $('#talk > span:last-child').textContent
@@ -2864,7 +2866,7 @@ function speak() {
   pond.lang = lang;
   $('#termV').lang = lang === 'ja' ? 'ja' : 'zh';
   $('.say').innerHTML = zhOn ? `${esc(ZH.say)} <button class="tlink" data-sheet="about">${esc(ZH.more)}</button>` : HOME.say;
-  document.querySelectorAll('.toc .go b').forEach((b, i) => (b.textContent = zhOn ? ZH.toc[i] : HOME.toc[i]));
+  document.querySelectorAll('.toc .go').forEach((go) => (go.querySelector('b').textContent = chapterName(go.dataset.sheet)));
   $('#cmdBtn .long').textContent = zhOn ? ZH.search[0] : HOME.long;
   $('#cmdBtn .short').textContent = zhOn ? ZH.search[1] : HOME.short;
   $('#palIn').placeholder = zhOn ? ZH.search[0] : 'Search the pond, or type / for commands';
@@ -3720,25 +3722,12 @@ pond.addEventListener(
 }
 
 /* ================= what the panes hold ================= */
-const PHOTOS = D.photos;
 let NOTES = [];
 const PLAY = '<svg width="10" height="10" viewBox="0 0 12 12"><path d="M2.5 1v10l8-5z"/></svg>';
-const markSrc = (m) => `/pond/marks/${m}.png`;
 // The pond speaks English, Chinese or Japanese, chosen with En / 中 / 日 (content.ts, ZH and JA): L(en, zh) picks the words for now.
 let ZH = lang === 'ja' ? D.ja : D.zh;
 const L = (en, zh) => (zhOn ? zh : en);
-const CN_MONTH = { Jan: 1, Feb: 2, Mar: 3, Apr: 4, May: 5, Jun: 6, Jul: 7, Aug: 8, Sep: 9, Oct: 10, Nov: 11, Dec: 12 };
-const zhWhen = (w) => w.replace(/([A-Z][a-z]{2}) (\d{4})/g, (_, m, y) => (lang === 'ja' ? `${y}年${CN_MONTH[m]}月` : `${y}.${CN_MONTH[m]}`));
-// an entry of the timeline as it reads now: in Chinese, what ZH gives for it over the English
-const tr = (e) => {
-  if (!zhOn) return e;
-  const z = ZH.log[e.id] || {};
-  return { ...e, ...z, when: zhWhen(e.when), ref: e.ref && z.ref ? [e.ref[0], z.ref] : e.ref };
-};
 function fillPanes() {
-  // the timeline's and the photos' rows say only how many; their marks and pictures wait inside
-  $('#tocWorkN').textContent = LOG.length;
-  $('#photoMore').textContent = PHOTOS.length;
   fillNotes();
   fillMusic();
 }
@@ -3804,54 +3793,16 @@ $('#toc').addEventListener('click', (e) => {
 });
 
 /* ================= a section opened ================= */
-// The career: roles, schools and projects in one stream, newest first. `s` is when each began, as a
-// year with a fraction; its depth on the staff is how long ago that was.
-const TODAY = (() => {
-  const d = new Date();
-  return d.getFullYear() + d.getMonth() / 12;
-})();
-const LOG = D.log;
-const PROJECTS = LOG.filter((e) => e.kind === 'project');
-const depthOf = (e) => (Math.max(0, TODAY - e.s) * 0.45).toFixed(1);
-const entry = (en) => {
-  const e = tr(en);
-  return `<li id="p-${e.id}" data-kind="${e.kind}" data-depth="${depthOf(e)}" data-year="${Math.floor(e.s)}"><span class="depth"><b>${Math.floor(e.s)}</b>${depthOf(e)} m</span>${e.mark ? `<i class="node mark${e.kind === 'project' ? ' full' : ''}" style="--bg:${e.mark === 'tiktok' ? '#000' : '#fff'}"><img src="${markSrc(e.mark)}" alt=""></i>` : `<i class="node" style="--c:${e.c || 'none'}"></i>`}
-  <h3>${esc(e.title)}${e.tag ? `<small>${esc(e.tag)}</small>` : ''}<span class="meta">${esc(e.when)}</span></h3>
-  ${e.role ? `<p class="role">${esc(e.role)}${e.place ? ` <span>·</span> ${esc(e.place)}` : ''}</p>` : ''}${e.text ? `<p class="txt">${esc(e.text)}</p>` : ''}
-  ${e.pts ? `<ul class="pts">${e.pts.map((x) => `<li>${x}</li>`).join('')}</ul>` : ''}${e.cover ? (e.visit ? `<a class="cover" href="${e.visit}" target="_blank" rel="noopener" aria-label="Open ${esc(e.title)}">` : '<div class="cover">') + `<img src="${e.cover}" alt="" loading="lazy">` + (e.visit ? '</a>' : '</div>') : ''}${
-    e.stack
-      ? `<div class="stack">${e.stack
-          .split(' · ')
-          .map((x) => `<span>${esc(x)}</span>`)
-          .join('')}</div>`
-      : ''
-  }
-  ${e.ref ? `<button class="ref" data-goto="${e.ref[0]}" style="--c:${(PROJECTS.find((p) => p.id === e.ref[0]) || {}).c}">${esc(e.ref[1])} <span aria-hidden="true">↑</span></button>` : ''}
-  ${e.source ? `<div class="links">${e.visit ? `<a class="link" href="${e.visit}" target="_blank" rel="noopener">${L('Visit', ZH.career.visit)} ↗</a>` : ''}<a class="link" href="${e.source}" target="_blank" rel="noopener">${L('Source', ZH.career.source)} ↗</a></div>` : ''}</li>`;
-};
-const monthOf = (p) =>
-  zhOn
-    ? `${new Date(p.taken).getFullYear()}年${new Date(p.taken).getMonth() + 1}月`
-    : new Date(p.taken).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
-const KINDS = [
-  ['all', 'All'],
-  ['role', 'Roles'],
-  ['project', 'Projects'],
-  ['school', 'School']
-];
-let logKind = 'all',
-  logCompact = false;
 const SHEETS = {
-  seals: () => `<div class="album">${albumHTML(album, VOLS, lang, freshVols())}</div>`,
-  career:
-    () => `<h1>${L('Soundings', ZH.career.title)}</h1><p class="lede">${L("Work, projects and school on one line, newest at the surface. Scroll, and the pond's focus sinks with you to the bed.", ZH.career.lede)}</p>
-    <div class="filt" role="toolbar" aria-label="Show">${KINDS.map(([k, l]) => `<button data-kind="${k}">${L(l, ZH.career.kinds[k])}<em>${k === 'all' ? LOG.length : LOG.filter((e) => e.kind === k).length}</em></button>`).join('')}<span class="gap"></span>
-      <button data-view="detail" aria-label="In full"><svg width="14" height="14" viewBox="0 0 14 14" stroke-width="1.3" stroke-linecap="round"><rect x="1.5" y="2" width="4" height="4" rx="1"/><path d="M8 3h4.5M8 5h3M1.5 9.5h11M1.5 12h8"/></svg></button>
-      <button data-view="list" aria-label="Titles only"><svg width="14" height="14" viewBox="0 0 14 14" stroke-width="1.3" stroke-linecap="round"><path d="M1.5 3h11M1.5 7h11M1.5 11h11"/></svg></button></div>
-    <ol class="sound" id="sound">${LOG.map(entry).join('')}<li class="bed" data-kind="bed" data-depth="${depthOf(LOG[LOG.length - 1])}" data-year="${Math.floor(LOG[LOG.length - 1].s)}"><span class="depth">${L('bed', '池底')}</span><i class="node"></i><p class="role">${L('The bed. Everything above settled on this.', ZH.career.bed)}</p></li></ol>`,
+  seals: () =>
+    `<div class="album">${albumHTML(album, VOLS, lang, freshVols())}${
+      PANEL && sealCount(album) > 0
+        ? `<p class="album-save"><button class="link" id="albumSave">${['Save as a picture', '存为图片', '画像で保存'][LANGS.indexOf(lang)]}</button></p>`
+        : ''
+    }</div>`,
   about:
-    () => `<h1>${L("Hey, I'm Jincheng.", ZH.about.title)}</h1><div class="prose">${(zhOn ? ZH.about.paragraphs : D.about).map((p) => `<p>${chips(p)}</p>`).join('')}
-    <div class="links"><a class="link" href="https://github.com/jma49" target="_blank" rel="noopener">GitHub ↗</a><button class="link" data-sheet="career">${L('Timeline', ZH.toc[0])}</button><a class="link" href="/os">${L('The old desktop', ZH.about.desktop)}</a></div></div>
+    () => `<h1>${L("Hey, I'm Jincheng.", ZH.about.title)}</h1><div class="prose">${(zhOn ? ZH.about.paragraphs : D.about).map((p) => `<p>${p}</p>`).join('')}
+    <div class="links"><a class="link" href="https://github.com/jma49" target="_blank" rel="noopener">GitHub ↗</a><a class="link" href="/os">${L('The old desktop', ZH.about.desktop)}</a></div></div>
     <p class="fine" id="letterTime"></p>`,
   music: () => {
     const m = music(),
@@ -3860,9 +3811,6 @@ const SHEETS = {
     ${song ? `<div class="now-song"><img id="nowCover" src="${coverOf(song)}" alt=""><div><b id="nowTitle">${esc(song.title)}</b><span id="nowWho">${esc(song.artist)}</span></div></div>` : ''}
     <ul class="rows songs" id="songList">${m.songs.map((t, i) => `<li data-i="${i}" ${i === m.index ? 'data-now' : ''}><button data-song="${i}" aria-label="Play ${esc(t.title)}">${PLAY}</button><b>${esc(t.title)}</b><span class="who">${esc(t.artist)}</span></li>`).join('') || `<li class="empty">${L('The songs are on their way.', ZH.music.empty)}</li>`}</ul>`;
   },
-  photos:
-    () => `<h1>${L(`${PHOTOS.length} photographs`, ZH.photos.title.replace('{n}', PHOTOS.length))}</h1><p class="lede">${L('Newest first, from', ZH.photos.lede)} <a href="${D.unsplash}" target="_blank" rel="noopener">Unsplash</a>${L('. Press one to see it large; the arrow keys move through them.', ZH.photos.after)}</p>
-    <div class="shots just">${PHOTOS.map((p, i) => `<a href="${p.page}" data-i="${i}" style="--ar:${(p.w / p.h).toFixed(3)};background:${p.color}" aria-label="Photograph, ${monthOf(p)}"><img src="${p.thumb}" alt="${esc(p.alt)}" loading="lazy"><span>${monthOf(p)}</span></a>`).join('')}</div>`,
   notes:
     () => `<h1>${L('Paper boats', ZH.notes.title)}</h1><p class="lede">${L('The guestbook. Leave a line, a few a day; it sails off across the pond as a boat, and whoever comes by can read it.', ZH.notes.lede)}</p>
     ${noteForm()}<ul class="notes" id="noteAll">${notesHtml()}</ul>`,
@@ -3879,13 +3827,6 @@ const SHEETS = {
       <p class="err" id="acctErr" role="alert"></p>
       <div class="links"><button class="link main">${signingUp ? L('Make the account', ZH.account.make) : L('Sign in', ZH.account.signIn)}</button><button type="button" class="link" data-act="switch">${signingUp ? L('I have an account', ZH.account.have) : L('Make an account', ZH.account.makeOne)}</button></div></form>`
 };
-const chips = (p) =>
-  p
-    .replace(/\{work:(\w+)\}/g, (_, id) => {
-      const e = PROJECTS.find((x) => x.id === id);
-      return e ? `<button class="chip mk" data-sheet="work" data-focus="${id}"><img src="${markSrc(e.mark)}" alt="">${esc(e.title)}</button>` : id;
-    })
-    .replace('{photos}', `<button class="chip" data-sheet="photos" style="--c:#6fb9cc">${L('photos', ZH.about.photos)}</button>`);
 const signInFirst = (why) =>
   accountsOpen
     ? `<p class="signin"><button class="link main" data-sheet="account">${L('Sign in', ZH.account.signIn)}</button> <span>${why}${L('.', '。')}</span></p>`
@@ -3897,93 +3838,34 @@ const noteForm = () =>
 let me = null,
   accountsOpen = false,
   signingUp = false;
-const ORDER = ['about', 'career', 'photos', 'music', 'notes', 'chat'];
+const ORDER = ['about', 'seals', 'music', 'notes', 'chat'];
 const CHAPTERS = {
   about: ['00', 'About'],
-  career: ['01', 'Timeline'],
-  resume: ['01', 'Timeline'],
-  work: ['01', 'Timeline'],
-  photos: ['02', 'Photos'],
-  music: ['03', 'Music'],
-  notes: ['04', 'Notes'],
-  chat: ['05', 'Chat'],
-  account: ['', 'Account'],
-  seals: ['', 'Seals']
+  seals: ['01', 'Seals'],
+  music: ['02', 'Music'],
+  notes: ['03', 'Notes'],
+  chat: ['04', 'Chat'],
+  account: ['', 'Account']
 };
-// Which entries show, and which of them is the first of its year (it carries the year on the staff).
-function applyLog() {
-  const ol = $('#sound');
-  if (!ol) return;
-  let year = '';
-  ol.toggleAttribute('data-compact', logCompact);
-  for (const li of ol.children) {
-    li.hidden = logKind !== 'all' && li.dataset.kind !== logKind && li.dataset.kind !== 'bed';
-    if (!li.hidden && li.dataset.kind !== 'bed') {
-      li.toggleAttribute('data-newyear', li.dataset.year !== year);
-      year = li.dataset.year;
-    }
-  }
-  $('#sheet')
-    .querySelectorAll('[data-kind]')
-    .forEach((b) => {
-      if (b.tagName === 'BUTTON') b.setAttribute('aria-pressed', String(b.dataset.kind === logKind));
-    });
-  $('#sheet')
-    .querySelectorAll('[data-view]')
-    .forEach((b) => b.setAttribute('aria-pressed', String((b.dataset.view === 'list') === logCompact)));
-  sound();
-}
-// Reading down the career sinks the pond's focus with it, and the reading in the header follows the entry under the eye.
-function sound() {
-  const el = $('#scroll');
-  if (!el || !$('#sound')) return;
-  const room = el.scrollHeight - el.clientHeight,
-    line = el.getBoundingClientRect().top + el.clientHeight * 0.34;
-  let cur = null;
-  setFocus(0.1 + (room > 8 ? clamp(el.scrollTop / room, 0, 1) : 0) * 0.9);
-  for (const li of $('#sound').children) if (!li.hidden && li.getBoundingClientRect().top <= line) cur = li;
-  $('#readout').textContent = cur ? `↓ ${cur.dataset.depth} m · ${cur.dataset.year}` : `↓ 0.0 m · ${L('today', '今天')}`;
-}
-function showRow(at) {
-  const row = at && $('#p-' + at),
-    el = $('#scroll');
-  if (!row) return;
-  el.scrollTo({
-    top: el.scrollTop + row.getBoundingClientRect().top - el.getBoundingClientRect().top - el.clientHeight * 0.3,
-    behavior: RM ? 'auto' : 'smooth'
-  });
-  row.dataset.focus = '';
-  setTimeout(() => delete row.dataset.focus, 1600);
-}
+// a chapter's name as it reads now; the album's is kept with the album's own words
+const chapterName = (id) => (id === 'seals' ? SEAL_WORDS[lang].title : L(CHAPTERS[id][1], ZH.chapters[id]));
 let lastFocus = null;
 const sheetOpen = () => 'open' in $('#veil').dataset;
 let sheetId = '';
-function openSheet(id, at) {
+function openSheet(id) {
   sheetId = id;
   const wasOpen = sheetOpen();
   if (!wasOpen) {
     lastFocus = document.activeElement;
     focusWas = focusGoal;
   }
-  const [no, name] = CHAPTERS[id],
-    log = id === 'career' || id === 'resume' || id === 'work',
-    wide = id === 'photos' ? 'full' : '';
-  if (log) logKind = id === 'resume' ? 'role' : id === 'work' && !at ? 'project' : 'all';
-  viewAt = -1;
+  const [no, name] = CHAPTERS[id];
   $('#sheet').innerHTML =
-    `<header class="head"><p class="eyebrow">${id === 'seals' ? SEAL_WORDS[lang].title : L(name, ZH.chapters[id])}</p><span class="read" id="readout"></span><nav class="chap" aria-label="Chapters">${ORDER.map((k) => `<button data-sheet="${k}" aria-label="${L(CHAPTERS[k][1], ZH.chapters[k])}" ${CHAPTERS[k][0] === no ? 'aria-current="true"' : ''}>${+CHAPTERS[k][0]}</button>`).join('')}</nav><button class="x" aria-label="Close"><svg width="12" height="12" viewBox="0 0 12 12" stroke-width="1.6" stroke-linecap="round"><path d="M2 2l8 8M10 2l-8 8"/></svg></button></header><div class="scroll" id="scroll">${SHEETS[log ? 'career' : id]()}</div>` +
-    (id === 'photos'
-      ? '<div class="view" id="view" hidden><button class="vx" aria-label="Close the photograph"><svg width="12" height="12" viewBox="0 0 12 12" stroke-width="1.6" stroke-linecap="round"><path d="M2 2l8 8M10 2l-8 8"/></svg></button><button class="vs" data-step="-1" aria-label="Previous">‹</button><img id="viewImg" alt="Photo by Jincheng Ma"><button class="vs" data-step="1" aria-label="Next">›</button><p><span id="viewCap"></span><a class="link" id="viewLink" target="_blank" rel="noopener">' +
-        L('Open on Unsplash ↗', ZH.photos.open) +
-        '</a></p></div>'
-      : '');
-  if (wide) $('#sheet').dataset.wide = wide;
-  else delete $('#sheet').dataset.wide;
+    `<header class="head"><p class="eyebrow">${chapterName(id)}</p><nav class="chap" aria-label="Chapters">${ORDER.map((k) => `<button data-sheet="${k}" aria-label="${chapterName(k)}" ${CHAPTERS[k][0] === no ? 'aria-current="true"' : ''}>${+CHAPTERS[k][0]}</button>`).join('')}</nav><button class="x" aria-label="Close"><svg width="12" height="12" viewBox="0 0 12 12" stroke-width="1.6" stroke-linecap="round"><path d="M2 2l8 8M10 2l-8 8"/></svg></button></header><div class="scroll" id="scroll">${SHEETS[id]()}</div>`;
   $('#sheet').setAttribute('aria-label', name);
   $('#veil').dataset.open = '';
-  pond.dataset.chapter = wide ? 'wide' : 'side';
+  pond.dataset.chapter = 'side';
   $('#sheet').focus({ preventScroll: true });
-  sheetFor = log || id === 'work' ? at || '' : '';
   // the water takes the pane's arrival, and the address names where one is
   if (!wasOpen) {
     const r = $('#sheet').getBoundingClientRect(),
@@ -3991,20 +3873,18 @@ function openSheet(id, at) {
     drop(clamp(r.right - pr.left + 26, 20, W - 20), H * 0.5, 5, 0.7);
   }
   try {
-    history.replaceState(null, '', '#' + id + (at ? '/' + at : ''));
+    history.replaceState(null, '', '#' + id);
   } catch (err) {
     /* a page that may not rewrite its address still opens the chapter */
   }
   stirTop = 0;
   $('#scroll').addEventListener('scroll', stir, { passive: true });
-  if (log) applyLog();
-  else if (id === 'about') tick();
+  if (id === 'about') tick();
   else if (id === 'chat') openChat();
   else if (id === 'notes') void people.readNotes();
   else if (id === 'music') void loadSongs();
   else if (id === 'seals') albumShown();
   if (id !== 'chat') closeChat();
-  if (log || id === 'work') showRow(at);
 }
 // Reading down any chapter sinks the pond's focus with it, and the scrolling itself stirs the water beside the sheet.
 let stirAt = 0,
@@ -4024,32 +3904,10 @@ function stir() {
     if (moved > 2 && !RM)
       drop(clamp(r.right - pr.left + rnd(16, 74), 10, W - 10), clamp(H * (0.12 + 0.76 * p) + rnd(-34, 34), 10, H - 10), 2.4, clamp(moved * 0.006, 0.12, 0.8));
   }
-  sound();
-}
-// one photograph, large, over its sheet
-let viewAt = -1;
-const viewOpen = () => viewAt >= 0;
-function showPhoto(i) {
-  const v = $('#view');
-  if (!v) return;
-  viewAt = (i + PHOTOS.length) % PHOTOS.length;
-  v.hidden = false;
-  const p = PHOTOS[viewAt];
-  $('#viewImg').src = p.full;
-  $('#viewImg').alt = p.alt;
-  $('#viewCap').textContent = `${monthOf(p)} · ${viewAt + 1} / ${PHOTOS.length}`;
-  $('#viewLink').href = p.page;
-}
-function closeView() {
-  const v = $('#view');
-  if (v) v.hidden = true;
-  viewAt = -1;
 }
 let focusWas = null;
-let sheetFor = '';
 function closeSheet() {
   if (!sheetOpen()) return;
-  closeView();
   closeChat();
   delete $('#veil').dataset.open;
   delete pond.dataset.chapter;
@@ -4063,14 +3921,6 @@ function closeSheet() {
   } catch (err) {
     /* as above: the address is a nicety */
   }
-  // whoever belongs to the project just read comes by once the sheet is out of the way
-  if (sheetFor === 'devot') setTimeout(callDove, 500);
-  else if (sheetFor === 'ocra')
-    setTimeout(() => {
-      dropBug();
-      dropBug();
-    }, 500);
-  sheetFor = '';
 }
 function playSong(i) {
   audio();
@@ -4081,27 +3931,8 @@ $('#veil').addEventListener('pointerdown', (e) => {
   if (e.target === $('#veil')) closeSheet();
 });
 $('#sheet').addEventListener('click', (e) => {
-  const kind = e.target.closest('button[data-kind]'),
-    view = e.target.closest('[data-view]'),
-    go = e.target.closest('[data-goto]'),
-    shot = e.target.closest('.shots.just a'),
-    step = e.target.closest('[data-step]');
-  if (e.target.closest('.vx') || e.target.id === 'view') closeView();
-  else if (step) showPhoto(viewAt + +step.dataset.step);
-  else if (shot && !e.metaKey && !e.ctrlKey) {
-    e.preventDefault();
-    showPhoto(+shot.dataset.i);
-  } else if (e.target.closest('.x')) closeSheet();
-  else if (kind) {
-    logKind = kind.dataset.kind;
-    applyLog();
-  } else if (view) {
-    logCompact = view.dataset.view === 'list';
-    applyLog();
-  } else if (go) {
-    logKind = 'all';
-    applyLog();
-    showRow(go.dataset.goto);
+  if (e.target.closest('.x')) closeSheet();
+  else if (e.target.closest('[data-act=switch]')) {
   } else if (e.target.closest('[data-act=switch]')) {
     signingUp = !signingUp;
     openSheet('account');
@@ -4120,7 +3951,7 @@ pond.addEventListener('click', (e) => {
   if (e.target.closest('#play')) return;
   const s = e.target.closest('[data-sheet]'),
     g = e.target.closest('[data-song]');
-  if (s) openSheet(s.dataset.sheet, s.dataset.focus);
+  if (s) openSheet(s.dataset.sheet);
   else if (g) playSong(+g.dataset.song);
 });
 pond.addEventListener('submit', (e) => {
@@ -4289,8 +4120,6 @@ $('#clear').addEventListener('click', () => {
 /* ================= the command bar ================= */
 const ICONS = {
   letter: '<path d="M2.5 4h11v8.5h-11z"/><path d="m2.5 4.5 5.5 4.5 5.5-4.5"/>',
-  doc: '<path d="M4 2h5.5L12 4.5V14H4z"/><path d="M6 7.5h4M6 10h4"/>',
-  photo: '<rect x="2" y="3" width="12" height="10" rx="2"/><circle cx="6" cy="7" r="1.3"/><path d="m3 12 3.5-3 2.5 2 2-1.5 2.5 2"/>',
   note: '<path d="M2 9.5h12l-2.5 3h-7z"/><path d="M8 2.5v7M8 3.5l3.5 4H8"/>',
   music: '<path d="M6 12V4l6-1.5V10"/><circle cx="4.6" cy="12" r="1.5"/><circle cx="10.6" cy="10" r="1.5"/>',
   play: '<path d="M5 3.5v9l7-4.5z"/>',
@@ -4311,22 +4140,6 @@ function commands() {
   const cleared = 'clear' in pond.dataset;
   return [
     { sec: 'Go to', icon: 'letter', label: 'About me', hint: 'Who I am, in four paragraphs', kw: 'about hello jincheng who bio', top: true, run: openLetter },
-    ...PROJECTS.map(tr).map((p) => ({
-      sec: 'Go to',
-      mark: p.mark,
-      label: p.title,
-      hint: `${p.tag}, ${p.when}`,
-      kw: 'work project ' + p.text,
-      run: () => openSheet('work', p.id)
-    })),
-    {
-      sec: 'Go to',
-      icon: 'doc',
-      label: 'Timeline',
-      hint: 'TikTok, INFI.US, Carrefour China, and what I built',
-      kw: 'resume cv experience jobs career hire work projects school',
-      run: () => openSheet('career')
-    },
     {
       sec: 'People',
       icon: 'chat',
@@ -4363,14 +4176,6 @@ function commands() {
               }
         ]
       : []),
-    {
-      sec: 'Go to',
-      icon: 'photo',
-      label: 'Photos',
-      hint: `${PHOTOS.length} photographs`,
-      kw: 'pictures unsplash camera gallery',
-      run: () => openSheet('photos')
-    },
     {
       sec: 'Go to',
       icon: 'note',
@@ -4598,14 +4403,13 @@ function commands() {
         setMuted(!muted);
       }
     },
-    // the seal album: listed once its mark shows, found by name before that; clearing it once a volume is full
+    // the seal album, as in the contents; clearing it once a volume is full
     {
       sec: 'Pond',
       icon: 'brush',
       label: SEAL_WORDS[lang].open,
       hint: SEAL_WORDS[lang].openHint,
       kw: 'seals stamps album collection looks 集印册 集印帳 印 御朱印',
-      hidden: !entryShows(album),
       cmd: true,
       run: () => openSheet('seals')
     },
@@ -4712,7 +4516,7 @@ function drawPal() {
   mark();
 }
 const row = (c, i, label, right) =>
-  `<li role="option" id="opt-${i}" data-i="${i}"><span class="ic">${c.mark ? `<img src="${markSrc(c.mark)}" alt="">` : c.dot ? `<i style="--c:${c.dot}"></i>` : ico(c.icon)}</span><span class="tx"><b>${label}</b><small>${esc(c.hint)}</small></span><span class="rt">${right ? (right.length <= 3 && right !== 'pond' ? `<kbd>${esc(right)}</kbd>` : esc(right)) : ''}</span></li>`;
+  `<li role="option" id="opt-${i}" data-i="${i}"><span class="ic">${c.dot ? `<i style="--c:${c.dot}"></i>` : ico(c.icon)}</span><span class="tx"><b>${label}</b><small>${esc(c.hint)}</small></span><span class="rt">${right ? (right.length <= 3 && right !== 'pond' ? `<kbd>${esc(right)}</kbd>` : esc(right)) : ''}</span></li>`;
 function mark() {
   $('#palList')
     .querySelectorAll('[role=option]')
@@ -4799,15 +4603,10 @@ function feedMiddle() {
 }
 addEventListener('keydown', (e) => {
   const typing = /INPUT|TEXTAREA/.test((document.activeElement || {}).tagName || '');
-  // 0 to 5 open the chapters in order; with a photograph up, the arrows move through them
-  if (!typing && !palOpen() && !e.metaKey && !e.ctrlKey && !e.altKey && /^[0-5]$/.test(e.key)) {
+  // 0 to 4 open the chapters in order
+  if (!typing && !palOpen() && !e.metaKey && !e.ctrlKey && !e.altKey && /^[0-4]$/.test(e.key)) {
     e.preventDefault();
     openSheet(ORDER[+e.key]);
-    return;
-  }
-  if (viewOpen() && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
-    e.preventDefault();
-    showPhoto(viewAt + (e.key === 'ArrowLeft' ? -1 : 1));
     return;
   }
   if (e.key.toLowerCase() === 'k' && (e.metaKey || e.ctrlKey)) {
@@ -4818,7 +4617,6 @@ addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
     // esc closes whatever is on top
     if (palOpen()) closePal();
-    else if (viewOpen()) closeView();
     else if (sheetOpen()) closeSheet();
     else if (typing) document.activeElement.blur();
     return;
@@ -5673,11 +5471,12 @@ function paintMural() {
 
 /* ================= the seal album (集印册) =================
    Each look has a seal (seals.ts). The first time a look comes in all the way, by whatever route, its seal is
-   stamped in the corner and kept in this browser; the album is a sheet, opened from the command bar or from
-   the small mark by the solar term, which shows once there is a seal to see. Someone who has found none is
+   stamped in the corner and kept in this browser; the album is a chapter, opened from the contents (its row
+   says how many are found), from the command bar or from the small mark by the solar term, which shows once
+   there is a seal to see. Someone who has found none is
    shown one quiet line on the water, once. None of it runs in the frame: a stamp is a CSS animation, and
    the line a timer. */
-const VOLS = volumes(false);
+const VOLS = volumes(PANEL);
 let album = readAlbum(load('pond-seals'));
 album = { ...album, visits: album.visits + 1 };
 save('pond-seals', writeAlbum(album));
@@ -5699,6 +5498,7 @@ function sealsEntry() {
   b.toggleAttribute('data-some', sealCount(album) > 0);
   b.toggleAttribute('data-all', allFull(album, VOLS));
   b.setAttribute('aria-label', SEAL_WORDS[lang].title);
+  $('#sealsN').textContent = `${sealCount(album)} / ${VOLS.flatMap((v) => v.seals).length}`;
 }
 // the volumes whose large seal hasn't been seen yet: it stamps as the album opens, once
 const freshVols = () => VOLS.filter((v) => full(album, v) && !album.sealed.includes(v.id)).map((v) => v.id);
@@ -5709,9 +5509,112 @@ function sealsPic() {
   if (sealsPic.asked) return;
   sealsPic.asked = true;
   const im = new Image();
-  im.onload = () => pond.setAttribute('data-seals', '');
+  im.onload = () => {
+    sealsPic.im = im;
+    pond.setAttribute('data-seals', '');
+  };
   im.src = '/pond/ink/seals.webp';
 }
+// The album as one picture, to keep or pass on (a trial, in preview builds): the leaves on paper, each
+// found seal with its name and day, the rest an outline. Nothing in it but the seals.
+function albumPicture() {
+  const Wd = 1080,
+    M = 72,
+    row = 330,
+    cv = document.createElement('canvas'),
+    c = cv.getContext('2d'),
+    words = SEAL_WORDS[lang],
+    RED = '#b8382a';
+  cv.width = Wd;
+  cv.height = 250 + VOLS.length * row;
+  c.fillStyle = '#efe6d2';
+  c.fillRect(0, 0, Wd, cv.height);
+  c.fillStyle = '#2a231c';
+  c.textBaseline = 'alphabetic';
+  c.font = "600 64px 'Cormorant Garamond', 'Zhi Mang Xing', serif";
+  c.fillText(words.title, M, 132);
+  c.font = '400 22px ui-monospace, monospace';
+  c.fillStyle = 'rgba(42,35,28,.6)';
+  c.fillText(`${sealCount(album)} / ${VOLS.flatMap((v) => v.seals).length} · ${dayText(dayOf(new Date()), lang)}`, M, 176);
+  // one seal, s across (a tall one narrower), centred on x, y: its cut from the sheet, or its characters
+  const seal = (q, x, y, s) => {
+    const at = sealCell(q.id),
+      tall = q.shape === 'tall',
+      w = tall ? (s * 150) / 246 : s;
+    if (at && sealsPic.im) {
+      const one = document.createElement('canvas'),
+        o = one.getContext('2d');
+      one.width = Math.round(w);
+      one.height = Math.round(s);
+      o.fillStyle = RED;
+      o.fillRect(0, 0, one.width, one.height);
+      o.globalCompositeOperation = 'destination-in';
+      o.drawImage(sealsPic.im, at[0] * 256 + (tall ? 53 : 12), at[1] * 256 + (tall ? 5 : 12), tall ? 150 : 232, tall ? 246 : 232, 0, 0, one.width, one.height);
+      c.drawImage(one, x - w / 2, y - s / 2);
+      return;
+    }
+    c.fillStyle = RED;
+    c.beginPath();
+    if (q.shape === 'round') c.arc(x, y, s / 2, 0, TAU);
+    else c.rect(x - w / 2, y - s / 2, w, s);
+    if (q.cut === 'red') {
+      c.lineWidth = s * 0.065;
+      c.strokeStyle = RED;
+      c.stroke();
+    } else {
+      c.fill();
+      c.fillStyle = '#f4ece0';
+    }
+    c.font = `400 ${s * 0.6}px 'Zhi Mang Xing', serif`;
+    c.textAlign = 'center';
+    c.fillText(q.chars, x, y + s * 0.2);
+    c.textAlign = 'left';
+  };
+  VOLS.forEach((v, i) => {
+    const top = 250 + i * row,
+      step = (Wd - M * 2) / Math.max(5, v.seals.length);
+    c.fillStyle = '#2a231c';
+    c.font = "600 30px 'Cormorant Garamond', 'Zhi Mang Xing', serif";
+    c.fillText(words.volumes[v.id], M, top);
+    c.fillStyle = 'rgba(120,96,60,.3)';
+    c.fillRect(M, top + 16, Wd - M * 2, 1);
+    v.seals.forEach((q, j) => {
+      const x = M + step * (j + 0.5),
+        y = top + 110;
+      if (hasSeal(album, q.id)) {
+        seal(q, x, y, 124);
+        c.textAlign = 'center';
+        c.fillStyle = '#2a231c';
+        c.font = "600 24px 'Cormorant Garamond', 'Zhi Mang Xing', serif";
+        c.fillText(words.names[q.id], x, y + 104);
+        c.font = '400 17px ui-monospace, monospace';
+        c.fillStyle = 'rgba(42,35,28,.6)';
+        c.fillText(dayText(album.found[q.id], lang), x, y + 130);
+        c.textAlign = 'left';
+      } else {
+        c.strokeStyle = 'rgba(92,58,40,.3)';
+        c.lineWidth = 1.5;
+        c.beginPath();
+        if (q.shape === 'round') c.arc(x, y, 56, 0, TAU);
+        else c.rect(x - (q.shape === 'tall' ? 34 : 56), y - 56, q.shape === 'tall' ? 68 : 112, 112);
+        c.stroke();
+      }
+    });
+  });
+  return cv;
+}
+document.addEventListener('click', (e) => {
+  if (!e.target.closest?.('#albumSave')) return;
+  albumPicture().toBlob((blob) => {
+    if (!blob) return;
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'pond-seals.png';
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  });
+});
+if (PERF) window.__album = albumPicture;
 // a seal's characters are centred by their own ink, measured once the brush has come for them
 function alignSeals(sel) {
   sealsPic();
@@ -5733,6 +5636,15 @@ function albumShown() {
   album = a;
   save('pond-seals', writeAlbum(a));
 }
+// The occasions' seals (a trial, in preview builds): one is stamped when the pond is in its state while
+// someone is there and nothing else is in front of the water. Looked at now and then, not every frame.
+function occasions() {
+  if (!settledNow || document.hidden || sheetOpen() || 'on' in $('#stamp').dataset) return;
+  const on = { rain: raining, snow: fx.snow > 0.02, moon: phase === 'night' && Math.abs(pv.age - 0.5) < 0.06, fest: !!pv.fest, dawn: phase === 'dawn' },
+    seal = VOLS.flatMap((v) => v.seals).find((x) => on[x.id] && !hasSeal(album, x.id));
+  if (seal) reached(seal.id);
+}
+setInterval(occasions, 4000);
 let stampTimer = 0;
 // a look has come in all the way: its seal, if this is the first time
 function reached(id) {
@@ -7079,8 +6991,8 @@ function start() {
   panesLive();
   invalidate();
   {
-    const [ch, at] = location.hash.slice(1).split('/');
-    if (CHAPTERS[ch]) setTimeout(() => openSheet(ch, at), 1400);
+    const ch = location.hash.slice(1);
+    if (CHAPTERS[ch]) setTimeout(() => openSheet(ch), 1400);
   }
   let rt = 0;
   const refit = () => {
