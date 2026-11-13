@@ -133,6 +133,36 @@ describe('a hand on a large screen', () => {
   });
 });
 
+describe('on a slant', () => {
+  const turned = (pts: Pt[], deg: number, cx = 640, cy = 400): Pt[] => {
+    const c = Math.cos((deg * Math.PI) / 180),
+      sn = Math.sin((deg * Math.PI) / 180);
+    return pts.map(([x, y]) => [cx + (x - cx) * c - (y - cy) * sn, cy + (x - cx) * sn + (y - cy) * c]);
+  };
+  it('a rub is a rub at any angle, and never a stir', () => {
+    for (const deg of [20, 45, 70, 110, 135])
+      for (const w of [120, 300]) {
+        const pts = turned(rubbing(560, 400, w, 6), deg);
+        expect(rub(pts)).toBe(true);
+        expect([...read(pts)]).toEqual(['dunhuang']);
+      }
+  });
+  it('a small quick scrub is a rub too', () => {
+    expect(rub(turned(rubbing(620, 400, 50, 8), 30))).toBe(true);
+  });
+  it('a zigzag is a zigzag at any angle', () => {
+    for (const deg of [25, 45, 60, 120]) {
+      const pts = turned(zigzagging(420, 430), deg);
+      expect(zigzag(pts)).toBe(true);
+      expect([...read(pts)]).toEqual(['relief']);
+    }
+  });
+  it('a slanted ruled line is still only a line, and a circle still a stir', () => {
+    expect([...read(turned(ruled(), 40))]).toEqual(['blueprint']);
+    expect([...read(circle(640, 400, 90))]).toEqual(['ukiyo']);
+  });
+});
+
 describe('dust brushed off a stroke at a time', () => {
   it('four strokes the same way, joined end to end, are a rub; two are not', () => {
     const swipe = (k: number): Pt[] => line([500, 400 + k * 8], [760, 404 + k * 8], 14);

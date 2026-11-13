@@ -39,7 +39,7 @@ import {
 } from './seals';
 import { FPS, IDLE_AFTER, due, learnBeat, simSteps } from './clock.js';
 import { PERF, add, count, frameDone, span } from './perf.js';
-import { rub, strokeLifted, strokeMoving, tapsLook } from './gestures';
+import { describe, rub, strokeLifted, strokeMoving, tapsLook } from './gestures';
 import { crowdsPainting, underPainting } from './hang.js';
 import { paintingOf, seasonAmounts } from './seasons.js';
 import {
@@ -5991,7 +5991,21 @@ const gest = {
 };
 // how long a lifted stroke still counts with the next, in milliseconds
 const CARRY = 2200;
+// With ?gest in the address: each stroke as the rules read it, in a corner, for when a gesture won't take.
+const GEST = /[?&]gest\b/.test(location.search);
+function gestSay(text) {
+  let el = $('#gestSay');
+  if (!el) {
+    el = document.createElement('pre');
+    el.id = 'gestSay';
+    el.style.cssText =
+      'position:fixed;left:8px;top:8px;z-index:99;margin:0;padding:8px 10px;max-width:calc(100vw - 16px);white-space:pre-wrap;font:12px/1.5 ui-monospace,monospace;color:#fff;background:rgba(0,0,0,.78);border-radius:6px;pointer-events:none';
+    document.body.append(el);
+  }
+  el.textContent = text;
+}
 const toggleLook = (name, at) => {
+  if (GEST) gestSay(`${gest.pts.length > 1 ? describe(gest.pts, W, H) : ''}\n→ ${name}${look === name ? ' (already on show)' : ''}`);
   gest.down = false;
   gest.pts = [];
   gest.carry = null;
@@ -6058,29 +6072,20 @@ const HOLD = 1.2,
     // (a long stroke is thinned, not cut short: its beginning is part of what it means)
     if (P.length > 480) for (let i = P.length - 2; i > 0; i -= 2) P.splice(i, 1);
     // the strokes that are rules of their own (gestures.ts): a rub over one spot, or once round the rim of the screen
-    {
-      // (dust is brushed off a stroke at a time too: the strokes of the last moment count with this one)
-      const m = strokeMoving(P, W, H) || (gest.carry && performance.now() - gest.carryAt < CARRY && rub([...gest.carry, ...P]) ? 'dunhuang' : null);
-      if (m === 'dunhuang' || m === 'qinghua') {
-        const xs = P.map((p) => p[0]),
-          ys = P.map((p) => p[1]);
-        return void toggleLook(m, m === 'qinghua' ? [x, y] : [(Math.max(...xs) + Math.min(...xs)) / 2, (Math.max(...ys) + Math.min(...ys)) / 2]);
-      }
+    // (dust is brushed off a stroke at a time too: the strokes of the last moment count with this one)
+    const m = strokeMoving(P, W, H) || (gest.carry && performance.now() - gest.carryAt < CARRY && rub([...gest.carry, ...P]) ? 'dunhuang' : null);
+    if (m === 'dunhuang' || m === 'qinghua') {
+      const xs = P.map((p) => p[0]),
+        ys = P.map((p) => p[1]);
+      return void toggleLook(m, m === 'qinghua' ? [x, y] : [(Math.max(...xs) + Math.min(...xs)) / 2, (Math.max(...ys) + Math.min(...ys)) / 2]);
     }
     // (half way round a stir, the print's crests are sent for, so that it arrives as a wave)
     if (Math.abs(gest.turn) > Math.PI && look === 'water') loadWaves();
-    // stirred once round, wide enough to be meant
-    if (Math.abs(gest.turn) > Math.PI * 1.9 && gest.len > 260) {
-      let xs = P.map((p) => p[0]),
+    // stirred once round, wide enough to be meant (gestures.ts)
+    if (m === 'ukiyo') {
+      const xs = P.map((p) => p[0]),
         ys = P.map((p) => p[1]);
-      const w = Math.max(...xs) - Math.min(...xs),
-        h = Math.max(...ys) - Math.min(...ys);
-      // (not a long thin patch: that is a rub on its way)
-      if (Math.min(w, h) > Math.max(50, Math.max(w, h) * 0.3)) {
-        xs = (Math.max(...xs) + Math.min(...xs)) / 2;
-        ys = (Math.max(...ys) + Math.min(...ys)) / 2;
-        toggleLook('ukiyo', [xs, ys]);
-      }
+      toggleLook('ukiyo', [(Math.max(...xs) + Math.min(...xs)) / 2, (Math.max(...ys) + Math.min(...ys)) / 2]);
     }
   };
   const lift = (e) => {
@@ -6107,6 +6112,7 @@ const HOLD = 1.2,
         }
       }
     } else if (strokeLifted(drawn) === 'relief') toggleLook('relief', [x, y]);
+    else if (GEST && drawn.length > 1) gestSay(`${describe(drawn, W, H)}\n→ nothing (lifted after ${dt.toFixed(1)} s)`);
     // a stroke that meant nothing by itself is kept a moment, in case it is one of several brushed over a spot
     if (gest.len >= 40 && drawn.length) {
       gest.carry = [...(gest.carry && performance.now() - gest.carryAt < CARRY ? gest.carry : []), ...drawn].slice(-300);
