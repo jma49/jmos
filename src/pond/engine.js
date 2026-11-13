@@ -2513,8 +2513,13 @@ function boatAt(x, y) {
   }
   return best;
 }
+// (which boat's note is open, and the timer that folds it away where no pointer can leave it: a finger)
+let boatShown = null,
+  boatTimer = 0;
 function showBoat(b) {
   const tip = $('#boatTip');
+  clearTimeout(boatTimer);
+  boatShown = b || null;
   if (!b) {
     delete tip.dataset.on;
     return;
@@ -5348,7 +5353,13 @@ function clueNow() {
 // someone is there and nothing else is in front of the water. Looked at now and then, not every frame.
 function occasions() {
   if (!settledNow || document.hidden || sheetOpen() || 'on' in $('#stamp').dataset) return;
-  const on = { rain: raining, snow: fx.snow > 0.02, moon: phase === 'night' && Math.abs(pv.age - 0.5) < 0.06, fest: !!pv.fest, dawn: phase === 'dawn' },
+  const on = {
+      rain: raining, // (snow where the visitor is, or the pond's own winter, when it freezes over wherever they are)
+      snow: fx.snow > 0.02 || AM.ice > 0.3,
+      moon: phase === 'night' && Math.abs(pv.age - 0.5) < 0.06,
+      fest: !!pv.fest,
+      dawn: phase === 'dawn'
+    },
     seal = VOLS.flatMap((v) => v.seals).find((x) => on[x.id] && !hasSeal(album, x.id));
   if (seal) reached(seal.id);
 }
@@ -5595,6 +5606,11 @@ pond.addEventListener('pointermove', (e) => {
   if (e.pointerType === 'mouse') showBoat(wet ? boatAt(x, y) : null);
 });
 pond.addEventListener('pointerdown', (e) => {
+  // A finger opens a boat's note with a tap, and has no way to move off it as a mouse does: the next tap
+  // anywhere folds it away (on the same boat too), and it folds itself after a while.
+  const touch = e.pointerType !== 'mouse',
+    open = boatShown;
+  if (touch && open) showBoat(null);
   if (e.target.closest(DRY)) return;
   const [x, y] = spot(e),
     b = boatAt(x, y);
@@ -5602,8 +5618,11 @@ pond.addEventListener('pointerdown', (e) => {
   ptr.y = ptr.ly = y;
   ptr.moved = true;
   ptr.at = T;
-  if (b && e.pointerType !== 'mouse') {
-    showBoat(b);
+  if (touch && (b || open)) {
+    if (b && b !== open) {
+      showBoat(b);
+      boatTimer = setTimeout(() => showBoat(null), 8000);
+    }
     return;
   }
   audio();
