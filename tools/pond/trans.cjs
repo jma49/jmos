@@ -103,7 +103,7 @@ const INIT = () => {
   for (const l of looks.split(',')) {
     await set(l);
     let at = 0;
-    for (const [i, n] of [5, 11, 18, 28, 70].entries()) {
+    for (const [i, n] of (process.env.DIRECT ? [8, 20, 34, 50, 110] : [5, 11, 18, 28, 70]).entries()) {
       await step(n - at);
       at = n;
       await shot(`${l}-in-${i}`);
@@ -119,6 +119,8 @@ const INIT = () => {
         await shot(`${l}-press-${i}`);
       }
     }
+    // (DIRECT=1 goes from each look straight to the next, as a gesture made in a look does)
+    if (process.env.DIRECT) continue;
     await set('water');
     at = 0;
     for (const [i, n] of [5, 12].entries()) {

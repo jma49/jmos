@@ -1609,8 +1609,17 @@ void main(){
 // goes; the water alone (1), with no look shown; and a look alone (2), once one has come in all the way and
 // covers the water. Each draws exactly what the whole would, without the work that wouldn't be seen.
 // A look alone is built for that one look (ONLY), so each is a pass of its own with none of the others in it.
-const FS = FS_SRC.replace('vec3 look(int s){', `${NEW_GLSL}vec3 look(int s){\n#ifdef ONLY\n  s=ONLY;\n#endif\n  if(s>=6) return lookNew(s);\n`);
-const fsPart = (n, only) => FS.replace('\n', `\n#define PART ${n}\n#define CRESTS\n${only ? `#define ONLY ${only}\n` : ''}`);
+// A look over the water (OVER) is the whole pass with one look in it and the water under it: what a look
+// coming in over the water, or going back to it, needs. The whole pass, with every look, can take a real
+// GPU a long while to build, and an arrival can't wait for it.
+const FS = FS_SRC.replace(
+  'vec3 look(int s){',
+  `${NEW_GLSL}vec3 look(int s){\n#ifdef OVER\n  if(s!=OVER) return gWater;\n  s=OVER;\n#endif\n#ifdef ONLY\n  s=ONLY;\n#endif\n  if(s>=6) return lookNew(s);\n`
+);
+const fsPart = (n, only, over) =>
+  FS.replace('\n', `\n#define PART ${n}\n#define CRESTS\n${only ? `#define ONLY ${only}\n` : ''}${over ? `#define OVER ${over}\n` : ''}`);
+// which pass a look over the water is, among the passes (after the whole, the water and each look alone)
+const OVER_AT = 20;
 // The second pass. Inside a pane the picture is blurred and smoked; towards the rim it is
 // pulled sideways as through the edge of a lens, and the rim itself catches the light. In
 // the cold, frost gathers along the rim.
@@ -1752,10 +1761,14 @@ const FS_U = [
 const locs = (p) => Object.fromEntries(FS_U.map((n) => [n, gl.getUniformLocation(p, n)]));
 // Which build of the water pass draws this frame: a part is used once it has been built (asked without
 // waiting where the browser can say, else after a few seconds); one that failed is never used.
+// The pass a look in motion is drawn with: over the water, its own small one; over another look, the whole.
+const passFor = () => (SID[base] === 0 && SID[top] > 0 ? OVER_AT + SID[top] : 0);
+// (what each pass took to build, for the ?gest readout)
+let passNote = '';
 function waterProg(part) {
   // the whole pass and a look's own are asked for the first time they are needed
   if (!progs[part]) {
-    progs[part] = mk(part ? fsPart(2, part - 1) : fsPart(0), true);
+    progs[part] = mk(part >= OVER_AT ? fsPart(0, 0, part - OVER_AT) : part ? fsPart(2, part - 1) : fsPart(0), true);
     progAts[part] = performance.now();
   }
   const p = progs[part];
@@ -1764,6 +1777,7 @@ function waterProg(part) {
     if (pcx ? !gl.getProgramParameter(p, pcx.COMPLETION_STATUS_KHR) : performance.now() - progAts[part] < 1500) return part && progOK[0] ? progs[0] : prog;
     progOK[part] = !!gl.getProgramParameter(p, gl.LINK_STATUS);
     if (progOK[part]) progU.set(p, locs(p));
+    passNote += `\npass ${part} ${progOK[part] ? 'built' : 'FAILED'} in ${Math.round(performance.now() - progAts[part])} ms`;
   }
   return progOK[part] ? p : part && progOK[0] ? progs[0] : prog;
 }
@@ -1788,10 +1802,10 @@ function deep() {
 function initGL() {
   gl = glc.getContext('webgl2', { antialias: false, alpha: false, powerPreference: 'high-performance' });
   if (!gl) return;
-  // Only the water alone is built before the first frame: it is all the first screen shows, and the whole
-  // pass, with every look in it, takes several times as long to build (seconds, where the GPU is software).
-  // The whole is built in the background once the pond has settled, or the moment a look is first asked
-  // for; each look alone when it is first asked for.
+  // Only the water alone is built before the first frame: it is all the first screen shows. A look's two
+  // passes (over the water, as it comes and goes; alone, once it covers the water) are built when it is
+  // first asked for. The whole pass, with every look in it, is never asked for: it can take a real GPU a
+  // very long time to build, and nothing needs two looks in one frame (setLook).
   prog = mk(fsPart(1));
   bedProg = mk(BED);
   glassProg = mk(GLASS);
@@ -2953,16 +2967,17 @@ function glide(change) {
 }
 const GLIDE_MS = 640;
 const setInk = (on, from) => setLook(on ? 'ink' : 'water', from || $('#inkBtn'));
-// The looks with a picture share one texture, so two of them can't be on the water at once: when one is
-// asked for while another still shows, that one draws back to the water first and the new one comes in
-// once it has gone (stepInk).
+// A look always comes in over the water: when one is asked for while another still shows, that one draws
+// back to the water first and the new one comes in once it has gone (stepInk). Two looks are never drawn
+// in one frame: the looks with a picture share one texture, and a pass that held every look would take a
+// real GPU far too long to build.
 let lookNext = null,
   rubNext = false;
-const pictured = (l) => l in PICTURED;
 function setLook(name, from) {
   if (!LOOKS.includes(name) || name === look) return;
   lookNext = null;
-  if (pictured(name) && [look, inkR > 0 ? top : 'water', inkR > 0 ? base : 'water'].some((l) => l !== name && pictured(l))) {
+  const others = [look, inkR > 0 ? top : 'water', inkR > 0 ? base : 'water'].filter((l) => l !== name && l !== 'water');
+  if (name !== 'water' && others.length) {
     // (the way out is a change of look like any other, and would forget that a rubbing was asked for)
     const rub = rubNext;
     if (look !== 'water') setLook('water', from);
@@ -3121,11 +3136,11 @@ function paintInk() {
 // and comes back slow; going back, the look draws in to where it came from and time runs up again.
 // The print is peeled off from the top left, the blueprint scanned from the top; the text spreads as a drop does.
 function stepInk(raw) {
-  // A look can't be drawn until the pass that holds it is built, which the first look asked for has to
-  // wait for (a moment on a real GPU, seconds on a software one). Its arrival starts when it can be
-  // seen, not when it was asked for: else it would be over, unseen, by the time the pass was ready.
-  if (look !== 'water' && glOK && inkR === 0 && progOK[0] === undefined) {
-    waterProg(0);
+  // A look can't be drawn until the pass that holds it is built (its own over the water: a moment on a
+  // real GPU, seconds on a software one). Its arrival starts when it can be seen, not when it was asked
+  // for: else it would be over, unseen, by the time the pass was ready.
+  if (look !== 'water' && glOK && inkR === 0 && progOK[passFor()] === undefined) {
+    waterProg(passFor());
     inkAt = performance.now() / 1000;
   }
   const k = performance.now() / 1000 - inkAt;
@@ -5705,7 +5720,7 @@ function gestSay(text) {
       'position:fixed;left:8px;top:8px;z-index:99;margin:0;padding:8px 10px;max-width:calc(100vw - 16px);white-space:pre-wrap;font:12px/1.5 ui-monospace,monospace;color:#fff;background:rgba(0,0,0,.78);border-radius:6px;pointer-events:none';
     document.body.append(el);
   }
-  el.textContent = text;
+  el.textContent = text + passNote;
 }
 const toggleLook = (name, at) => {
   if (GEST) gestSay(`${gest.pts.length > 1 ? describe(gest.pts, W, H) : ''}\n→ ${name}${look === name ? ' (already on show)' : ''}`);
@@ -6334,7 +6349,7 @@ function tick1(raw) {
   // with no look shown the water alone is drawn, and a look alone once it covers the water
   const shown = top !== 'water' && SID[top] !== SID[base] ? inkR : SID[top] ? inkMax : 0,
     inkW = shown > 0 ? (look !== 'water' && inkR >= inkMax ? 1 : 0.5) : 0,
-    wp = waterProg(inkW === 0 ? 1 : inkW === 1 ? 1 + SID[top] : 0);
+    wp = waterProg(inkW === 0 ? 1 : inkW === 1 ? 1 + SID[top] : passFor());
   U = progU.get(wp);
   passNow = progs.indexOf(wp);
   gl.useProgram(wp);
@@ -6500,8 +6515,6 @@ settled.then(() => {
   life = { DOVE: SPRITES.dove.half, SPIDER: SPRITES.spider.half, pic: spritePics(invalidate) };
 });
 settled.then(() => {
-  // (the whole pass starts building now, in the background, so the first look finds it ready)
-  if (glOK) waterProg(0);
   settledNow = true;
   padKey = '';
   topAt = -1e9;
