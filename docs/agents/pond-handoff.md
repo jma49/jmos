@@ -113,7 +113,7 @@ spider as sprites, with three.js and `life.js` no longer fetched; ukiyo-e's cres
 chart's plate and figures; Dunhuang's halo, its koi, and nothing painted under the controls; Monet's
 koi moved to the common sheet. What is left of those:
 
-1. **Dove and spider: the revised renders.** The pond draws the two from the first sprite sheets in
+1. **Dove and spider: the revised renders (approved; asked of the local thread).** The pond draws the two from the first sprite sheets in
    every build, and three.js and the models are gone. When the `-v2` sheets come: point `SHEETS` in
    `sprites.js` at them, set the frame counts and order in `doveFrame()` and `spiderFrame()` (and in
    `sprites.test.ts`), and look at every look's dress with `tools/pond/life.cjs`.
@@ -176,6 +176,12 @@ the dove and spider's own pictures in motion, phones, the festivals.
 Asked of the local thread since this page was first written, delivered, and in use: the relief's koi
 sheet and stone face, then a lighter lily sheet for the water, a grid that tiles for the star chart,
 and a bolder cut of the relief's koi. The files each replaced are deleted.
+
+- **The first frame builds only the water's pass.** The whole pass, with every look in it, is built
+  in the background once the pond has settled (or when a look is first asked for). Built before the
+  first frame, as it once was, it held the main thread for seconds under a software GPU: CI's smoke
+  test timed out waiting for the page's `load` with its own fonts still unanswered. A new look
+  makes the whole pass longer; never build it before the first frame.
 
 ## 5. Rules learnt the hard way
 

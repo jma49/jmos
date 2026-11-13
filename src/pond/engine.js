@@ -1662,7 +1662,6 @@ let gl,
   progOK = [],
   progU = new Map(),
   pcx = null,
-  progAt = 0,
   progAts = [],
   passNow = 0,
   UG = {},
@@ -1750,19 +1749,19 @@ const locs = (p) => Object.fromEntries(FS_U.map((n) => [n, gl.getUniformLocation
 // Which build of the water pass draws this frame: a part is used once it has been built (asked without
 // waiting where the browser can say, else after a few seconds); one that failed is never used.
 function waterProg(part) {
-  // a look's own pass is asked for the first time the look is
-  if (part > 1 && !progs[part]) {
-    progs[part] = mk(fsPart(2, part - 1), true);
+  // the whole pass and a look's own are asked for the first time they are needed
+  if (!progs[part]) {
+    progs[part] = mk(part ? fsPart(2, part - 1) : fsPart(0), true);
     progAts[part] = performance.now();
   }
   const p = progs[part];
-  if (!part || !p) return prog;
   if (progOK[part] === undefined) {
-    if (pcx ? !gl.getProgramParameter(p, pcx.COMPLETION_STATUS_KHR) : performance.now() - (progAts[part] || progAt) < 4000) return prog;
+    // (until it is built: the whole pass if that is, which draws anything; else the water, as it was)
+    if (pcx ? !gl.getProgramParameter(p, pcx.COMPLETION_STATUS_KHR) : performance.now() - progAts[part] < 1500) return part && progOK[0] ? progs[0] : prog;
     progOK[part] = !!gl.getProgramParameter(p, gl.LINK_STATUS);
     if (progOK[part]) progU.set(p, locs(p));
   }
-  return progOK[part] ? p : prog;
+  return progOK[part] ? p : part && progOK[0] ? progs[0] : prog;
 }
 function tex(filter) {
   const t = gl.createTexture();
@@ -1785,13 +1784,16 @@ function deep() {
 function initGL() {
   gl = glc.getContext('webgl2', { antialias: false, alpha: false, powerPreference: 'high-performance' });
   if (!gl) return;
-  prog = mk(fsPart(0));
+  // Only the water alone is built before the first frame: it is all the first screen shows, and the whole
+  // pass, with every look in it, takes several times as long to build (seconds, where the GPU is software).
+  // The whole is built in the background once the pond has settled, or the moment a look is first asked
+  // for; each look alone when it is first asked for.
+  prog = mk(fsPart(1));
   bedProg = mk(BED);
   glassProg = mk(GLASS);
-  // the water alone is built in the background now, and each look alone when it is first asked for
-  progs = [prog, mk(fsPart(1), true)];
+  progs = [null, prog];
+  progOK[1] = true;
   pcx = gl.getExtension('KHR_parallel_shader_compile');
-  progAt = performance.now();
   const vb = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, vb);
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
@@ -6819,6 +6821,8 @@ settled.then(() => {
   life = { DOVE: SPRITES.dove.half, SPIDER: SPRITES.spider.half, pic: spritePics(invalidate) };
 });
 settled.then(() => {
+  // (the whole pass starts building now, in the background, so the first look finds it ready)
+  if (glOK) waterProg(0);
   settledNow = true;
   padKey = '';
   topAt = -1e9;

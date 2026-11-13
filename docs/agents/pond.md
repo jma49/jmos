@@ -667,7 +667,29 @@ pads and flowers as these sets: spring (small young pads), summer (full pads, bu
   keep the spine dead straight and paint nothing that only makes sense straight (no long straight
   highlight down the back). 青花's sheet is the model of a correct one.
 
-**The dove and the spider** (Blender; in `public/pond/water/`). **Status: revise.** The first sheets
+**The dove and the spider: the second version is approved.** Jincheng has said yes to the stills of
+the revised dove and spider: render the whole `-v2` sheets now. So that the code can take them
+without a question:
+
+- Files `dove-v2.webp` and `spider-v2.webp` in `public/pond/water/`; if a sheet can't stay under
+  200 KB, split it by rows into `dove-v2-1.webp`, `dove-v2-2.webp` and so on, the rows in the order
+  below, every file the same width.
+- Cells of 384 × 384 for both (the dove is drawn about 220 pixels across at most, so 512 is more
+  than is shown and costs twice the weight). The creature faces the right of its cell, its place on
+  the ground at the cell's centre, the same scale in every cell, at least 18 pixels clear.
+- The dove's rows, in this order, each left-aligned: (1) at rest: still, head turned left, head
+  turned right, preening, a head-bob; (2) take-off, 6 frames; (3) flight, one wing-beat that loops,
+  12 frames; (4) landing, 6 frames, the last close to the first of row 1; (5) walking, 6 frames,
+  the feet showing.
+- The spider's rows: (1) at rest: still, looking up, turning to its left, turning to its right;
+  (2) the walk, a loop of 8, one loop a stride of half a unit; (3) the wind-up crouch, 2 frames;
+  (4) the jump, 4 frames, the last landed and settling. The orange on the pedipalps.
+- Say in the table under "Water" the columns each row holds and the units a cell spans either side
+  of its centre, as the first sheets' note does.
+
+What follows is the brief the stills were made to.
+
+**The dove and the spider** (Blender; in `public/pond/water/`). **Status: approved, to render.** The first sheets
 (`dove.webp`, `spider.webp`, under "Water" above) are clean and correct in outline, but Jincheng's
 review is that the dove is not detailed or lifelike enough and the spider needs more detail. They
 are used only as placeholders while the pond's sprite path is built; they are not final. Before
