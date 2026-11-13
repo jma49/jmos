@@ -634,6 +634,8 @@ vec3 lookRelief(){
   float fbare=(1.-smoothstep(.05,.14,distance(fcol,vec3(.886,.863,.804))))*uSprite, fline=(1.-smoothstep(.22,.42,dot(fcol,vec3(.333))))*f0.a*uSprite;
   vec4 pd=textureLod(uPads,uv,0.); float pb=textureLod(uPads,uv,1.6).a; vec3 pcol=pd.rgb/max(pd.a,1e-3);
   vec4 tp=textureLod(uTop,uv,0.); float tb=textureLod(uTop,uv,1.5).a;
+  // (a koi that swims where the tomb's carving stands passes behind it: the carving is the wall's own)
+  f0*=1.-carv; fa*=1.-carv; fb*=1.-carv; rd*=1.-carv; fline*=1.-carv;
   float proud=clamp(max(max(smoothstep(.08,.7,fb),pb),max(carv,tb)),0.,1.);
   // the water: zigzags in rows, each row sliding a little, shaken where the water moves; none under the
   // type, nor in the plain band under the frieze, where the clock stands

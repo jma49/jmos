@@ -156,9 +156,9 @@ koi moved to the common sheet. What is left of those:
 10. **The finish checklist: one pass done from contact sheets.** `tools/pond/finish.cjs` makes, for each
     look, a sheet of the title page, every chapter, the album and the command bar at 1280 × 800, and a
     phone sheet. All ten were looked at (in winter, English). Fixed: the command bar was dark glass
-    under dark type in 青花, Dunhuang and the relief. Seen and left, for Jincheng or a real screen:
-    the timeline's filter bar keeps its dark green in every dark look; on a phone a painted koi
-    crosses the contents at full strength in ukiyo-e, and ink's koi cross the greeting, as on the
+    under dark type in 青花, Dunhuang and the relief. Since then: the timeline's filter bar takes each look's own ground; a painted koi under the
+    title's type is at half strength in ukiyo-e; in the relief a koi passes behind the tomb's
+    carvings; 青花's medallion is paler. Left: ink's koi cross the greeting on a phone, as on the
     water; the Preview pill sits on the search box on a phone (preview builds only). Not covered by
     the sheets: hover, focus rings, scrollbars, selection, the photo viewer, sounds, the other
     seasons and languages.

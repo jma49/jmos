@@ -1314,7 +1314,7 @@ vec3 lookUkiyo(){
   vec3 fcl=f0.rgb/max(f0.a,1e-3); fcl=floor(fcl*4.+.5)/4.; fcl=mix(fcl,vec3(.96,.93,.84),step(.75,dot(fcl,vec3(.33))));
   fcl=mix(fcl,vec3(.82,.25,.16),step(.4,red/max(f0.a,1e-3)));
   // (koi from the print's own sheet, uSprite, are laid in as they are: they carry their key line)
-  c=mix(c,mix(fcl,f0.rgb/max(f0.a,1e-3),uSprite),step(.5,f0.a)); c=mix(c,vec3(.06,.05,.05),clamp((fa-fb)*3.,0.,1.)*(1.-uSprite));
+  c=mix(c,mix(fcl,f0.rgb/max(f0.a,1e-3),uSprite),step(.5,f0.a)*(1.-gCalm*.5*uSprite)); c=mix(c,vec3(.06,.05,.05),clamp((fa-fb)*3.,0.,1.)*(1.-uSprite));
   vec4 tp=textureLod(uTop,uv+gG*gIa*.004,0.); c=mix(c,floor(tp.rgb/max(tp.a,1e-3)*4.)/4.,step(.5,tp.a));
   for(int i=0;i<10;i++){ vec3 b=uBlot[i]; if(b.z<0.||b.z>3.) continue;   // a press: a carved splash, flat cream with a key line
     float t=b.z, life=1.-t/3.; vec2 v=P-b.xy; float d=length(v), an=atan(v.y,v.x), R=12.+64.*sqrt(t);
@@ -1549,12 +1549,23 @@ void main(){
     float e; float m=reveal(uStyle,e);
     vec3 top=look(uStyle), base=m<.999?look(uPrev):top;
     col=mix(base,top,m);
+#ifdef CRESTS
+    // (the print's front is a wave, not a line of light, once its crests have come)
+    if(uStyle==2&&uPic>.5) e*=.2;
+#endif
     col=mix(col,edgeCol(uStyle),e);
 #ifdef CRESTS
     // the print's front carries its great crests (the same picture), standing on the front and rising ahead of it
     if(uStyle==2&&uPic>.5&&uInk.w>=.3&&uInk.w<.999&&uInk.x>1.){
       float ft=(P.x-P.y)*.7071, fr=(P.x+P.y)*.7071+(noise(P*vec2(.02,.004))-.5)*26.+sin((P.x-P.y)*.012)*18.+sin((P.x-P.y)*.031)*6.;
-      float ht=min(210.,uCss.y*.28)*smoothstep(0.,320.,uInk.x), vv=(fr-uInk.x+ht*.12)/max(ht,1.), sc=ft/(ht*1.09+1.);
+      // (it comes out of the corner already a wave, and grows to its full height as it crosses)
+      float ht=min(210.,uCss.y*.28)*(.5+.5*smoothstep(0.,300.,uInk.x)), vv=(fr-uInk.x+ht*.12)/max(ht,1.), sc=ft/(ht*1.09+1.);
+      // behind it the water it leaves is still running: foam thinning out, and a row of low wavelets following
+      float back=(uInk.x-fr)/ht;
+      col=mix(col,vec3(.96,.93,.84),(1.-smoothstep(0.,.5,back))*step(0.,back)*.55);
+      float v2=(fr-uInk.x+ht*.95)/(ht*.42), s2=ft/(ht*.86+1.)+.5;
+      vec4 w2=texture(uMural,vec2((mod(floor(s2),4.)*256.+44.+fract(s2)*167.)/1024.,(416.-v2*65.)/1024.+.5))*step(0.,v2)*step(v2,1.);
+      col=w2.rgb+col*(1.-w2.a);
       vec4 wv=texture(uMural,vec2((mod(floor(sc),4.)*256.+20.+fract(sc)*215.)/1024.,(227.-vv*198.)/1024.+.5))*step(0.,vv)*step(vv,1.);
       col=wv.rgb+col*(1.-wv.a);
     }
@@ -5451,7 +5462,7 @@ function paintRim() {
   // the dish's own painting, large and pale in the right of the bowl, clear of the title: two koi among lotus
   if (rimImgs.medallion && big) {
     const d = Math.min(H * 0.7, W * 0.42);
-    c.globalAlpha = 0.34;
+    c.globalAlpha = 0.24;
     c.drawImage(rimImgs.medallion, W * 0.74 - d / 2, H * 0.5 - d / 2, d, d);
     c.globalAlpha = 1;
   }
@@ -6848,6 +6859,8 @@ const crackU = new Float32Array(24),
 $('#tags').append(doveTag, spiderTag);
 // Settled: the opening has played and the browser is idle. What isn't on the first screen loads then.
 const settled = new Promise((resolve) => setTimeout(() => (window.requestIdleCallback || ((f) => setTimeout(f, 1)))(() => resolve()), 2600));
+// (the print's crests too, so that the first time it comes it comes as a wave)
+if (PREVIEW) settled.then(loadWaves);
 if (PREVIEW)
   settled.then(() => {
     const im = new Image();

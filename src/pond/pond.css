@@ -3734,3 +3734,8 @@ button.more:hover {
     justify-content: center;
   }
 }
+
+/* the timeline's filter bar takes each look's own ground (the water's dark green is the water's) */
+#pond[data-look] .filt {
+  background: color-mix(in srgb, var(--deep) 88%, transparent);
+}

@@ -304,12 +304,16 @@ visitor's colour laid into their patches through `koi-mask.webp` (`koiPicture()`
 
 In `public/pond/ukiyo/`, and in use in a preview build (the look itself ships; its pictures don't yet).
 
-- **The crests:** the sheet itself is the look's picture texture (`paintWaves()`, with smaller copies,
-  since a crest is drawn well under the size it was cut at). `lookUkiyo()` rings a press with six of the
-  low wavelets, base to the middle, sinking as the splash dies, in place of the shader's claws; the
-  arrival's front carries the four large crests, standing on the front and rising ahead of it, as tall
-  as 28% of the window and no taller than they were cut. Both are inside `#ifdef CRESTS`, which only a
-  preview build defines, so the pass a release build compiles is unchanged.
+- **The arrival is a wave out of the corner.** The front runs from the top left; on it stand the four
+  great crests, already a wave as it leaves the corner and at full height (28% of the window, no
+  taller than they were cut) by 300 pixels in; behind it foam thins out and a row of the low wavelets
+  follows. The line of light a front otherwise has is all but off. The crests' sheet is fetched once
+  the pond has settled, so the first arrival is a wave too. A press is ringed by six wavelets, base
+  to the middle, sinking as the splash dies, in place of the shader's claws.
+- **The water** is the painted bed (`bed`, or `bed-tall` on a phone) in the top half of the look's
+  texture, the crests' sheet in the bottom half (`paintWaves()`); the shader bends the bed a little
+  where the water moves and keeps the moving foam. All of this is inside `#ifdef CRESTS`, which only
+  a preview build defines, so the pass a release build compiles is unchanged.
 - **The koi:** `KOI_SHEETS.ukiyo`. The shader lays a painted koi in as it is (`uSprite`), without the
   posterising and the key line it gives the pond's own koi, since the sheet carries its own.
 
