@@ -4403,14 +4403,13 @@ function commands() {
         setMuted(!muted);
       }
     },
-    // the seal album: listed once its mark shows, found by name before that; clearing it once a volume is full
+    // the seal album, as in the contents; clearing it once a volume is full
     {
       sec: 'Pond',
       icon: 'brush',
       label: SEAL_WORDS[lang].open,
       hint: SEAL_WORDS[lang].openHint,
       kw: 'seals stamps album collection looks 集印册 集印帳 印 御朱印',
-      hidden: !entryShows(album),
       cmd: true,
       run: () => openSheet('seals')
     },
