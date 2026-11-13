@@ -136,16 +136,19 @@ gesture, key or ⌘K, its seal is stamped in the corner above the controls, in t
   in each language, and its stamp's manner in `pond.css`. Looks marked `preview` exist only in a build
   with `PUBLIC_POND_PREVIEW=1`.
 
-## Looks that are only previews
+## The five later looks
 
 The state of this work, what is left and what was learnt along the way is in
 [pond-handoff.md](pond-handoff.md).
 
-Five looks exist only in a build with `PUBLIC_POND_PREVIEW=1` (`newlooks.js`, `newlooks.css`): Monet's
-water lilies in oil, blue-and-white porcelain (青花), a Dunhuang mural (敦煌), a star chart (星图) and an
-Egyptian relief (carved and painted limestone; it took the place of a school blackboard, which was
-turned down). A release build leaves out their shader source, gestures and
-commands; their seals are marked `preview` in `seals.ts`.
+Five looks came after the first six (`newlooks.js`, `newlooks.css`): Monet's water lilies in oil,
+blue-and-white porcelain (青花), a Dunhuang mural (敦煌), a star chart (星图) and an Egyptian relief
+(carved and painted limestone; it took the place of a school blackboard, which was turned down). They
+ship like the others: found by their gestures or by searching ⌘K, each with its seal, each drawn from
+its own pictures, which are fetched only when the look is first asked for. What is still only in a
+preview build (`PUBLIC_POND_PREVIEW=1`, or `?preview`): the water look's own pictures (its lily pads,
+drift and dragonfly), the dove and the spider as sprites, and the details under "Next, with
+`?preview`".
 
 - Each is one function of the water pass, built as a pass of its own the first time it is asked for
   (`fsPart(2, sid)`), as every look now is. None adds a pass or a per-frame cost outside it.
@@ -302,7 +305,7 @@ visitor's colour laid into their patches through `koi-mask.webp` (`koiPicture()`
 
 #### Ukiyo-e
 
-In `public/pond/ukiyo/`, and in use in every build: the print is the one look whose own pictures ship
+In `public/pond/ukiyo/`, and in use in every build, as every look's own pictures are but the water's
 (`pictured()` in `engine.js`); they are fetched when the look is first asked for, or half way round the
 stir that brings it, never on the first screen.
 
@@ -881,7 +884,8 @@ in `JA` too.
 
 ## Looks, gestures and languages
 
-Six looks ([decision 0026](../decisions/0026-looks-and-gestures.md)):
+The first six looks ([decision 0026](../decisions/0026-looks-and-gestures.md)); the five that came
+after are under "The five later looks":
 water, ink, ukiyo-e (a woodblock print), glow (the pond at night, lit by
 what moves), blueprint (a drawing on blue paper, the koi measured in the
 air) and ASCII (the pond in characters).
@@ -912,7 +916,9 @@ air) and ASCII (the pond in characters).
   - glow: press the light on the water (the moon's, or the sun's glint
     by day);
   - blueprint: draw a long straight line;
-  - Egyptian relief (preview): draw a zigzag of three peaks or more;
+  - Egyptian relief: draw a zigzag of three peaks or more;
+  - Monet: four taps in one place; 青花: once round the rim of the screen; Dunhuang: rub back and
+    forth over a spot; the star chart: three taps far apart (the table is in `gestures.ts`);
   - ASCII: type five letters that aren't shortcuts within 3 s (each
     lands on the water at the pointer), or "ascii" or "text" in ⌘K on a
     phone.
@@ -929,7 +935,7 @@ air) and ASCII (the pond in characters).
   - in ink as fine dry strokes;
   - in ukiyo-e as Hiroshige's straight lines;
   - in ASCII as falling `|` and `/`;
-  - on the star chart (preview) as a shower of meteors, with nothing falling on the water.
+  - on the star chart as a shower of meteors, with nothing falling on the water.
 
   Glow and blueprint hold it off, and the ⌘K rain command is hidden in a
   look. In ukiyo-e the swell's bands and foam follow only large crests,

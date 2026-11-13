@@ -19,11 +19,14 @@ import {
   writeAlbum
 } from './seals';
 
-const live = volumes(false),
-  preview = volumes(true);
+// every look ships, so a release build's album is the whole of it; most cases here use a smaller one (the
+// first two painted looks, the first three drawn ones), as a build that left looks out would have
+const preview = volumes(false),
+  live = preview.map((v) => ({ ...v, seals: v.seals.slice(0, v.id === 'painted' ? 2 : 3) }));
 
 describe('the volumes', () => {
-  it('leave the preview looks out of a build that is not one', () => {
+  it('hold every look in a release build, five to a volume', () => {
+    expect(volumes(false)).toEqual(volumes(true));
     expect(live.map((v) => v.seals.map((s) => s.id))).toEqual([
       ['ink', 'ukiyo'],
       ['glow', 'blueprint', 'ascii']

@@ -778,8 +778,9 @@ const mixHex = (a, b, t) => {
     y = n(b);
   return `rgb(${x.map((v, i) => Math.round(v + (y[i] - v) * t)).join(',')})`;
 };
-// Which looks draw from their own pictures: the print in every build, the others in a preview build.
-const pictured = (name) => PREVIEW || name === 'ukiyo';
+// Which looks draw from their own pictures: every look but the water, whose own are still being tried
+// (a preview build has them).
+const pictured = (name) => PREVIEW || name !== 'water';
 // Each look's own pictures of the pads, of what drifts and flies, and of the two visitors (LOOK_ART in
 // newlooks.js). A picture is asked for the first time its look needs it; until it has come, and if it
 // never does, what the pond draws for every look stands.
@@ -1589,10 +1590,7 @@ void main(){
 // goes; the water alone (1), with no look shown; and a look alone (2), once one has come in all the way and
 // covers the water. Each draws exactly what the whole would, without the work that wouldn't be seen.
 // A look alone is built for that one look (ONLY), so each is a pass of its own with none of the others in it.
-const FS = FS_SRC.replace(
-  'vec3 look(int s){',
-  `${PREVIEW ? NEW_GLSL : ''}vec3 look(int s){\n#ifdef ONLY\n  s=ONLY;\n#endif\n${PREVIEW ? '  if(s>=6) return lookNew(s);\n' : ''}`
-);
+const FS = FS_SRC.replace('vec3 look(int s){', `${NEW_GLSL}vec3 look(int s){\n#ifdef ONLY\n  s=ONLY;\n#endif\n  if(s>=6) return lookNew(s);\n`);
 const fsPart = (n, only) => FS.replace('\n', `\n#define PART ${n}\n#define CRESTS\n${only ? `#define ONLY ${only}\n` : ''}`);
 // The second pass. Inside a pane the picture is blurred and smoked; towards the rim it is
 // pulled sideways as through the edge of a lens, and the rim itself catches the light. In
@@ -2798,8 +2796,8 @@ function drawBugs(c) {
 // A front brings a look in over the one before (`top` over `base`); going back to the water, the front
 // draws in again. Ink: a drop from the switch spreads and turns the pond to paper, and time slows.
 // The other looks are found by gestures on the water (`gest`, below) or by searching ⌘K.
-const LOOKS = ['water', 'ink', 'ukiyo', 'glow', 'blueprint', 'ascii', ...(PREVIEW ? NEW_LOOKS : [])],
-  SID = { water: 0, ink: 1, ukiyo: 2, glow: 3, blueprint: 4, ascii: 5, ...(PREVIEW ? NEW_SID : {}) };
+const LOOKS = ['water', 'ink', 'ukiyo', 'glow', 'blueprint', 'ascii', ...NEW_LOOKS],
+  SID = { water: 0, ink: 1, ukiyo: 2, glow: 3, blueprint: 4, ascii: 5, ...NEW_SID };
 // The looks' own type and Japanese (looks.css: kana.css and the looks' faces) load the first time a
 // look or 日 is chosen, so a first visit costs no more than the water and the brush.
 let typeLoad = null;
@@ -3323,7 +3321,7 @@ function drawDove(c) {
   laidIn(c, () => c.drawImage(sits && doveAt ? dovePic : life.canvas, dove.x - half, dove.y - half, half * 2, half * 2));
 }
 // how the look lays the two into the air: ink soaks into the paper, glow adds light; the rest as they are
-const LAY = { ink: ['multiply', 0.8], glow: ['lighter', 0.65], ascii: ['source-over', 0.6], ...(PREVIEW ? NEW_LAY : {}) };
+const LAY = { ink: ['multiply', 0.8], glow: ['lighter', 0.65], ascii: ['source-over', 0.6], ...NEW_LAY };
 function laidIn(c, draw) {
   const l = LAY[look];
   if (!l) return draw();
@@ -3407,7 +3405,7 @@ const RAINY = { water: 1, ink: 1, ukiyo: 1, ascii: 1 },
   blooms = [],
   rainNow = () => raining && RAINY[look] === 1,
   // on the star chart rain is a shower of meteors: nothing falls on the water, the sky does it
-  meteorsNow = () => PREVIEW && raining && look === 'stars' && inkR >= inkMax * 0.9,
+  meteorsNow = () => raining && look === 'stars' && inkR >= inkMax * 0.9,
   meteors = [];
 let meteorAt = 0;
 function drawMeteors(c) {
@@ -3535,7 +3533,7 @@ const airWanted = () =>
   meteorsNow() ||
   gest.down ||
   gest.letters.length > 0 ||
-  (PREVIEW && gest.taps && gest.taps.length > 0) ||
+  (gest.taps && gest.taps.length > 0) ||
   gest.glint > 0.05 ||
   AM.snow > 0.02 ||
   fx.snow > 0.02 ||
@@ -3579,7 +3577,7 @@ function drawAir() {
   }
   for (const f of flies) {
     // (a look that has no place for a dragonfly does without: the night sky, glaze, a painted or carved wall)
-    if (f.a2 < 0.02 || (PREVIEW && NEW_WITHOUT[look]?.flies)) continue;
+    if (f.a2 < 0.02 || NEW_WITHOUT[look]?.flies) continue;
     c.save();
     c.globalAlpha = f.a2 * (look === 'monet' ? 0.42 : 1);
     c.translate(f.x, f.y);
@@ -3691,10 +3689,9 @@ function shadeTex() {
 // shade's strength, eased over 2.5 s as its opacity was, by the time of day and the look.
 let shadeK = 0.9;
 function shadeUniforms(dt) {
-  const goal =
-    PREVIEW && look in NEW_SHADE ? NEW_SHADE[look] : 'bare' in pond.dataset ? 0.25 : inkOn ? 0.35 : ({ night: 0.3, dawn: 0.6, dusk: 0.6 }[phase] ?? 0.9);
+  const goal = look in NEW_SHADE ? NEW_SHADE[look] : 'bare' in pond.dataset ? 0.25 : inkOn ? 0.35 : ({ night: 0.3, dawn: 0.6, dusk: 0.6 }[phase] ?? 0.9);
   // (a look with no shade at all loses it quickly, as its front passes)
-  const quick = PREVIEW && NEW_SHADE[look] === 0 ? 0.35 : 2.5;
+  const quick = NEW_SHADE[look] === 0 ? 0.35 : 2.5;
   shadeK += clamp(goal - shadeK, -dt / quick, dt / quick);
   let u = RM ? -1 : (performance.now() / 27000) % 2;
   u = u < 0 ? 0 : u > 1 ? 2 - u : u;
@@ -4550,7 +4547,7 @@ function commands() {
       ['glow', 'Glow', 'The lights go out; or press the light on the water', 'glow night neon dark light'],
       ['blueprint', 'Blueprint', 'A drawing on blue paper; or draw a long straight line', 'blueprint drawing plan draft ruler'],
       ['ascii', 'ASCII', 'The pond in characters; or type a few letters', 'ascii text characters terminal type'],
-      ...(PREVIEW ? NEW_COMMANDS : [])
+      ...NEW_COMMANDS
     ].map(([id, label, hint, kw]) => ({
       sec: 'Pond',
       icon: 'brush',
@@ -6140,8 +6137,8 @@ const HOLD = 1.2,
     gest.len += d;
     P.push([x, y]);
     if (P.length > 400) P.splice(1, 1);
-    // the preview looks' strokes (gestures.ts): a rub over one spot, or once round the rim of the screen
-    if (PREVIEW) {
+    // the strokes that are rules of their own (gestures.ts): a rub over one spot, or once round the rim of the screen
+    {
       const m = strokeMoving(P, W, H);
       if (m === 'dunhuang' || m === 'qinghua') {
         const xs = P.map((p) => p[0]),
@@ -6176,7 +6173,7 @@ const HOLD = 1.2,
     else if (dt < 0.4 && gest.len < 10) {
       const [gx, gy] = glintAt();
       if (Math.hypot(x - gx, y - gy) < 46) toggleLook('glow', [gx, gy]);
-      else if (PREVIEW) {
+      else {
         // taps: three far apart join as a triangle of stars; four in one place are dabs of paint
         const now = performance.now() / 1000;
         gest.taps = [...(gest.taps || []).filter((q) => now - q.t < 2), { t: now, x, y }];
@@ -6187,7 +6184,7 @@ const HOLD = 1.2,
           toggleLook(t, [at.reduce((a, q) => a + q.x, 0) / at.length, at.reduce((a, q) => a + q.y, 0) / at.length]);
         }
       }
-    } else if (PREVIEW && strokeLifted(drawn) === 'relief') toggleLook('relief', [x, y]);
+    } else if (strokeLifted(drawn) === 'relief') toggleLook('relief', [x, y]);
     gest.pts = [];
   };
   pond.addEventListener('pointerup', lift);
@@ -6358,7 +6355,7 @@ function drawGesture(c) {
       c.stroke();
     }
   }
-  if (PREVIEW) drawNewCues(c, now);
+  drawNewCues(c, now);
   c.restore();
 }
 // The preview looks' cues: the taps so far (dabs of paint where they are close, stars joined by a line
@@ -6831,7 +6828,7 @@ function tick1(raw) {
   // the glass turns to paper with the pond
   const pk = clamp(inkR / inkMax, 0, 1),
     gs = [0.03 + cur.tint[0] * 0.03, 0.09 + cur.tint[1] * 0.04, 0.1 + cur.tint[2] * 0.045],
-    GT = { ink: [0.95, 0.92, 0.85], ukiyo: [0.07, 0.17, 0.32], glow: [0.01, 0.02, 0.05], blueprint: [0.08, 0.24, 0.5], ...(PREVIEW ? NEW_GLASS : {}) },
+    GT = { ink: [0.95, 0.92, 0.85], ukiyo: [0.07, 0.17, 0.32], glow: [0.01, 0.02, 0.05], blueprint: [0.08, 0.24, 0.5], ...NEW_GLASS },
     gt = GT[top] || gs,
     gf = GT[base] || gs;
   gl.uniform3f(UG.uGlass, lerpN(gf[0], gt[0], pk), lerpN(gf[1], gt[1], pk), lerpN(gf[2], gt[2], pk));

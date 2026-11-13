@@ -9,7 +9,7 @@ export interface Seal {
   chars: string;
   shape: 'square' | 'round' | 'tall';
   cut: 'white' | 'red';
-  /** Only in a preview build: a look visitors can't reach yet. */
+  /** Only in a preview build: a look visitors can't reach yet (none is, as it stands). */
   preview?: boolean;
   /** A place kept in the album for a look that isn't chosen yet: shown as coming, never stamped. */
   soon?: boolean;
@@ -27,9 +27,9 @@ export const VOLUMES: Volume[] = [
     seals: [
       { id: 'ink', chars: '墨', shape: 'square', cut: 'white' },
       { id: 'ukiyo', chars: '浮世', shape: 'tall', cut: 'red' },
-      { id: 'monet', chars: '莲', shape: 'round', cut: 'white', preview: true },
-      { id: 'qinghua', chars: '青花', shape: 'tall', cut: 'white', preview: true },
-      { id: 'dunhuang', chars: '敦煌', shape: 'tall', cut: 'red', preview: true }
+      { id: 'monet', chars: '莲', shape: 'round', cut: 'white' },
+      { id: 'qinghua', chars: '青花', shape: 'tall', cut: 'white' },
+      { id: 'dunhuang', chars: '敦煌', shape: 'tall', cut: 'red' }
     ]
   },
   {
@@ -38,8 +38,8 @@ export const VOLUMES: Volume[] = [
       { id: 'glow', chars: '光', shape: 'round', cut: 'red' },
       { id: 'blueprint', chars: '图', shape: 'square', cut: 'white' },
       { id: 'ascii', chars: '字', shape: 'square', cut: 'red' },
-      { id: 'stars', chars: '星', shape: 'round', cut: 'white', preview: true },
-      { id: 'relief', chars: '刻', shape: 'square', cut: 'white', preview: true }
+      { id: 'stars', chars: '星', shape: 'round', cut: 'white' },
+      { id: 'relief', chars: '刻', shape: 'square', cut: 'white' }
     ]
   }
 ];
