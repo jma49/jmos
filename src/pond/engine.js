@@ -12,8 +12,8 @@
 import { report } from '../os/core/report';
 import { load, save } from '../os/core/storage';
 import { effectsOf, loadWeather, minutesAt, phaseAt, seasonOf } from './weather';
-import { SHEETS as SPRITES, doveFrame, lit as litLook, loadSprites, spiderFrame } from './sprites.js';
-import { PREVIEW, WELCOME_BACK, festivalDate, festivalOn, moonAge, moonLit, panel, returning } from './preview.js';
+import { SHEETS as SPRITES, doveFrame, lit as litLook, spiderFrame, spritePics } from './sprites.js';
+import { PANEL, WELCOME_BACK, festivalDate, festivalOn, moonAge, moonLit, panel, returning } from './preview.js';
 // the looks' type, as a stylesheet of its own: linked only once a look or 日 is chosen (loadType)
 import LOOKS_CSS from './looks.css?url';
 import {
@@ -68,7 +68,7 @@ const $ = (s) => document.querySelector(s);
 const D = JSON.parse($('#pond-data').textContent);
 const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
 // With ?preview: the real moon, the wind, the festivals, fireflies, stars, a welcome back (preview.js)
-const pv = { age: moonAge(), fest: PREVIEW ? festivalOn() : null, flies: [], fliesOn: false, windX: 13, windY: 6, boatAt: -1e9, wakeAt: 0, lanterns: [] };
+const pv = { age: moonAge(), fest: festivalOn(), flies: [], fliesOn: false, windX: 13, windY: 6, boatAt: -1e9, wakeAt: 0, lanterns: [] };
 const MAC = /Mac|iPhone|iPad/.test(navigator.userAgent);
 const pond = $('#pond'),
   glc = $('#gl');
@@ -778,15 +778,15 @@ const mixHex = (a, b, t) => {
     y = n(b);
   return `rgb(${x.map((v, i) => Math.round(v + (y[i] - v) * t)).join(',')})`;
 };
-// Which looks draw from their own pictures: the print in every build, the others in a preview build.
-const pictured = (name) => PREVIEW || name === 'ukiyo';
 // Each look's own pictures of the pads, of what drifts and flies, and of the two visitors (LOOK_ART in
 // newlooks.js). A picture is asked for the first time its look needs it; until it has come, and if it
 // never does, what the pond draws for every look stands.
 const artPics = new Map();
+// (nothing of the pond's own pictures is asked for before the pond has settled)
+let settledNow = false;
 function artOf(kind, name = look) {
-  const d = pictured(name) && LOOK_ART[name]?.[kind];
-  if (!d) return null;
+  const d = LOOK_ART[name]?.[kind];
+  if (!d || !settledNow) return null;
   if (!artPics.has(d.src)) {
     artPics.set(d.src, null);
     const im = new Image();
@@ -804,10 +804,25 @@ function artOf(kind, name = look) {
 }
 // one cell of a sheet of 256-pixel cells, drawn d across about the origin
 const cellAt = (c, pic, [i, j], d) => c.drawImage(pic, i * 256, j * 256, 256, 256, -d / 2, -d / 2, d, d);
-// The water's own lily pads and flowers as pictures (public/pond/water/lilies-768.webp, cells of 192): a preview build
-// fetches the sheet once the pond has settled, never on the first screen, and the drawn pads stand until then.
+// The water's own lily pads and flowers as pictures (public/pond/water/lilies-768.webp, cells of 192):
+// fetched once the pond has settled and there are pads to draw, and the drawn pads stand until then.
 let waterLily = null,
+  waterLilyAsked = false,
   autumnPic = null;
+// (asked for the first time there are pads to draw on the water, so a winter visit never fetches it)
+function askWaterLily() {
+  if (waterLilyAsked) return;
+  waterLilyAsked = true;
+  const im = new Image();
+  im.onload = () => {
+    waterLily = im;
+    padKey = '';
+    padsNow();
+    invalidate();
+  };
+  im.onerror = () => report(new Error('no picture at /pond/water/lilies-768.webp'), 'pond pictures');
+  im.src = '/pond/water/lilies-768.webp';
+}
 function monetAutumn() {
   if (autumnPic === null) {
     autumnPic = false;
@@ -852,6 +867,7 @@ function drawPads() {
     }
     // on the water (a preview build) the pads are pictures of real ones, from their sheet: whole or
     // notched, by size, the withered ones laid over the green as autumn comes
+    if (look === 'water' && settledNow) askWaterLily();
     const real = waterLily && look === 'water';
     if (real) {
       const n = Math.floor(r0 * 7 + rot * 3),
@@ -1589,10 +1605,7 @@ void main(){
 // goes; the water alone (1), with no look shown; and a look alone (2), once one has come in all the way and
 // covers the water. Each draws exactly what the whole would, without the work that wouldn't be seen.
 // A look alone is built for that one look (ONLY), so each is a pass of its own with none of the others in it.
-const FS = FS_SRC.replace(
-  'vec3 look(int s){',
-  `${PREVIEW ? NEW_GLSL : ''}vec3 look(int s){\n#ifdef ONLY\n  s=ONLY;\n#endif\n${PREVIEW ? '  if(s>=6) return lookNew(s);\n' : ''}`
-);
+const FS = FS_SRC.replace('vec3 look(int s){', `${NEW_GLSL}vec3 look(int s){\n#ifdef ONLY\n  s=ONLY;\n#endif\n  if(s>=6) return lookNew(s);\n`);
 const fsPart = (n, only) => FS.replace('\n', `\n#define PART ${n}\n#define CRESTS\n${only ? `#define ONLY ${only}\n` : ''}`);
 // The second pass. Inside a pane the picture is blurred and smoked; towards the rim it is
 // pulled sideways as through the edge of a lens, and the rim itself catches the light. In
@@ -1649,7 +1662,6 @@ let gl,
   progOK = [],
   progU = new Map(),
   pcx = null,
-  progAt = 0,
   progAts = [],
   passNow = 0,
   UG = {},
@@ -1737,19 +1749,19 @@ const locs = (p) => Object.fromEntries(FS_U.map((n) => [n, gl.getUniformLocation
 // Which build of the water pass draws this frame: a part is used once it has been built (asked without
 // waiting where the browser can say, else after a few seconds); one that failed is never used.
 function waterProg(part) {
-  // a look's own pass is asked for the first time the look is
-  if (part > 1 && !progs[part]) {
-    progs[part] = mk(fsPart(2, part - 1), true);
+  // the whole pass and a look's own are asked for the first time they are needed
+  if (!progs[part]) {
+    progs[part] = mk(part ? fsPart(2, part - 1) : fsPart(0), true);
     progAts[part] = performance.now();
   }
   const p = progs[part];
-  if (!part || !p) return prog;
   if (progOK[part] === undefined) {
-    if (pcx ? !gl.getProgramParameter(p, pcx.COMPLETION_STATUS_KHR) : performance.now() - (progAts[part] || progAt) < 4000) return prog;
+    // (until it is built: the whole pass if that is, which draws anything; else the water, as it was)
+    if (pcx ? !gl.getProgramParameter(p, pcx.COMPLETION_STATUS_KHR) : performance.now() - progAts[part] < 1500) return part && progOK[0] ? progs[0] : prog;
     progOK[part] = !!gl.getProgramParameter(p, gl.LINK_STATUS);
     if (progOK[part]) progU.set(p, locs(p));
   }
-  return progOK[part] ? p : prog;
+  return progOK[part] ? p : part && progOK[0] ? progs[0] : prog;
 }
 function tex(filter) {
   const t = gl.createTexture();
@@ -1772,13 +1784,16 @@ function deep() {
 function initGL() {
   gl = glc.getContext('webgl2', { antialias: false, alpha: false, powerPreference: 'high-performance' });
   if (!gl) return;
-  prog = mk(fsPart(0));
+  // Only the water alone is built before the first frame: it is all the first screen shows, and the whole
+  // pass, with every look in it, takes several times as long to build (seconds, where the GPU is software).
+  // The whole is built in the background once the pond has settled, or the moment a look is first asked
+  // for; each look alone when it is first asked for.
+  prog = mk(fsPart(1));
   bedProg = mk(BED);
   glassProg = mk(GLASS);
-  // the water alone is built in the background now, and each look alone when it is first asked for
-  progs = [prog, mk(fsPart(1), true)];
+  progs = [null, prog];
+  progOK[1] = true;
   pcx = gl.getExtension('KHR_parallel_shader_compile');
-  progAt = performance.now();
   const vb = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, vb);
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
@@ -2316,7 +2331,7 @@ function drawTop() {
     c.arc(q.x - 0.9, q.y - 1, 1.3, 0, TAU);
     c.fill();
   }
-  if (PREVIEW) drawFestival(c);
+  drawFestival(c);
   drawBugs(c);
   drawSpider(c);
 }
@@ -2329,6 +2344,7 @@ let festAt = 0;
 const festPics = {},
   FEST_PICS = { 'dragon-boat': '/pond/water/dragon-boat.webp', lanterns: '/pond/water/lanterns.webp' };
 function festPic(name) {
+  if (!settledNow) return null;
   if (!(name in festPics)) {
     festPics[name] = null;
     const im = new Image();
@@ -2491,10 +2507,9 @@ function showBoat(b) {
   tip.style.transform = `translate3d(${clamp(b.x - tip.offsetWidth / 2, 8, W - tip.offsetWidth - 8)}px,${Math.max(8, b.y - tip.offsetHeight - 26)}px,0)`;
 }
 
-/* ================= Devot's dove and ocra's spider, as models or as sprites ================= */
-// three.js and the models (life.js) arrive once the pond has settled; until then, and where they can't run,
-// the pond does without them. A preview build draws the two from rendered sprite sheets instead
-// (sprites.js), and never fetches three.js or the models: `life.pic` is then how a sheet is had.
+/* ================= Devot's dove and ocra's spider, as rendered sprites ================= */
+// The two are drawn from sprite sheets (sprites.js), each fetched the first time its creature is to be
+// drawn; until the pond has settled, and until a sheet has come, the pond does without them.
 let life = null,
   lifeDt = 0.016;
 // the light the time of day gives a sprite, in steps coarse enough that a sheet is dressed again only now and then
@@ -2505,7 +2520,10 @@ const spriteLight = () => {
 // one cell of a creature's sheet, laid where it stands and turned to its heading, on the soft shadow the
 // ground gave the model where the look keeps its light
 function drawCell(c, which, [row, i], x, y, a, half, shadow) {
-  const n = SPRITES[which].cell;
+  const n = SPRITES[which].cell,
+    sheet = artOf(which) ? null : life.pic(which, look, spriteLight());
+  // (its own picture in this look, or the rendered sheet; nothing until one has come)
+  if (!artOf(which) && !sheet) return;
   c.save();
   c.translate(x, y);
   if (shadow > 0 && litLook(look)) {
@@ -2542,7 +2560,7 @@ function drawCell(c, which, [row, i], x, y, a, half, shadow) {
     c.restore();
     return;
   }
-  laidIn(c, () => c.drawImage(life.pic(which, look, spriteLight()), i * n, row * n, n, n, -half, -half, half * 2, half * 2));
+  laidIn(c, () => c.drawImage(sheet, i * n, row * n, n, n, -half, -half, half * 2, half * 2));
   c.restore();
 }
 
@@ -2798,8 +2816,8 @@ function drawBugs(c) {
 // A front brings a look in over the one before (`top` over `base`); going back to the water, the front
 // draws in again. Ink: a drop from the switch spreads and turns the pond to paper, and time slows.
 // The other looks are found by gestures on the water (`gest`, below) or by searching ⌘K.
-const LOOKS = ['water', 'ink', 'ukiyo', 'glow', 'blueprint', 'ascii', ...(PREVIEW ? NEW_LOOKS : [])],
-  SID = { water: 0, ink: 1, ukiyo: 2, glow: 3, blueprint: 4, ascii: 5, ...(PREVIEW ? NEW_SID : {}) };
+const LOOKS = ['water', 'ink', 'ukiyo', 'glow', 'blueprint', 'ascii', ...NEW_LOOKS],
+  SID = { water: 0, ink: 1, ukiyo: 2, glow: 3, blueprint: 4, ascii: 5, ...NEW_SID };
 // The looks' own type and Japanese (looks.css: kana.css and the looks' faces) load the first time a
 // look or 日 is chosen, so a first visit costs no more than the water and the brush.
 let typeLoad = null;
@@ -2940,7 +2958,7 @@ const GLIDE_MS = 640;
 const setInk = (on, from) => setLook(on ? 'ink' : 'water', from || $('#inkBtn'));
 function setLook(name, from) {
   if (!LOOKS.includes(name) || name === look) return;
-  if (pictured(name) && name in PICTURED) {
+  if (name in PICTURED) {
     picLook = name;
     PICTURED[name]();
     paintPic();
@@ -2983,10 +3001,6 @@ function setLook(name, from) {
     () =>
       glide(() => {
         pond.toggleAttribute('data-ink', inkOn);
-        if (life && life.dress) {
-          life.dress(name);
-          spiderSig = '';
-        }
         if (name === 'water') delete pond.dataset.look;
         else pond.dataset.look = name;
         // (the pads are the look's own picture of them, where it has one)
@@ -3106,47 +3120,14 @@ function stepInk(raw) {
   const goal = inkOn ? (k < 0.5 ? 0.06 : 0.32) : look === 'glow' ? 0.7 : top === 'ink' && inkR > 0 ? 0.25 : 1;
   timeScale += (goal - timeScale) * Math.min(1, raw * (inkOn && k < 0.5 ? 9 : 1.6));
 }
-let calmNow = 1,
-  spiderPic = null,
-  spiderSig = '',
-  spiderHot = 0;
+let calmNow = 1;
 function drawSpider(c) {
   if (!life || spider.alpha < 0.02 || spider.pad < 0 || !spider.feet.length) return;
   const u = spiderSize() * 0.46,
     up = spider.state === 'jump' ? Math.sin(spider.jump * Math.PI) : 0,
-    half = life.SPIDER * u * (1 + up * 0.3),
-    n = life.size / 2;
-  if (life.pic) {
-    c.globalAlpha = spider.alpha;
-    drawCell(c, 'spider', spiderFrame(spider), spider.x, spider.y, spider.a, half, spider.state === 'jump' ? 0 : 0.9);
-    c.globalAlpha = 1;
-    return;
-  }
-  const sig = `${spider.state} ${spider.a.toFixed(2)} ${spider.crouch.toFixed(2)} ${up.toFixed(2)} ${spider.feet.map((f) => Math.round(f.x - spider.x) + ',' + Math.round(f.y - spider.y)).join(' ')}`;
-  if (!spiderPic) {
-    spiderPic = document.createElement('canvas');
-    spiderPic.width = spiderPic.height = n;
-    spiderSig = '';
-  }
-  if (sig !== spiderSig) {
-    spiderSig = sig;
-    spiderHot = T + 0.8;
-  }
-  if (T < spiderHot) {
-    count('spider');
-    life.spider(lifeDt, {
-      a: spider.a,
-      feet: spider.feet.map((f) => [(f.x - spider.x) / u, (f.y - spider.y) / u]),
-      crouch: spider.crouch,
-      lift: up * 1.3,
-      pitch: spider.state === 'sit' ? 0.4 : spider.state === 'walk' ? 0.14 : 0
-    });
-    const x = spiderPic.getContext('2d');
-    x.clearRect(0, 0, n, n);
-    x.drawImage(life.canvas, 0, n, n, n, 0, 0, n, n);
-  }
+    half = life.SPIDER * u * (1 + up * 0.3);
   c.globalAlpha = spider.alpha;
-  laidIn(c, () => c.drawImage(spiderPic, spider.x - half, spider.y - half, half * 2, half * 2));
+  drawCell(c, 'spider', spiderFrame(spider), spider.x, spider.y, spider.a, half, spider.state === 'jump' ? 0 : 0.9);
   c.globalAlpha = 1;
 }
 
@@ -3277,53 +3258,25 @@ function stepAir(dt) {
     }
   }
 }
-// The dove is laid into the air over the pond, larger the higher it flies; its light follows the time of day.
-// In flight it is drawn every frame; sitting, it barely moves, and its picture is drawn again at most
-// thirty times a second and kept in between (time it didn't draw is given to the next drawing).
-let dovePic = null,
-  doveAt = 0,
-  doveOwed = 0;
+// The dove is laid into the air over the pond, larger the higher it flies.
 function drawDove(c) {
   if (!life || dove.state === 'away') return;
   const u = doveSize() * 0.34 * (1 + dove.h * 0.28),
-    half = life.DOVE * u,
-    n = life.size,
-    now = performance.now(),
-    sits = dove.state === 'sit';
-  if (life.pic) {
-    count('dove');
-    drawCell(
-      c,
-      'dove',
-      doveFrame({ state: dove.state, t: dove.t, h: dove.h, ph: dove.ph, idle: dove.sips >= 4 }),
-      dove.x,
-      dove.y,
-      dove.a,
-      half,
-      1 - clamp(dove.h * 4, 0, 1)
-    );
-    return;
-  }
-  doveOwed += lifeDt;
-  if (!dovePic) {
-    dovePic = document.createElement('canvas');
-    dovePic.width = dovePic.height = n;
-  }
-  if (!sits || now - doveAt > 1000 / 30 - 4) {
-    count('dove');
-    life.dove(doveOwed, { a: dove.a, fly: !sits, dip: dove.dip, h: dove.h, amb: cur ? cur.amb : 1, tint: cur ? cur.tint : [1, 1, 1] });
-    doveOwed = 0;
-    doveAt = now;
-    if (sits) {
-      const x = dovePic.getContext('2d');
-      x.clearRect(0, 0, n, n);
-      x.drawImage(life.canvas, 0, 0);
-    } else doveAt = 0;
-  }
-  laidIn(c, () => c.drawImage(sits && doveAt ? dovePic : life.canvas, dove.x - half, dove.y - half, half * 2, half * 2));
+    half = life.DOVE * u;
+  count('dove');
+  drawCell(
+    c,
+    'dove',
+    doveFrame({ state: dove.state, t: dove.t, h: dove.h, ph: dove.ph, idle: dove.sips >= 4 }),
+    dove.x,
+    dove.y,
+    dove.a,
+    half,
+    1 - clamp(dove.h * 4, 0, 1)
+  );
 }
 // how the look lays the two into the air: ink soaks into the paper, glow adds light; the rest as they are
-const LAY = { ink: ['multiply', 0.8], glow: ['lighter', 0.65], ascii: ['source-over', 0.6], ...(PREVIEW ? NEW_LAY : {}) };
+const LAY = { ink: ['multiply', 0.8], glow: ['lighter', 0.65], ascii: ['source-over', 0.6], ...NEW_LAY };
 function laidIn(c, draw) {
   const l = LAY[look];
   if (!l) return draw();
@@ -3407,7 +3360,7 @@ const RAINY = { water: 1, ink: 1, ukiyo: 1, ascii: 1 },
   blooms = [],
   rainNow = () => raining && RAINY[look] === 1,
   // on the star chart rain is a shower of meteors: nothing falls on the water, the sky does it
-  meteorsNow = () => PREVIEW && raining && look === 'stars' && inkR >= inkMax * 0.9,
+  meteorsNow = () => raining && look === 'stars' && inkR >= inkMax * 0.9,
   meteors = [];
 let meteorAt = 0;
 function drawMeteors(c) {
@@ -3535,13 +3488,13 @@ const airWanted = () =>
   meteorsNow() ||
   gest.down ||
   gest.letters.length > 0 ||
-  (PREVIEW && gest.taps && gest.taps.length > 0) ||
+  (gest.taps && gest.taps.length > 0) ||
   gest.glint > 0.05 ||
   AM.snow > 0.02 ||
   fx.snow > 0.02 ||
   (rainNow() && AM.ice > 0.3) ||
   flies.some((f) => f.a2 >= 0.02) ||
-  (PREVIEW && fireflies()) ||
+  fireflies() ||
   (life && dove.state !== 'away');
 function drawAir() {
   const c = actx;
@@ -3563,7 +3516,7 @@ function drawAir() {
   c.clearRect(0, 0, W, H);
   if (look === 'blueprint' && inkR >= inkMax * 0.9) drawDims(c);
   drawRain(c);
-  if (PREVIEW) drawFireflies(c);
+  drawFireflies(c);
   drawGesture(c);
   if (Math.max(AM.snow, fx.snow) > 0.02 || (rainNow() && AM.ice > 0.3)) {
     const n = Math.max(AM.snow, fx.snow, rainNow() && AM.ice > 0.3 ? 0.7 : 0);
@@ -3579,7 +3532,7 @@ function drawAir() {
   }
   for (const f of flies) {
     // (a look that has no place for a dragonfly does without: the night sky, glaze, a painted or carved wall)
-    if (f.a2 < 0.02 || (PREVIEW && NEW_WITHOUT[look]?.flies)) continue;
+    if (f.a2 < 0.02 || NEW_WITHOUT[look]?.flies) continue;
     c.save();
     c.globalAlpha = f.a2 * (look === 'monet' ? 0.42 : 1);
     c.translate(f.x, f.y);
@@ -3602,7 +3555,7 @@ function drawAir() {
       continue;
     }
     // (a look whose manner has no drawn dragonfly, and whose own flyer hasn't come, goes without)
-    if (pictured(look) && LOOK_ART[look]?.afloat?.fly) {
+    if (LOOK_ART[look]?.afloat?.fly) {
       c.restore();
       continue;
     }
@@ -3691,10 +3644,9 @@ function shadeTex() {
 // shade's strength, eased over 2.5 s as its opacity was, by the time of day and the look.
 let shadeK = 0.9;
 function shadeUniforms(dt) {
-  const goal =
-    PREVIEW && look in NEW_SHADE ? NEW_SHADE[look] : 'bare' in pond.dataset ? 0.25 : inkOn ? 0.35 : ({ night: 0.3, dawn: 0.6, dusk: 0.6 }[phase] ?? 0.9);
+  const goal = look in NEW_SHADE ? NEW_SHADE[look] : 'bare' in pond.dataset ? 0.25 : inkOn ? 0.35 : ({ night: 0.3, dawn: 0.6, dusk: 0.6 }[phase] ?? 0.9);
   // (a look with no shade at all loses it quickly, as its front passes)
-  const quick = PREVIEW && NEW_SHADE[look] === 0 ? 0.35 : 2.5;
+  const quick = NEW_SHADE[look] === 0 ? 0.35 : 2.5;
   shadeK += clamp(goal - shadeK, -dt / quick, dt / quick);
   let u = RM ? -1 : (performance.now() / 27000) % 2;
   u = u < 0 ? 0 : u > 1 ? 2 - u : u;
@@ -4550,7 +4502,7 @@ function commands() {
       ['glow', 'Glow', 'The lights go out; or press the light on the water', 'glow night neon dark light'],
       ['blueprint', 'Blueprint', 'A drawing on blue paper; or draw a long straight line', 'blueprint drawing plan draft ruler'],
       ['ascii', 'ASCII', 'The pond in characters; or type a few letters', 'ascii text characters terminal type'],
-      ...(PREVIEW ? NEW_COMMANDS : [])
+      ...NEW_COMMANDS
     ].map(([id, label, hint, kw]) => ({
       sec: 'Pond',
       icon: 'brush',
@@ -4655,7 +4607,7 @@ function commands() {
       cmd: true,
       run: () => openSheet('seals')
     },
-    ...(VOLS.some((v) => full(album, v)) || PREVIEW
+    ...(VOLS.some((v) => full(album, v)) || PANEL
       ? [
           {
             sec: 'Pond',
@@ -4663,13 +4615,13 @@ function commands() {
             label: SEAL_WORDS[lang].clear,
             hint: SEAL_WORDS[lang].clearHint,
             kw: 'seals clear reset again 清空 印 消す',
-            hidden: !PREVIEW,
+            hidden: !PANEL,
             cmd: true,
             run: () => setAlbum(clearSeals(album))
           }
         ]
       : []),
-    ...(PREVIEW
+    ...(PANEL
       ? [
           {
             sec: 'Pond',
@@ -5491,7 +5443,7 @@ let monetImgs = null,
 // koi is one of the sheet's plain ones with their colour laid on, made once for each colour and kept.
 const koiSheets = {};
 function loadKoi(name) {
-  const d = pictured(name) && KOI_SHEETS[name];
+  const d = KOI_SHEETS[name];
   if (!d || koiSheets[name]) return;
   const sh = (koiSheets[name] = { ...d, pic: null, maskA: null, made: new Map() }),
     pic = new Image();
@@ -5723,7 +5675,7 @@ function paintMural() {
    the small mark by the solar term, which shows once there is a seal to see. Someone who has found none is
    shown one quiet line on the water, once. None of it runs in the frame: a stamp is a CSS animation, and
    the line a timer. */
-const VOLS = volumes(PREVIEW);
+const VOLS = volumes(false);
 let album = readAlbum(load('pond-seals'));
 album = { ...album, visits: album.visits + 1 };
 save('pond-seals', writeAlbum(album));
@@ -5863,7 +5815,7 @@ function greetVisitor() {
     }
   }, 7000);
 }
-if (PREVIEW) pv.back = returning();
+pv.back = returning();
 // A word for whoever came: some for the hour, some for any hour, one picked each time.
 function salute() {
   const h = new Date().getHours();
@@ -5943,8 +5895,8 @@ function arrival() {
     [hello, sub] = salute(),
     el = $('#greet'),
     cards = [...document.querySelectorAll('.home .rise')];
-  $('#hero').textContent = PREVIEW && pv.back ? backGreeting() : hello;
-  if (PREVIEW && pv.back) later(1800, greetVisitor, id);
+  $('#hero').textContent = pv.back ? backGreeting() : hello;
+  if (pv.back) later(1800, greetVisitor, id);
   el.innerHTML = sub;
   const words = [...el.querySelectorAll('w')];
   if (RM) {
@@ -6140,8 +6092,8 @@ const HOLD = 1.2,
     gest.len += d;
     P.push([x, y]);
     if (P.length > 400) P.splice(1, 1);
-    // the preview looks' strokes (gestures.ts): a rub over one spot, or once round the rim of the screen
-    if (PREVIEW) {
+    // the strokes that are rules of their own (gestures.ts): a rub over one spot, or once round the rim of the screen
+    {
       const m = strokeMoving(P, W, H);
       if (m === 'dunhuang' || m === 'qinghua') {
         const xs = P.map((p) => p[0]),
@@ -6176,7 +6128,7 @@ const HOLD = 1.2,
     else if (dt < 0.4 && gest.len < 10) {
       const [gx, gy] = glintAt();
       if (Math.hypot(x - gx, y - gy) < 46) toggleLook('glow', [gx, gy]);
-      else if (PREVIEW) {
+      else {
         // taps: three far apart join as a triangle of stars; four in one place are dabs of paint
         const now = performance.now() / 1000;
         gest.taps = [...(gest.taps || []).filter((q) => now - q.t < 2), { t: now, x, y }];
@@ -6187,7 +6139,7 @@ const HOLD = 1.2,
           toggleLook(t, [at.reduce((a, q) => a + q.x, 0) / at.length, at.reduce((a, q) => a + q.y, 0) / at.length]);
         }
       }
-    } else if (PREVIEW && strokeLifted(drawn) === 'relief') toggleLook('relief', [x, y]);
+    } else if (strokeLifted(drawn) === 'relief') toggleLook('relief', [x, y]);
     gest.pts = [];
   };
   pond.addEventListener('pointerup', lift);
@@ -6358,7 +6310,7 @@ function drawGesture(c) {
       c.stroke();
     }
   }
-  if (PREVIEW) drawNewCues(c, now);
+  drawNewCues(c, now);
   c.restore();
 }
 // The preview looks' cues: the taps so far (dabs of paint where they are close, stars joined by a line
@@ -6783,8 +6735,8 @@ function tick1(raw) {
   gl.uniform1f(U.uFog, fx.fog);
   // the moon as it is tonight (full, and brighter, at Mid-Autumn); stars on a clear night
   const age = pv.fest === 'midautumn' ? 0.5 : pv.age;
-  gl.uniform3f(U.uMoonPh, PREVIEW ? moonLit(age) : 1, age < 0.5 ? 1 : -1, PREVIEW ? 1 : 0);
-  gl.uniform1f(U.uStars, PREVIEW && phase === 'night' && fx.glint > 0.9 ? Math.min(1, cur.moon) : 0);
+  gl.uniform3f(U.uMoonPh, moonLit(age), age < 0.5 ? 1 : -1, 1);
+  gl.uniform1f(U.uStars, phase === 'night' && fx.glint > 0.9 ? Math.min(1, cur.moon) : 0);
   gl.uniform4fv(U.uBox, boxA);
   gl.uniform4fv(U.uBoxB, boxB);
   gl.uniform1i(U.uBoxN, boxN);
@@ -6831,7 +6783,7 @@ function tick1(raw) {
   // the glass turns to paper with the pond
   const pk = clamp(inkR / inkMax, 0, 1),
     gs = [0.03 + cur.tint[0] * 0.03, 0.09 + cur.tint[1] * 0.04, 0.1 + cur.tint[2] * 0.045],
-    GT = { ink: [0.95, 0.92, 0.85], ukiyo: [0.07, 0.17, 0.32], glow: [0.01, 0.02, 0.05], blueprint: [0.08, 0.24, 0.5], ...(PREVIEW ? NEW_GLASS : {}) },
+    GT = { ink: [0.95, 0.92, 0.85], ukiyo: [0.07, 0.17, 0.32], glow: [0.01, 0.02, 0.05], blueprint: [0.08, 0.24, 0.5], ...NEW_GLASS },
     gt = GT[top] || gs,
     gf = GT[base] || gs;
   gl.uniform3f(UG.uGlass, lerpN(gf[0], gt[0], pk), lerpN(gf[1], gt[1], pk), lerpN(gf[2], gt[2], pk));
@@ -6863,40 +6815,20 @@ const crackU = new Float32Array(24),
 $('#tags').append(doveTag, spiderTag);
 // Settled: the opening has played and the browser is idle. What isn't on the first screen loads then.
 const settled = new Promise((resolve) => setTimeout(() => (window.requestIdleCallback || ((f) => setTimeout(f, 1)))(() => resolve()), 2600));
-// (the print's crests too, so that the first time it comes it comes as a wave)
-if (PREVIEW) settled.then(loadWaves);
-if (PREVIEW)
-  settled.then(() => {
-    const im = new Image();
-    im.onload = () => {
-      waterLily = im;
-      padsNow();
-      invalidate();
-    };
-    im.onerror = () => report(new Error('no picture at /pond/water/lilies-768.webp'), 'pond pictures');
-    im.src = '/pond/water/lilies-768.webp';
-  });
-if (PREVIEW)
-  settled.then(loadSprites).then(
-    (sprites) => {
-      life = { DOVE: SPRITES.dove.half, SPIDER: SPRITES.spider.half, size: 0, pic: sprites.pic };
-    },
-    (err) => report(err, 'pond sprites')
-  );
-else
-  settled
-    .then(() => import('./life.js'))
-    .then(
-      (L) => {
-        try {
-          life = L.makeLife();
-          life.dress(look);
-        } catch (err) {
-          report(err, 'pond models');
-        }
-      },
-      (err) => report(err, 'pond models')
-    );
+// The dove and the spider are rendered sprites (sprites.js): each sheet is fetched the first time its
+// creature is to be drawn, never on the first screen.
+settled.then(() => {
+  life = { DOVE: SPRITES.dove.half, SPIDER: SPRITES.spider.half, pic: spritePics(invalidate) };
+});
+settled.then(() => {
+  // (the whole pass starts building now, in the background, so the first look finds it ready)
+  if (glOK) waterProg(0);
+  settledNow = true;
+  padKey = '';
+  topAt = -1e9;
+  padsNow();
+  invalidate();
+});
 settled.then(loadSongs);
 settled.then(() => hintSoon(20000));
 // The weather where the visitor is: once the pond has settled, so it never holds up the title page; again
@@ -6921,7 +6853,7 @@ function weatherIn(w) {
   if (!w) return;
   wx = w;
   fx = effectsOf(w.condition);
-  if (PREVIEW) {
+  {
     // the wind, gently: its direction is where it blows from, so the drift goes the other way
     const k = (Math.min(40, w.windSpeed) / 40) * 26 + 3,
       th = (w.windFrom * Math.PI) / 180;
@@ -6964,7 +6896,7 @@ function ambLoop(name, secs, fill, gainTo) {
   amb[name].gain.setTargetAtTime(gainTo, AC.currentTime, 1.5);
 }
 function ambience() {
-  if (!PREVIEW || !AC || muted || document.hidden) return;
+  if (!AC || muted || document.hidden) return;
   const summer = AM.flies > 0.3,
     autumn = AM.leaves > 0.3;
   ambLoop(
@@ -7012,9 +6944,9 @@ function ambience() {
     raining && look === 'water' ? 0.025 * Math.max(0.5, fx.rain || 1) : 0
   );
 }
-if (PREVIEW) setInterval(ambience, 2000);
-// The preview panel: force each state, to see it now
-if (PREVIEW)
+setInterval(ambience, 2000);
+// The panel (only with ?preview, or in a build made for it): force each state, to see it now
+if (PANEL)
   pond.append(
     panel({
       looks: LOOKS,

@@ -155,9 +155,9 @@ export const THIS_POND = {
   pts: [
     'The water is a ripple simulation, and the glass is drawn in the same shader, so what swims under a pane bends and blurs',
     'It follows the 24 solar terms: petals, lotus and dragonflies, falling leaves, ice that cracks',
-    "Devot's dove and ocra's jumping spider are three.js models built in code"
+    "Devot's dove and ocra's jumping spider were modelled in Blender and are drawn from sprite sheets"
   ],
-  stack: 'Astro · TypeScript · WebGL · three.js · Supabase',
+  stack: 'Astro · TypeScript · WebGL · Supabase',
   source: 'https://github.com/jma49/jmos'
 };
 
@@ -329,7 +329,7 @@ export const ZH = {
       pts: [
         '水面是涟漪模拟，玻璃和水在同一个着色器里绘制，所以玻璃下游过的东西会折射、变模糊',
         '跟着二十四节气变化：春天有落花，夏天有荷花和蜻蜓，秋天有落叶，冬天有冰裂',
-        'Devot 的鸽子和 ocra 的跳蛛，都是用代码搭出来的 three.js 模型'
+        'Devot 的鸽子和 ocra 的跳蛛，是在 Blender 里建模、渲染成序列帧再画上去的'
       ]
     }
   } as Record<string, { title?: string; tag?: string; role?: string; place?: string; text?: string; pts?: string[]; ref?: string }>
@@ -504,7 +504,7 @@ export const JA: typeof ZH = {
       pts: [
         '水面は波紋のシミュレーション。ガラスと水を同じシェーダーで描くので、ガラスの下を泳ぐものは屈折してぼやけます',
         '二十四節気で移ろいます。春は花びら、夏は蓮とトンボ、秋は落ち葉、冬は氷が割れます',
-        'Devot の鳩と ocra のハエトリグモは、コードで組んだ three.js のモデルです'
+        'Devot の鳩と ocra のハエトリグモは、Blender で作ったモデルを連番の絵にして描いています'
       ]
     }
   }

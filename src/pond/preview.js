@@ -1,9 +1,9 @@
-// The pond's next details, for Jincheng to try before they ship: only with ?preview in the address (or a
-// build with PUBLIC_POND_PREVIEW=1, as the single-file demo is). Without it, none of this does anything.
-// The real moon's phase, the wind, the festivals, fireflies on summer nights, stars on clear nights, a
-// welcome back, and quiet ambience; and a small panel to force each state.
+// The pond's later details: the real moon's phase, the wind, the festivals, fireflies on summer nights,
+// stars on clear nights, a welcome back, and quiet ambience. They are part of the pond. What is only for
+// trying things is the small panel that forces each state: it shows with ?preview in the address, or in a
+// build with PUBLIC_POND_PREVIEW=1 (as the single-file demo is).
 
-export const PREVIEW = (typeof location !== 'undefined' && /[?&]preview\b/.test(location.search)) || !!import.meta.env.PUBLIC_POND_PREVIEW;
+export const PANEL = (typeof location !== 'undefined' && /[?&]preview\b/.test(location.search)) || !!import.meta.env.PUBLIC_POND_PREVIEW;
 
 /** How far through its month the moon is: 0 new, 0.5 full (from a known new moon, 2000-01-06 18:14 UTC). */
 export function moonAge(d = new Date()) {

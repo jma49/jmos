@@ -58,8 +58,8 @@ page at `/projects/<slug>/`.
   `api/` (the visitor's location, a lyrics relay, the music library,
   cached at the edge, and whether a page can be framed in the Browser);
   what they read from other services is checked with valibot.
-- The pond (`src/pond/`): WebGL2 for the water and the glass, three.js
-  for the dove and the spider (loaded once the pond has settled), and
+- The pond (`src/pond/`): WebGL2 for the water and the glass, sprite
+  sheets for the dove and the spider (fetched when first drawn), and
   Cormorant Garamond and Zhi Mang Xing (a brush hand, for every Chinese
   character), self-hosted.
 - Vitest, Playwright for preview images, and GitHub Actions.

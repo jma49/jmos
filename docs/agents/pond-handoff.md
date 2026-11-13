@@ -55,7 +55,7 @@ pass, and the move from drawing things in code to painted pictures. How the pond
   
 ## 2. The state of each look
 
-"Preview" means it exists only in a build with `PUBLIC_POND_PREVIEW=1`.
+Every look is live. "Preview only" marks what exists only in a build with `PUBLIC_POND_PREVIEW=1` (or with `?preview`).
 
 | Look | State | Pictures in use | Delivered, not used | Wrong or unverified |
 | --- | --- | --- | --- | --- |
@@ -65,11 +65,11 @@ pass, and the move from drawing things in code to painted pictures. How the pond
 | Glow | Live. Goes dark, then relights in rings. | none wanted | none | Seen once in a frame sequence. |
 | Blueprint | Live. Plots its lines before the paper's blue floods in. | none | none | Seen once in a frame sequence. |
 | ASCII | Live. Resolves a cell at a time. | none wanted | none | Seen once in a frame sequence. |
-| Monet | Preview. Rebuilt on its paintings: bed, lilies, koi. | `monet/bed`, `bed-1280`, `bed-tall`, `lilies`, `koi-v2` + mask | `strokes`, `canvas` | The press is a soft dab from the shader, not the stamps. The dove is only dimmed. |
-| 青花 | Preview. Painted rim and corners; painted koi with visitors' colours through the mask; the frame is the page's margin. | `qinghua/rim`, `corner`, `koi` + mask | none | Lotus and the pads are still shader outlines. The tint through the mask has never been seen with a second visitor. |
-| Dunhuang | Preview. The flying figures are the wall; mural koi; nothing painted under the controls. | `dunhuang/feitian-pipa`, `feitian-flowers`, `feitian-far`, `sky-flowers`, `border`, `cloud-trail`, `halo`, `koi` + mask | `caisson`, `feitian-pipa-2560` (never fetched while the picture texture is at most 2048 across: see pond.md) | The caisson has no place. Seen at 1280 × 800, 1920 × 900 and a 390 × 844 phone; shorter phones are held by a test, not seen. |
-| Star chart | Preview. Koi drawn as constellations in code, the atlas's koi in outline behind each; the plate's grid in the sky. | `stars/grid`, `koi-figures` | none | Seen at 1280 × 800, a few seconds in. The grid tiles, so it has no edge as the sky turns; it is quieter than the framed plate it replaced. |
-| Egyptian relief | Preview. Built: carved and painted limestone under a light that goes round with the day; zigzag water; the frieze and a marsh of the delivered carvings; a chisel's strike for a press; sand blown off as it arrives; the zigzag gesture; the seal 刻. The blackboard is gone from the code. | `relief/fish`, `lotus`, `frieze` (each `-h` and `-c`), `koi-c-bold`, `koi-h-bold` + mask, `stone-h` | none | Seen at 1280 × 800 (dawn, noon, night), 1440 × 900 (dusk, and dawn with its own koi and stone), a phone in winter, and its arrival and a press in a 640 × 400 frame sequence. The carved koi are small on screen, so their cut scales are fine: to be judged on a real screen. Chapters, the album's stamp, the dove and the spider in its dress, and a second language were not looked at. |
+| Monet | Live. Rebuilt on its paintings: bed, lilies, koi. | `monet/bed`, `bed-1280`, `bed-tall`, `lilies`, `koi-v2` + mask | `strokes`, `canvas` | The press is a soft dab from the shader, not the stamps. The dove is only dimmed. |
+| 青花 | Live. Painted rim and corners; painted koi with visitors' colours through the mask; the frame is the page's margin. | `qinghua/rim`, `corner`, `koi` + mask | none | Lotus and the pads are still shader outlines. The tint through the mask has never been seen with a second visitor. |
+| Dunhuang | Live. The flying figures are the wall; mural koi; nothing painted under the controls. | `dunhuang/feitian-pipa`, `feitian-flowers`, `feitian-far`, `sky-flowers`, `border`, `cloud-trail`, `halo`, `koi` + mask | `caisson`, `feitian-pipa-2560` (never fetched while the picture texture is at most 2048 across: see pond.md) | The caisson has no place. Seen at 1280 × 800, 1920 × 900 and a 390 × 844 phone; shorter phones are held by a test, not seen. |
+| Star chart | Live. Koi drawn as constellations in code, the atlas's koi in outline behind each; the plate's grid in the sky. | `stars/grid`, `koi-figures` | none | Seen at 1280 × 800, a few seconds in. The grid tiles, so it has no edge as the sky turns; it is quieter than the framed plate it replaced. |
+| Egyptian relief | Live. Built: carved and painted limestone under a light that goes round with the day; zigzag water; the frieze and a marsh of the delivered carvings; a chisel's strike for a press; sand blown off as it arrives; the zigzag gesture; the seal 刻. The blackboard is gone from the code. | `relief/fish`, `lotus`, `frieze` (each `-h` and `-c`), `koi-c-bold`, `koi-h-bold` + mask, `stone-h` | none | Seen at 1280 × 800 (dawn, noon, night), 1440 × 900 (dusk, and dawn with its own koi and stone), a phone in winter, and its arrival and a press in a 640 × 400 frame sequence. The carved koi are small on screen, so their cut scales are fine: to be judged on a real screen. Chapters, the album's stamp, the dove and the spider in its dress, and a second language were not looked at. |
 
 Jincheng's words that still stand:
 
@@ -113,14 +113,13 @@ spider as sprites, with three.js and `life.js` no longer fetched; ukiyo-e's cres
 chart's plate and figures; Dunhuang's halo, its koi, and nothing painted under the controls; Monet's
 koi moved to the common sheet. What is left of those:
 
-1. **Dove and spider: the release build.** Waiting on the revised renders (the brief says what). When
-   the `-v2` sheets come: point `SHEETS` in `sprites.js` at them, set the frame counts and order in
-   `doveFrame()` and `spiderFrame()` (and in `sprites.test.ts`), look at every look's dress with
-   `tools/pond/life.cjs`, then draw them from sprites in a release build too and delete `life.js`,
-   the three.js dependency and the models' half of `drawDove()` and `drawSpider()` (about 500 KB,
-   130 KB gzipped, and a 512 px 3D render a frame while the dove is out).
-2. **Ukiyo-e ships with its own pictures** (its painted water, crests, koi, pads and drift), by
-   Jincheng's word. The other looks' pictures stay behind the preview flag.
+1. **Dove and spider: the revised renders (approved; asked of the local thread).** The pond draws the two from the first sprite sheets in
+   every build, and three.js and the models are gone. When the `-v2` sheets come: point `SHEETS` in
+   `sprites.js` at them, set the frame counts and order in `doveFrame()` and `spiderFrame()` (and in
+   `sprites.test.ts`), and look at every look's dress with `tools/pond/life.cjs`.
+2. **Everything ships**, by Jincheng's word: every look with its own pictures, the water's own
+   pictures, the sprites, and the later details (moon, wind, festivals, fireflies, ambience). Only
+   the panel that forces each state is behind `?preview`.
 3. **Star chart:** whether the quiet grid is enough, or the atlas wants its equator and ecliptic back
    as a second, fixed layer: Jincheng's to say on a real screen.
 4. **Dunhuang:** a place for the caisson (the album page or a chapter's header for this look; the
@@ -177,6 +176,12 @@ the dove and spider's own pictures in motion, phones, the festivals.
 Asked of the local thread since this page was first written, delivered, and in use: the relief's koi
 sheet and stone face, then a lighter lily sheet for the water, a grid that tiles for the star chart,
 and a bolder cut of the relief's koi. The files each replaced are deleted.
+
+- **The first frame builds only the water's pass.** The whole pass, with every look in it, is built
+  in the background once the pond has settled (or when a look is first asked for). Built before the
+  first frame, as it once was, it held the main thread for seconds under a software GPU: CI's smoke
+  test timed out waiting for the page's `load` with its own fonts still unanswered. A new look
+  makes the whole pass longer; never build it before the first frame.
 
 ## 5. Rules learnt the hard way
 

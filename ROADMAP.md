@@ -19,7 +19,7 @@ guestbook and the chat, the swap (the pond at `/`, the desktop at
 
 1. **Password resets** (`?reset=`) and a member's recovery address,
    which only the desktop handles today.
-2. **Type the engine** (`src/pond/engine.js`, `life.js`) a section at a
+2. **Type the engine** (`src/pond/engine.js`) a section at a
    time, comparing each with the pond as it is.
 
 **Done when** every old link lands somewhere, and
