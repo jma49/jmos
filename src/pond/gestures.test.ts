@@ -111,6 +111,28 @@ describe('strokes that are none of them', () => {
   });
 });
 
+describe('a hand on a large screen', () => {
+  // a rub half a screen long that wanders as it goes: each pass 30 px below the last
+  const wide = Array.from({ length: 6 }, (_, k) =>
+    line(k % 2 ? [900, 400 + k * 12] : [400, 400 + k * 12], k % 2 ? [400, 412 + k * 12] : [900, 412 + k * 12], 30)
+  ).flat();
+  it('rubs wide and not quite on one line, and it is still a rub, not a stir', () => {
+    expect(rub(wide)).toBe(true);
+    // (it is a rub the moment it is anything: at no point on its way is it a stir)
+    expect([...read(wide)]).toEqual(['dunhuang']);
+  });
+  it('draws a zigzag large, shallow and with its corners rounded', () => {
+    expect(zigzag(zigzagging(200, 500, 7, 110, 70))).toBe(true);
+    const round: Pt[] = Array.from({ length: 7 * 24 + 1 }, (_, i) => {
+      const u = i / 24,
+        tri = Math.abs((u % 2) - 1) * 2 - 1;
+      return [200 + u * 90, 500 + 80 * (tri * 0.6 + Math.sin(u * Math.PI + Math.PI / 2) * 0.4)];
+    });
+    expect(zigzag(round)).toBe(true);
+    expect([...read(round)]).toEqual(['relief']);
+  });
+});
+
 describe('taps', () => {
   const far = taps([
     [300, 300],

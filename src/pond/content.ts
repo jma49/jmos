@@ -1,14 +1,6 @@
-// What the pond says that the rest of the site doesn't: the About chapter,
-// its words in Chinese and Japanese, and what it plays. The paragraphs may
+// What the pond says that the rest of the site doesn't: its words in
+// Chinese and Japanese, and what it plays. The paragraphs may
 // hold <i>; they are the owner's text, never a visitor's.
-
-/** The About chapter, a paragraph each. */
-export const ABOUT = [
-  "I'm a software engineer in the Bay Area. I like handing the tedious parts of shipping software to AI agents, <i>review, tests and release</i>, and building the tools that let a small team move fast.",
-  "Most recently I was at TikTok, where I built a multi-agent code review system that runs in CI across 30+ repositories, and the automation and quality gates that Trust &amp; Safety releases pass through. These days I'm building ocra, an open-source code review engine. I also made Devot, local-first Markdown notes for Mac and iPhone, and Assay, SQL data checks for PostgreSQL.",
-  "Away from the keyboard I boulder (V6 for now), take photos and keep an eye on the markets. I'm looking for my next role.",
-  'This site is a pond. Everyone who visits is a koi, and that includes you: the white one with the red spot. The gold one is me.'
-];
 
 /**
  * The pond in Chinese, chosen with 中 apart from the look: the same words in plain, natural Chinese, set in the brush.
@@ -23,28 +15,17 @@ export const ZH = {
     any: ['欢迎来到池塘。', '你好呀。', '你找到这儿了。', '慢慢看，不着急。', '小心荷叶。', '来了就坐一会儿。', '水正好，进来吧。', '谢谢你来。']
   },
   say: '你是那条带红点的白色锦鲤。点一下水面，可以喂其他的鱼。',
-  more: '关于我',
+  faces: '找找它别的样子',
   search: ['搜索，或输入 / 使用命令', '搜索'],
   talk: '聊天',
   firstLine: '留下第一句话',
-  clock: { yours: '你的时间', mine: '我在圣何塞', now: '你那里现在是' },
+  clock: { yours: '你的时间', mine: '我在圣何塞' },
   chapters: {
-    about: '关于',
     music: '音乐',
     notes: '留言',
     chat: '聊天',
     account: '账号'
   } as Record<string, string>,
-  about: {
-    title: '你好，我是马锦程。',
-    paragraphs: [
-      '我是一名在湾区的软件工程师。喜欢把软件交付里那些繁琐的事交给 AI 智能体，<i>代码审查、测试和发布</i>，也喜欢做让小团队跑得更快的工具。',
-      '最近在 TikTok，我做了一套在 CI 里运行的多智能体代码审查系统，覆盖 30 多个代码库；也搭了信任与安全团队发布时要经过的自动化和质量门禁。现在在做 ocra，一个开源的代码审查引擎。我还做了 Devot，一款本地优先的 Mac 和 iPhone Markdown 笔记；以及 Assay，PostgreSQL 的 SQL 数据检查工具。',
-      '离开键盘的时候，我攀岩（目前 V6），拍照片，也关注市场。正在找下一份工作。',
-      '这个网站是一方池塘。每个来访的人都是一条锦鲤，你也是：那条带红点的白鱼。金色的那条是我。'
-    ],
-    desktop: '旧桌面'
-  },
   music: { title: '在听', lede: '坂本龙一，多是钢琴，安静的时候我就放这些。池塘的声音开关也管着它。', empty: '歌单正在来的路上。' },
   notes: {
     title: '纸船',
@@ -101,27 +82,16 @@ export const JA: typeof ZH = {
     ]
   },
   say: 'あなたは赤い斑点のある白い鯉です。水面に触れると、ほかの鯉に餌をあげられます。',
-  more: '自己紹介',
+  faces: 'ほかの姿を探す',
   search: ['検索、または / でコマンド', '検索'],
   talk: 'チャット',
   firstLine: '最初のひとことを',
-  clock: { yours: 'あなたの時間', mine: 'サンノゼの私', now: 'そちらはいま' },
+  clock: { yours: 'あなたの時間', mine: 'サンノゼの私' },
   chapters: {
-    about: '自己紹介',
     music: '音楽',
     notes: '伝言',
     chat: 'チャット',
     account: 'アカウント'
-  },
-  about: {
-    title: 'こんにちは、馬錦程です。',
-    paragraphs: [
-      'ベイエリアのソフトウェアエンジニアです。ソフトウェアを届けるまでの手間、<i>コードレビュー、テスト、リリース</i>を AI エージェントに任せること、そして小さなチームを速くする道具を作ることが好きです。',
-      '直近は TikTok で、CI で動くマルチエージェントのコードレビューを作り、30 以上のリポジトリに入れました。Trust &amp; Safety チームのリリースが通る自動化と品質ゲートも作りました。いまはオープンソースのコードレビューエンジン ocra を作っています。ほかに、Mac と iPhone のローカルファーストな Markdown ノート Devot と、PostgreSQL の SQL データチェック Assay も作りました。',
-      'キーボードを離れると、ボルダリング（いまは V6）をして、写真を撮り、マーケットを眺めています。次の仕事を探しています。',
-      'このサイトはひとつの池です。訪れた人はみな鯉になります。あなたもそう、赤い斑点の白い鯉です。金色の鯉が私です。'
-    ],
-    desktop: '前のデスクトップ'
   },
   music: {
     title: 'いま聴いている曲',

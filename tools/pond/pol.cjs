@@ -79,9 +79,9 @@ const { chromium } = require('playwright');
       await p.screenshot({ path: `${__dirname}/pol/${tag}-${l}-left.png`, timeout: 180000 });
     }
     if (process.env.SHEET) {
-      await p.evaluate(() => document.querySelector('[data-sheet=about]').click());
+      await p.evaluate(() => document.querySelector('[data-sheet=music]').click());
       await p.waitForTimeout(3500);
-      await p.screenshot({ path: `${__dirname}/pol/${tag}-${l}-about.png`, timeout: 180000 });
+      await p.screenshot({ path: `${__dirname}/pol/${tag}-${l}-music.png`, timeout: 180000 });
       await p.keyboard.press('Escape');
       await p.waitForTimeout(1000);
     }

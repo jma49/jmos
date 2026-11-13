@@ -67,7 +67,7 @@ import { coverOf, loadSongs, music, onMusic, play as playSongAt, setMusicMuted, 
 import * as people from './people';
 
 const $ = (s) => document.querySelector(s);
-/** What the page gathered at build time: the About chapter, and the pond's words in Chinese and Japanese. */
+/** What the page gathered at build time: the pond's words in Chinese and Japanese. */
 const D = JSON.parse($('#pond-data').textContent);
 const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
 // With ?preview: the real moon, the wind, the festivals, fireflies, stars, a welcome back (preview.js)
@@ -2865,7 +2865,7 @@ const HOME = {
 function speak() {
   pond.lang = lang;
   $('#termV').lang = lang === 'ja' ? 'ja' : 'zh';
-  $('.say').innerHTML = zhOn ? `${esc(ZH.say)} <button class="tlink" data-sheet="about">${esc(ZH.more)}</button>` : HOME.say;
+  $('.say').innerHTML = zhOn ? `${esc(ZH.say)} <button class="tlink" data-sheet="seals">${esc(ZH.faces)}</button>` : HOME.say;
   document.querySelectorAll('.toc .go').forEach((go) => (go.querySelector('b').textContent = chapterName(go.dataset.sheet)));
   $('#cmdBtn .long').textContent = zhOn ? ZH.search[0] : HOME.long;
   $('#cmdBtn .short').textContent = zhOn ? ZH.search[1] : HOME.short;
@@ -2959,8 +2959,19 @@ function glide(change) {
 }
 const GLIDE_MS = 640;
 const setInk = (on, from) => setLook(on ? 'ink' : 'water', from || $('#inkBtn'));
+// The looks with a picture share one texture, so two of them can't be on the water at once: when one is
+// asked for while another still shows, that one draws back to the water first and the new one comes in
+// once it has gone (stepInk).
+let lookNext = null;
+const pictured = (l) => l in PICTURED;
 function setLook(name, from) {
   if (!LOOKS.includes(name) || name === look) return;
+  lookNext = null;
+  if (pictured(name) && [look, inkR > 0 ? top : 'water', inkR > 0 ? base : 'water'].some((l) => l !== name && pictured(l))) {
+    if (look !== 'water') setLook('water', from);
+    lookNext = [name, from];
+    return;
+  }
   if (name in PICTURED) {
     picLook = name;
     PICTURED[name]();
@@ -3119,7 +3130,11 @@ function stepInk(raw) {
     }
   } else if (inkR > 0) {
     inkR = Math.max(0, inkR - raw * inkMax * (0.4 + k * 1.3));
-    if (inkR <= 0) top = 'water';
+    if (inkR <= 0) {
+      top = 'water';
+      base = 'water';
+      if (lookNext) setLook(...lookNext);
+    }
   }
   const goal = inkOn ? (k < 0.5 ? 0.06 : 0.32) : look === 'glow' ? 0.7 : top === 'ink' && inkR > 0 ? 0.25 : 1;
   timeScale += (goal - timeScale) * Math.min(1, raw * (inkOn && k < 0.5 ? 9 : 1.6));
@@ -3165,7 +3180,7 @@ function callDove() {
 }
 function stepAir(dt) {
   if (dove.state === 'away') {
-    if (T > dove.next && !letterOpen() && !sheetOpen() && padSpots.length) {
+    if (T > dove.next && !sheetOpen() && padSpots.length) {
       callDove();
       dove.next = T + rnd(70, 120);
     }
@@ -3800,10 +3815,6 @@ const SHEETS = {
         ? `<p class="album-save"><button class="link" id="albumSave">${['Save as a picture', '存为图片', '画像で保存'][LANGS.indexOf(lang)]}</button></p>`
         : ''
     }</div>`,
-  about:
-    () => `<h1>${L("Hey, I'm Jincheng.", ZH.about.title)}</h1><div class="prose">${(zhOn ? ZH.about.paragraphs : D.about).map((p) => `<p>${p}</p>`).join('')}
-    <div class="links"><a class="link" href="https://github.com/jma49" target="_blank" rel="noopener">GitHub ↗</a><a class="link" href="/os">${L('The old desktop', ZH.about.desktop)}</a></div></div>
-    <p class="fine" id="letterTime"></p>`,
   music: () => {
     const m = music(),
       song = m.songs[m.index];
@@ -3838,9 +3849,8 @@ const noteForm = () =>
 let me = null,
   accountsOpen = false,
   signingUp = false;
-const ORDER = ['about', 'seals', 'music', 'notes', 'chat'];
+const ORDER = ['seals', 'music', 'notes', 'chat'];
 const CHAPTERS = {
-  about: ['00', 'About'],
   seals: ['01', 'Seals'],
   music: ['02', 'Music'],
   notes: ['03', 'Notes'],
@@ -3879,8 +3889,7 @@ function openSheet(id) {
   }
   stirTop = 0;
   $('#scroll').addEventListener('scroll', stir, { passive: true });
-  if (id === 'about') tick();
-  else if (id === 'chat') openChat();
+  if (id === 'chat') openChat();
   else if (id === 'notes') void people.readNotes();
   else if (id === 'music') void loadSongs();
   else if (id === 'seals') albumShown();
@@ -4096,11 +4105,7 @@ function chatUnread(on) {
   $('#talk').toggleAttribute('data-new', chatSeen > 0);
 }
 
-/* ================= the letter ================= */
-// Nothing lies over the pond any more: these stay so that everything that used to ask about the letter still can.
-const letterOpen = () => false,
-  putDown = () => {},
-  openLetter = () => openSheet('about');
+// whether the gold koi has come in to meet the visitor (the opening is over)
 let arrived = false;
 $('#inkBtn').addEventListener('click', (e) => setInk(!inkOn, e.currentTarget));
 $('#langBtn').addEventListener('click', (e) => {
@@ -4113,7 +4118,6 @@ function setClear(on) {
   $('#clear').setAttribute('aria-label', on ? 'Show the glass' : 'Hide the glass');
 }
 $('#clear').addEventListener('click', () => {
-  if (letterOpen()) putDown();
   setClear(!('clear' in pond.dataset));
 });
 
@@ -4139,7 +4143,6 @@ const ico = (n) => `<svg width="16" height="16" viewBox="0 0 16 16" stroke-width
 function commands() {
   const cleared = 'clear' in pond.dataset;
   return [
-    { sec: 'Go to', icon: 'letter', label: 'About me', hint: 'Who I am, in four paragraphs', kw: 'about hello jincheng who bio', top: true, run: openLetter },
     {
       sec: 'People',
       icon: 'chat',
@@ -4185,7 +4188,6 @@ function commands() {
       top: true,
       run: () => {
         setClear(false);
-        if (letterOpen()) putDown();
         openSheet('notes');
         setTimeout(() => {
           const box = $('#sheet').querySelector('input');
@@ -4250,7 +4252,6 @@ function commands() {
       kw: 'devot pigeon bird dove visitor',
       cmd: true,
       run: () => {
-        if (letterOpen()) putDown();
         setClear(false);
         callDove();
       }
@@ -4263,7 +4264,6 @@ function commands() {
       kw: 'ocra spider bug insect review jump',
       cmd: true,
       run: () => {
-        if (letterOpen()) putDown();
         dropBug();
         dropBug();
       }
@@ -4288,7 +4288,6 @@ function commands() {
       kw: 'glass panes cards hide show clear pond only',
       cmd: true,
       run: () => {
-        if (letterOpen()) putDown();
         setClear(!cleared);
       }
     },
@@ -4591,7 +4590,6 @@ function feedMiddle() {
   // into open water: the middle of the pond is the last place to freeze
   const x = W * rnd(0.42, 0.58),
     y = H * rnd(0.44, 0.56);
-  if (letterOpen()) putDown();
   audio();
   if (iceAt(x, y) > 0.5) {
     crack(x, y);
@@ -4603,10 +4601,10 @@ function feedMiddle() {
 }
 addEventListener('keydown', (e) => {
   const typing = /INPUT|TEXTAREA/.test((document.activeElement || {}).tagName || '');
-  // 0 to 4 open the chapters in order
-  if (!typing && !palOpen() && !e.metaKey && !e.ctrlKey && !e.altKey && /^[0-4]$/.test(e.key)) {
+  // 1 to 4 open the chapters in order
+  if (!typing && !palOpen() && !e.metaKey && !e.ctrlKey && !e.altKey && /^[1-4]$/.test(e.key)) {
     e.preventDefault();
-    openSheet(ORDER[+e.key]);
+    openSheet(ORDER[+e.key - 1]);
     return;
   }
   if (e.key.toLowerCase() === 'k' && (e.metaKey || e.ctrlKey)) {
@@ -4628,7 +4626,6 @@ addEventListener('keydown', (e) => {
   } else if (e.key === 'i' || e.key === 'I') setInk(!inkOn);
   else if (e.key === 'l' || e.key === 'L') setLang(nextLang());
   else if (e.key === 'g' || e.key === 'G') {
-    if (letterOpen()) putDown();
     setClear(!('clear' in pond.dataset));
   } else if (e.key === 'f' || e.key === 'F') feedMiddle();
   else if (e.key === 'm' || e.key === 'M') {
@@ -6017,7 +6014,8 @@ const HOLD = 1.2,
     }
     gest.len += d;
     P.push([x, y]);
-    if (P.length > 400) P.splice(1, 1);
+    // (a long stroke is thinned, not cut short: its beginning is part of what it means)
+    if (P.length > 480) for (let i = P.length - 2; i > 0; i -= 2) P.splice(i, 1);
     // the strokes that are rules of their own (gestures.ts): a rub over one spot, or once round the rim of the screen
     {
       const m = strokeMoving(P, W, H);
@@ -6035,7 +6033,8 @@ const HOLD = 1.2,
         ys = P.map((p) => p[1]);
       const w = Math.max(...xs) - Math.min(...xs),
         h = Math.max(...ys) - Math.min(...ys);
-      if (Math.min(w, h) > 50) {
+      // (not a long thin patch: that is a rub on its way)
+      if (Math.min(w, h) > Math.max(50, Math.max(w, h) * 0.3)) {
         xs = (Math.max(...xs) + Math.min(...xs)) / 2;
         ys = (Math.max(...ys) + Math.min(...ys)) / 2;
         toggleLook('ukiyo', [xs, ys]);
@@ -6287,7 +6286,6 @@ function tick() {
     h = d.getHours(),
     mm = String(d.getMinutes()).padStart(2, '0'),
     city = place();
-  const part = h < 12 ? 'in the morning' : h < 17 ? 'in the afternoon' : h < 21 ? 'in the evening' : 'at night';
   $('#clockBig').textContent = `${h % 12 || 12}:${mm}`;
   $('#clockPart').textContent = `${h < 12 ? 'am' : 'pm'} · ${city || 'your time'}`;
   let his = '';
@@ -6309,8 +6307,6 @@ function tick() {
     $('#hisTime').textContent = his24 ? `${ZH.clock.mine} · ${his24}` : ZH.clock.mine;
   }
   if (phaseChoice === 'auto') setPhase('auto');
-  const lt = $('#letterTime');
-  if (lt) lt.textContent = zhOn ? `${ZH.clock.now} ${h}:${mm}。` : `${h % 12 || 12}:${mm} ${part}${city ? ' in ' + city : ' where you are'}`;
 }
 // Who is here: this visitor and everyone presence knows of, on the pond and on the old desktop alike.
 let online = 0;
@@ -6537,7 +6533,7 @@ function tick1(raw) {
   stepSpider(dt);
   stepAir(dt);
   easePhase(dt);
-  if (!letterOpen() && !sheetOpen() && spider.alpha > 0.5 && T > bugAt) {
+  if (!sheetOpen() && spider.alpha > 0.5 && T > bugAt) {
     dropBug();
     bugAt = T + rnd(40, 75);
   }
@@ -6623,7 +6619,8 @@ function tick1(raw) {
   if (U.uMural) {
     gl.uniform1i(U.uMural, 10);
     gl.uniform3fv(U.uFace, muralFaces);
-    gl.uniform1f(U.uPic, picIn === look ? 1 : 0);
+    // (a look on its way out keeps its picture until it has gone)
+    gl.uniform1f(U.uPic, picIn === (look === 'water' ? top : look) ? 1 : 0);
   }
   gl.uniform1f(U.uSprite, koiSheets[look] && koiSheets[look].pic ? 1 : 0);
   gl.uniform2f(U.uRes, glc.width, glc.height);

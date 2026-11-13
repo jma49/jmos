@@ -8,13 +8,13 @@
 //   ascii       five letters within 3 s              keys      the keyboard
 //   ukiyo       stir once round                      moving    a full turn, wider than 50 px, not round the rim
 //   qinghua     once round the rim of the screen     moving    a full turn spanning most of the screen, near its edges
-//   dunhuang    rub back and forth over a spot       moving    four reversals along one line, thinner than 50 px
+//   dunhuang    rub back and forth over a spot       moving    four reversals along one line, in a thin patch
 //   blueprint   one long straight line               lift      over 320 px, straight
 //   relief      a zigzag of three peaks or more      lift      five sharp corners, travelling one way, wider than a rub
 //   stars       three taps far apart, within 1.5 s   lift      each over 150 px from the others
 //   monet       four taps in one place, within 1.8 s lift      all within 44 px of their middle
 //
-// A stir is at least 50 px across and a rub at most, so they can't both hold; a rim loop is a stir that
+// A rub's patch is thin (under 50 px, or under 0.3 of its length) and a stir's is not, so they can't both hold; a rim loop is a stir that
 // spans the screen; a zigzag swings at least 50 px and never turns round, and its corners are sharp, so a
 // wavy line is not one; a ruled line has no corner; the taps differ by how far apart.
 
@@ -67,7 +67,8 @@ export function straight(pts: Pt[], len = lengthOf(pts)) {
 export function loop(pts: Pt[], W: number, H: number, turn = turnOf(pts), len = lengthOf(pts)): 'ukiyo' | 'qinghua' | null {
   if (Math.abs(turn) <= Math.PI * 1.9 || len <= 260) return null;
   const e = ext(pts);
-  if (Math.min(e.w, e.h) <= 50) return null;
+  // (a patch that long and thin is a rub on its way, whatever its turns add up to)
+  if (Math.min(e.w, e.h) <= Math.max(50, Math.max(e.w, e.h) * THIN)) return null;
   if (e.w > W * 0.62 && e.h > H * 0.62) {
     const m = Math.max(90, Math.min(W, H) * 0.22),
       near = pts.filter(([x, y]) => Math.min(x, W - x, y, H - y) < m).length;
@@ -75,12 +76,19 @@ export function loop(pts: Pt[], W: number, H: number, turn = turnOf(pts), len = 
   }
   return 'ukiyo';
 }
-/** Rubbed: back and forth along one line, four reversals at least, each pass 24 px or more, in a thin patch. */
+// how thin a patch is a rub's and not a stir's: its breadth under this much of its length (or under 50 px)
+const THIN = 0.3;
+/**
+ * Rubbed: back and forth along one line, four reversals at least, each pass 24 px or more, in a thin
+ * patch. A hand rubs wider on a large screen and wanders as it goes, so the patch may be long, and as
+ * broad as its length allows.
+ */
 export function rub(pts: Pt[]): boolean {
   if (pts.length < 8) return false;
   const e = ext(pts),
-    k = e.w >= e.h ? 0 : 1;
-  if (Math.min(e.w, e.h) >= 50 || Math.max(e.w, e.h) < 60 || Math.max(e.w, e.h) > 320) return false;
+    k = e.w >= e.h ? 0 : 1,
+    long = Math.max(e.w, e.h);
+  if (Math.min(e.w, e.h) >= Math.max(50, long * THIN) || long < 60 || long > 720) return false;
   let dir = 0,
     turnAt = pts[0][k],
     far = pts[0][k],
@@ -114,12 +122,13 @@ export function zigzag(pts: Pt[]): boolean {
     travel = Math.max(e.w, e.h),
     swing = Math.min(e.w, e.h);
   if (travel < 180 || swing < 50) return false;
-  // it never doubles back along its way
-  const way = Math.sign(pts[pts.length - 1][k] - pts[0][k]);
+  // it never doubles back along its way (a hand's peaks lean a little, more on a long stroke)
+  const way = Math.sign(pts[pts.length - 1][k] - pts[0][k]),
+    back = Math.max(24, travel * 0.1);
   let lead = pts[0][k];
   for (const p of pts) {
     if ((p[k] - lead) * way > 0) lead = p[k];
-    else if ((lead - p[k]) * way > 24) return false;
+    else if ((lead - p[k]) * way > back) return false;
   }
   // where it turns across its way: the furthest point of each swing of 30 px or more
   const corners: number[] = [];
@@ -139,11 +148,13 @@ export function zigzag(pts: Pt[]): boolean {
       far = i;
     }
   });
-  // a corner is sharp if the heading turns by more than 62° within 16 px either side of it
+  // a corner is sharp if the heading turns by more than 46° within a short reach either side of it (16 px,
+  // more on a large zigzag, whose corners a hand rounds)
+  const span = Math.max(16, Math.min(40, swing * 0.2));
   const reach = (from: number, step: number): Pt => {
     let d = 0,
       i = from;
-    while (i + step >= 0 && i + step < pts.length && d < 16) {
+    while (i + step >= 0 && i + step < pts.length && d < span) {
       d += Math.hypot(pts[i + step][0] - pts[i][0], pts[i + step][1] - pts[i][1]);
       i += step;
     }
@@ -156,7 +167,7 @@ export function zigzag(pts: Pt[]): boolean {
       u = [p[0] - a[0], p[1] - a[1]],
       w = [b[0] - p[0], b[1] - p[1]],
       turn = Math.abs(Math.atan2(u[0] * w[1] - u[1] * w[0], u[0] * w[0] + u[1] * w[1]));
-    return turn > 1.08;
+    return turn > 0.8;
   });
   return sharp.length >= 5;
 }

@@ -40,7 +40,7 @@ async function targets() {
   const projects = await readdir(join(ROOT, 'src/content/projects'));
   const project = projects.find((f) => f.endsWith('.md'))?.replace(/\.md$/, '');
   // The pond (src/pages/index.astro, the home page), and each chapter by its address.
-  const pond = ['pond', ...['about', 'seals', 'music', 'notes', 'chat'].map((c) => `pond#${c}`)];
+  const pond = ['pond', ...['seals', 'music', 'notes', 'chat'].map((c) => `pond#${c}`)];
   return [...apps, project, 'dashboard', 'screensaver', ...pond].filter(Boolean);
 }
 
