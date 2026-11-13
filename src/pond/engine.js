@@ -2959,8 +2959,19 @@ function glide(change) {
 }
 const GLIDE_MS = 640;
 const setInk = (on, from) => setLook(on ? 'ink' : 'water', from || $('#inkBtn'));
+// The looks with a picture share one texture, so two of them can't be on the water at once: when one is
+// asked for while another still shows, that one draws back to the water first and the new one comes in
+// once it has gone (stepInk).
+let lookNext = null;
+const pictured = (l) => l in PICTURED;
 function setLook(name, from) {
   if (!LOOKS.includes(name) || name === look) return;
+  lookNext = null;
+  if (pictured(name) && [look, inkR > 0 ? top : 'water', inkR > 0 ? base : 'water'].some((l) => l !== name && pictured(l))) {
+    if (look !== 'water') setLook('water', from);
+    lookNext = [name, from];
+    return;
+  }
   if (name in PICTURED) {
     picLook = name;
     PICTURED[name]();
@@ -3119,7 +3130,11 @@ function stepInk(raw) {
     }
   } else if (inkR > 0) {
     inkR = Math.max(0, inkR - raw * inkMax * (0.4 + k * 1.3));
-    if (inkR <= 0) top = 'water';
+    if (inkR <= 0) {
+      top = 'water';
+      base = 'water';
+      if (lookNext) setLook(...lookNext);
+    }
   }
   const goal = inkOn ? (k < 0.5 ? 0.06 : 0.32) : look === 'glow' ? 0.7 : top === 'ink' && inkR > 0 ? 0.25 : 1;
   timeScale += (goal - timeScale) * Math.min(1, raw * (inkOn && k < 0.5 ? 9 : 1.6));
@@ -6017,7 +6032,8 @@ const HOLD = 1.2,
     }
     gest.len += d;
     P.push([x, y]);
-    if (P.length > 400) P.splice(1, 1);
+    // (a long stroke is thinned, not cut short: its beginning is part of what it means)
+    if (P.length > 480) for (let i = P.length - 2; i > 0; i -= 2) P.splice(i, 1);
     // the strokes that are rules of their own (gestures.ts): a rub over one spot, or once round the rim of the screen
     {
       const m = strokeMoving(P, W, H);
@@ -6035,7 +6051,8 @@ const HOLD = 1.2,
         ys = P.map((p) => p[1]);
       const w = Math.max(...xs) - Math.min(...xs),
         h = Math.max(...ys) - Math.min(...ys);
-      if (Math.min(w, h) > 50) {
+      // (not a long thin patch: that is a rub on its way)
+      if (Math.min(w, h) > Math.max(50, Math.max(w, h) * 0.3)) {
         xs = (Math.max(...xs) + Math.min(...xs)) / 2;
         ys = (Math.max(...ys) + Math.min(...ys)) / 2;
         toggleLook('ukiyo', [xs, ys]);
@@ -6623,7 +6640,8 @@ function tick1(raw) {
   if (U.uMural) {
     gl.uniform1i(U.uMural, 10);
     gl.uniform3fv(U.uFace, muralFaces);
-    gl.uniform1f(U.uPic, picIn === look ? 1 : 0);
+    // (a look on its way out keeps its picture until it has gone)
+    gl.uniform1f(U.uPic, picIn === (look === 'water' ? top : look) ? 1 : 0);
   }
   gl.uniform1f(U.uSprite, koiSheets[look] && koiSheets[look].pic ? 1 : 0);
   gl.uniform2f(U.uRes, glc.width, glc.height);
