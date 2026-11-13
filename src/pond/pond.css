@@ -784,20 +784,6 @@ button.more:hover {
   display: none;
 }
 
-/* ---------- the letter: what a visitor reads first, a sheet lying on the water ---------- */
-.sheet .prose p {
-  margin: 16px 0 0;
-  font-size: 16.5px;
-  line-height: 1.66;
-  color: var(--mist);
-}
-.sheet .prose p i {
-  font: italic 500 1.17em / 1 var(--display);
-}
-.sheet .prose .links {
-  margin-top: 24px;
-}
-
 .pal-wrap {
   position: absolute;
   inset: 0;
@@ -1132,11 +1118,6 @@ button.more:hover {
 }
 .songs li[data-now] b {
   color: var(--koi);
-}
-.fine {
-  margin-top: 18px !important;
-  font: 400 11px / 1.5 var(--mono);
-  color: var(--mist-faint) !important;
 }
 
 /* ---------- the title page ---------- */
@@ -2089,10 +2070,6 @@ button.more:hover {
 #pond[lang='zh'] .sheet .lede {
   font-size: 17.5px;
   line-height: 1.75;
-}
-#pond[lang='zh'] .sheet .prose p {
-  font-size: 19px;
-  line-height: 1.85;
 }
 #pond[lang='zh'] .sheet .notes q,
 #pond[lang='zh'] .sheet .signin {

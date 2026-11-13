@@ -4,7 +4,7 @@
 // 1280 × 800 (halved), and finish/<look>-phone.png: the title page and three chapters at 390 × 844.
 const { chromium } = require('playwright');
 const fs = require('node:fs');
-const SHEETS = ['seals', 'music', 'notes', 'chat', 'about'];
+const SHEETS = ['seals', 'music', 'notes', 'chat'];
 (async () => {
   const [, , dir, looks] = process.argv;
   const { serveDist } = await import(require('node:url').pathToFileURL(require('node:path').join(__dirname, '../../scripts/serve-dist.mjs')).href);

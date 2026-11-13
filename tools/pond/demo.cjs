@@ -117,7 +117,7 @@ const out = __dirname + '/demo/';
       await arrived(p, l);
       await shot(p, `${l}-title-en`);
       await lang(p, 'zh');
-      await p.evaluate(() => document.querySelector('[data-sheet=about]').click());
+      await p.evaluate(() => document.querySelector('[data-sheet=music]').click());
       await p.waitForTimeout(3000);
       await shot(p, `${l}-chapter-zh`);
       await p.keyboard.press('Escape');

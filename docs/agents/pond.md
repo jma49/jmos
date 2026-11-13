@@ -3,19 +3,19 @@
 The pond is the site's home page, at `/`; the desktop it replaced is at
 `/os` ([decision 0025](../decisions/0025-the-pond.md)). It's a full-bleed
 pond seen from above: a title page set on the water (a greeting, the
-contents), and chapters (About, Seals, Music, Notes, Chat)
+contents), and chapters (Seals, Music, Notes, Chat)
 that open as one tall sheet of glass. Everyone who visits is a koi.
 
 ## Where things are
 
 | File | What it holds |
 | --- | --- |
-| `src/pages/index.astro` | The markup. It hands the pond's words (`src/pond/content.ts`) to the script as JSON (`#pond-data`) and keeps a plain-text copy of the About chapter for screen readers and visitors without JavaScript. |
+| `src/pages/index.astro` | The markup. It hands the pond's words (`src/pond/content.ts`) to the script as JSON (`#pond-data`) and keeps a few plain sentences on what the page is for screen readers and visitors without JavaScript. |
 | `src/pond/engine.js` | Everything that moves: the water (a height field stepped on the CPU), the koi, lily pads, the 24 solar terms and the time of day, ice that cracks and breaks, boats, the dove's and spider's behaviour, the WebGL passes (the pond into a texture, then the glass over it), the chapters, the command bar, the sound effects, the opening. Its sections are marked `/* ===== … ===== */`. |
 | `src/pond/sprites.js` | The dove and the spider as rendered sprite sheets: which frame a moment calls for (`doveFrame()`, `spiderFrame()`), and how each look dresses the sheets (`dressed()`). `sprites.test.ts` holds the frames to the sheets' grids. |
 | `src/pond/music.ts` | The music: Ryuichi Sakamoto only, the songs `POND_MUSIC` in `content.ts` chooses first and the rest of his in the library the iPod plays (`/api/songs`, or `src/data/songs.json`), played with YouTube's player in a frame clipped to nothing. |
 | `src/pond/people.ts` | Accounts, presence, the guestbook's notes and the chat, through `src/os/social` (the same backend and rules as the desktop). |
-| `src/pond/content.ts` | The pond's wording: the About chapter, the page's and the chapters' words in Chinese and Japanese, and what the pond plays. |
+| `src/pond/content.ts` | The pond's wording: the page's and the chapters' words in Chinese and Japanese, and what the pond plays. |
 | `src/pond/pond.css` | The styles. |
 
 `engine.js` is plain JavaScript, ported from the
@@ -95,8 +95,8 @@ for; keep it true when the file changes.
 
   A new animation must be time-based (scale by `dt`), and anything that changes the picture without
   input must call `invalidate()`.
-- **Addresses:** a chapter is `#<chapter>` (`#about`, `#seals`, `#music`,
-  `#notes`, `#chat`).
+- **Addresses:** a chapter is `#<chapter>` (`#seals`, `#music`, `#notes`,
+  `#chat`).
 
 ## Ink and paper
 
@@ -1036,7 +1036,7 @@ end is for trying things: it shows with `?preview` in the address, or in a build
   browser with motion on and off, on a phone width, and in winter and
   summer (⌘K → Winter, Summer).
 - **A chapter:** `SHEETS`, `CHAPTERS` and `ORDER` in `engine.js` (the
-  numbers in `CHAPTERS` are the contents' and the keys 0 to 4), its row in
+  numbers in `CHAPTERS` are the contents' and the keys 1 to 4), its row in
   `index.astro`'s `.toc`; add it to
   `scripts/smoke.mjs`'s list of the pond's chapters too.
 - `npm run test:smoke` opens the pond and every chapter; `astro dev` has a

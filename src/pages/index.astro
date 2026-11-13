@@ -11,14 +11,12 @@ import '@fontsource/cormorant-garamond/latin-500-italic.css';
 import '../pond/brush.css';
 import '../pond/pond.css';
 import Layout from '../layouts/Layout.astro';
-import { profile } from '../content/site';
-import { ABOUT, JA, ZH } from '../pond/content';
+import { JA, ZH } from '../pond/content';
 
-const data = { about: ABOUT, zh: ZH, ja: JA };
-const plain = (html: string) => html.replace(/<[^>]+>/g, '').replace(/&amp;/g, '&');
+const data = { zh: ZH, ja: JA };
 ---
 
-<Layout bleed path="/" tabTitle="Jincheng's pond" title="Jincheng Ma: a pond" description="Jincheng Ma, a software engineer in the Bay Area. A pond seen from above: his music, a guestbook of paper boats and a chat, and everyone who visits is a koi.">
+<Layout bleed path="/" tabTitle="Jincheng's pond" title="Jincheng Ma: a pond" description="A pond seen from above. It can look more than one way: find each look and collect its seal. Everyone who visits is a koi.">
   <div id="pond" data-phase="day">
     <canvas id="gl" aria-hidden="true"></canvas>
     <canvas id="inkArt" aria-hidden="true"></canvas>
@@ -31,7 +29,7 @@ const plain = (html: string) => html.replace(/<[^>]+>/g, '').replace(/&amp;/g, '
       <p class="greet" id="greet" aria-live="polite"></p>
       <div class="lead" id="lead">
         <h1 class="hero rise" id="hero">Hello.</h1>
-        <p class="say rise">You're the white koi with the red spot. Press the water to feed the others. <button class="tlink" data-sheet="about">More about me</button></p>
+        <p class="say rise">You're the white koi with the red spot. Press the water to feed the others. <button class="tlink" data-sheet="seals">Find its other faces</button></p>
         <nav class="toc" id="toc" aria-label="Contents">
           <div class="row rise"><button class="go" data-sheet="seals"><i>01</i><b>Seals</b></button><span class="live"></span><em id="sealsN"></em></div>
           <div class="row rise">
@@ -124,8 +122,8 @@ const plain = (html: string) => html.replace(/<[^>]+>/g, '').replace(/&amp;/g, '
     </style>
   </noscript>
   <div class="pond-text">
-    <h2>About</h2>
-    {ABOUT.map((p) => <p>{plain(p)}</p>)}
-    <p><a href={profile.github}>GitHub</a> · <a href="/os">The old desktop</a></p>
+    <p>This page is a pond seen from above. Everyone who visits is a koi, and pressing the water feeds the others.</p>
+    <p>The pond can look more than one way: each look is found by a gesture, and finding one collects its seal. There is music to play, a guestbook whose notes cross the water as paper boats, and a chat.</p>
+    <p><a href="/os">The old desktop</a></p>
   </div>
 </Layout>
