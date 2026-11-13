@@ -35,6 +35,8 @@ import {
   sealMark,
   stamp,
   volumes,
+  walked,
+  WAY,
   writeAlbum
 } from './seals';
 import { FPS, IDLE_AFTER, due, learnBeat, simSteps } from './clock.js';
@@ -2963,13 +2965,17 @@ const setInk = (on, from) => setLook(on ? 'ink' : 'water', from || $('#inkBtn'))
 // The looks with a picture share one texture, so two of them can't be on the water at once: when one is
 // asked for while another still shows, that one draws back to the water first and the new one comes in
 // once it has gone (stepInk).
-let lookNext = null;
+let lookNext = null,
+  rubNext = false;
 const pictured = (l) => l in PICTURED;
 function setLook(name, from) {
   if (!LOOKS.includes(name) || name === look) return;
   lookNext = null;
   if (pictured(name) && [look, inkR > 0 ? top : 'water', inkR > 0 ? base : 'water'].some((l) => l !== name && pictured(l))) {
+    // (the way out is a change of look like any other, and would forget that a rubbing was asked for)
+    const rub = rubNext;
     if (look !== 'water') setLook('water', from);
+    rubNext = rub;
     lookNext = [name, from];
     return;
   }
@@ -2982,6 +2988,9 @@ function setLook(name, from) {
   if (name !== 'water' && name !== 'ink') loadType();
   const was = look;
   look = name;
+  // (the rubbing is the relief taken off on paper: it lasts while the relief does)
+  pond.toggleAttribute('data-rub', name === 'relief' && rubNext);
+  rubNext = false;
   // (the pads are painted ones in Monet's pond, and none lie under ink's painting)
   setTimeout(padsNow, 0);
   inkOn = name === 'ink';
@@ -5635,6 +5644,29 @@ function albumShown() {
   album = a;
   save('pond-seals', writeAlbum(a));
 }
+// The end (seals.ts, WAY): with the two volumes of looks full, their seals pressed in the album in the
+// order it keeps them turn the pond into a rubbing of the carved stone: the relief, taken off on paper.
+let way = [];
+document.addEventListener('click', (e) => {
+  const li = e.target.closest?.('#sheet .slots li[data-found][data-id]');
+  if (!li || !full(album, VOLS[0]) || !full(album, VOLS[1])) return;
+  way = walked(way, li.dataset.id);
+  // (a seal on the way answers the press; one off it does not)
+  if (way.length) {
+    li.dataset.step = '';
+    setTimeout(() => delete li.dataset.step, 450);
+    plip('stamp', 0.35);
+  }
+  if (way.length < WAY.length) return;
+  way = [];
+  closeSheet();
+  if (look === 'relief') pond.setAttribute('data-rub', '');
+  else {
+    rubNext = true;
+    setLook('relief', [W / 2, H / 2]);
+  }
+  reached('rubbing');
+});
 // A look on show carries a clue to the next look's gesture (seals.ts, NEXT) until that one is found: a
 // small mark in the look's own manner, laid in quietly once the look has come in all the way.
 const CLUES = {

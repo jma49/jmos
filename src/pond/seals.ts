@@ -53,8 +53,18 @@ export const VOLUMES: Volume[] = [
       { id: 'fest', chars: '节', shape: 'square', cut: 'red' },
       { id: 'dawn', chars: '晨', shape: 'square', cut: 'white' }
     ]
+  },
+  // The end: the pond as a rubbing taken from the carved stone. It has no gesture: once the two volumes
+  // of looks are full, their seals are pressed in the album in the order they are kept (WAY).
+  {
+    id: 'end',
+    seals: [{ id: 'rubbing', chars: '拓', shape: 'square', cut: 'white' }]
   }
 ];
+/** The way back through the album that opens the end: the looks' seals in the order the volumes keep them. */
+export const WAY: string[] = VOLUMES.slice(0, 2).flatMap((v) => v.seals.map((x) => x.id));
+/** The steps taken so far with one more seal pressed: the next on the way goes on, anything else starts again. */
+export const walked = (steps: string[], id: string): string[] => (id === WAY[steps.length] ? [...steps, id] : id === WAY[0] ? [id] : []);
 
 /**
  * The looks as two chains, a volume each: a look on show carries a clue to the next one's gesture, until
@@ -171,7 +181,7 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
   en: {
     title: 'Seals',
     lede: 'The pond can look more than one way. Each look has a seal, stamped the first time you find it.',
-    volumes: { painted: 'Painted', drawn: 'Drawn', hours: 'Occasions' },
+    volumes: { painted: 'Painted', drawn: 'Drawn', hours: 'Occasions', end: 'The end' },
     names: {
       ink: 'Ink',
       ukiyo: 'Ukiyo-e',
@@ -187,7 +197,8 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
       snow: 'Snow',
       moon: 'Full moon',
       fest: 'Festival',
-      dawn: 'Dawn'
+      dawn: 'Dawn',
+      rubbing: 'Rubbing'
     },
     hints: {
       ink: 'Stillness leaves a mark.',
@@ -204,12 +215,14 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
       snow: 'Some days the pond freezes over.',
       moon: 'Once a month the night is bright.',
       fest: 'A few days a year, the pond dresses up.',
-      dawn: 'Be here before the sun is.'
+      dawn: 'Be here before the sun is.',
+      rubbing: 'Fill the first two volumes. Then, here in the album, go back the way you came.'
     },
     thanks: {
       painted: 'Every painted one. Thank you for looking so closely.',
       drawn: 'Every drawn one. Thank you for trying things.',
-      hours: 'Every occasion. Thank you for coming back.'
+      hours: 'Every occasion. Thank you for coming back.',
+      end: 'That is all of it. Thank you for finding everything.'
     },
     koi: 'Your koi wears a seal from now on.',
     both: 'Every volume is full. The gold koi wears one too, to match.',
@@ -223,7 +236,7 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
   zh: {
     title: '集印册',
     lede: '池塘不止一种样子。每一种都有一方印，第一次遇见时盖上。',
-    volumes: { painted: '画', drawn: '线', hours: '时' },
+    volumes: { painted: '画', drawn: '线', hours: '时', end: '终' },
     names: {
       ink: '水墨',
       ukiyo: '浮世绘',
@@ -239,7 +252,8 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
       snow: '雪',
       moon: '满月',
       fest: '节日',
-      dawn: '清晨'
+      dawn: '清晨',
+      rubbing: '拓片'
     },
     hints: {
       ink: '停一停，会留下痕迹。',
@@ -256,12 +270,14 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
       snow: '有些日子，池塘会结冰。',
       moon: '每个月有一夜，特别亮。',
       fest: '一年里有几天，池塘会打扮。',
-      dawn: '比太阳早一点到。'
+      dawn: '比太阳早一点到。',
+      rubbing: '集满前两册，再在这册子里，按来路走一遍。'
     },
     thanks: {
       painted: '画的这一册集齐了。谢谢你看得这么仔细。',
       drawn: '线的这一册集齐了。谢谢你什么都试一试。',
-      hours: '时的这一册集齐了。谢谢你一次次回来。'
+      hours: '时的这一册集齐了。谢谢你一次次回来。',
+      end: '到这里就是全部了。谢谢你把它们都找到。'
     },
     koi: '你的锦鲤，从此带着一方印。',
     both: '每一册都满了。金色的那条也盖了一方，和你作伴。',
@@ -275,7 +291,7 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
   ja: {
     title: '集印帳',
     lede: '池の姿はひとつではありません。姿ごとに印がひとつあり、初めて出会ったときに押されます。',
-    volumes: { painted: '絵', drawn: '線', hours: '時' },
+    volumes: { painted: '絵', drawn: '線', hours: '時', end: '終' },
     names: {
       ink: '水墨',
       ukiyo: '浮世絵',
@@ -291,7 +307,8 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
       snow: '雪',
       moon: '満月',
       fest: '祭り',
-      dawn: '夜明け'
+      dawn: '夜明け',
+      rubbing: '拓本'
     },
     hints: {
       ink: 'じっとしていると、跡が残る。',
@@ -308,12 +325,14 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
       snow: '池が凍る日があります。',
       moon: '月に一度、夜が明るい。',
       fest: '年に数日、池は着飾ります。',
-      dawn: '日の出より先に。'
+      dawn: '日の出より先に。',
+      rubbing: '二冊をそろえたら、この帳の中で、来た道をもう一度。'
     },
     thanks: {
       painted: '絵の一冊がそろいました。じっくり見てくれて、ありがとう。',
       drawn: '線の一冊がそろいました。いろいろ試してくれて、ありがとう。',
-      hours: '時の一冊がそろいました。何度も来てくれて、ありがとう。'
+      hours: '時の一冊がそろいました。何度も来てくれて、ありがとう。',
+      end: 'これで全部です。すべて見つけてくれて、ありがとう。'
     },
     koi: 'あなたの鯉に、印がひとつ付きました。',
     both: 'どの冊もそろいました。金の鯉にも、おそろいの印を。',
@@ -363,7 +382,7 @@ export function albumHTML(a: Album, vols: Volume[], lang: Lang, fresh: string[] 
     return `<section class="vol"${done ? ' data-done' : ''}><header><i>${lang === 'en' ? roman[i] : `第${'一二三四五六'[i]}${lang === 'ja' ? '冊' : '册'}`}</i><b>${esc(w.volumes[v.id])}</b><em>${n} / ${v.seals.length}</em></header><div class="leaf"><ol class="slots">${v.seals
       .map((s) =>
         has(a, s.id)
-          ? `<li data-found>${sealMark(s)}<span class="nm">${esc(w.names[s.id])}</span><time datetime="${a.found[s.id]}">${dayText(a.found[s.id], lang)}</time></li>`
+          ? `<li data-found data-id="${s.id}">${sealMark(s)}<span class="nm">${esc(w.names[s.id])}</span><time datetime="${a.found[s.id]}">${dayText(a.found[s.id], lang)}</time></li>`
           : `<li>${sealBlank(s)}<span class="hint">${esc(w.hints[s.id])}</span></li>`
       )
       .join(
