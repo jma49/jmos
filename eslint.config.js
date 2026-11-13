@@ -4,7 +4,7 @@
 // boundaries between the OS, apps and applets (docs/agents/desktop.md),
 // that anything remembered in the browser goes through core/storage.ts,
 // that no block (a catch above all) is empty without a comment saying why,
-// and, in scripts/, ESLint's recommended rules. Formatting is Biome's
+// and, in scripts/ and the pond's plain JavaScript, ESLint's recommended rules. Formatting is Biome's
 // (biome.jsonc, `npm run format`). tests/eslint.test.ts
 // probes each rule.
 import js from '@eslint/js';
@@ -179,6 +179,14 @@ export default [
   {
     files: ['scripts/{smoke,perf-audit,capture-previews}.mjs'],
     languageOptions: { globals: globals.browser }
+  },
+  // The pond's engine and its helpers are plain JavaScript, which the type check does not read: the
+  // recommended rules are what catches an undefined or redeclared name there, or one left behind
+  // unused when something is taken out, before a visitor's browser does.
+  {
+    files: ['src/pond/**/*.{js,mjs}'],
+    languageOptions: { parser: tseslint.parser, globals: globals.browser },
+    rules: { ...js.configs.recommended.rules, 'no-unused-vars': ['error', { args: 'none', caughtErrors: 'none' }] }
   },
   // Storage can be missing, blocked or full, and every tab of a visitor
   // shares it: core/storage.ts handles both (AGENTS.md), so nothing else

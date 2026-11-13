@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { type Pt, type Tap, loop, rub, straight, strokeLifted, strokeMoving, tapsLook, zigzag } from './gestures';
+import { thrown, type Pt, type Tap, loop, rub, straight, strokeLifted, strokeMoving, tapsLook, zigzag } from './gestures';
 
 const W = 1280,
   H = 800;
@@ -160,6 +160,44 @@ describe('on a slant', () => {
   it('a slanted ruled line is still only a line, and a circle still a stir', () => {
     expect([...read(turned(ruled(), 40))]).toEqual(['blueprint']);
     expect([...read(circle(640, 400, 90))]).toEqual(['ukiyo']);
+  });
+});
+
+describe('a stone thrown', () => {
+  const flick: Pt[] = line([120, 620], [360, 572], 8);
+  it('is a short straight stroke let go fast, and skips further the faster it goes', () => {
+    const slow = thrown(flick, 0.2, W, H),
+      fast = thrown(flick, 0.06, W, H);
+    expect(slow?.skips.length).toBe(2);
+    expect(fast?.skips.length).toBeGreaterThanOrEqual(5);
+    // each skip is on along the throw, shorter than the last
+    const xs = fast!.skips.map((q) => q.x);
+    for (let i = 1; i < xs.length; i++) expect(xs[i]).toBeGreaterThan(xs[i - 1]);
+    for (let i = 2; i < xs.length; i++) expect(xs[i] - xs[i - 1]).toBeLessThan(xs[i - 1] - xs[i - 2]);
+  });
+  it('is not a slow stroke, a long one, a bent one or a tap', () => {
+    expect(thrown(flick, 0.5, W, H)).toBe(null);
+    expect(thrown(flick, 0.3, W, H)).toBe(null);
+    expect(thrown(ruled(), 0.1, W, H)).toBe(null);
+    expect(thrown(zigzagging(420, 430).slice(0, 20), 0.1, W, H)).toBe(null);
+    expect(
+      thrown(
+        [
+          [300, 300],
+          [302, 301],
+          [303, 302]
+        ],
+        0.05,
+        W,
+        H
+      )
+    ).toBe(null);
+  });
+  it('fits five skips on a phone, and is gone when it leaves the pond', () => {
+    const up: Pt[] = line([200, 760], [200, 600], 8);
+    expect(thrown(up, 0.05, 390, 844)?.skips.length).toBeGreaterThanOrEqual(5);
+    const out: Pt[] = line([1100, 400], [1260, 400], 8);
+    expect(thrown(out, 0.05, W, H)?.skips.length).toBe(0);
   });
 });
 

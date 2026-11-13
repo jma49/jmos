@@ -18,6 +18,7 @@
       "!src/data/**/*.json",
       // Written by src/pond/brush.test.ts from the font package's own stylesheet.
       "!src/pond/brush.css",
+      "!src/pond/brush-first.css",
       "!src/pond/kana.css",
       // Biome reads only an Astro file's frontmatter, not its markup.
       "!**/*.astro"

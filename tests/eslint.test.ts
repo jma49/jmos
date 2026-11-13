@@ -148,6 +148,17 @@ describe('a catch is never silently empty', () => {
   });
 });
 
+describe('the pond’s plain JavaScript gets ESLint’s recommended rules, in the browser', () => {
+  test('an undefined name, a redeclared one, or one left unused', async () => {
+    expect(await lint('src/pond/probe.js', 'missing();')).toContain("'missing' is not defined.");
+    expect(await lint('src/pond/probe.js', 'const unused = 1;')).toContain("'unused' is assigned a value but never used.");
+    expect(await lint('src/pond/probe.js', 'import { a } from "./x.js";\nconst a = 1;\nexport { a };')).not.toBe('');
+  });
+  test('the browser’s globals, and arguments or caught errors that go unused', async () => {
+    expect(await lint('src/pond/probe.js', 'export const f = (e) => document.title;\ntry {\n  f();\n} catch (err) {\n  // nothing to do\n}')).toBe('');
+  });
+});
+
 describe('the scripts get ESLint’s recommended rules, under Node', () => {
   test('an undefined name or an unused variable', async () => {
     expect(await lint('scripts/probe.mjs', 'console.log(missing);')).toContain("'missing' is not defined.");

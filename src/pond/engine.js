@@ -41,7 +41,7 @@ import {
 } from './seals';
 import { FPS, IDLE_AFTER, due, learnBeat, simSteps } from './clock.js';
 import { PERF, add, count, frameDone, span } from './perf.js';
-import { describe, rub, straight, strokeLifted, strokeMoving, tapsLook } from './gestures';
+import { describe, rub, strokeLifted, strokeMoving, tapsLook, thrown } from './gestures';
 import { crowdsPainting, underPainting } from './hang.js';
 import { paintingOf, seasonAmounts } from './seasons.js';
 import {
@@ -1766,20 +1766,27 @@ const passFor = () => (SID[base] === 0 && SID[top] > 0 ? OVER_AT + SID[top] : 0)
 // (what each pass took to build, for the ?gest readout)
 let passNote = '';
 function waterProg(part) {
-  // the whole pass and a look's own are asked for the first time they are needed
+  // a look's passes are asked for the first time they are needed
   if (!progs[part]) {
     progs[part] = mk(part >= OVER_AT ? fsPart(0, 0, part - OVER_AT) : part ? fsPart(2, part - 1) : fsPart(0), true);
     progAts[part] = performance.now();
   }
   const p = progs[part];
   if (progOK[part] === undefined) {
-    // (until it is built: the whole pass if that is, which draws anything; else the water, as it was)
-    if (pcx ? !gl.getProgramParameter(p, pcx.COMPLETION_STATUS_KHR) : performance.now() - progAts[part] < 1500) return part && progOK[0] ? progs[0] : prog;
+    if (pcx ? !gl.getProgramParameter(p, pcx.COMPLETION_STATUS_KHR) : performance.now() - progAts[part] < 1500) return standIn(part);
     progOK[part] = !!gl.getProgramParameter(p, gl.LINK_STATUS);
     if (progOK[part]) progU.set(p, locs(p));
     passNote += `\npass ${part} ${progOK[part] ? 'built' : 'FAILED'} in ${Math.round(performance.now() - progAts[part])} ms`;
   }
-  return progOK[part] ? p : part && progOK[0] ? progs[0] : prog;
+  return progOK[part] ? p : standIn(part);
+}
+// What draws in a pass's place until it is built (or if it never is). A look alone is what its pass over
+// the water draws once the look has come all the way, only for less work: so that one stands in, and the
+// look never falls back to the water it has just covered. Else the whole pass if there is one, else the
+// water.
+function standIn(part) {
+  const over = part > 1 && part < OVER_AT ? OVER_AT + part - 1 : -1;
+  return over > 0 && progOK[over] ? progs[over] : part && progOK[0] ? progs[0] : prog;
 }
 function tex(filter) {
   const t = gl.createTexture();
@@ -3153,6 +3160,8 @@ function stepInk(raw) {
     if (top === 'blueprint') inkR = inkMax * Math.min(1, k / 1.5);
     else inkR = inkMax * (1 - Math.exp(-k * ({ ink: 1.25, ukiyo: 1.1, glow: 1.6, ascii: 1.4 }[top] || 1.6))) * Math.min(1, 0.2 + k * 3);
     if (k > 4.5) inkR = inkMax;
+    // (its pass alone starts building as it comes in, to be ready when it has)
+    if (glOK && inkR > 0 && SID[top] > 0) waterProg(1 + SID[top]);
     if (inkR >= inkMax && base !== top) {
       base = top;
       reached(top);
@@ -5326,8 +5335,8 @@ const CLUES = {
   // the lilies: none yet. A line drawn over the painting reads as a fault, not a clue: it waits for a
   // painted one (asked for in the art brief).
   monet: '',
-  // the bowl: its mark under a film of dust
-  qinghua: '<i></i>',
+  // the bowl: none yet, for the same reason (a film of dust drawn in code sat on the type like a stain)
+  qinghua: '',
   // glow: one faint straight line by the light
   glow: '<i></i>',
   // the blueprint: five blanks waiting in the title block
@@ -5684,47 +5693,23 @@ const gest = {
   carryAt: 0
 };
 // Skipping stones: a short straight stroke let go fast throws a flat stone the way it was going. The
-// faster the throw, the more it skips; each skip is shorter and sooner than the last and leaves a ring
-// on the water. Five skips earn an idle seal. (A long straight stroke is the blueprint's ruled line, a
-// slow one is a brush at the wall's dust: a flick is neither, and is not kept to count with the next.)
-const flicked = (pts, dt) => {
-  const ln = pts.length > 2 && straight(pts);
-  return !!ln && ln.chord >= 70 && ln.chord <= 320 && dt < 0.4 && ln.chord / Math.max(dt, 0.02) > 1000;
-};
-function skipStone(pts, dt) {
-  const [ax, ay] = pts[0],
-    [bx, by] = pts[pts.length - 1],
-    chord = Math.hypot(bx - ax, by - ay),
-    speed = chord / Math.max(dt, 0.02),
-    ux = (bx - ax) / chord,
-    uy = (by - ay) / chord,
-    skips = Math.max(2, Math.min(9, Math.round(speed / 520)));
-  if (GEST) gestSay(`${describe(pts, W, H)}\n→ a stone, ${Math.round(speed)} px/s, ${skips} skips`);
+// faster the throw, the more it skips (thrown() in gestures.ts has the rule); each skip leaves a ring on
+// the water. Five skips earn an idle seal. A flick is not kept to count with the next stroke.
+function skipStone(pts, t) {
+  if (GEST) gestSay(`${describe(pts, W, H)}\n→ a stone, ${Math.round(t.speed)} px/s, ${t.skips.length} skips`);
   gest.pts = [];
   gest.carry = null;
-  let x = bx,
-    y = by,
-    // (the first skip is at most a fifth of the pond's short side, so five fit on a phone too)
-    hop = Math.max(50, Math.min(Math.max(60, Math.min(W, H) * 0.2), speed * 0.085)),
-    wait = 90,
-    n = 0;
+  let n = 0;
   const next = () => {
-    x += ux * hop;
-    y += uy * hop;
-    // off the pond, or out of skips: it sinks where it is
-    if (x < 0 || y < 0 || x > W || y > H) return;
-    n++;
-    const last = n >= skips;
-    drop(x, y, last ? 3 : 2.1 - n * 0.1, last ? 0.9 : 0.55 - n * 0.03);
+    const q = t.skips[n++],
+      last = n >= t.skips.length;
+    drop(q.x, q.y, last ? 3 : 2.1 - n * 0.1, last ? 0.9 : 0.55 - n * 0.03);
     plip('drop', last ? 0.9 : 0.5);
     invalidate();
     if (n === 5) reached('skip');
-    if (last) return;
-    hop *= 0.74;
-    wait = Math.max(70, wait * 1.12 + hop * 0.5);
-    setTimeout(next, wait);
+    if (!last) setTimeout(next, t.skips[n].wait);
   };
-  setTimeout(next, wait);
+  if (t.skips.length) setTimeout(next, t.skips[0].wait);
 }
 // how long a lifted stroke still counts with the next, in milliseconds
 const CARRY = 2200;
@@ -5849,7 +5834,7 @@ const HOLD = 1.2,
           toggleLook(t, [at.reduce((a, q) => a + q.x, 0) / at.length, at.reduce((a, q) => a + q.y, 0) / at.length]);
         }
       }
-    } else if (flicked(drawn, dt)) return void skipStone(drawn, dt);
+    } else if (thrown(drawn, dt, W, H)) return void skipStone(drawn, thrown(drawn, dt, W, H));
     else if (strokeLifted(drawn) === 'relief') toggleLook('relief', [x, y]);
     else if (GEST && drawn.length > 1) gestSay(`${describe(drawn, W, H)}\n→ nothing (lifted after ${dt.toFixed(1)} s)`);
     // a stroke that meant nothing by itself is kept a moment, in case it is one of several brushed over a spot
@@ -6540,6 +6525,23 @@ settled.then(() => {
   padsNow();
   invalidate();
 });
+// Once the pond has been still a while, the passes of the looks this visitor is likely to find next are
+// built ahead, one at a time, so that the first arrival does not have to wait for its pass. Only where
+// passes are built off the main thread (KHR_parallel_shader_compile), and only while the page is seen.
+settled.then(() =>
+  setTimeout(() => {
+    if (!glOK || !pcx) return;
+    const ahead = WAY.filter((id) => !hasSeal(album, id))
+      .slice(0, 3)
+      .map((id) => OVER_AT + SID[id]);
+    const t = setInterval(() => {
+      if (document.hidden) return;
+      if (!ahead.length) return void clearInterval(t);
+      waterProg(ahead[0]);
+      if (progOK[ahead[0]] !== undefined) ahead.shift();
+    }, 1200);
+  }, 5000)
+);
 settled.then(loadSongs);
 settled.then(() => hintSoon(20000));
 // The weather where the visitor is: once the pond has settled, so it never holds up the title page; again

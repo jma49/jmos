@@ -808,14 +808,17 @@ is most of it.
    (round, 朱), 图 (square, 白), 字 (square, 朱), 星 (round, 白), 刻 (square, 白, for the relief),
    锦程 (tall, 白, 锦 over 程), one cell empty. Tall is 3 : 5. Used in the album, the stamp and
    under the solar term.
-9. **Asked of the local thread: the lilies' clue, painted.** In Monet's pond a small mark should
-   point to the porcelain bowl's gesture (once round the rim). Drawn in code over the painting it
-   read as a fault, so there is none for now. Wanted: a file named clue.webp in the Monet folder under `public/pond/`, about 320 × 240
-   with alpha, one lily pad seen from above in the painting's own hand and palette, its rim alone
-   picked out in the bowl's cobalt (`#1c3f9a`) as a loaded brush would lay it, edges feathered to
-   nothing so it sits in the canvas. The same goes for any look whose clue should be a picture
-   and not a line: say so here when one is made (`CLUES` in `engine.js` holds what each look
-   shows now).
+9. **Asked of the local thread: two clues, painted.** A look on show carries a small mark that
+   points to the next look's gesture. Drawn in code over a painting two of them read as faults, so
+   those two looks carry none for now (`CLUES` in `engine.js` holds what each look shows):
+   - Monet's pond, pointing to the bowl (once round the rim): a file named clue.webp in the Monet
+     folder under `public/pond/`, about 320 × 240 with alpha, one lily pad seen from above in the
+     painting's own hand and palette, its rim alone picked out in the bowl's cobalt (`#1c3f9a`) as a
+     loaded brush would lay it, edges feathered to nothing.
+   - The porcelain bowl, pointing to Dunhuang (rub the dust off): clue.webp in the bowl's folder,
+     about 240 × 240 with alpha, a reign mark in cobalt as on the foot of a bowl, half hidden under a
+     film of ochre dust with a few strokes wiped through it, edges feathered to nothing.
+
 8. **Asked of the local thread: five more seals, for the volume of occasions** (`hours` in `VOLUMES`, `seals.ts`). A second sheet `seals-2.webp` in
    `public/pond/ink/`, 1024 × 512, cells of 256, 4 × 2, cut and coloured exactly as `seals.webp` is
    (same face, same vermilion `#B8382A`, the tone in the alpha, square and round 232 across and

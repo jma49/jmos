@@ -1,0 +1,10 @@
+/* The pond's first screen in the brush: written by scripts/pond-first-brush.mjs. */
+@font-face {
+  font-family: 'Zhi Mang Xing';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  size-adjust: 116%;
+  src: url(/pond/type/brush-first.woff2) format('woff2');
+  unicode-range: U+4e2d,U+51ac,U+5206,U+5858,U+58a8,U+5904,U+590f,U+5927,U+5bd2,U+5c0f,U+60ca,U+65e5,U+660e,U+6625,U+6691,U+6c34,U+6c60,U+6e05,U+6ee1,U+753b,U+767d,U+79cb,U+79cd,U+7a0b,U+7acb,U+81f3,U+8292,U+86f0,U+8c37,U+9526,U+964d,U+96e8,U+96ea,U+971c,U+9732;
+}
