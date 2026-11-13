@@ -119,9 +119,15 @@ languages). The first time a look comes in all the way (`reached()` in `engine.j
 gesture, key or command, its seal is stamped in the corner above the controls, in the look's own manner
 (`#pond[data-look] .stamp` in `pond.css`), with a soft thud; under reduced motion it only appears.
 
-- **Three volumes.** Two hold the looks, five each. The third, `hours`, holds five seals for an
+- **Four volumes.** Two hold the looks, five each. The third, `hours`, holds five seals for an
   occasion and not a look (the rain, snow, the full moon, a festival, the dawn): `occasions()` in
   `engine.js` stamps one when the pond is in that state while someone is there.
+- **The end.** The fourth volume holds one seal, for the pond as a rubbing taken from the carved
+  stone. It has no gesture: once the two volumes of looks are full, their seals pressed in the album
+  in the order it keeps them (`WAY` and `walked()` in `seals.ts`; the click handler by `let way` in
+  `engine.js`) bring in the relief with `data-rub` on `#pond`, which turns every layer of it to ink
+  and paper under a dabbed pad's mottle (`#pond[data-rub]` in `newlooks.css`). It is the relief with
+  a filter over it, not a look of its own, and it lasts until the look changes.
 - **A chain of clues.** A look on show carries a small mark that points to the next look's gesture
   (`NEXT` and `clueFor()` in `seals.ts`, `CLUES` and `clueNow()` in `engine.js`, `.clue` in
   `pond.css`), laid in a few seconds after the look has come, until that next seal is found.
@@ -946,7 +952,13 @@ air) and ASCII (the pond in characters).
   - Monet: four taps in one place; 青花: once round the rim of the screen; Dunhuang: rub back and
     forth over a spot; the star chart: three taps far apart (the table is in `gestures.ts`);
   - ASCII: type five letters that aren't shortcuts within 3 s (each
-    lands on the water at the pointer). It needs a keyboard: a phone has no way to it.
+    lands on the water at the pointer); or, where there are no keys, tap five times in a row along
+    a level line within 3 s.
+  - A rub and a zigzag are read along the stroke's own line (`aligned()` in `gestures.ts`), since a
+    hand draws on a slant; a rub may be brushed in several strokes lifted within about two seconds
+    of each other (`gest.carry` in `engine.js`).
+  - With `?gest` in the address, each stroke is shown in a corner as the rules read it
+    (`describe()` in `gestures.ts`): for when a gesture won't take on someone's machine.
 
   In a look, a press on the gold koi (mine) brings the water back, from
   the koi, before whatever lies over it.

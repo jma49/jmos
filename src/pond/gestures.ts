@@ -6,6 +6,7 @@
 //   ink         press and hold still, 1.2 s          timer     no movement past 8 px
 //   glow        one tap on the light on the water    lift      a tap, at the light
 //   ascii       five letters within 3 s              keys      the keyboard
+//               or five taps in a row, within 3 s    lift      each a step on from the last, along a level line
 //   ukiyo       stir once round                      moving    a full turn, wider than 50 px, not round the rim
 //   qinghua     once round the rim of the screen     moving    a full turn spanning most of the screen, near its edges
 //   dunhuang    rub or brush over a spot             moving    four passes along one line (any slant), in a thin patch, lifted or not
@@ -230,11 +231,19 @@ export function describe(pts: Pt[], W: number, H: number): string {
     `line ${ln && ln.chord > 320 ? 'YES' : 'no'}${ln ? `: ${n(ln.chord)} px (320 needed)` : ''}; loop ${loop(pts, W, H) || 'no'}`
   ].join('\n');
 }
-/** What the taps so far mean, the newest last: three far apart (a triangle of stars), or four in one place (dabs of paint). */
-export function tapsLook(taps: Tap[]): 'stars' | 'monet' | null {
+/** What the taps so far mean, the newest last: three far apart (a triangle of stars), four in one place (dabs of paint), or five in a row (letters, without keys). */
+export function tapsLook(taps: Tap[]): 'stars' | 'monet' | 'ascii' | null {
   const now = taps.length ? taps[taps.length - 1].t : 0,
     three = taps.slice(-3),
-    four = taps.slice(-4);
+    four = taps.slice(-4),
+    five = taps.slice(-5);
+  // five in a row, each a step on from the last along a level line: five letters typed with a finger, for
+  // where there are no keys. The steps are closer than stars are far, and further than dabs are near.
+  if (five.length === 5 && now - five[0].t <= 3) {
+    const way = Math.sign(five[4].x - five[0].x),
+      level = Math.max(...five.map((q) => q.y)) - Math.min(...five.map((q) => q.y));
+    if (way && level <= 70 && five.every((q, i) => i === 0 || ((q.x - five[i - 1].x) * way >= 34 && (q.x - five[i - 1].x) * way <= 140))) return 'ascii';
+  }
   if (three.length === 3 && now - three[0].t <= 1.5 && three.every((a, i) => three.every((b, j) => i === j || Math.hypot(a.x - b.x, a.y - b.y) > 150)))
     return 'stars';
   if (four.length === 4 && now - four[0].t <= 1.8) {

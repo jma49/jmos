@@ -189,6 +189,18 @@ describe('taps', () => {
     expect(tapsLook(dabs.slice(0, 3))).toBe(null);
     expect(tapsLook(far.slice(0, 2))).toBe(null);
   });
+  it('five in a row are letters typed with a finger, and nothing else', () => {
+    const row = (x: number, y: number, step: number): Pt[] => [0, 1, 2, 3, 4].map((i) => [x + i * step, y + (i % 2) * 8]);
+    expect(tapsLook(taps(row(200, 500, 60)))).toBe('ascii');
+    expect(tapsLook(taps(row(600, 500, -60)))).toBe('ascii');
+    // four of them are not yet anything; steps as far apart as stars are stars; all in one place are dabs
+    expect(tapsLook(taps(row(200, 500, 60).slice(0, 4)))).toBe(null);
+    expect(tapsLook(taps(row(200, 500, 170)))).not.toBe('ascii');
+    expect(tapsLook(taps(row(200, 500, 6)))).not.toBe('ascii');
+    // too slow, or wandering up and down
+    expect(tapsLook(taps(row(200, 500, 60), 0.9))).toBe(null);
+    expect(tapsLook(taps([0, 1, 2, 3, 4].map((i) => [200 + i * 60, 500 + i * 30] as Pt)))).toBe(null);
+  });
   it('one press, or two, is only feeding', () => {
     expect(tapsLook(taps([[500, 500]]))).toBe(null);
     expect(

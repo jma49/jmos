@@ -5668,12 +5668,13 @@ const HOLD = 1.2,
       const [gx, gy] = glintAt();
       if (Math.hypot(x - gx, y - gy) < 46) toggleLook('glow', [gx, gy]);
       else {
-        // taps: three far apart join as a triangle of stars; four in one place are dabs of paint
+        // taps: three far apart join as a triangle of stars; four in one place are dabs of paint; five in a
+        // row are letters, where there are no keys
         const now = performance.now() / 1000;
-        gest.taps = [...(gest.taps || []).filter((q) => now - q.t < 2), { t: now, x, y }];
+        gest.taps = [...(gest.taps || []).filter((q) => now - q.t < 3), { t: now, x, y }];
         const t = tapsLook(gest.taps);
         if (t) {
-          const at = t === 'stars' ? gest.taps.slice(-3) : gest.taps.slice(-4);
+          const at = gest.taps.slice(t === 'stars' ? -3 : t === 'ascii' ? -5 : -4);
           gest.taps = [];
           toggleLook(t, [at.reduce((a, q) => a + q.x, 0) / at.length, at.reduce((a, q) => a + q.y, 0) / at.length]);
         }

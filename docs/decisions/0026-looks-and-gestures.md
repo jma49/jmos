@@ -38,7 +38,7 @@ it can draw well, and drop the rest.
   alone offered and is still wanted has a place of its own ("Clear my
   seals" is in the album; the account is reached from the chat); forcing
   a season, the rain or a time of day, calling the dove, and looks by
-  name are gone. ASCII, typed, has no way in on a phone.
+  name are gone. ASCII, typed, is also five taps in a row, for a phone.
 - The language is its own switch: English, 中文 or 日本語. Chinese stays in
   the brush. Japanese is set in Yuji Syuku and Shippori Mincho, with
   M PLUS 1 Code in ASCII and Klee One in blueprint.
