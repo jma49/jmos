@@ -59,7 +59,7 @@ Every look is live. "Preview only" marks what exists only in a build with `PUBLI
 
 | Look | State | Pictures in use | Delivered, not used | Wrong or unverified |
 | --- | --- | --- | --- | --- |
-| Water | Live. Unchanged but for the seal on a koi. In a preview build the dove and the spider are sprites. | `water/dove`, `water/spider` (preview only; placeholders, being redone), `water/lilies-768` (preview only) | none | Petals and the dragonfly are still drawn in code. The pictured pads were seen in summer and autumn at 1280 × 800; shipping them means 77 KB more on every visit, once the pond has settled. The sprites were seen in frame sequences in the water, ink and the blueprint (flight, landing, sitting, preening, take-off); the other looks' dress was made but not looked at. The spider reads as a dark soft shape on its pad, as the model did. |
+| Water | Live. Unchanged but for the seal on a koi. The dove and the spider are sprites. | `water/dove-v2-1` to `-3`, `water/spider-v2-1` to `-3`, `water/lilies-768` (preview only) | none | Petals and the dragonfly are still drawn in code. The pictured pads were seen in summer and autumn at 1280 × 800; shipping them means 77 KB more on every visit, once the pond has settled. The sprites were seen in frame sequences in the water, ink and the blueprint (flight, landing, sitting, preening, take-off); the other looks' dress was made but not looked at. The spider reads as a dark soft shape on its pad, as the model did. |
 | Ink | Live; Jincheng's favourite and the benchmark. Seasonal motif is now a painting; seasons put right. | `ink/willow`, `lotus`, `reeds`, `plum` | none | Checked at 1280, 1440, 2000 and phone in summer only. Dry lotus stems asked for, not drawn. The seals are still the brush face, not seal script. |
 | Ukiyo-e | Live. Its arrival has a carved-wave front. In a preview build: the great crests on that front, wavelets round a press, painted koi. | `ukiyo/waves`, `koi` + mask (preview only) | none | The crests were judged in a 640 × 400 frame sequence only. The press's wavelets are small beside its two swell rings; whether the rings should thin is a matter of taste on a real screen. |
 | Glow | Live. Goes dark, then relights in rings. | none wanted | none | Seen once in a frame sequence. |
@@ -113,10 +113,11 @@ spider as sprites, with three.js and `life.js` no longer fetched; ukiyo-e's cres
 chart's plate and figures; Dunhuang's halo, its koi, and nothing painted under the controls; Monet's
 koi moved to the common sheet. What is left of those:
 
-1. **Dove and spider: the revised renders (approved; asked of the local thread).** The pond draws the two from the first sprite sheets in
-   every build, and three.js and the models are gone. When the `-v2` sheets come: point `SHEETS` in
-   `sprites.js` at them, set the frame counts and order in `doveFrame()` and `spiderFrame()` (and in
-   `sprites.test.ts`), and look at every look's dress with `tools/pond/life.cjs`.
+1. **Dove and spider: the second renders are in.** The pond draws the two from the `-v2` sheets
+   (three files each, packed into one picture in `sprites.js`); the first sheets are deleted. Seen
+   with `tools/pond/life.cjs` on the water and in ukiyo-e only; the other dresses were not looked
+   at again. The spider is darker than the first one and hard to make out on a dark pad. The
+   dove's walking row and the spider's turned frames are not played.
 2. **Everything ships**, by Jincheng's word: every look with its own pictures, the water's own
    pictures, the sprites, and the later details (moon, wind, festivals, fireflies, ambience). Only
    the panel that forces each state is behind `?preview`.

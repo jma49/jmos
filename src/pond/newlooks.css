@@ -240,12 +240,21 @@
   #pond[data-look='relief'] .lead {
     padding-top: calc(var(--frame) + 4px);
   }
+  /* (the language switch sits a row above the controls on a phone: it is lifted with them) */
+  #pond[data-look='qinghua'] .br .seg,
+  #pond[data-look='dunhuang'] .br .seg,
+  #pond[data-look='relief'] .br .seg {
+    bottom: calc(var(--frame) + 62px);
+  }
   /* (the bowl's rim runs down the sides too) */
   #pond[data-look='qinghua'] .home {
     padding-inline: calc(var(--frame) + 8px);
   }
   #pond[data-look='qinghua'] .hud {
     padding-inline: calc(var(--frame) + 6px);
+  }
+  #pond[data-look='qinghua'] .br .seg {
+    right: calc(var(--frame) + 6px);
   }
   #pond[data-look='qinghua'] .veil {
     padding: calc(var(--frame) + 2px);
