@@ -68,6 +68,10 @@ async function check(target) {
   }, applets);
   const page = await context.newPage();
   const problems = [];
+  // What is still being fetched, so that a page that never finishes loading says what it waited for.
+  const pending = new Set();
+  page.on('request', (r) => pending.add(r));
+  for (const done of ['requestfinished', 'requestfailed']) page.on(done, (r) => pending.delete(r));
   page.on('pageerror', (e) => problems.push(`uncaught: ${e.message}`));
   page.on('console', (m) => {
     // Only this site's errors count: third-party frames (YouTube's player)
@@ -91,7 +95,10 @@ async function check(target) {
       : ['dashboard', 'screensaver'].includes(target) || (await page.locator('.os-window, .os-fullscreen').count()) > 0;
     if (!opened) problems.push(pond ? 'showed no pond or chapter' : 'opened no window');
   } catch (e) {
-    problems.push(`failed to load: ${e.message}`);
+    const waiting = [...pending].map((r) => `${r.resourceType()} ${r.url().slice(0, 140)}`);
+    problems.push(
+      `failed to load: ${e.message}${waiting.length ? `\n    still fetching:\n      ${waiting.join('\n      ')}` : '\n    nothing was still being fetched'}`
+    );
   } finally {
     await context.close();
   }
