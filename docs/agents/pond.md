@@ -100,7 +100,7 @@ for; keep it true when the file changes.
 
 ## Ink and paper
 
-The 墨 switch (bottom right; I; ⌘K "Ink and paper") turns the pond into
+The 墨 switch (bottom right; I; "Ink and paper" in the command bar) turns the pond into
 an ink painting. A drop falls from the switch and its front spreads with
 a ragged, fibrous edge (`uInk`: radius, origin, state); what it has
 passed is drawn as xuan paper, the fish as washes with a dark edge and
@@ -116,16 +116,25 @@ paper; a new pane or control needs its ink colours there too.
 
 Each look has a seal (`seals.ts`: the seals, the volumes, the album's state and its words in the three
 languages). The first time a look comes in all the way (`reached()` in `engine.js`, from `stepInk`), by
-gesture, key or ⌘K, its seal is stamped in the corner above the controls, in the look's own manner
+gesture, key or command, its seal is stamped in the corner above the controls, in the look's own manner
 (`#pond[data-look] .stamp` in `pond.css`), with a soft thud; under reduced motion it only appears.
 
-- The album is the first chapter in the contents (`#seals`, ⌘K "Seals"), there from the first visit;
+- **Three volumes.** Two hold the looks, five each. The third, `hours`, holds five seals for an
+  occasion and not a look (the rain, snow, the full moon, a festival, the dawn): `occasions()` in
+  `engine.js` stamps one when the pond is in that state while someone is there.
+- **A chain of clues.** A look on show carries a small mark that points to the next look's gesture
+  (`NEXT` and `clueFor()` in `seals.ts`, `CLUES` and `clueNow()` in `engine.js`, `.clue` in
+  `pond.css`), laid in a few seconds after the look has come, until that next seal is found. The
+  command bar offers a look only once its seal is in the album, so a look is found on the water.
+- **The album as a picture.** "Save as a picture" under the leaves draws the album on a canvas
+  (`albumPicture()`) and saves it as a PNG.
+- The album is the first chapter in the contents (`#seals`, "Seals" in the command bar), there from the first visit;
   its row says how many seals are found of how many there are (`#sealsN`, written by `sealsEntry()`).
   Inside, a leaf of paper for each volume (册), found seals in vermilion with the day, the rest an
   outline and a hint that points at the gesture without saying it. Its small mark also sits under the
   clock's lines once there is a seal, or on a later visit by someone the line on the water didn't reach.
 - A full volume carries the large 锦程 seal and a line of thanks. The first volume full, the visitor's
-  koi wears a small seal; every volume full, the gold koi does too. ⌘K then offers "Clear my seals".
+  koi wears a small seal; every volume full, the gold koi does too. The command bar then offers "Clear my seals".
 - Someone who has found no look is shown one line on the water, once: 20 s after the pond settles, or a
   moment after their first press, with the gold koi coming over. Never over a chapter, the command bar
   or the title's type.
@@ -143,7 +152,7 @@ The state of this work, what is left and what was learnt along the way is in
 Five looks came after the first six (`newlooks.js`, `newlooks.css`): Monet's water lilies in oil,
 blue-and-white porcelain (青花), a Dunhuang mural (敦煌), a star chart (星图) and an Egyptian relief
 (carved and painted limestone; it took the place of a school blackboard, which was turned down). They
-ship like the others: found by their gestures or by searching ⌘K, each with its seal, each drawn from
+ship like the others: found by their gestures or by their name in the command bar once their seal is found, each with its seal, each drawn from
 its own pictures, which are fetched only when the look is first asked for. The water look has its own
 pictures too (its lily pads, drift and dragonfly), fetched once the pond has settled and there is
 something of theirs to draw.
@@ -777,8 +786,7 @@ is most of it.
    (round, 朱), 图 (square, 白), 字 (square, 朱), 星 (round, 白), 刻 (square, 白, for the relief),
    锦程 (tall, 白, 锦 over 程), one cell empty. Tall is 3 : 5. Used in the album, the stamp and
    under the solar term.
-8. **Asked of the local thread: five more seals, for a trial volume of occasions** (preview builds
-   only for now: `hours` in `VOLUMES`, `seals.ts`). A second sheet `seals-2.webp` in
+8. **Asked of the local thread: five more seals, for the volume of occasions** (`hours` in `VOLUMES`, `seals.ts`). A second sheet `seals-2.webp` in
    `public/pond/ink/`, 1024 × 512, cells of 256, 4 × 2, cut and coloured exactly as `seals.webp` is
    (same face, same vermilion `#B8382A`, the tone in the alpha, square and round 232 across and
    centred): row 1 雨 (square, 白), 雪 (round, 白), 月 (round, 朱), 节 (square, 朱); row 2 晨
@@ -886,7 +894,7 @@ green `#5E8F6A`, red ochre `#A8482C`, yellow `#D6A23E`, black line; transparent 
 ## Languages
 
 The language is chosen apart from the look: the En / 中 / 日 segments
-beside 墨 (L steps through them; ⌘K too) turn the pond's words to plain,
+beside 墨 (L steps through them; the command bar too) turn the pond's words to plain,
 natural Chinese, set in the brush, or plain Japanese, and back: the
 greeting, the contents, the clock and every chapter. It's remembered (`pond-lang`); a first visit takes the
 browser's language. The words are `ZH` and `JA` in `content.ts`;
@@ -933,11 +941,11 @@ air) and ASCII (the pond in characters).
   - Monet: four taps in one place; 青花: once round the rim of the screen; Dunhuang: rub back and
     forth over a spot; the star chart: three taps far apart (the table is in `gestures.ts`);
   - ASCII: type five letters that aren't shortcuts within 3 s (each
-    lands on the water at the pointer), or "ascii" or "text" in ⌘K on a
+    lands on the water at the pointer), or "ascii" or "text" in the command bar on a
     phone.
 
   In a look, a press on the gold koi (mine) brings the water back, from
-  the koi, before whatever lies over it. ⌘K finds the looks when
+  the koi, before whatever lies over it. The command bar finds the looks, once found, when
   searched, and never lists them.
 - **What a look leaves out:** the seasons' things show only where the look's manner has a place for
   them (`NEW_WITHOUT` in `newlooks.js`): no lily pads, dragonflies or fireflies on the star chart; no
@@ -950,7 +958,7 @@ air) and ASCII (the pond in characters).
   - in ASCII as falling `|` and `/`;
   - on the star chart as a shower of meteors, with nothing falling on the water.
 
-  Glow and blueprint hold it off, and the ⌘K rain command is hidden in a
+  Glow and blueprint hold it off, and the command bar's rain command is hidden in a
   look. In ukiyo-e the swell's bands and foam follow only large crests,
   so the rain's rings never cut them up.
 - **Sound:** each look has its own sounds (`lookSound()`):
@@ -997,8 +1005,8 @@ What the conditions do (`effectsOf()`):
 - The time of day follows the place's own sun (`phaseAt()`).
 - South of the equator the season the pond shows is half a year on (`seasonOf()`). The solar term's
   name stays the calendar's.
-- A visitor's own ⌘K rain wins until they reload.
-- ⌘K says the weather where they are.
+- A visitor's own rain from the command bar wins until they reload.
+- The command bar says the weather where they are.
 - If anything fails there is no weather, and nothing is said.
 
 **Privacy:** the place goes only to Open-Meteo, to ask for its weather, and is kept only in this
@@ -1034,7 +1042,7 @@ end is for trying things: it shows with `?preview` in the address, or in a build
   words are in `seals.ts`.
 - **Something on the water:** its section in `engine.js`. Check it in a
   browser with motion on and off, on a phone width, and in winter and
-  summer (⌘K → Winter, Summer).
+  summer (the command bar: Winter, Summer).
 - **A chapter:** `SHEETS`, `CHAPTERS` and `ORDER` in `engine.js` (the
   numbers in `CHAPTERS` are the contents' and the keys 1 to 4), its row in
   `index.astro`'s `.toc`; add it to

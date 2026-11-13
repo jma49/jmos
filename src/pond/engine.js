@@ -21,6 +21,7 @@ import {
   albumHTML,
   allFull,
   clearSeals,
+  clueFor,
   count as sealCount,
   dayOf,
   entryShows,
@@ -38,7 +39,7 @@ import {
 } from './seals';
 import { FPS, IDLE_AFTER, due, learnBeat, simSteps } from './clock.js';
 import { PERF, add, count, frameDone, span } from './perf.js';
-import { strokeLifted, strokeMoving, tapsLook } from './gestures';
+import { rub, strokeLifted, strokeMoving, tapsLook } from './gestures';
 import { crowdsPainting, underPainting } from './hang.js';
 import { paintingOf, seasonAmounts } from './seasons.js';
 import {
@@ -72,7 +73,6 @@ const D = JSON.parse($('#pond-data').textContent);
 const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
 // With ?preview: the real moon, the wind, the festivals, fireflies, stars, a welcome back (preview.js)
 const pv = { age: moonAge(), fest: festivalOn(), flies: [], fliesOn: false, windX: 13, windY: 6, boatAt: -1e9, wakeAt: 0, lanterns: [] };
-const MAC = /Mac|iPhone|iPad/.test(navigator.userAgent);
 const pond = $('#pond'),
   glc = $('#gl');
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -2819,7 +2819,8 @@ function drawBugs(c) {
 // ---------- the looks: water, ink (墨), ukiyo-e, glow, blueprint and ASCII ----------
 // A front brings a look in over the one before (`top` over `base`); going back to the water, the front
 // draws in again. Ink: a drop from the switch spreads and turns the pond to paper, and time slows.
-// The other looks are found by gestures on the water (`gest`, below) or by searching ⌘K.
+// The other looks are found by gestures on the water (`gest`, below); the command bar offers a look only
+// once its seal is in the album.
 const LOOKS = ['water', 'ink', 'ukiyo', 'glow', 'blueprint', 'ascii', ...NEW_LOOKS],
   SID = { water: 0, ink: 1, ukiyo: 2, glow: 3, blueprint: 4, ascii: 5, ...NEW_SID };
 // The looks' own type and Japanese (looks.css: kana.css and the looks' faces) load the first time a
@@ -3009,6 +3010,7 @@ function setLook(name, from) {
   inkMax = top === 'blueprint' ? H + 40 : top === 'ukiyo' ? (W + H) * 0.7072 + 40 : far;
   if (name === 'water' && inkR > inkMax) inkR = inkMax;
   pond.dataset.inking = '';
+  clueNow();
   $('#inkBtn').setAttribute('aria-pressed', String(inkOn));
   clearTimeout(lookTimer);
   lookTimer = setTimeout(
@@ -3127,6 +3129,7 @@ function stepInk(raw) {
     if (inkR >= inkMax && base !== top) {
       base = top;
       reached(top);
+      clueNow();
     }
   } else if (inkR > 0) {
     inkR = Math.max(0, inkR - raw * inkMax * (0.4 + k * 1.3));
@@ -3811,7 +3814,7 @@ $('#toc').addEventListener('click', (e) => {
 const SHEETS = {
   seals: () =>
     `<div class="album">${albumHTML(album, VOLS, lang, freshVols())}${
-      PANEL && sealCount(album) > 0
+      sealCount(album) > 0
         ? `<p class="album-save"><button class="link" id="albumSave">${['Save as a picture', '存为图片', '画像で保存'][LANGS.indexOf(lang)]}</button></p>`
         : ''
     }</div>`,
@@ -4291,7 +4294,8 @@ function commands() {
         setClear(!cleared);
       }
     },
-    {
+    // a look is to be found on the water: the command bar offers one only once its seal is in the album
+    hasSeal(album, 'ink') && {
       sec: 'Pond',
       icon: 'brush',
       label: inkOn ? 'Back to the water' : 'Ink and paper',
@@ -4302,23 +4306,25 @@ function commands() {
       cmd: true,
       run: () => setInk(!inkOn)
     },
-    // the other looks: found only when searched for, never listed
+    // the other looks, likewise: found here only when searched for, never listed
     ...[
       ['ukiyo', '浮世絵 Ukiyo-e', 'A woodblock print; or stir the water once round', 'ukiyo ukiyo-e woodblock print hokusai wave japan 浮世絵'],
       ['glow', 'Glow', 'The lights go out; or press the light on the water', 'glow night neon dark light'],
       ['blueprint', 'Blueprint', 'A drawing on blue paper; or draw a long straight line', 'blueprint drawing plan draft ruler'],
       ['ascii', 'ASCII', 'The pond in characters; or type a few letters', 'ascii text characters terminal type'],
       ...NEW_COMMANDS
-    ].map(([id, label, hint, kw]) => ({
-      sec: 'Pond',
-      icon: 'brush',
-      label: look === id ? 'Back to the water' : label,
-      hint,
-      kw,
-      hidden: true,
-      cmd: true,
-      run: () => setLook(look === id ? 'water' : id)
-    })),
+    ]
+      .filter(([id]) => hasSeal(album, id))
+      .map(([id, label, hint, kw]) => ({
+        sec: 'Pond',
+        icon: 'brush',
+        label: look === id ? 'Back to the water' : label,
+        hint,
+        kw,
+        hidden: true,
+        cmd: true,
+        run: () => setLook(look === id ? 'water' : id)
+      })),
     {
       sec: 'Pond',
       icon: 'brush',
@@ -4482,7 +4488,7 @@ function drawPal() {
   const raw = $('#palIn').value,
     only = raw.startsWith('/'),
     q = raw.replace(/^\//, '').trim().toLowerCase(),
-    all = commands().filter((c) => !only || c.cmd);
+    all = commands().filter((c) => c && (!only || c.cmd));
   let html = '';
   if (!q) {
     const groups = only
@@ -4605,11 +4611,6 @@ addEventListener('keydown', (e) => {
   if (!typing && !palOpen() && !e.metaKey && !e.ctrlKey && !e.altKey && /^[1-4]$/.test(e.key)) {
     e.preventDefault();
     openSheet(ORDER[+e.key - 1]);
-    return;
-  }
-  if (e.key.toLowerCase() === 'k' && (e.metaKey || e.ctrlKey)) {
-    e.preventDefault();
-    palOpen() ? closePal() : openPal();
     return;
   }
   if (e.key === 'Escape') {
@@ -5490,6 +5491,7 @@ function koiSeals() {
   if (host) host.seal = allFull(album, VOLS);
 }
 function sealsEntry() {
+  clueNow();
   const b = $('#sealsBtn');
   b.hidden = !entryShows(album);
   b.toggleAttribute('data-some', sealCount(album) > 0);
@@ -5512,7 +5514,7 @@ function sealsPic() {
   };
   im.src = '/pond/ink/seals.webp';
 }
-// The album as one picture, to keep or pass on (a trial, in preview builds): the leaves on paper, each
+// The album as one picture, to keep or pass on: the leaves on paper, each
 // found seal with its name and day, the rest an outline. Nothing in it but the seals.
 function albumPicture() {
   const Wd = 1080,
@@ -5633,7 +5635,41 @@ function albumShown() {
   album = a;
   save('pond-seals', writeAlbum(a));
 }
-// The occasions' seals (a trial, in preview builds): one is stamped when the pond is in its state while
+// A look on show carries a clue to the next look's gesture (seals.ts, NEXT) until that one is found: a
+// small mark in the look's own manner, laid in quietly once the look has come in all the way.
+const CLUES = {
+  // ink: a line added to the inscription, "one turn makes a wave"
+  ink: '<span lang="zh">一圈成浪</span>',
+  // the print: four flecks of spray fallen in one place
+  ukiyo:
+    '<svg viewBox="0 0 60 60" width="60" height="60"><g fill="#f6edd8" stroke="#0c1b27" stroke-width="1.2"><circle cx="27" cy="26" r="4"/><circle cx="35" cy="29" r="3.4"/><circle cx="29" cy="35" r="3.6"/><circle cx="34" cy="37" r="2.8"/></g></svg>',
+  // the lilies: one pad's edge in the bowl's cobalt
+  monet:
+    '<svg viewBox="0 0 120 84" width="120" height="84"><ellipse cx="60" cy="42" rx="54" ry="36" fill="none" stroke="#1c3f9a" stroke-width="3" stroke-dasharray="150 14 60 10"/></svg>',
+  // the bowl: its mark under a film of dust
+  qinghua: '<i></i>',
+  // glow: one faint straight line by the light
+  glow: '<i></i>',
+  // the blueprint: five blanks waiting in the title block
+  blueprint: '<span>_ _ _ _ _</span>',
+  // the characters: three stars, far apart
+  ascii: '<b style="left:17%;top:31%">✦</b><b style="left:79%;top:24%">✦</b><b style="left:56%;top:79%">✦</b>',
+  // the sky: one figure whose stars are joined as a zigzag
+  stars:
+    '<svg viewBox="0 0 230 70" width="230" height="70"><polyline points="8,52 44,16 80,54 116,18 152,56 188,20 222,50" fill="none" stroke="#f0cf8a" stroke-width="0.8" stroke-opacity=".7"/><g fill="#f0cf8a"><circle cx="8" cy="52" r="2.2"/><circle cx="44" cy="16" r="2.6"/><circle cx="80" cy="54" r="2"/><circle cx="116" cy="18" r="2.8"/><circle cx="152" cy="56" r="2"/><circle cx="188" cy="20" r="2.4"/><circle cx="222" cy="50" r="2.2"/></g></svg>'
+};
+function clueNow() {
+  const el = $('#clue'),
+    // (only for a look that has come in all the way and is not on its way out)
+    next = look !== 'water' && base === look ? clueFor(look, album) : '',
+    want = next ? look : '';
+  if ((el.dataset.for || '') === want) return;
+  if (want) {
+    el.innerHTML = CLUES[want] || '';
+    el.dataset.for = want;
+  } else delete el.dataset.for;
+}
+// The occasions' seals: one is stamped when the pond is in its state while
 // someone is there and nothing else is in front of the water. Looked at now and then, not every frame.
 function occasions() {
   if (!settledNow || document.hidden || sheetOpen() || 'on' in $('#stamp').dataset) return;
@@ -5949,11 +5985,16 @@ const gest = {
   near: false,
   keys: [],
   letters: [],
-  typed: 0
+  typed: 0,
+  carry: null,
+  carryAt: 0
 };
+// how long a lifted stroke still counts with the next, in milliseconds
+const CARRY = 2200;
 const toggleLook = (name, at) => {
   gest.down = false;
   gest.pts = [];
+  gest.carry = null;
   if (look !== name) setLook(name, at);
 };
 const glintAt = () => [W * (big ? 0.6 : 0.74), H * (big ? 0.1 : 0.12)];
@@ -6018,7 +6059,8 @@ const HOLD = 1.2,
     if (P.length > 480) for (let i = P.length - 2; i > 0; i -= 2) P.splice(i, 1);
     // the strokes that are rules of their own (gestures.ts): a rub over one spot, or once round the rim of the screen
     {
-      const m = strokeMoving(P, W, H);
+      // (dust is brushed off a stroke at a time too: the strokes of the last moment count with this one)
+      const m = strokeMoving(P, W, H) || (gest.carry && performance.now() - gest.carryAt < CARRY && rub([...gest.carry, ...P]) ? 'dunhuang' : null);
       if (m === 'dunhuang' || m === 'qinghua') {
         const xs = P.map((p) => p[0]),
           ys = P.map((p) => p[1]);
@@ -6065,6 +6107,11 @@ const HOLD = 1.2,
         }
       }
     } else if (strokeLifted(drawn) === 'relief') toggleLook('relief', [x, y]);
+    // a stroke that meant nothing by itself is kept a moment, in case it is one of several brushed over a spot
+    if (gest.len >= 40 && drawn.length) {
+      gest.carry = [...(gest.carry && performance.now() - gest.carryAt < CARRY ? gest.carry : []), ...drawn].slice(-300);
+      gest.carryAt = performance.now();
+    } else gest.carry = null;
     gest.pts = [];
   };
   pond.addEventListener('pointerup', lift);
@@ -6965,7 +7012,6 @@ function start() {
     console.warn('The pond needs WebGL 2; showing it still.', err);
   }
   if (!glOK) pond.classList.add('nogl');
-  $('#cmdKey').textContent = MAC ? '⌘K' : 'Ctrl K';
   if (load('pond-sound') === 'off') setMuted(true);
   paneEls = [...document.querySelectorAll('.glass')];
   resize();
