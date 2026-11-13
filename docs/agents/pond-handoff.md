@@ -178,11 +178,15 @@ Asked of the local thread since this page was first written, delivered, and in u
 sheet and stone face, then a lighter lily sheet for the water, a grid that tiles for the star chart,
 and a bolder cut of the relief's koi. The files each replaced are deleted.
 
-- **The first frame builds only the water's pass.** The whole pass, with every look in it, is built
-  in the background once the pond has settled (or when a look is first asked for). Built before the
-  first frame, as it once was, it held the main thread for seconds under a software GPU: CI's smoke
-  test timed out waiting for the page's `load` with its own fonts still unanswered. A new look
-  makes the whole pass longer; never build it before the first frame.
+- **The first frame builds only the water's pass, and the whole pass is never built.** The whole
+  pass, with every look in it, held the main thread for seconds under a software GPU when it was
+  built before the first frame (CI's smoke test timed out on it), and on the owner's Mac it was not
+  ready when looks were asked for: arrivals did not play, the look just appeared. A look now has two
+  small passes of its own, built when it is first asked for: over the water (`OVER`, for coming in
+  and going out) and alone. Its arrival's clock starts when its pass is ready (`stepInk`), and a
+  look always comes in over the water: one asked for while another shows waits for that one to
+  draw back first (`setLook`, `lookNext`). Every look added must keep to this; never put two looks
+  in one frame. With `?gest` the readout lists what each pass took to build.
 
 ## 5. Rules learnt the hard way
 

@@ -243,9 +243,6 @@
   #pond[data-look='qinghua'] .hud {
     padding-inline: calc(var(--frame) + 6px);
   }
-  #pond[data-look='qinghua'] .br .seg {
-    right: calc(var(--frame) + 6px);
-  }
   #pond[data-look='qinghua'] .veil {
     padding: calc(var(--frame) + 2px);
   }

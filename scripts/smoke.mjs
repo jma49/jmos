@@ -109,13 +109,17 @@ try {
   const list = await targets();
   if (list.length < 10) throw new Error(`Found only ${list.length} apps in the registry; has its format changed?`);
   const results = new Map();
-  const queue = [...list];
+  const queue = list.filter((t) => !t.startsWith('pond'));
   // A few pages at a time: each mostly waits.
   await Promise.all(
     Array.from({ length: PARALLEL }, async () => {
       for (let target; (target = queue.shift()); ) results.set(target, await check(target));
     })
   );
+  // The pond draws with the GPU, which here is software: four at once take four times as long each to
+  // load as one alone, and on a small runner the last of them ran out of time. One at a time, each
+  // still has to load within its own.
+  for (const target of list.filter((t) => t.startsWith('pond'))) results.set(target, await check(target));
   for (const target of list) {
     const problems = results.get(target);
     console.log(`${problems.length ? '✗' : '✓'} ${target}`);

@@ -2224,9 +2224,10 @@ button.more:hover {
 }
 /* on a phone the bottom row is full: the languages sit just above it, at the right */
 @media (max-width: 560px) {
+  /* (its right edge is the row's below it: the same inset the controls keep) */
   .br .seg {
     position: fixed;
-    right: max(12px, env(safe-area-inset-right, 0px));
+    right: max(var(--edge, 20px), env(safe-area-inset-right, 0px));
     bottom: 70px;
   }
 }
