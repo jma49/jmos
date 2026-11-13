@@ -7,13 +7,13 @@
 //   glow        one tap on the light on the water    lift      a tap, at the light
 //   ascii       five letters within 3 s              keys      the keyboard
 //               or five taps in a row, within 3 s    lift      each a step on from the last, along a level line
-//   ukiyo       stir once round                      moving    a full turn, wider than 50 px, not round the rim
-//   qinghua     once round the rim of the screen     moving    a full turn spanning most of the screen, near its edges
+//   ukiyo       stir once round                      moving    a full turn, round, back to where it began, smaller than the screen
+//   qinghua     once round the rim of the screen     moving    a full turn spanning most of the screen, near its edges (else nothing)
 //   dunhuang    rub or brush over a spot             moving    four passes along one line (any slant), in a thin patch, lifted or not
 //   blueprint   one long straight line               lift      over 320 px, straight
 //   relief      a zigzag of three peaks or more      lift      five sharp corners, travelling one way, wider than a rub
-//   stars       three taps far apart, within 1.5 s   lift      each over 150 px from the others
-//   monet       four taps in one place, within 1.8 s lift      all within 44 px of their middle
+//   stars       three taps far apart, within 2.6 s   lift      each over 130 px from the others
+//   monet       four taps in one place, within 2.6 s lift      all within 50 px of their middle
 //
 // A rub's patch is thin (under 50 px, or under 0.3 of its length) and a stir's is not, so they can't both hold; a rim loop is a stir that
 // spans the screen; a zigzag swings at least 50 px and never turns round, and its corners are sharp, so a
@@ -59,10 +59,10 @@ export function straight(pts: Pt[], len = lengthOf(pts)) {
   const [ax, ay] = pts[0],
     [bx, by] = pts[pts.length - 1],
     chord = Math.hypot(bx - ax, by - ay);
-  if (chord < 60 || len > chord * 1.08) return null;
+  if (chord < 60 || len > chord * 1.12) return null;
   let off = 0;
   for (const [x, y] of pts) off = Math.max(off, Math.abs((bx - ax) * (ay - y) - (ax - x) * (by - ay)) / chord);
-  return off < Math.max(9, chord * 0.035) ? { chord } : null;
+  return off < Math.max(12, chord * 0.05) ? { chord } : null;
 }
 /** Once round: a stir (ukiyo-e), or the rim of the screen (青花) when the loop spans it and keeps to its edges. */
 export function loop(pts: Pt[], W: number, H: number, turn = turnOf(pts), len = lengthOf(pts)): 'ukiyo' | 'qinghua' | null {
@@ -71,11 +71,17 @@ export function loop(pts: Pt[], W: number, H: number, turn = turnOf(pts), len = 
   // (a patch that long and thin, along its own line, is a rub on its way, whatever its turns add up to)
   const own = ext(aligned(pts));
   if (Math.min(e.w, e.h) <= 50 || own.h <= Math.max(50, own.w * THIN)) return null;
-  if (e.w > W * 0.62 && e.h > H * 0.62) {
-    const m = Math.max(90, Math.min(W, H) * 0.22),
+  // a loop as large as the screen is a try at the rim, and only ever that: it is the rim if it keeps
+  // near the edges, and nothing if it wanders in
+  if (e.w > W * 0.6 && e.h > H * 0.6) {
+    const m = Math.max(110, Math.min(W, H) * 0.28),
       near = pts.filter(([x, y]) => Math.min(x, W - x, y, H - y) < m).length;
-    if (near >= pts.length * 0.85) return 'qinghua';
+    return near >= pts.length * 0.75 ? 'qinghua' : null;
   }
+  // a stir is round and comes back to where it began: not any stroke whose bends happen to add up to a turn
+  const [ax, ay] = pts[0],
+    [bx, by] = pts[pts.length - 1];
+  if (own.h < own.w * 0.5 || Math.hypot(bx - ax, by - ay) > Math.max(e.w, e.h) * 0.45) return null;
   return 'ukiyo';
 }
 /**
@@ -242,14 +248,14 @@ export function tapsLook(taps: Tap[]): 'stars' | 'monet' | 'ascii' | null {
   if (five.length === 5 && now - five[0].t <= 3) {
     const way = Math.sign(five[4].x - five[0].x),
       level = Math.max(...five.map((q) => q.y)) - Math.min(...five.map((q) => q.y));
-    if (way && level <= 70 && five.every((q, i) => i === 0 || ((q.x - five[i - 1].x) * way >= 34 && (q.x - five[i - 1].x) * way <= 140))) return 'ascii';
+    if (way && level <= 70 && five.every((q, i) => i === 0 || ((q.x - five[i - 1].x) * way >= 36 && (q.x - five[i - 1].x) * way <= 125))) return 'ascii';
   }
-  if (three.length === 3 && now - three[0].t <= 1.5 && three.every((a, i) => three.every((b, j) => i === j || Math.hypot(a.x - b.x, a.y - b.y) > 150)))
+  if (three.length === 3 && now - three[0].t <= 2.6 && three.every((a, i) => three.every((b, j) => i === j || Math.hypot(a.x - b.x, a.y - b.y) > 130)))
     return 'stars';
-  if (four.length === 4 && now - four[0].t <= 1.8) {
+  if (four.length === 4 && now - four[0].t <= 2.6) {
     const cx = four.reduce((s, q) => s + q.x, 0) / 4,
       cy = four.reduce((s, q) => s + q.y, 0) / 4;
-    if (four.every((q) => Math.hypot(q.x - cx, q.y - cy) <= 44)) return 'monet';
+    if (four.every((q) => Math.hypot(q.x - cx, q.y - cy) <= 50)) return 'monet';
   }
   return null;
 }
