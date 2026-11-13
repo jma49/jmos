@@ -119,7 +119,7 @@ languages). The first time a look comes in all the way (`reached()` in `engine.j
 gesture, key or command, its seal is stamped in the corner above the controls, in the look's own manner
 (`#pond[data-look] .stamp` in `pond.css`), with a soft thud; under reduced motion it only appears.
 
-- **Four volumes.** Two hold the looks, five each. The third, `hours`, holds five seals for an
+- **Five volumes.** Two hold the looks, five each. The third, `hours`, holds five seals for an
   occasion and not a look (the rain, snow, the full moon, a festival, the dawn): `occasions()` in
   `engine.js` stamps one when the pond is in that state while someone is there.
 - **The end.** The fourth volume holds one seal, for the pond as a rubbing taken from the carved
@@ -128,6 +128,16 @@ gesture, key or command, its seal is stamped in the corner above the controls, i
   `engine.js`) bring in the relief with `data-rub` on `#pond`, which turns every layer of it to ink
   and paper under a dabbed pad's mottle (`#pond[data-rub]` in `newlooks.css`). It is the relief with
   a filter over it, not a look of its own, and it lasts until the look changes.
+- **The long scroll.** Once the end is reached the album offers "Unroll the scroll": every seal
+  found, in the order found, read from the right as a handscroll is, with the rubbing's seal and a
+  word of thanks at its far end (`scrollPicture()` in `engine.js`, `.scroll-view` in `pond.css`).
+  "Save as a picture" saves the scroll while it is unrolled.
+- **Idle seals and the small games.** A fifth volume, `idle`, is marked `extra`: the album is full
+  without it. Its first seal is for skipping stones: a short straight stroke let go fast (70 to 320
+  px in under 0.4 s, over 1000 px/s: `flicked()` and `skipStone()` in `engine.js`) throws a stone
+  that skips the way it was going, each skip a ring on the water; the faster, the more skips, and
+  five earn the seal. A flick is not kept to count with the next stroke, so it is never part of a
+  rub.
 - **A chain of clues.** A look on show carries a small mark that points to the next look's gesture
   (`NEXT` and `clueFor()` in `seals.ts`, `CLUES` and `clueNow()` in `engine.js`, `.clue` in
   `pond.css`), laid in a few seconds after the look has come, until that next seal is found.

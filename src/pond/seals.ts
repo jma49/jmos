@@ -19,6 +19,8 @@ export interface Volume {
   seals: Seal[];
   /** places kept for looks still to come */
   soon?: number;
+  /** a volume of play, apart from the album proper: the album is full without it */
+  extra?: boolean;
 }
 /** The volumes in order. A new look's seal is added to a volume, or a volume added, here and nowhere else. */
 export const VOLUMES: Volume[] = [
@@ -59,6 +61,12 @@ export const VOLUMES: Volume[] = [
   {
     id: 'end',
     seals: [{ id: 'rubbing', chars: '拓', shape: 'square', cut: 'white' }]
+  },
+  // Idle seals (闲章), for the pond's small games. Nothing depends on them.
+  {
+    id: 'idle',
+    extra: true,
+    seals: [{ id: 'skip', chars: '漂', shape: 'round', cut: 'red' }]
   }
 ];
 /** The way back through the album that opens the end: the looks' seals in the order the volumes keep them. */
@@ -129,7 +137,7 @@ export const has = (a: Album, id: string): boolean => id in a.found;
 export const count = (a: Album): number => Object.keys(a.found).length;
 /** A volume is full when every seal this build has for it is found. */
 export const full = (a: Album, v: Volume): boolean => v.seals.length > 0 && v.seals.every((s) => has(a, s.id));
-export const allFull = (a: Album, vols: Volume[]): boolean => vols.length > 0 && vols.every((v) => full(a, v));
+export const allFull = (a: Album, vols: Volume[]): boolean => vols.length > 0 && vols.filter((v) => !v.extra).every((v) => full(a, v));
 
 /**
  * Stamps a seal: the album with it, whether it is new (a seal is stamped once, and keeps its first day),
@@ -180,7 +188,7 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
   en: {
     title: 'Seals',
     lede: 'The pond can look more than one way. Each look has a seal, stamped the first time you find it.',
-    volumes: { painted: 'Painted', drawn: 'Drawn', hours: 'Occasions', end: 'The end' },
+    volumes: { painted: 'Painted', drawn: 'Drawn', hours: 'Occasions', end: 'The end', idle: 'Idle hours' },
     names: {
       ink: 'Ink',
       ukiyo: 'Ukiyo-e',
@@ -197,7 +205,8 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
       moon: 'Full moon',
       fest: 'Festival',
       dawn: 'Dawn',
-      rubbing: 'Rubbing'
+      rubbing: 'Rubbing',
+      skip: 'Skipping stones'
     },
     hints: {
       ink: 'Stillness leaves a mark.',
@@ -215,13 +224,15 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
       moon: 'Once a month the night is bright.',
       fest: 'A few days a year, the pond dresses up.',
       dawn: 'Be here before the sun is.',
-      rubbing: 'Fill the first two volumes. Then, here in the album, go back the way you came.'
+      rubbing: 'Fill the first two volumes. Then, here in the album, go back the way you came.',
+      skip: 'A flat stone, thrown low and fast. Five skips.'
     },
     thanks: {
       painted: 'Every painted one. Thank you for looking so closely.',
       drawn: 'Every drawn one. Thank you for trying things.',
       hours: 'Every occasion. Thank you for coming back.',
-      end: 'That is all of it. Thank you for finding everything.'
+      end: 'That is all of it. Thank you for finding everything.',
+      idle: 'Time well wasted.'
     },
     koi: 'Your koi wears a seal from now on.',
     both: 'Every volume is full. The gold koi wears one too, to match.',
@@ -233,7 +244,7 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
   zh: {
     title: '集印册',
     lede: '池塘不止一种样子。每一种都有一方印，第一次遇见时盖上。',
-    volumes: { painted: '画', drawn: '线', hours: '时', end: '终' },
+    volumes: { painted: '画', drawn: '线', hours: '时', end: '终', idle: '闲' },
     names: {
       ink: '水墨',
       ukiyo: '浮世绘',
@@ -250,7 +261,8 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
       moon: '满月',
       fest: '节日',
       dawn: '清晨',
-      rubbing: '拓片'
+      rubbing: '拓片',
+      skip: '打水漂'
     },
     hints: {
       ink: '停一停，会留下痕迹。',
@@ -268,13 +280,15 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
       moon: '每个月有一夜，特别亮。',
       fest: '一年里有几天，池塘会打扮。',
       dawn: '比太阳早一点到。',
-      rubbing: '集满前两册，再在这册子里，按来路走一遍。'
+      rubbing: '集满前两册，再在这册子里，按来路走一遍。',
+      skip: '一块扁石头，低低地、快快地甩出去。跳五下。'
     },
     thanks: {
       painted: '画的这一册集齐了。谢谢你看得这么仔细。',
       drawn: '线的这一册集齐了。谢谢你什么都试一试。',
       hours: '时的这一册集齐了。谢谢你一次次回来。',
-      end: '到这里就是全部了。谢谢你把它们都找到。'
+      end: '到这里就是全部了。谢谢你把它们都找到。',
+      idle: '偷得浮生半日闲。'
     },
     koi: '你的锦鲤，从此带着一方印。',
     both: '每一册都满了。金色的那条也盖了一方，和你作伴。',
@@ -286,7 +300,7 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
   ja: {
     title: '集印帳',
     lede: '池の姿はひとつではありません。姿ごとに印がひとつあり、初めて出会ったときに押されます。',
-    volumes: { painted: '絵', drawn: '線', hours: '時', end: '終' },
+    volumes: { painted: '絵', drawn: '線', hours: '時', end: '終', idle: '閑' },
     names: {
       ink: '水墨',
       ukiyo: '浮世絵',
@@ -303,7 +317,8 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
       moon: '満月',
       fest: '祭り',
       dawn: '夜明け',
-      rubbing: '拓本'
+      rubbing: '拓本',
+      skip: '水切り'
     },
     hints: {
       ink: 'じっとしていると、跡が残る。',
@@ -321,13 +336,15 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
       moon: '月に一度、夜が明るい。',
       fest: '年に数日、池は着飾ります。',
       dawn: '日の出より先に。',
-      rubbing: '二冊をそろえたら、この帳の中で、来た道をもう一度。'
+      rubbing: '二冊をそろえたら、この帳の中で、来た道をもう一度。',
+      skip: '平たい石を、低く、速く。五回はねたら。'
     },
     thanks: {
       painted: '絵の一冊がそろいました。じっくり見てくれて、ありがとう。',
       drawn: '線の一冊がそろいました。いろいろ試してくれて、ありがとう。',
       hours: '時の一冊がそろいました。何度も来てくれて、ありがとう。',
-      end: 'これで全部です。すべて見つけてくれて、ありがとう。'
+      end: 'これで全部です。すべて見つけてくれて、ありがとう。',
+      idle: 'よい暇つぶしでした。'
     },
     koi: 'あなたの鯉に、印がひとつ付きました。',
     both: 'どの冊もそろいました。金の鯉にも、おそろいの印を。',
@@ -382,7 +399,7 @@ export function albumHTML(a: Album, vols: Volume[], lang: Lang, fresh: string[] 
         ''
       )}${`<li class="soon"><b class="seal-m blank" data-shape="square" aria-hidden="true"></b><span class="hint">${esc(w.soon)}</span></li>`.repeat(v.soon ?? 0)}</ol>${
       done
-        ? `<p class="grand"${fresh.includes(v.id) ? ' data-fresh' : ''}><span>${esc(w.thanks[v.id])}${v.id === 'painted' ? `<br>${esc(w.koi)}` : ''}${allFull(a, vols) && i === vols.length - 1 && vols.length > 1 ? `<br>${esc(w.both)}` : ''}</span><b class="seal-m own" data-shape="tall" data-cut="white" data-n="2" ${cellStyle(OWN)} lang="zh" aria-hidden="true"><span>锦</span><span>程</span></b></p>`
+        ? `<p class="grand"${fresh.includes(v.id) ? ' data-fresh' : ''}><span>${esc(w.thanks[v.id])}${v.id === 'painted' ? `<br>${esc(w.koi)}` : ''}${allFull(a, vols) && i === vols.filter((x) => !x.extra).length - 1 && vols.length > 1 ? `<br>${esc(w.both)}` : ''}</span><b class="seal-m own" data-shape="tall" data-cut="white" data-n="2" ${cellStyle(OWN)} lang="zh" aria-hidden="true"><span>锦</span><span>程</span></b></p>`
         : ''
     }</div></section>`;
   };

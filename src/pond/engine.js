@@ -41,7 +41,7 @@ import {
 } from './seals';
 import { FPS, IDLE_AFTER, due, learnBeat, simSteps } from './clock.js';
 import { PERF, add, count, frameDone, span } from './perf.js';
-import { describe, rub, strokeLifted, strokeMoving, tapsLook } from './gestures';
+import { describe, rub, straight, strokeLifted, strokeMoving, tapsLook } from './gestures';
 import { crowdsPainting, underPainting } from './hang.js';
 import { paintingOf, seasonAmounts } from './seasons.js';
 import {
@@ -3121,6 +3121,13 @@ function paintInk() {
 // and comes back slow; going back, the look draws in to where it came from and time runs up again.
 // The print is peeled off from the top left, the blueprint scanned from the top; the text spreads as a drop does.
 function stepInk(raw) {
+  // A look can't be drawn until the pass that holds it is built, which the first look asked for has to
+  // wait for (a moment on a real GPU, seconds on a software one). Its arrival starts when it can be
+  // seen, not when it was asked for: else it would be over, unseen, by the time the pass was ready.
+  if (look !== 'water' && glOK && inkR === 0 && progOK[0] === undefined) {
+    waterProg(0);
+    inkAt = performance.now() / 1000;
+  }
   const k = performance.now() / 1000 - inkAt;
   if (look !== 'water') {
     if (top === 'blueprint') inkR = inkMax * Math.min(1, k / 1.5);
@@ -3815,7 +3822,7 @@ const SHEETS = {
   seals: () =>
     `<div class="album">${albumHTML(album, VOLS, lang, freshVols())}${
       sealCount(album) > 0
-        ? `<p class="album-save"><button class="link" id="albumClear">${SEAL_WORDS[lang].clear}</button><button class="link" id="albumSave">${['Save as a picture', '存为图片', '画像で保存'][LANGS.indexOf(lang)]}</button></p>`
+        ? `<p class="album-save"><button class="link" id="albumClear">${SEAL_WORDS[lang].clear}</button>${hasSeal(album, 'rubbing') ? `<button class="link" id="albumScroll">${['Unroll the scroll', '展开长卷', '巻物をひらく'][LANGS.indexOf(lang)]}</button>` : ''}<button class="link" id="albumSave">${['Save as a picture', '存为图片', '画像で保存'][LANGS.indexOf(lang)]}</button></p>`
         : ''
     }</div>`,
   music: () => {
@@ -5058,6 +5065,41 @@ function sealsPic() {
   };
   im.src = '/pond/ink/seals.webp';
 }
+// One seal on a canvas, s across (a tall one narrower), centred on x, y: its cut from the sheet, or its characters.
+function drawSeal(c, q, x, y, s) {
+  const RED = '#b8382a';
+  const at = sealCell(q.id),
+    tall = q.shape === 'tall',
+    w = tall ? (s * 150) / 246 : s;
+  if (at && sealsPic.im) {
+    const one = document.createElement('canvas'),
+      o = one.getContext('2d');
+    one.width = Math.round(w);
+    one.height = Math.round(s);
+    o.fillStyle = RED;
+    o.fillRect(0, 0, one.width, one.height);
+    o.globalCompositeOperation = 'destination-in';
+    o.drawImage(sealsPic.im, at[0] * 256 + (tall ? 53 : 12), at[1] * 256 + (tall ? 5 : 12), tall ? 150 : 232, tall ? 246 : 232, 0, 0, one.width, one.height);
+    c.drawImage(one, x - w / 2, y - s / 2);
+    return;
+  }
+  c.fillStyle = RED;
+  c.beginPath();
+  if (q.shape === 'round') c.arc(x, y, s / 2, 0, TAU);
+  else c.rect(x - w / 2, y - s / 2, w, s);
+  if (q.cut === 'red') {
+    c.lineWidth = s * 0.065;
+    c.strokeStyle = RED;
+    c.stroke();
+  } else {
+    c.fill();
+    c.fillStyle = '#f4ece0';
+  }
+  c.font = `400 ${s * 0.6}px 'Zhi Mang Xing', serif`;
+  c.textAlign = 'center';
+  c.fillText(q.chars, x, y + s * 0.2);
+  c.textAlign = 'left';
+}
 // The album as one picture, to keep or pass on: the leaves on paper, each
 // found seal with its name and day, the rest an outline. Nothing in it but the seals.
 function albumPicture() {
@@ -5066,8 +5108,7 @@ function albumPicture() {
     row = 330,
     cv = document.createElement('canvas'),
     c = cv.getContext('2d'),
-    words = SEAL_WORDS[lang],
-    RED = '#b8382a';
+    words = SEAL_WORDS[lang];
   cv.width = Wd;
   cv.height = 250 + VOLS.length * row;
   c.fillStyle = '#efe6d2';
@@ -5079,40 +5120,7 @@ function albumPicture() {
   c.font = '400 22px ui-monospace, monospace';
   c.fillStyle = 'rgba(42,35,28,.6)';
   c.fillText(`${sealCount(album)} / ${VOLS.flatMap((v) => v.seals).length} · ${dayText(dayOf(new Date()), lang)}`, M, 176);
-  // one seal, s across (a tall one narrower), centred on x, y: its cut from the sheet, or its characters
-  const seal = (q, x, y, s) => {
-    const at = sealCell(q.id),
-      tall = q.shape === 'tall',
-      w = tall ? (s * 150) / 246 : s;
-    if (at && sealsPic.im) {
-      const one = document.createElement('canvas'),
-        o = one.getContext('2d');
-      one.width = Math.round(w);
-      one.height = Math.round(s);
-      o.fillStyle = RED;
-      o.fillRect(0, 0, one.width, one.height);
-      o.globalCompositeOperation = 'destination-in';
-      o.drawImage(sealsPic.im, at[0] * 256 + (tall ? 53 : 12), at[1] * 256 + (tall ? 5 : 12), tall ? 150 : 232, tall ? 246 : 232, 0, 0, one.width, one.height);
-      c.drawImage(one, x - w / 2, y - s / 2);
-      return;
-    }
-    c.fillStyle = RED;
-    c.beginPath();
-    if (q.shape === 'round') c.arc(x, y, s / 2, 0, TAU);
-    else c.rect(x - w / 2, y - s / 2, w, s);
-    if (q.cut === 'red') {
-      c.lineWidth = s * 0.065;
-      c.strokeStyle = RED;
-      c.stroke();
-    } else {
-      c.fill();
-      c.fillStyle = '#f4ece0';
-    }
-    c.font = `400 ${s * 0.6}px 'Zhi Mang Xing', serif`;
-    c.textAlign = 'center';
-    c.fillText(q.chars, x, y + s * 0.2);
-    c.textAlign = 'left';
-  };
+  const seal = (q, x, y, size) => drawSeal(c, q, x, y, size);
   VOLS.forEach((v, i) => {
     const top = 250 + i * row,
       step = (Wd - M * 2) / Math.max(5, v.seals.length);
@@ -5146,17 +5154,102 @@ function albumPicture() {
   });
   return cv;
 }
+// The long scroll, once the end is reached: every seal found, in the order it was found, read from the
+// right as a handscroll is, between two bands of brocade, with the rubbing's seal and a word of thanks
+// at its far end.
+function scrollPicture() {
+  const words = SEAL_WORDS[lang],
+    all = VOLS.flatMap((v) => v.seals),
+    // (by the day found; the album's own order within a day; the rubbing last)
+    got = all.filter((q) => hasSeal(album, q.id) && q.id !== 'rubbing').sort((a, b) => album.found[a.id].localeCompare(album.found[b.id])),
+    end = all.find((q) => q.id === 'rubbing'),
+    Ht = 600,
+    step = 210,
+    head = 300,
+    tail = 520,
+    Wd = head + got.length * step + tail,
+    cv = document.createElement('canvas'),
+    c = cv.getContext('2d');
+  cv.width = Wd;
+  cv.height = Ht;
+  c.fillStyle = '#efe6d2';
+  c.fillRect(0, 0, Wd, Ht);
+  // the brocade, top and bottom, with a thin gold line inside each
+  c.fillStyle = '#2c3a4a';
+  c.fillRect(0, 0, Wd, 34);
+  c.fillRect(0, Ht - 34, Wd, 34);
+  c.fillStyle = '#b49a5a';
+  c.fillRect(0, 40, Wd, 1.5);
+  c.fillRect(0, Ht - 41.5, Wd, 1.5);
+  c.textBaseline = 'alphabetic';
+  // the title, at the right where a scroll begins
+  c.textAlign = 'right';
+  c.fillStyle = '#2a231c';
+  c.font = "600 60px 'Cormorant Garamond', 'Zhi Mang Xing', serif";
+  c.fillText(words.title, Wd - 70, 300);
+  c.font = '400 19px ui-monospace, monospace';
+  c.fillStyle = 'rgba(42,35,28,.6)';
+  if (got.length)
+    c.fillText(
+      `${dayText(album.found[got[0].id], lang)} – ${dayText(album.found[end && hasSeal(album, end.id) ? end.id : got[got.length - 1].id], lang)}`,
+      Wd - 70,
+      340
+    );
+  c.textAlign = 'center';
+  got.forEach((q, i) => {
+    const x = Wd - head - step * (i + 0.5),
+      y = 250;
+    drawSeal(c, q, x, y, 124);
+    c.textAlign = 'center';
+    c.fillStyle = '#2a231c';
+    c.font = "600 24px 'Cormorant Garamond', 'Zhi Mang Xing', serif";
+    c.fillText(words.names[q.id], x, y + 110);
+    c.font = '400 16px ui-monospace, monospace';
+    c.fillStyle = 'rgba(42,35,28,.6)';
+    c.fillText(dayText(album.found[q.id], lang), x, y + 138);
+  });
+  // the far end: the rubbing's seal, large, the thanks, and the pond's own seal
+  if (end && hasSeal(album, end.id)) {
+    drawSeal(c, end, tail - 150, 250, 190);
+    c.textAlign = 'center';
+    c.fillStyle = '#2a231c';
+    c.font = "600 24px 'Cormorant Garamond', 'Zhi Mang Xing', serif";
+    c.fillText(words.thanks.end, tail - 150 - 40, 430, tail - 120);
+    drawSeal(c, { id: 'own', chars: '锦程', shape: 'tall', cut: 'white' }, 84, 300, 96);
+  }
+  c.textAlign = 'left';
+  return cv;
+}
+// what "Save as a picture" saves: the scroll while it is unrolled, the album otherwise
+const savedPicture = () => ($('#scrollView') ? [scrollPicture(), 'pond-scroll.png'] : [albumPicture(), 'pond-seals.png']);
 document.addEventListener('click', (e) => {
+  if (e.target.closest?.('#albumScroll')) {
+    // unroll it above the album's foot, or roll it up again; it opens at its right end, where it begins
+    const open = $('#scrollView');
+    if (open) return void open.remove();
+    const box = document.createElement('div'),
+      im = new Image();
+    box.id = 'scrollView';
+    box.className = 'scroll-view';
+    im.alt = '';
+    im.src = scrollPicture().toDataURL('image/png');
+    box.append(im);
+    $('#sheet .album-save').before(box);
+    im.onload = () => (box.scrollLeft = box.scrollWidth);
+    return;
+  }
   if (!e.target.closest?.('#albumSave')) return;
-  albumPicture().toBlob((blob) => {
+  const [cv, name] = savedPicture();
+  cv.toBlob((blob) => {
     if (!blob) return;
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = 'pond-seals.png';
+    a.download = name;
     a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 4000);
   });
 });
+if (PERF) window.__scroll = scrollPicture;
 if (PERF) window.__album = albumPicture;
 // a seal's characters are centred by their own ink, measured once the brush has come for them
 function alignSeals(sel) {
@@ -5556,6 +5649,49 @@ const gest = {
   carry: null,
   carryAt: 0
 };
+// Skipping stones: a short straight stroke let go fast throws a flat stone the way it was going. The
+// faster the throw, the more it skips; each skip is shorter and sooner than the last and leaves a ring
+// on the water. Five skips earn an idle seal. (A long straight stroke is the blueprint's ruled line, a
+// slow one is a brush at the wall's dust: a flick is neither, and is not kept to count with the next.)
+const flicked = (pts, dt) => {
+  const ln = pts.length > 2 && straight(pts);
+  return !!ln && ln.chord >= 70 && ln.chord <= 320 && dt < 0.4 && ln.chord / Math.max(dt, 0.02) > 1000;
+};
+function skipStone(pts, dt) {
+  const [ax, ay] = pts[0],
+    [bx, by] = pts[pts.length - 1],
+    chord = Math.hypot(bx - ax, by - ay),
+    speed = chord / Math.max(dt, 0.02),
+    ux = (bx - ax) / chord,
+    uy = (by - ay) / chord,
+    skips = Math.max(2, Math.min(9, Math.round(speed / 520)));
+  if (GEST) gestSay(`${describe(pts, W, H)}\n→ a stone, ${Math.round(speed)} px/s, ${skips} skips`);
+  gest.pts = [];
+  gest.carry = null;
+  let x = bx,
+    y = by,
+    // (the first skip is at most a fifth of the pond's short side, so five fit on a phone too)
+    hop = Math.max(50, Math.min(Math.max(60, Math.min(W, H) * 0.2), speed * 0.085)),
+    wait = 90,
+    n = 0;
+  const next = () => {
+    x += ux * hop;
+    y += uy * hop;
+    // off the pond, or out of skips: it sinks where it is
+    if (x < 0 || y < 0 || x > W || y > H) return;
+    n++;
+    const last = n >= skips;
+    drop(x, y, last ? 3 : 2.1 - n * 0.1, last ? 0.9 : 0.55 - n * 0.03);
+    plip('drop', last ? 0.9 : 0.5);
+    invalidate();
+    if (n === 5) reached('skip');
+    if (last) return;
+    hop *= 0.74;
+    wait = Math.max(70, wait * 1.12 + hop * 0.5);
+    setTimeout(next, wait);
+  };
+  setTimeout(next, wait);
+}
 // how long a lifted stroke still counts with the next, in milliseconds
 const CARRY = 2200;
 // With ?gest in the address: each stroke as the rules read it, in a corner, for when a gesture won't take.
@@ -5679,7 +5815,8 @@ const HOLD = 1.2,
           toggleLook(t, [at.reduce((a, q) => a + q.x, 0) / at.length, at.reduce((a, q) => a + q.y, 0) / at.length]);
         }
       }
-    } else if (strokeLifted(drawn) === 'relief') toggleLook('relief', [x, y]);
+    } else if (flicked(drawn, dt)) return void skipStone(drawn, dt);
+    else if (strokeLifted(drawn) === 'relief') toggleLook('relief', [x, y]);
     else if (GEST && drawn.length > 1) gestSay(`${describe(drawn, W, H)}\n→ nothing (lifted after ${dt.toFixed(1)} s)`);
     // a stroke that meant nothing by itself is kept a moment, in case it is one of several brushed over a spot
     if (gest.len >= 40 && drawn.length) {

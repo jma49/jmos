@@ -2716,6 +2716,20 @@ button.more:hover {
     animation: none;
   }
 }
+/* the long scroll, unrolled in the album: it is wider than the leaf and is drawn along by hand */
+.album .scroll-view {
+  margin: 22px 0 0;
+  overflow-x: auto;
+  border-radius: 3px;
+  box-shadow: 0 2px 14px rgba(0, 0, 0, 0.28);
+  overscroll-behavior-x: contain;
+}
+.album .scroll-view img {
+  display: block;
+  height: 300px;
+  width: auto;
+  max-width: none;
+}
 .album .album-save {
   display: flex;
   justify-content: flex-end;
