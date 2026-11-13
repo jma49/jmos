@@ -493,8 +493,9 @@ vec3 lookQinghua(){
   vec3 deep=vec3(.06,.14,.42), wash=vec3(.36,.50,.80);
   float pool=.62+.38*noise(P*.09)+.5*smoothstep(.62,.9,noise(P*.035+5.));
   vec3 c=glaze;
-  // the water: scale-waves in a pale line, firmer where it moves
-  float wv=seigaiha(P+gG*36.); c=mix(c,wash,wv*(.16+clamp(abs(gLap)*30.+length(gG)*1.4,0.,.6))*(1.-gCalm*.97)*pool);
+  // the water: scale-waves in a pale line, firmer where it moves; none on a narrow bowl, where the type
+  // stands over all of it and the glaze is left plain
+  float wv=seigaiha(P+gG*36.); c=mix(c,wash,wv*(.16+clamp(abs(gLap)*30.+length(gG)*1.4,0.,.6))*(1.-gCalm*.97)*pool*(1.-uCalm.x));
   // pads and lotus: a washed leaf inside a drawn line, veins from its heart
   vec4 pd=textureLod(uPads,uv,0.); float pe=textureLod(uPads,uv,1.6).a, pw=textureLod(uPads,uv,3.).a;
   // (under the title's type the pads and the koi are only faintly there, as in the other looks)
