@@ -113,15 +113,13 @@ spider as sprites, with three.js and `life.js` no longer fetched; ukiyo-e's cres
 chart's plate and figures; Dunhuang's halo, its koi, and nothing painted under the controls; Monet's
 koi moved to the common sheet. What is left of those:
 
-1. **Dove and spider: the release build.** Waiting on the revised renders (the brief says what). When
-   the `-v2` sheets come: point `SHEETS` in `sprites.js` at them, set the frame counts and order in
-   `doveFrame()` and `spiderFrame()` (and in `sprites.test.ts`), look at every look's dress with
-   `tools/pond/life.cjs`, then draw them from sprites in a release build too and delete `life.js`,
-   the three.js dependency and the models' half of `drawDove()` and `drawSpider()` (about 500 KB,
-   130 KB gzipped, and a 512 px 3D render a frame while the dove is out).
-2. **Every look ships**, with its own pictures, gesture, command and seal, by Jincheng's word. Still
-   only in a preview build: the water look's own pictures, the dove and the spider as sprites, and
-   the `?preview` details (moon, wind, festivals, fireflies, ambience, the panel).
+1. **Dove and spider: the revised renders.** The pond draws the two from the first sprite sheets in
+   every build, and three.js and the models are gone. When the `-v2` sheets come: point `SHEETS` in
+   `sprites.js` at them, set the frame counts and order in `doveFrame()` and `spiderFrame()` (and in
+   `sprites.test.ts`), and look at every look's dress with `tools/pond/life.cjs`.
+2. **Everything ships**, by Jincheng's word: every look with its own pictures, the water's own
+   pictures, the sprites, and the later details (moon, wind, festivals, fireflies, ambience). Only
+   the panel that forces each state is behind `?preview`.
 3. **Star chart:** whether the quiet grid is enough, or the atlas wants its equator and ecliptic back
    as a second, fixed layer: Jincheng's to say on a real screen.
 4. **Dunhuang:** a place for the caisson (the album page or a chapter's header for this look; the

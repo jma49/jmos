@@ -155,20 +155,33 @@ const fetched = (src) =>
     im.src = src;
   });
 /**
- * Both sheets, fetched; then `pic(which, look, light)` gives a sheet dressed for the look, made the first
- * time it is asked for and again only when the look or the light changes.
+ * `pic(which, look, light)` gives a creature's sheet dressed for the look, or null until the sheet has
+ * come: it is fetched the first time it is asked for (and `changed` is called when it arrives), dressed
+ * the first time a look asks, and again only when the look or the light changes.
  */
-export async function loadSprites() {
-  const [dove, spider] = await Promise.all([fetched(SHEETS.dove.src), fetched(SHEETS.spider.src)]),
-    img = { dove, spider },
+export function spritePics(changed) {
+  const img = { dove: null, spider: null },
+    asked = { dove: false, spider: false },
     kept = { dove: null, spider: null };
-  return {
-    pic(which, look, light) {
-      const key = lit(look) && look !== 'ukiyo' ? `${look} ${light}` : look,
-        k = kept[which];
-      if (k && k.key === key) return k.cv;
-      kept[which] = { key, cv: dressed(img[which], look, light) };
-      return kept[which].cv;
+  return (which, look, light) => {
+    if (!img[which]) {
+      if (!asked[which]) {
+        asked[which] = true;
+        fetched(SHEETS[which].src).then(
+          (im) => {
+            img[which] = im;
+            changed();
+          },
+          // (without its sheet the creature is simply not drawn)
+          () => {}
+        );
+      }
+      return null;
     }
+    const key = lit(look) && look !== 'ukiyo' ? `${look} ${light}` : look,
+      k = kept[which];
+    if (k && k.key === key) return k.cv;
+    kept[which] = { key, cv: dressed(img[which], look, light) };
+    return kept[which].cv;
   };
 }

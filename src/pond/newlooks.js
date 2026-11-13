@@ -1,4 +1,4 @@
-// Five looks that are only previews (a build with PUBLIC_POND_PREVIEW=1): Monet's water lilies in oil,
+// The five looks that came after the first six: Monet's water lilies in oil,
 // blue-and-white porcelain (青花), a Dunhuang mural (敦煌), a star chart (星图) and an Egyptian relief,
 // carved and painted limestone. Each is a function of the water pass, drawn from what that pass has already worked
 // out (the ripples, the koi, the pads, where the water was pressed), as the other looks are; none adds a

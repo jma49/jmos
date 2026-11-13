@@ -12,7 +12,6 @@ that open as one tall sheet of glass. Everyone who visits is a koi.
 | --- | --- |
 | `src/pages/index.astro` | The markup, and everything gathered at build time: the timeline (each project's page plus `src/pond/content.ts`), the latest Unsplash photos (`src/lib/photos.ts`), covers resized by `getImage`. It hands them to the script as JSON (`#pond-data`) and keeps a plain-text copy for screen readers and visitors without JavaScript. |
 | `src/pond/engine.js` | Everything that moves: the water (a height field stepped on the CPU), the koi, lily pads, the 24 solar terms and the time of day, ice that cracks and breaks, boats, the dove's and spider's behaviour, the WebGL passes (the pond into a texture, then the glass over it), the chapters, the command bar, the sound effects, the opening. Its sections are marked `/* ===== … ===== */`. |
-| `src/pond/life.js` | Devot's dove and ocra's jumping spider as three.js models built in code, drawn from straight above into a small picture each frame. It and three.js load once the pond has settled. A preview build never fetches either: it draws the two from sprite sheets. |
 | `src/pond/sprites.js` | The dove and the spider as rendered sprite sheets, for a preview build: which frame a moment calls for (`doveFrame()`, `spiderFrame()`), and how each look dresses the sheets (`dressed()`). `sprites.test.ts` holds the frames to the sheets' grids. |
 | `src/pond/music.ts` | The music: Ryuichi Sakamoto only, the songs `POND_MUSIC` in `content.ts` chooses first and the rest of his in the library the iPod plays (`/api/songs`, or `src/data/songs.json`), played with YouTube's player in a frame clipped to nothing. |
 | `src/pond/people.ts` | Accounts, presence, the guestbook's notes and the chat, through `src/os/social` (the same backend and rules as the desktop). |
@@ -21,7 +20,7 @@ that open as one tall sheet of glass. Everyone who visits is a koi.
 | `public/pond/marks/` | The 72-pixel marks of the companies, schools and projects on the timeline. |
 | `src/assets/pond/cover.jpg` | This pond's picture on the timeline: a capture of the title page. |
 
-`engine.js` and `life.js` are plain JavaScript, ported from the
+`engine.js` is plain JavaScript, ported from the
 prototype the design was made on (the decision has why); the parts that
 reach the rest of the site are TypeScript. A file's header says what it's
 for; keep it true when the file changes.
@@ -58,7 +57,8 @@ for; keep it true when the file changes.
 - **What loads when:** the first visit gets the page's script (about
   35 KB gzipped), its CSS and the serif. The backend loads at once only
   for someone with a stored session, otherwise once the pond has settled
-  (`settled` in `engine.js`), as do the songs, three.js and the models.
+  (`settled` in `engine.js`), as do the songs; the dove's and the spider's sprite sheets and the
+  water's own pictures are fetched when each is first to be drawn.
 - **The loop's pace** (`clock.js`, `invalidate()` in `engine.js`):
   - At most 60 frames a second while something happens, and 30 once nothing has for six seconds (no
     input, the water settled, no look coming in, no rain). The koi always swim, so quiet is never
@@ -145,10 +145,9 @@ Five looks came after the first six (`newlooks.js`, `newlooks.css`): Monet's wat
 blue-and-white porcelain (青花), a Dunhuang mural (敦煌), a star chart (星图) and an Egyptian relief
 (carved and painted limestone; it took the place of a school blackboard, which was turned down). They
 ship like the others: found by their gestures or by searching ⌘K, each with its seal, each drawn from
-its own pictures, which are fetched only when the look is first asked for. What is still only in a
-preview build (`PUBLIC_POND_PREVIEW=1`, or `?preview`): the water look's own pictures (its lily pads,
-drift and dragonfly), the dove and the spider as sprites, and the details under "Next, with
-`?preview`".
+its own pictures, which are fetched only when the look is first asked for. The water look has its own
+pictures too (its lily pads, drift and dragonfly), fetched once the pond has settled and there is
+something of theirs to draw.
 
 - Each is one function of the water pass, built as a pass of its own the first time it is asked for
   (`fsPart(2, sid)`), as every look now is. None adds a pass or a per-frame cost outside it.
@@ -443,9 +442,10 @@ In `public/pond/blueprint/`, delivered and not yet used.
 #### Water
 
 In `public/pond/water/`: Devot's dove and ocra's jumping spider as sprite sheets, modelled in Blender
-and rendered from straight above. A preview build draws the two from them (`sprites.js`, `drawCell()`
-in `engine.js`) and never fetches three.js or `life.js`; a release build still draws the models, until
-the revised renders are approved.
+and rendered from straight above. The pond draws the two from them (`sprites.js`, `drawCell()` in `engine.js`), each sheet fetched the
+first time its creature is to be drawn; the three.js models they replaced are gone. They are the
+first renders, to be replaced by the revised ones when those are approved; in the looks that have
+their own picture of the two, that picture is drawn instead.
 
 - **How they are played:** the pond's own behaviour is unchanged; only the picture is. The dove beats
   once a turn of the phase its shadow already follows, takes off through its six frames in 0.45 s, comes
@@ -467,7 +467,7 @@ the revised renders are approved.
 | `dove.webp` | 2048 × 1024, 132 KB | 256 × 256, 8 × 4 | 1 sitting (4), 2 take-off (6), 3 flight (8), 4 landing (6) |
 | `spider.webp` | 1536 × 768, 117 KB | 192 × 192, 8 × 4 | 1 sitting (2), 2 walking (8), 3 crouch (2), 4 jump (4) |
 
-- **Framing is `life.js`'s own**, so a cell drops in where the 3D picture was drawn, at the same
+- **Framing is that of the models they replaced**, so a cell drops in where the 3D picture was drawn, at the same
   size: the creature faces the right of its cell (heading 0), its place on the ground is the cell's
   centre (128, 128 for the dove, 96, 96 for the spider), and the cell spans 4 units either side of
   it for the dove (32 pixels a unit) and 2.7 for the spider (35.6). The paint is not centred on that
@@ -551,7 +551,7 @@ light and refraction, the glass) stays in the shader.
 | Snowflakes | dots on the air canvas | Fine: they are small and moving | Keep | none |
 | Dragonflies | paths on the air canvas | Stiff; wings are plain ellipses | Replace | `water/dragonfly` sprite, 4 wing frames |
 | Fireflies (preview) | soft dots | Fine | Keep | none |
-| Devot's dove, ocra's spider | three.js models built in code (`life.js`), rendered into a small canvas; rendered sprites in a preview build (`sprites.js`) | The models are rough close up; the sprites are placeholders | Sprites everywhere once the revised renders are approved; that removes three.js and the per-frame 3D | Blender job, below |
+| Devot's dove, ocra's spider | rendered sprites (`sprites.js`); a look's own picture of them where it has one | The first renders: the sitting dove is plain | Replace with the revised renders when approved | Blender job, below |
 | Paper boats | three paths in `drawTop()` | Read as boats; a little bare | Replace when convenient | in `water/afloat` |
 | Moon, sun glint | shader | Light, not an object | Keep | none |
 | The tree's shade | a texture drawn once | Good on water; wrong on the painted looks (switched off there) | Keep | none |
@@ -991,10 +991,11 @@ What the conditions do (`effectsOf()`):
 **Privacy:** the place goes only to Open-Meteo, to ask for its weather, and is kept only in this
 browser's half-hour cache (`pond-weather`). Nothing about it is stored or sent anywhere else.
 
-## Next, with `?preview`
+## The later details
 
-`?preview` in the address (or a build with `PUBLIC_POND_PREVIEW=1`, as the single-file demo is) turns
-on details being tried before they ship (`preview.js`). Without it, none of them does anything.
+These came after the pond's first version and are part of it (`preview.js`). Only the panel at the
+end is for trying things: it shows with `?preview` in the address, or in a build with
+`PUBLIC_POND_PREVIEW=1`, as the single-file demo is.
 
 - **The moon:** the moon shows its real phase (`moonAge()`, from a known new moon). It also shows in
   each look at night, drawn in that look's idiom.
@@ -1011,7 +1012,7 @@ on details being tried before they ship (`preview.js`). Without it, none of them
   theirs once.
 - **Ambience:** under the sound switch, very quiet: cicadas on summer days, crickets on summer and
   autumn nights, rain on the water. Each is a short loop made in code.
-- **The panel:** a small panel at the top forces each of these, with the time of day, the weather and
+- **The panel** (`?preview` only): a small panel at the bottom forces each of these, with the time of day, the weather and
   the look.
 
 ## Changing it
