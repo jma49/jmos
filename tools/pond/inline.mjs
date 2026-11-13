@@ -82,14 +82,16 @@ css = css.replace(/@font-face\s*\{[^}]*\}/g, (block) => {
   });
 });
 html = html.replace(/<link rel="stylesheet" href="[^"]+">/g, '');
-// images the data and the script name: covers, marks, the portrait
+// pictures the page and the script name
 const swap = (s) =>
   s.replace(
-    /\/(?:_astro|pond\/marks|pond\/dunhuang|pond\/ink|pond\/qinghua|pond\/ukiyo|pond\/stars|pond\/monet|pond\/relief|pond\/water|pond\/blueprint)\/[\w.\-]+\.(?:png|jpg|webp|avif)/g,
+    /\/(?:_astro|pond\/dunhuang|pond\/ink|pond\/qinghua|pond\/ukiyo|pond\/stars|pond\/monet|pond\/relief|pond\/water|pond\/blueprint)\/[\w.\-]+\.(?:png|jpg|webp|avif)/g,
     (p) => (existsSync(join(DIST, p)) ? dataUrl(p) : p)
   );
 html = swap(html);
 js = swap(js);
+// (and the styles': the sheet of seals is a mask there)
+css = swap(css);
 html = html.replace(/<link rel="(?:icon|apple-touch-icon)"[^>]*>/g, '');
 html = html.replace('</head>', `<style>${css}</style></head>`);
 html = html.replace(entry[0], () => `<script type="module">${js.replace(/<\/script/g, '<\\/script')}</script>`);
