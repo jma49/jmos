@@ -119,9 +119,8 @@ koi moved to the common sheet. What is left of those:
    `tools/pond/life.cjs`, then draw them from sprites in a release build too and delete `life.js`,
    the three.js dependency and the models' half of `drawDove()` and `drawSpider()` (about 500 KB,
    130 KB gzipped, and a 512 px 3D render a frame while the dove is out).
-2. **Ukiyo-e, to ship:** the crests and the painted koi are behind the preview flag (`CRESTS` in the
-   pass, `KOI_SHEETS`). Shipping them means the look fetches its pictures in a release build: a
-   decision for Jincheng once he has seen them on a real screen.
+2. **Ukiyo-e ships with its own pictures** (its painted water, crests, koi, pads and drift), by
+   Jincheng's word. The other looks' pictures stay behind the preview flag.
 3. **Star chart:** whether the quiet grid is enough, or the atlas wants its equator and ecliptic back
    as a second, fixed layer: Jincheng's to say on a real screen.
 4. **Dunhuang:** a place for the caisson (the album page or a chapter's header for this look; the

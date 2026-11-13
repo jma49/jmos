@@ -778,12 +778,14 @@ const mixHex = (a, b, t) => {
     y = n(b);
   return `rgb(${x.map((v, i) => Math.round(v + (y[i] - v) * t)).join(',')})`;
 };
+// Which looks draw from their own pictures: the print in every build, the others in a preview build.
+const pictured = (name) => PREVIEW || name === 'ukiyo';
 // Each look's own pictures of the pads, of what drifts and flies, and of the two visitors (LOOK_ART in
-// newlooks.js), in a preview build. A picture is asked for the first time its look needs it; until it has
-// come, and if it never does, what the pond draws for every look stands.
+// newlooks.js). A picture is asked for the first time its look needs it; until it has come, and if it
+// never does, what the pond draws for every look stands.
 const artPics = new Map();
 function artOf(kind, name = look) {
-  const d = PREVIEW && LOOK_ART[name]?.[kind];
+  const d = pictured(name) && LOOK_ART[name]?.[kind];
   if (!d) return null;
   if (!artPics.has(d.src)) {
     artPics.set(d.src, null);
@@ -1591,7 +1593,7 @@ const FS = FS_SRC.replace(
   'vec3 look(int s){',
   `${PREVIEW ? NEW_GLSL : ''}vec3 look(int s){\n#ifdef ONLY\n  s=ONLY;\n#endif\n${PREVIEW ? '  if(s>=6) return lookNew(s);\n' : ''}`
 );
-const fsPart = (n, only) => FS.replace('\n', `\n#define PART ${n}\n${PREVIEW ? '#define CRESTS\n' : ''}${only ? `#define ONLY ${only}\n` : ''}`);
+const fsPart = (n, only) => FS.replace('\n', `\n#define PART ${n}\n#define CRESTS\n${only ? `#define ONLY ${only}\n` : ''}`);
 // The second pass. Inside a pane the picture is blurred and smoked; towards the rim it is
 // pulled sideways as through the edge of a lens, and the rim itself catches the light. In
 // the cold, frost gathers along the rim.
@@ -1818,8 +1820,8 @@ function initGL() {
   blurFbo = gl.createFramebuffer();
   glOK = true;
   tq = gl.getExtension('EXT_disjoint_timer_query_webgl2');
-  if (PREVIEW) {
-    // the Dunhuang wall's painting: empty until the look is asked for
+  {
+    // the texture a look's own picture lies in: empty until a look that has one is asked for
     gl.activeTexture(gl.TEXTURE10);
     texMural = tex(gl.LINEAR);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(4));
@@ -2938,7 +2940,7 @@ const GLIDE_MS = 640;
 const setInk = (on, from) => setLook(on ? 'ink' : 'water', from || $('#inkBtn'));
 function setLook(name, from) {
   if (!LOOKS.includes(name) || name === look) return;
-  if (PREVIEW && name in PICTURED) {
+  if (pictured(name) && name in PICTURED) {
     picLook = name;
     PICTURED[name]();
     paintPic();
@@ -3600,7 +3602,7 @@ function drawAir() {
       continue;
     }
     // (a look whose manner has no drawn dragonfly, and whose own flyer hasn't come, goes without)
-    if (PREVIEW && LOOK_ART[look]?.afloat?.fly) {
+    if (pictured(look) && LOOK_ART[look]?.afloat?.fly) {
       c.restore();
       continue;
     }
@@ -5489,7 +5491,7 @@ let monetImgs = null,
 // koi is one of the sheet's plain ones with their colour laid on, made once for each colour and kept.
 const koiSheets = {};
 function loadKoi(name) {
-  const d = PREVIEW && KOI_SHEETS[name];
+  const d = pictured(name) && KOI_SHEETS[name];
   if (!d || koiSheets[name]) return;
   const sh = (koiSheets[name] = { ...d, pic: null, maskA: null, made: new Map() }),
     pic = new Image();
@@ -6147,6 +6149,8 @@ const HOLD = 1.2,
         return void toggleLook(m, m === 'qinghua' ? [x, y] : [(Math.max(...xs) + Math.min(...xs)) / 2, (Math.max(...ys) + Math.min(...ys)) / 2]);
       }
     }
+    // (half way round a stir, the print's crests are sent for, so that it arrives as a wave)
+    if (Math.abs(gest.turn) > Math.PI && look === 'water') loadWaves();
     // stirred once round, wide enough to be meant
     if (Math.abs(gest.turn) > Math.PI * 1.9 && gest.len > 260) {
       let xs = P.map((p) => p[0]),
