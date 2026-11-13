@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
+  NEXT,
+  clueFor,
   SEAL_WORDS,
   VOLUMES,
   albumHTML,
@@ -21,14 +23,14 @@ import {
 
 // every look ships, so a release build's album is the whole of it; most cases here use a smaller one (the
 // first two painted looks, the first three drawn ones), as a build that left looks out would have
-const preview = volumes(false),
+// (the two volumes of looks; the third, of occasions, has its own cases)
+const preview = volumes(false).slice(0, 2),
   live = preview.map((v) => ({ ...v, seals: v.seals.slice(0, v.id === 'painted' ? 2 : 3) }));
 
 describe('the volumes', () => {
   it('hold every look in a release build, five to a volume', () => {
-    // (a preview build adds the trial volume of occasions and nothing else)
-    expect(volumes(true).slice(0, 2)).toEqual(volumes(false));
-    expect(volumes(true).map((v) => v.id)).toEqual(['painted', 'drawn', 'hours']);
+    expect(volumes(false)).toEqual(volumes(true));
+    expect(volumes(false).map((v) => v.id)).toEqual(['painted', 'drawn', 'hours']);
     expect(live.map((v) => v.seals.map((s) => s.id))).toEqual([
       ['ink', 'ukiyo'],
       ['glow', 'blueprint', 'ascii']
@@ -88,6 +90,36 @@ describe('stamping', () => {
     expect(allFull(last.album, live)).toBe(true);
     // with the preview looks, the same two are not yet a full volume
     expect(full(last.album, preview[0])).toBe(false);
+  });
+});
+
+describe('the clues', () => {
+  it('lead through each volume in order, and stop once the next seal is found', () => {
+    for (const v of volumes(false).slice(0, 2)) {
+      const ids = v.seals.map((x) => x.id);
+      ids.slice(0, -1).forEach((id, i) => expect(NEXT[id]).toBe(ids[i + 1]));
+      expect(NEXT[ids[ids.length - 1]]).toBeUndefined();
+    }
+    expect(clueFor('ink', emptyAlbum())).toBe('ukiyo');
+    expect(clueFor('ink', stamp(emptyAlbum(), 'ukiyo', '2026-11-13', volumes(false)).album)).toBe('');
+    expect(clueFor('water', emptyAlbum())).toBe('');
+    expect(clueFor('relief', emptyAlbum())).toBe('');
+  });
+});
+
+describe('the occasions', () => {
+  const all = volumes(false),
+    hours = all[2];
+  it('are five seals, each stamped once like any other, and the album is not full without them', () => {
+    expect(hours.seals.map((s) => s.id)).toEqual(['rain', 'snow', 'moon', 'fest', 'dawn']);
+    let a = emptyAlbum();
+    for (const v of all.slice(0, 2)) for (const s of v.seals) a = stamp(a, s.id, '2026-11-13', all).album;
+    expect(allFull(a, all)).toBe(false);
+    const r = stamp(a, 'rain', '2026-11-14', all);
+    expect(r.fresh).toBe(true);
+    expect(stamp(r.album, 'rain', '2026-11-15', all).fresh).toBe(false);
+    for (const s of hours.seals) a = stamp(a, s.id, '2026-11-14', all).album;
+    expect(allFull(a, all)).toBe(true);
   });
 });
 

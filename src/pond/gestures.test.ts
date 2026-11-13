@@ -133,6 +133,14 @@ describe('a hand on a large screen', () => {
   });
 });
 
+describe('dust brushed off a stroke at a time', () => {
+  it('four strokes the same way, joined end to end, are a rub; two are not', () => {
+    const swipe = (k: number): Pt[] => line([500, 400 + k * 8], [760, 404 + k * 8], 14);
+    expect(rub([0, 1, 2, 3].flatMap(swipe))).toBe(true);
+    expect(rub([0, 1].flatMap(swipe))).toBe(false);
+  });
+});
+
 describe('taps', () => {
   const far = taps([
     [300, 300],

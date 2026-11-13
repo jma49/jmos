@@ -8,7 +8,7 @@
 //   ascii       five letters within 3 s              keys      the keyboard
 //   ukiyo       stir once round                      moving    a full turn, wider than 50 px, not round the rim
 //   qinghua     once round the rim of the screen     moving    a full turn spanning most of the screen, near its edges
-//   dunhuang    rub back and forth over a spot       moving    four reversals along one line, in a thin patch
+//   dunhuang    rub or brush over a spot             moving    four passes along one line, in a thin patch, lifted or not
 //   blueprint   one long straight line               lift      over 320 px, straight
 //   relief      a zigzag of three peaks or more      lift      five sharp corners, travelling one way, wider than a rub
 //   stars       three taps far apart, within 1.5 s   lift      each over 150 px from the others
@@ -79,9 +79,11 @@ export function loop(pts: Pt[], W: number, H: number, turn = turnOf(pts), len = 
 // how thin a patch is a rub's and not a stir's: its breadth under this much of its length (or under 50 px)
 const THIN = 0.3;
 /**
- * Rubbed: back and forth along one line, four reversals at least, each pass 24 px or more, in a thin
- * patch. A hand rubs wider on a large screen and wanders as it goes, so the patch may be long, and as
- * broad as its length allows.
+ * Rubbed: back and forth along one line, three reversals at least (four passes), each pass 24 px or
+ * more, in a thin patch. A hand rubs wider on a large screen and wanders as it goes, so the patch may be
+ * long, and as broad as its length allows. Dust is also brushed off a stroke at a time, the hand lifted
+ * between them: the pond hands this the strokes of the last moment joined end to end, and the way back
+ * to where the next one starts counts as a pass.
  */
 export function rub(pts: Pt[]): boolean {
   if (pts.length < 8) return false;
@@ -108,7 +110,7 @@ export function rub(pts: Pt[]): boolean {
       far = v;
     }
   }
-  return n >= 4;
+  return n >= 3;
 }
 /**
  * A zigzag, as the sign for water is cut: it travels one way, swinging across its way at least five times

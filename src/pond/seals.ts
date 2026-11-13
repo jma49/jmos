@@ -43,18 +43,35 @@ export const VOLUMES: Volume[] = [
     ]
   },
   // Seals for an occasion and not a look: each is stamped when the pond is in that state while someone
-  // is there (the rain, snow, the full moon, a festival, the dawn). A trial, in preview builds only.
+  // is there (the rain, snow, the full moon, a festival, the dawn).
   {
     id: 'hours',
     seals: [
-      { id: 'rain', chars: '雨', shape: 'square', cut: 'white', preview: true },
-      { id: 'snow', chars: '雪', shape: 'round', cut: 'white', preview: true },
-      { id: 'moon', chars: '月', shape: 'round', cut: 'red', preview: true },
-      { id: 'fest', chars: '节', shape: 'square', cut: 'red', preview: true },
-      { id: 'dawn', chars: '晨', shape: 'square', cut: 'white', preview: true }
+      { id: 'rain', chars: '雨', shape: 'square', cut: 'white' },
+      { id: 'snow', chars: '雪', shape: 'round', cut: 'white' },
+      { id: 'moon', chars: '月', shape: 'round', cut: 'red' },
+      { id: 'fest', chars: '节', shape: 'square', cut: 'red' },
+      { id: 'dawn', chars: '晨', shape: 'square', cut: 'white' }
     ]
   }
 ];
+
+/**
+ * The looks as two chains, a volume each: a look on show carries a clue to the next one's gesture, until
+ * that one's seal is found. The last of each chain points nowhere.
+ */
+export const NEXT: Record<string, string> = {
+  ink: 'ukiyo',
+  ukiyo: 'monet',
+  monet: 'qinghua',
+  qinghua: 'dunhuang',
+  glow: 'blueprint',
+  blueprint: 'ascii',
+  ascii: 'stars',
+  stars: 'relief'
+};
+/** The look a clue should point to while this one is on show, or '' when there is none to give. */
+export const clueFor = (look: string, a: Album): string => (NEXT[look] && !has(a, NEXT[look]) ? NEXT[look] : '');
 
 /** The volumes as this build has them: without the looks that are only previews, unless it is one. */
 export const volumes = (preview: boolean): Volume[] =>
@@ -195,7 +212,7 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
       hours: 'Every occasion. Thank you for coming back.'
     },
     koi: 'Your koi wears a seal from now on.',
-    both: 'Both volumes are full. The gold koi wears one too, to match.',
+    both: 'Every volume is full. The gold koi wears one too, to match.',
     soon: 'Still to come.',
     line: 'The water answers more than a tap.',
     open: 'Seals',
@@ -247,7 +264,7 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
       hours: '时的这一册集齐了。谢谢你一次次回来。'
     },
     koi: '你的锦鲤，从此带着一方印。',
-    both: '两册都满了。金色的那条也盖了一方，和你作伴。',
+    both: '每一册都满了。金色的那条也盖了一方，和你作伴。',
     soon: '还没画好。',
     line: '水面不只会回应点击。',
     open: '集印册',
@@ -299,7 +316,7 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
       hours: '時の一冊がそろいました。何度も来てくれて、ありがとう。'
     },
     koi: 'あなたの鯉に、印がひとつ付きました。',
-    both: '二冊ともそろいました。金の鯉にも、おそろいの印を。',
+    both: 'どの冊もそろいました。金の鯉にも、おそろいの印を。',
     soon: 'まだ準備中。',
     line: '水面は、タップのほかにも応えます。',
     open: '集印帳',
