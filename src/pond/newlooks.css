@@ -191,72 +191,64 @@
   box-shadow: inset 0 0 0 1px var(--red);
   filter: drop-shadow(0 0 6px rgba(240, 207, 138, 0.7));
 }
-/* A look with a border round the whole pond (the bowl's rim): the border is the page's
-   margin in that look, and the title page, the clock and every control stand inside it, clear by the same
-   gap on every side. --frame is how far the border reaches in (newlooks.js draws it at this scale). */
-#pond[data-look='qinghua'] {
+/* The three looks with a band or a rim round the pond (the bowl's rim, the wall's bands, the relief's
+   frieze) share one margin: the clock and the controls stand clear of it by the same distance in all
+   three, so going from one to another moves nothing. --frame is how far the widest of them reaches in. */
+#pond[data-look='qinghua'],
+#pond[data-look='dunhuang'],
+#pond[data-look='relief'] {
   --frame: 48px;
-  --edge: max(clamp(20px, 4.2vw, 68px), calc(var(--frame) + 14px));
 }
-#pond[data-look='qinghua'] .alm {
+#pond[data-look='qinghua'] {
+  --edge: max(clamp(20px, 4.2vw, 68px), calc(var(--frame) + 4px));
+}
+#pond[data-look='qinghua'] .alm,
+#pond[data-look='dunhuang'] .alm,
+#pond[data-look='relief'] .alm {
   top: calc(var(--frame) + 10px);
 }
 #pond[data-look='qinghua'] .hud .bl,
 #pond[data-look='qinghua'] .hud .br,
-#pond[data-look='qinghua'] .hud .cmd {
+#pond[data-look='qinghua'] .hud .cmd,
+#pond[data-look='qinghua'] .preview,
+#pond[data-look='dunhuang'] .hud .bl,
+#pond[data-look='dunhuang'] .hud .br,
+#pond[data-look='dunhuang'] .hud .cmd,
+#pond[data-look='dunhuang'] .preview,
+#pond[data-look='relief'] .hud .bl,
+#pond[data-look='relief'] .hud .br,
+#pond[data-look='relief'] .hud .cmd,
+#pond[data-look='relief'] .preview {
   bottom: calc(var(--frame) + 10px);
 }
-#pond[data-look='qinghua'] .preview {
-  bottom: calc(var(--frame) + 10px);
-}
-#pond[data-look='qinghua'] .stamp {
+#pond[data-look='qinghua'] .stamp,
+#pond[data-look='dunhuang'] .stamp,
+#pond[data-look='relief'] .stamp {
   bottom: calc(var(--frame) + 58px);
 }
 #pond[data-look='qinghua'] .veil {
   padding: calc(var(--frame) + 6px);
 }
 @media (max-width: 860px) {
-  #pond[data-look='qinghua'] {
+  #pond[data-look='qinghua'],
+  #pond[data-look='dunhuang'],
+  #pond[data-look='relief'] {
     --frame: 27px;
   }
+  #pond[data-look='qinghua'] .lead,
+  #pond[data-look='dunhuang'] .lead,
+  #pond[data-look='relief'] .lead {
+    padding-top: calc(var(--frame) + 4px);
+  }
+  /* (the bowl's rim runs down the sides too) */
   #pond[data-look='qinghua'] .home {
     padding-inline: calc(var(--frame) + 8px);
-  }
-  #pond[data-look='qinghua'] .lead {
-    padding-top: calc(var(--frame) + 4px);
   }
   #pond[data-look='qinghua'] .hud {
     padding-inline: calc(var(--frame) + 6px);
   }
   #pond[data-look='qinghua'] .veil {
     padding: calc(var(--frame) + 2px);
-  }
-}
-/* the Dunhuang wall has a band along its top and bottom: the clock and the controls stand clear of it */
-#pond[data-look='dunhuang'] .alm {
-  top: 44px;
-}
-#pond[data-look='dunhuang'] .hud .bl,
-#pond[data-look='dunhuang'] .hud .br,
-#pond[data-look='dunhuang'] .hud .cmd,
-#pond[data-look='dunhuang'] .preview {
-  bottom: 44px;
-}
-#pond[data-look='dunhuang'] .stamp {
-  bottom: 92px;
-}
-@media (max-width: 860px) {
-  #pond[data-look='dunhuang'] .alm {
-    top: 28px;
-  }
-  #pond[data-look='dunhuang'] .lead {
-    padding-top: 12px;
-  }
-  #pond[data-look='dunhuang'] .hud .bl,
-  #pond[data-look='dunhuang'] .hud .br,
-  #pond[data-look='dunhuang'] .hud .cmd,
-  #pond[data-look='dunhuang'] .preview {
-    bottom: 30px;
   }
 }
 /* the clock stands in the soot at the top of the wall: its lines in the wall's white, not in umber */
@@ -349,30 +341,4 @@
   filter: none;
   opacity: 0.9;
   mix-blend-mode: multiply;
-}
-#pond[data-look='relief'] .alm {
-  top: 54px;
-}
-#pond[data-look='relief'] .hud .bl,
-#pond[data-look='relief'] .hud .br,
-#pond[data-look='relief'] .hud .cmd,
-#pond[data-look='relief'] .preview {
-  bottom: 54px;
-}
-#pond[data-look='relief'] .stamp {
-  bottom: 102px;
-}
-@media (max-width: 860px) {
-  #pond[data-look='relief'] .alm {
-    top: 34px;
-  }
-  #pond[data-look='relief'] .lead {
-    padding-top: 16px;
-  }
-  #pond[data-look='relief'] .hud .bl,
-  #pond[data-look='relief'] .hud .br,
-  #pond[data-look='relief'] .hud .cmd,
-  #pond[data-look='relief'] .preview {
-    bottom: 36px;
-  }
 }

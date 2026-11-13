@@ -46,6 +46,8 @@ pass, and the move from drawing things in code to painted pictures. How the pond
 | `life.cjs` | The dove and the spider through their states, as strips of crops round each, in the looks given (`HOUR` sets the time of day). It opens the page with `?perf`, which hands their places to `window.__pond`. Slow: six minutes a look and more. |
 | `virtual.cjs` | The virtual clock the newer tools share. |
 | `glide.cjs` | The layout glide between looks, measured: where each block stood, where it is drawn the moment the look's styles apply, where it ends. |
+| `finish.cjs` | The finish checklist as contact sheets: each look's title page, chapters, album and command bar, and a phone sheet. About three minutes a look. |
+| `layout.cjs` | Where every block of the title page stands in each look, and which differ from the water's: `node layout.cjs <dist> [w] [h] [lang]`. |
   | `terms.cjs` | Ink in each of the 24 solar terms. |
   | `ab.cjs`, `abdiff.py` | A deterministic A/B of two builds (seeded random, virtual clock, frames stepped by hand) and the largest pixel difference. |
   | `gest5.cjs` | Each look's gesture made with a real pointer, and which look arrives. |
@@ -81,6 +83,11 @@ Jincheng's words that still stand:
 - The Blender sheets: "鸽子不够细致，不够写实，参考现实中的鸽子去做。跳蛛的细节还要继续优化。"
 - The blackboard: "明显比其他的差很多…首先考虑换掉这个风格" (replaced by the Egyptian relief).
 - Layout between looks: "如果组件位置有变化，切换的时候丝滑一些".
+- Layout: "切换字体的时候整个页面上的所有非风格部分的内容不要有乱跳的变动。也就是布局统一" (done: see
+  "One layout in every look and language" in pond.md; keep it so).
+- Seasons by look: "不是所有的界面都要有荷叶蜻蜓，季节特点要符合艺术风格"; the star chart's rain is a
+  meteor shower.
+- Pictures: "每一种风格尽可能的全部用自己独有的美术资产。能定制的就定制。"
 
 ## 3. What ships when
 
@@ -112,9 +119,8 @@ koi moved to the common sheet. What is left of those:
    `tools/pond/life.cjs`, then draw them from sprites in a release build too and delete `life.js`,
    the three.js dependency and the models' half of `drawDove()` and `drawSpider()` (about 500 KB,
    130 KB gzipped, and a 512 px 3D render a frame while the dove is out).
-2. **Ukiyo-e, to ship:** the crests and the painted koi are behind the preview flag (`CRESTS` in the
-   pass, `KOI_SHEETS`). Shipping them means the look fetches its pictures in a release build: a
-   decision for Jincheng once he has seen them on a real screen.
+2. **Ukiyo-e ships with its own pictures** (its painted water, crests, koi, pads and drift), by
+   Jincheng's word. The other looks' pictures stay behind the preview flag.
 3. **Star chart:** whether the quiet grid is enough, or the atlas wants its equator and ecliptic back
    as a second, fixed layer: Jincheng's to say on a real screen.
 4. **Dunhuang:** a place for the caisson (the album page or a chapter's header for this look; the
@@ -146,14 +152,27 @@ koi moved to the common sheet. What is left of those:
    under the cobalt wash and is pale, paler still under the title. Whether 青花 should show a
    visitor's colour more strongly, or keep to cobalt, is Jincheng's to say. Not done with two real
    browsers signed in.
-10. **The finish checklist, ink as the benchmark,** for every look: title page; every chapter
-    (Timeline, Photos, Music, Notes, Chat, About, Account, ⌘K, the album) with rules, buttons, focus
-    rings, scrollbars, selection, hover, the photo viewer; the press; tags; gauge; clock and term;
-    dove and spider; seasons and weather; the stamp; sounds; phone. Report fixes by look.
+10. **The finish checklist: one pass done from contact sheets.** `tools/pond/finish.cjs` makes, for each
+    look, a sheet of the title page, every chapter, the album and the command bar at 1280 × 800, and a
+    phone sheet. All ten were looked at (in winter, English). Fixed: the command bar was dark glass
+    under dark type in 青花, Dunhuang and the relief. Since then: the timeline's filter bar takes each look's own ground; a painted koi under the
+    title's type is at half strength in ukiyo-e; in the relief a koi passes behind the tomb's
+    carvings; 青花's medallion is paler. Left: ink's koi cross the greeting on a phone, as on the
+    water; the Preview pill sits on the search box on a phone (preview builds only). Not covered by
+    the sheets: hover, focus rings, scrollbars, selection, the photo viewer, sounds, the other
+    seasons and languages.
 11. **The final review by an independent reviewer:** looks × seasons × weather × chapters ×
     desktop and phone × En, 中, 日.
 12. **Performance on a real Mac with `?perf`:** frame rate, GPU time and scale in each look and
     through each arrival. Nothing here could measure that (see the traps).
+
+The round asked of the local thread came back whole (nine looks' pictures, and each painted look's
+sheet of what drifts and flies), and it is wired in: each look's own lily pads, drift, flyers, dove
+and spider (`LOOK_ART`), ukiyo-e's painted water, 青花's medallion, the relief's papyrus, duck and
+cartouche, Monet's autumn pads, the water's drift and dragonfly, the dragon boat and the lanterns.
+Seen once each, in summer at 1280 × 800. Not used: ink's `stems`, ukiyo-e's `paper`, Monet's
+`strokes` and `canvas`, Dunhuang's `caisson`. Not looked at: autumn, winter and spring in each look,
+the dove and spider's own pictures in motion, phones, the festivals.
 
 Asked of the local thread since this page was first written, delivered, and in use: the relief's koi
 sheet and stone face, then a lighter lily sheet for the water, a grid that tiles for the star chart,

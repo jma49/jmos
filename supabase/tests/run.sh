@@ -34,9 +34,11 @@ trap 'psql -q -d postgres -c "drop database if exists $DB" -c "drop database if 
 psql -q -d postgres -c "do \$\$ begin create role anon nologin; create role authenticated nologin; create role service_role nologin bypassrls; exception when duplicate_object then null; end \$\$" >/dev/null
 
 # The database's structure as pg_dump writes it, without what changes from
-# one dump to the next (the \restrict key, pg_dump's own version).
+# one dump to the next (the \restrict key, pg_dump's own version, and the
+# pg_attver column option newer servers write, a counter of the database
+# it was dumped from, which two databases with one structure don't share).
 dump() {
-  pg_dump --schema-only -d "$1" | grep -v -e '^\\restrict ' -e '^\\unrestrict ' -e '^-- Dumped ' > "$2"
+  pg_dump --schema-only -d "$1" | grep -v -e '^\\restrict ' -e '^\\unrestrict ' -e '^-- Dumped ' -e ' SET (pg_attver=[0-9]*);$' > "$2"
 }
 
 # Runs psql quietly; an error fails the test rather than being printed and let through.
