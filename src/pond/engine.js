@@ -35,11 +35,13 @@ import {
   sealMark,
   stamp,
   volumes,
+  walked,
+  WAY,
   writeAlbum
 } from './seals';
 import { FPS, IDLE_AFTER, due, learnBeat, simSteps } from './clock.js';
 import { PERF, add, count, frameDone, span } from './perf.js';
-import { rub, strokeLifted, strokeMoving, tapsLook } from './gestures';
+import { describe, rub, strokeLifted, strokeMoving, tapsLook } from './gestures';
 import { crowdsPainting, underPainting } from './hang.js';
 import { paintingOf, seasonAmounts } from './seasons.js';
 import {
@@ -47,7 +49,6 @@ import {
   MONET,
   MURAL,
   MURAL_LARGE,
-  NEW_COMMANDS,
   NEW_GLASS,
   NEW_GLSL,
   NEW_LAY,
@@ -2016,7 +2017,7 @@ addEventListener('resize', panesLive);
 let paneSeen = '',
   paneLooked = 0;
 const paneAt = () => {
-  const el = paneEls.find((e) => e.id === 'cmdBtn') || paneEls[0];
+  const el = paneEls.find((e) => e.id === 'snd') || paneEls[0];
   if (!el) return '';
   const r = el.getBoundingClientRect(),
     pr = pond.getBoundingClientRect();
@@ -2068,10 +2069,9 @@ let phaseChoice = 'auto',
   phase = 'day',
   cur = null,
   raining = false,
-  // the weather where the visitor is (weather.ts), and what it does to the pond; a visitor's own rain wins
+  // the weather where the visitor is (weather.ts), and what it does to the pond
   wx = null,
   fx = effectsOf('clear'),
-  rainChosen = false,
   flashAt = -99;
 // how far through the day it is where the visitor is, 0 to 1 (a time of day chosen by hand stands for its hour)
 const dayNow = () =>
@@ -2819,8 +2819,7 @@ function drawBugs(c) {
 // ---------- the looks: water, ink (墨), ukiyo-e, glow, blueprint and ASCII ----------
 // A front brings a look in over the one before (`top` over `base`); going back to the water, the front
 // draws in again. Ink: a drop from the switch spreads and turns the pond to paper, and time slows.
-// The other looks are found by gestures on the water (`gest`, below); the command bar offers a look only
-// once its seal is in the album.
+// The other looks are found by gestures on the water (`gest`, below).
 const LOOKS = ['water', 'ink', 'ukiyo', 'glow', 'blueprint', 'ascii', ...NEW_LOOKS],
   SID = { water: 0, ink: 1, ukiyo: 2, glow: 3, blueprint: 4, ascii: 5, ...NEW_SID };
 // The looks' own type and Japanese (looks.css: kana.css and the looks' faces) load the first time a
@@ -2859,8 +2858,6 @@ const blotU = new Float32Array(30),
 // The words on the page, in English as the markup has them, and in Chinese from ZH.
 const HOME = {
   say: $('.say').innerHTML,
-  long: $('#cmdBtn .long').textContent,
-  short: $('#cmdBtn .short').textContent,
   talk: $('#talk > span:last-child').textContent
 };
 function speak() {
@@ -2868,9 +2865,6 @@ function speak() {
   $('#termV').lang = lang === 'ja' ? 'ja' : 'zh';
   $('.say').innerHTML = zhOn ? `${esc(ZH.say)} <button class="tlink" data-sheet="seals">${esc(ZH.faces)}</button>` : HOME.say;
   document.querySelectorAll('.toc .go').forEach((go) => (go.querySelector('b').textContent = chapterName(go.dataset.sheet)));
-  $('#cmdBtn .long').textContent = zhOn ? ZH.search[0] : HOME.long;
-  $('#cmdBtn .short').textContent = zhOn ? ZH.search[1] : HOME.short;
-  $('#palIn').placeholder = zhOn ? ZH.search[0] : 'Search the pond, or type / for commands';
   $('#talk > span:last-child').textContent = zhOn ? ZH.talk : HOME.talk;
   $('#hero').textContent = salute()[0];
   showTerm();
@@ -2900,7 +2894,6 @@ function setLang(to) {
     RM ? 0 : 260
   );
 }
-const LANG_NAME = { en: ['En', 'English'], zh: ['中', '中文'], ja: ['日', '日本語'] };
 // three languages, each its own segment, the one in use lit
 function langBtn() {
   const seg = $('#langBtn');
@@ -2963,13 +2956,17 @@ const setInk = (on, from) => setLook(on ? 'ink' : 'water', from || $('#inkBtn'))
 // The looks with a picture share one texture, so two of them can't be on the water at once: when one is
 // asked for while another still shows, that one draws back to the water first and the new one comes in
 // once it has gone (stepInk).
-let lookNext = null;
+let lookNext = null,
+  rubNext = false;
 const pictured = (l) => l in PICTURED;
 function setLook(name, from) {
   if (!LOOKS.includes(name) || name === look) return;
   lookNext = null;
   if (pictured(name) && [look, inkR > 0 ? top : 'water', inkR > 0 ? base : 'water'].some((l) => l !== name && pictured(l))) {
+    // (the way out is a change of look like any other, and would forget that a rubbing was asked for)
+    const rub = rubNext;
     if (look !== 'water') setLook('water', from);
+    rubNext = rub;
     lookNext = [name, from];
     return;
   }
@@ -2982,6 +2979,9 @@ function setLook(name, from) {
   if (name !== 'water' && name !== 'ink') loadType();
   const was = look;
   look = name;
+  // (the rubbing is the relief taken off on paper: it lasts while the relief does)
+  pond.toggleAttribute('data-rub', name === 'relief' && rubNext);
+  rubNext = false;
   // (the pads are painted ones in Monet's pond, and none lie under ink's painting)
   setTimeout(padsNow, 0);
   inkOn = name === 'ink';
@@ -3709,7 +3709,7 @@ function setFocus(v) {
 pond.addEventListener(
   'wheel',
   (e) => {
-    if (e.target.closest('.glass, .veil, .pal-wrap, .mock-pop')) return;
+    if (e.target.closest('.glass, .veil, .mock-pop')) return;
     e.preventDefault();
     setFocus(focusGoal + e.deltaY * 0.0014);
   },
@@ -3815,7 +3815,7 @@ const SHEETS = {
   seals: () =>
     `<div class="album">${albumHTML(album, VOLS, lang, freshVols())}${
       sealCount(album) > 0
-        ? `<p class="album-save"><button class="link" id="albumSave">${['Save as a picture', '存为图片', '画像で保存'][LANGS.indexOf(lang)]}</button></p>`
+        ? `<p class="album-save"><button class="link" id="albumClear">${SEAL_WORDS[lang].clear}</button><button class="link" id="albumSave">${['Save as a picture', '存为图片', '画像で保存'][LANGS.indexOf(lang)]}</button></p>`
         : ''
     }</div>`,
   music: () => {
@@ -3943,8 +3943,18 @@ $('#veil').addEventListener('pointerdown', (e) => {
   if (e.target === $('#veil')) closeSheet();
 });
 $('#sheet').addEventListener('click', (e) => {
+  const wipe = e.target.closest('#albumClear');
   if (e.target.closest('.x')) closeSheet();
-  else if (e.target.closest('[data-act=switch]')) {
+  else if (wipe) {
+    // clearing the album asks once, in place: the words turn to a question, and only a second press within
+    // a few seconds clears; left alone, the button reads as before
+    if ('ask' in wipe.dataset) return void setAlbum(clearSeals(album));
+    wipe.dataset.ask = '';
+    wipe.textContent = SEAL_WORDS[lang].clearAsk;
+    setTimeout(() => {
+      delete wipe.dataset.ask;
+      wipe.textContent = SEAL_WORDS[lang].clear;
+    }, 4000);
   } else if (e.target.closest('[data-act=switch]')) {
     signingUp = !signingUp;
     openSheet('account');
@@ -4055,6 +4065,12 @@ async function openChat() {
   $('#chatWho').textContent = me
     ? L(`You're ${me.username}. Be kind; everyone here can read it.`, ZH.chat.you.replace('{u}', me.username))
     : L('Anyone can read along; members can talk.', ZH.chat.anyone);
+  // a member's way to their account, where signing out is (a visitor's is the sign-in button below)
+  if (me) {
+    const acct = Object.assign(document.createElement('button'), { className: 'tlink', textContent: chapterName('account') });
+    acct.dataset.sheet = 'account';
+    $('#chatWho').append(' ', acct);
+  }
   void drawChat();
   if (!chatStop)
     chatStop = await people.watchChat(
@@ -4124,474 +4140,6 @@ $('#clear').addEventListener('click', () => {
   setClear(!('clear' in pond.dataset));
 });
 
-/* ================= the command bar ================= */
-const ICONS = {
-  letter: '<path d="M2.5 4h11v8.5h-11z"/><path d="m2.5 4.5 5.5 4.5 5.5-4.5"/>',
-  note: '<path d="M2 9.5h12l-2.5 3h-7z"/><path d="M8 2.5v7M8 3.5l3.5 4H8"/>',
-  music: '<path d="M6 12V4l6-1.5V10"/><circle cx="4.6" cy="12" r="1.5"/><circle cx="10.6" cy="10" r="1.5"/>',
-  play: '<path d="M5 3.5v9l7-4.5z"/>',
-  food: '<circle cx="5" cy="6" r="1.2"/><circle cx="10.5" cy="5" r="1.2"/><circle cx="8" cy="10" r="1.2"/><circle cx="12" cy="10.5" r="1"/>',
-  sun: '<circle cx="8" cy="8" r="3"/><path d="M8 1.5v1.8M8 12.7v1.8M1.5 8h1.8M12.7 8h1.8M3.4 3.4l1.3 1.3M11.3 11.3l1.3 1.3M3.4 12.6l1.3-1.3M11.3 4.7l1.3-1.3"/>',
-  moon: '<path d="M12.5 9.5A5.5 5.5 0 0 1 6.5 3.5a5.5 5.5 0 1 0 6 6z"/>',
-  rain: '<path d="M4.5 9.5a3 3 0 0 1 .4-6 3.6 3.6 0 0 1 6.8 1 2.5 2.5 0 0 1-.3 5z"/><path d="M5.5 11.5 5 13M8.2 11.5 7.7 13M11 11.5l-.5 1.5"/>',
-  brush: '<path d="M13.5 2.5 7 9"/><path d="M7 9c-1.6-.5-3.4.5-3.6 2.4-.1 1.2-.7 1.9-1.4 2.1 2.6.6 5.6-.1 5.9-2.6z"/>',
-  glass: '<rect x="2" y="3" width="8.5" height="7" rx="2"/><path d="M12.6 6.2A2 2 0 0 1 14 8.1V11a2 2 0 0 1-2 2H7.6a2 2 0 0 1-1.9-1.4"/>',
-  sound: '<path d="M2.5 6.2h2.6L8.6 3.5v9L5.1 9.8H2.5z"/><path d="M11 5.6a3.4 3.4 0 0 1 0 4.8"/>',
-  chat: '<path d="M2.5 3.5h11v7h-6l-3 2.5v-2.5h-2z"/>',
-  user: '<circle cx="8" cy="5.5" r="2.6"/><path d="M3 13.5c.8-2.6 2.7-3.8 5-3.8s4.2 1.2 5 3.8"/>',
-  again: '<path d="M3 8a5 5 0 1 0 1.6-3.7"/><path d="M3 3v3h3"/>'
-};
-const ico = (n) => `<svg width="16" height="16" viewBox="0 0 16 16" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">${ICONS[n]}</svg>`;
-// Everything the pond can do or show, as one list: label, a line about it, the keys that find it.
-function commands() {
-  const cleared = 'clear' in pond.dataset;
-  return [
-    {
-      sec: 'People',
-      icon: 'chat',
-      label: 'Chat',
-      hint: online ? `${online} here now` : 'The room everyone shares',
-      kw: 'chat talk message room people',
-      top: true,
-      run: () => openSheet('chat')
-    },
-    ...(accountsOpen
-      ? [
-          me
-            ? {
-                sec: 'People',
-                icon: 'user',
-                label: 'Sign out',
-                hint: `Signed in as ${me.username}`,
-                kw: 'account logout leave',
-                cmd: true,
-                run: () => void people.signOut()
-              }
-            : {
-                sec: 'People',
-                icon: 'user',
-                label: 'Sign in',
-                hint: 'Or make an account: your koi carries your name',
-                kw: 'account login register signup member',
-                top: true,
-                cmd: true,
-                run: () => {
-                  signingUp = false;
-                  openSheet('account');
-                }
-              }
-        ]
-      : []),
-    {
-      sec: 'Go to',
-      icon: 'note',
-      label: 'Leave a note',
-      hint: 'It sails off as a paper boat',
-      kw: 'guestbook boat write message notes',
-      top: true,
-      run: () => {
-        setClear(false);
-        openSheet('notes');
-        setTimeout(() => {
-          const box = $('#sheet').querySelector('input');
-          if (box) box.focus({ preventScroll: true });
-        }, 80);
-      }
-    },
-    {
-      sec: 'Music',
-      icon: 'play',
-      label: music().playing ? 'Pause the music' : 'Play the music',
-      hint: music().songs[music().index] ? `${music().songs[music().index].title} · ${music().songs[music().index].artist}` : 'The songs I keep coming back to',
-      kw: 'music song sound play pause stop',
-      top: true,
-      cmd: true,
-      run: () => {
-        audio();
-        void toggleSong();
-      }
-    },
-    ...music().songs.map((t, i) => ({
-      sec: 'Music',
-      icon: 'music',
-      label: t.title,
-      hint: t.artist,
-      kw: 'song play music ' + t.artist + ' ' + (t.album || '') + ' ' + (t.original || ''),
-      run: () => playSong(i)
-    })),
-    ...[
-      ['Spring', 4.3, '清明 · petals on the water'],
-      ['Summer', 11.2, '大暑 · lotus and dragonflies'],
-      ['Autumn', 17.2, '霜降 · leaves come down'],
-      ['Winter', 22.6, '小寒 · ice and snow']
-    ].map(([l, y, h]) => ({ sec: 'Year', icon: 'sun', label: l, hint: h, kw: 'season year time ' + l, cmd: true, run: () => setYear(y) })),
-    {
-      sec: 'Year',
-      icon: 'again',
-      label: 'Follow the calendar',
-      hint: `Today: ${TERMS[Math.floor(yearToday())][0]} · ${TERMS[Math.floor(yearToday())][1]}`,
-      kw: 'season year today auto solar term',
-      cmd: true,
-      run: () => setYear()
-    },
-    ...[
-      ['the surface', 0.05, 'Reflections, pads and petals'],
-      ['the koi', 0.6, 'Where it rests'],
-      ['the bed', 1, 'The stones']
-    ].map(([l, v, h]) => ({
-      sec: 'Pond',
-      icon: 'glass',
-      label: 'Focus on ' + l,
-      hint: h,
-      kw: 'focus depth sharp blur ' + l,
-      cmd: true,
-      run: () => setFocus(v)
-    })),
-    {
-      sec: 'Pond',
-      icon: 'letter',
-      label: "Call Devot's dove",
-      hint: 'It comes down on a lily pad to drink',
-      kw: 'devot pigeon bird dove visitor',
-      cmd: true,
-      run: () => {
-        setClear(false);
-        callDove();
-      }
-    },
-    {
-      sec: 'Pond',
-      icon: 'food',
-      label: "Drop a bug for ocra's spider",
-      hint: 'It watches, then it jumps',
-      kw: 'ocra spider bug insect review jump',
-      cmd: true,
-      run: () => {
-        dropBug();
-        dropBug();
-      }
-    },
-    {
-      sec: 'Pond',
-      icon: 'food',
-      label: 'Feed the fish',
-      hint: 'Or press the water anywhere',
-      key: 'F',
-      kw: 'food pellets koi feed',
-      top: true,
-      cmd: true,
-      run: feedMiddle
-    },
-    {
-      sec: 'Pond',
-      icon: 'glass',
-      label: cleared ? 'Show the glass' : 'Hide the glass',
-      hint: cleared ? 'Bring the panes back' : 'Only the pond',
-      key: 'G',
-      kw: 'glass panes cards hide show clear pond only',
-      cmd: true,
-      run: () => {
-        setClear(!cleared);
-      }
-    },
-    // a look is to be found on the water: the command bar offers one only once its seal is in the album
-    hasSeal(album, 'ink') && {
-      sec: 'Pond',
-      icon: 'brush',
-      label: inkOn ? 'Back to the water' : 'Ink and paper',
-      hint: 'The pond as an ink painting, in slow motion',
-      key: 'I',
-      kw: 'ink paper painting chinese brush black white slow 水墨',
-      hidden: true,
-      cmd: true,
-      run: () => setInk(!inkOn)
-    },
-    // the other looks, likewise: found here only when searched for, never listed
-    ...[
-      ['ukiyo', '浮世絵 Ukiyo-e', 'A woodblock print; or stir the water once round', 'ukiyo ukiyo-e woodblock print hokusai wave japan 浮世絵'],
-      ['glow', 'Glow', 'The lights go out; or press the light on the water', 'glow night neon dark light'],
-      ['blueprint', 'Blueprint', 'A drawing on blue paper; or draw a long straight line', 'blueprint drawing plan draft ruler'],
-      ['ascii', 'ASCII', 'The pond in characters; or type a few letters', 'ascii text characters terminal type'],
-      ...NEW_COMMANDS
-    ]
-      .filter(([id]) => hasSeal(album, id))
-      .map(([id, label, hint, kw]) => ({
-        sec: 'Pond',
-        icon: 'brush',
-        label: look === id ? 'Back to the water' : label,
-        hint,
-        kw,
-        hidden: true,
-        cmd: true,
-        run: () => setLook(look === id ? 'water' : id)
-      })),
-    {
-      sec: 'Pond',
-      icon: 'brush',
-      label: LANG_NAME[nextLang()][1],
-      hint: `The pond in ${{ en: 'English', zh: 'Chinese', ja: 'Japanese' }[nextLang()]}`,
-      key: 'L',
-      kw: 'language chinese english japanese 中文 语言 日本語 lang',
-      cmd: true,
-      run: () => setLang(nextLang())
-    },
-    // the weather where the visitor is, said plainly
-    ...(wx
-      ? [
-          {
-            sec: 'Pond',
-            icon: 'rain',
-            label: weatherLine(),
-            hint: L('From Open-Meteo, for where you are', zhOn ? (lang === 'ja' ? 'Open-Meteo より、あなたのいる場所' : '来自 Open-Meteo，你所在的地方') : ''),
-            kw: 'weather temperature rain where 天气 天気',
-            run: () => {}
-          }
-        ]
-      : []),
-    // it rains only on the water: in a look the rain waits, and the command with it
-    ...(look === 'water'
-      ? [
-          {
-            sec: 'Pond',
-            icon: 'rain',
-            label: raining ? 'Stop the rain' : 'Make it rain',
-            hint: 'Weather',
-            kw: 'rain weather storm',
-            cmd: true,
-            run: () => {
-              raining = !raining;
-              rainChosen = true;
-              tick();
-            }
-          }
-        ]
-      : []),
-    ...[
-      ['dawn', 'Dawn', 'sun'],
-      ['day', 'Day', 'sun'],
-      ['dusk', 'Dusk', 'sun'],
-      ['night', 'Night', 'moon']
-    ].map(([p, l, i]) => ({
-      sec: 'Pond',
-      icon: i,
-      label: l,
-      hint: 'Time of day',
-      kw: 'time light ' + p,
-      cmd: true,
-      run: () => {
-        setPhase(p);
-        tick();
-      }
-    })),
-    {
-      sec: 'Pond',
-      icon: 'sun',
-      label: 'Follow my clock',
-      hint: 'Time of day',
-      kw: 'auto time now reset',
-      cmd: true,
-      run: () => {
-        setPhase('auto');
-        tick();
-      }
-    },
-    {
-      sec: 'Pond',
-      icon: 'sound',
-      label: muted ? 'Turn the sound on' : 'Turn the sound off',
-      hint: 'The water, the fish and the music',
-      key: 'M',
-      kw: 'mute audio volume quiet',
-      cmd: true,
-      run: () => {
-        audio();
-        setMuted(!muted);
-      }
-    },
-    // the seal album, as in the contents; clearing it once a volume is full
-    {
-      sec: 'Pond',
-      icon: 'brush',
-      label: SEAL_WORDS[lang].open,
-      hint: SEAL_WORDS[lang].openHint,
-      kw: 'seals stamps album collection looks 集印册 集印帳 印 御朱印',
-      cmd: true,
-      run: () => openSheet('seals')
-    },
-    ...(VOLS.some((v) => full(album, v)) || PANEL
-      ? [
-          {
-            sec: 'Pond',
-            icon: 'again',
-            label: SEAL_WORDS[lang].clear,
-            hint: SEAL_WORDS[lang].clearHint,
-            kw: 'seals clear reset again 清空 印 消す',
-            hidden: !PANEL,
-            cmd: true,
-            run: () => setAlbum(clearSeals(album))
-          }
-        ]
-      : []),
-    ...(PANEL
-      ? [
-          {
-            sec: 'Pond',
-            icon: 'brush',
-            label: 'Preview: stamp all seals',
-            hint: 'Fills the album, a seal at a time',
-            kw: 'preview seals stamp all',
-            cmd: true,
-            run: () => VOLS.flatMap((v) => v.seals).forEach((x, i) => setTimeout(() => reached(x.id), i * 3400))
-          }
-        ]
-      : []),
-    { sec: 'Pond', icon: 'again', label: 'Replay the opening', hint: 'The greeting and the gold koi', kw: 'intro again restart', cmd: true, run: () => intro() }
-  ];
-}
-// A label matches when it holds the query whole, or when the query's letters each start a word
-// or follow the letter before (so "wf" finds White Ferrari, and "oc" does not find "clock").
-function fuzzy(q, text) {
-  const t = text.toLowerCase(),
-    whole = t.indexOf(q),
-    start = (i) => i === 0 || /[\s·,'-]/.test(t[i - 1]);
-  if (whole >= 0) return { score: 100 - whole * 2 + (start(whole) ? 30 : 0) - t.length * 0.05, at: [...q].map((_, k) => whole + k) };
-  const at = [];
-  let from = 0;
-  for (const ch of q) {
-    let f = -1;
-    if (at.length && t[from] === ch) f = from;
-    else
-      for (let i = from; i < t.length; i++)
-        if (t[i] === ch && start(i)) {
-          f = i;
-          break;
-        }
-    if (f < 0) return null;
-    at.push(f);
-    from = f + 1;
-  }
-  return { score: 50 - at[0] * 2 - t.length * 0.05, at };
-}
-// Beyond the label, a command is found by a word of its description or its keywords.
-const worded = (q, text) => {
-  const ws = text.toLowerCase().split(/[\s·,]+/);
-  return ws.some((w) => w.startsWith(q)) ? 12 : q.length > 2 && ws.some((w) => w.includes(q)) ? 4 : 0;
-};
-const lit = (text, at) => {
-  const set = new Set(at);
-  return [...text].map((ch, i) => (set.has(i) ? `<mark>${esc(ch)}</mark>` : esc(ch))).join('');
-};
-let hits = [],
-  sel = 0,
-  palFocus = null;
-function drawPal() {
-  const raw = $('#palIn').value,
-    only = raw.startsWith('/'),
-    q = raw.replace(/^\//, '').trim().toLowerCase(),
-    all = commands().filter((c) => c && (!only || c.cmd));
-  let html = '';
-  if (!q) {
-    const groups = only
-      ? [['Commands', all.filter((c) => !c.hidden)]]
-      : [
-          ['Suggested', all.filter((c) => c.top)],
-          ...['Go to', 'People', 'Music', 'Year', 'Pond'].map((s) => [s, all.filter((c) => c.sec === s && !c.top && !c.hidden)])
-        ];
-    hits = groups.flatMap(([, list]) => list);
-    let i = 0;
-    for (const [name, list] of groups)
-      if (list.length) html += `<li class="sec" role="presentation">${name}</li>` + list.map((c) => row(c, i++, esc(c.label), c.key)).join('');
-  } else {
-    hits = all
-      .map((c) => {
-        const a = fuzzy(q, c.label),
-          b = a ? 0 : worded(q, c.hint + ' ' + c.kw);
-        return a ? { ...c, score: a.score, at: a.at } : b ? { ...c, score: b, at: [] } : null;
-      })
-      .filter(Boolean)
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 12);
-    html = hits.length
-      ? hits.map((c, i) => row(c, i, lit(c.label, c.at), c.sec.toLowerCase())).join('')
-      : `<li class="none" role="presentation"><b>Nothing by that name in the pond.</b>Try a project, a song, or “rain”.</li>`;
-  }
-  sel = clamp(sel, 0, Math.max(0, hits.length - 1));
-  $('#palList').innerHTML = html;
-  $('#palN').textContent = hits.length === 1 ? '1 result' : `${hits.length} results`;
-  mark();
-}
-const row = (c, i, label, right) =>
-  `<li role="option" id="opt-${i}" data-i="${i}"><span class="ic">${c.dot ? `<i style="--c:${c.dot}"></i>` : ico(c.icon)}</span><span class="tx"><b>${label}</b><small>${esc(c.hint)}</small></span><span class="rt">${right ? (right.length <= 3 && right !== 'pond' ? `<kbd>${esc(right)}</kbd>` : esc(right)) : ''}</span></li>`;
-function mark() {
-  $('#palList')
-    .querySelectorAll('[role=option]')
-    .forEach((li) => li.setAttribute('aria-selected', String(+li.dataset.i === sel)));
-  const cur = $('#opt-' + sel);
-  $('#palIn').setAttribute('aria-activedescendant', cur ? cur.id : '');
-  if (cur) cur.scrollIntoView({ block: 'nearest' });
-  if (sel === 0) $('#palList').scrollTop = 0;
-}
-const palOpen = () => 'open' in $('#palWrap').dataset;
-function openPal(prefix) {
-  if (!palOpen()) palFocus = document.activeElement;
-  $('#palIn').value = prefix || '';
-  sel = 0;
-  drawPal();
-  $('#palWrap').dataset.open = '';
-  $('#palIn').focus({ preventScroll: true });
-}
-function closePal() {
-  if (!palOpen()) return;
-  delete $('#palWrap').dataset.open;
-  $('#palIn').blur();
-  if (palFocus && palFocus.focus && palFocus !== document.body) palFocus.focus({ preventScroll: true });
-}
-function runPal(i) {
-  const c = hits[i];
-  if (!c) return;
-  closePal();
-  c.run();
-}
-$('#cmdBtn').addEventListener('click', () => openPal());
-$('#palIn').addEventListener('input', () => {
-  sel = 0;
-  // "ascii" or "text" typed here is the same as typing on the page (a phone has no other keyboard)
-  if (look !== 'ascii' && /^(ascii|text)$/i.test($('#palIn').value.trim())) {
-    closePal();
-    setLook('ascii', [W * (big ? 0.7 : 0.5), H * 0.6]);
-    return;
-  }
-  drawPal();
-});
-$('#palIn').addEventListener('keydown', (e) => {
-  const n = hits.length,
-    move = { ArrowDown: 1, ArrowUp: -1, PageDown: 5, PageUp: -5 }[e.key] || (e.key === 'Tab' ? (e.shiftKey ? -1 : 1) : 0);
-  if (move) {
-    e.preventDefault();
-    if (n) {
-      sel = Math.abs(move) === 1 ? (sel + move + n) % n : clamp(sel + move, 0, n - 1);
-      mark();
-    }
-  } else if (e.key === 'Enter') {
-    e.preventDefault();
-    runPal(sel);
-  }
-});
-$('#palList').addEventListener('pointermove', (e) => {
-  const li = e.target.closest('[data-i]');
-  if (li && +li.dataset.i !== sel) {
-    sel = +li.dataset.i;
-    mark();
-  }
-});
-$('#palList').addEventListener('click', (e) => {
-  const li = e.target.closest('[data-i]');
-  if (li) runPal(+li.dataset.i);
-});
-$('#palWrap').addEventListener('pointerdown', (e) => {
-  e.stopPropagation();
-  if (e.target === $('#palWrap')) closePal();
-});
 function feedMiddle() {
   // into open water: the middle of the pond is the last place to freeze
   const x = W * rnd(0.42, 0.58),
@@ -4608,23 +4156,19 @@ function feedMiddle() {
 addEventListener('keydown', (e) => {
   const typing = /INPUT|TEXTAREA/.test((document.activeElement || {}).tagName || '');
   // 1 to 4 open the chapters in order
-  if (!typing && !palOpen() && !e.metaKey && !e.ctrlKey && !e.altKey && /^[1-4]$/.test(e.key)) {
+  if (!typing && !e.metaKey && !e.ctrlKey && !e.altKey && /^[1-4]$/.test(e.key)) {
     e.preventDefault();
     openSheet(ORDER[+e.key - 1]);
     return;
   }
   if (e.key === 'Escape') {
     // esc closes whatever is on top
-    if (palOpen()) closePal();
-    else if (sheetOpen()) closeSheet();
+    if (sheetOpen()) closeSheet();
     else if (typing) document.activeElement.blur();
     return;
   }
-  if (typing || e.metaKey || e.ctrlKey || e.altKey || palOpen() || sheetOpen()) return;
-  if (e.key === '/') {
-    e.preventDefault();
-    openPal('/');
-  } else if (e.key === 'i' || e.key === 'I') setInk(!inkOn);
+  if (typing || e.metaKey || e.ctrlKey || e.altKey || sheetOpen()) return;
+  if (e.key === 'i' || e.key === 'I') setInk(!inkOn);
   else if (e.key === 'l' || e.key === 'L') setLang(nextLang());
   else if (e.key === 'g' || e.key === 'G') {
     setClear(!('clear' in pond.dataset));
@@ -5470,7 +5014,7 @@ function paintMural() {
 /* ================= the seal album (集印册) =================
    Each look has a seal (seals.ts). The first time a look comes in all the way, by whatever route, its seal is
    stamped in the corner and kept in this browser; the album is a chapter, opened from the contents (its row
-   says how many are found), from the command bar or from the small mark by the solar term, which shows once
+   says how many are found) or from the small mark by the solar term, which shows once
    there is a seal to see. Someone who has found none is
    shown one quiet line on the water, once. None of it runs in the frame: a stamp is a CSS animation, and
    the line a timer. */
@@ -5635,6 +5179,29 @@ function albumShown() {
   album = a;
   save('pond-seals', writeAlbum(a));
 }
+// The end (seals.ts, WAY): with the two volumes of looks full, their seals pressed in the album in the
+// order it keeps them turn the pond into a rubbing of the carved stone: the relief, taken off on paper.
+let way = [];
+document.addEventListener('click', (e) => {
+  const li = e.target.closest?.('#sheet .slots li[data-found][data-id]');
+  if (!li || !full(album, VOLS[0]) || !full(album, VOLS[1])) return;
+  way = walked(way, li.dataset.id);
+  // (a seal on the way answers the press; one off it does not)
+  if (way.length) {
+    li.dataset.step = '';
+    setTimeout(() => delete li.dataset.step, 450);
+    plip('stamp', 0.35);
+  }
+  if (way.length < WAY.length) return;
+  way = [];
+  closeSheet();
+  if (look === 'relief') pond.setAttribute('data-rub', '');
+  else {
+    rubNext = true;
+    setLook('relief', [W / 2, H / 2]);
+  }
+  reached('rubbing');
+});
 // A look on show carries a clue to the next look's gesture (seals.ts, NEXT) until that one is found: a
 // small mark in the look's own manner, laid in quietly once the look has come in all the way.
 const CLUES = {
@@ -5711,7 +5278,7 @@ function reached(id) {
 }
 // One line on the water for someone who has found no look: once the pond has settled and they have been
 // here a while, or a moment after their first press. The gold koi comes over as it does at the opening.
-// Never over a chapter, the command bar or the title's type; shown once, and not at all after a seal.
+// Never over a chapter or the title's type; shown once, and not at all after a seal.
 sealsEntry();
 let hintTimer = 0;
 function hintSoon(ms) {
@@ -5721,7 +5288,7 @@ function hintSoon(ms) {
 }
 function hint() {
   if (!mayHint(album)) return;
-  if (sheetOpen() || palOpen() || look !== 'water' || !arrived || host.mode !== 'wander' || document.hidden) return void hintSoon(6000);
+  if (sheetOpen() || look !== 'water' || !arrived || host.mode !== 'wander' || document.hidden) return void hintSoon(6000);
   const el = $('#whisper'),
     toc = $('#toc').getBoundingClientRect(),
     pr = pond.getBoundingClientRect(),
@@ -5900,7 +5467,7 @@ function arrival() {
 
 /* ================= pointer ================= */
 // Glass, paper and controls are above the water: a press or a stroke there never reaches it.
-const DRY = '.glass, .hud > *, .veil, .pal-wrap';
+const DRY = '.glass, .hud > *, .veil';
 const spot = (e) => {
   const r = pond.getBoundingClientRect();
   return [e.clientX - r.left, e.clientY - r.top];
@@ -5991,7 +5558,21 @@ const gest = {
 };
 // how long a lifted stroke still counts with the next, in milliseconds
 const CARRY = 2200;
+// With ?gest in the address: each stroke as the rules read it, in a corner, for when a gesture won't take.
+const GEST = /[?&]gest\b/.test(location.search);
+function gestSay(text) {
+  let el = $('#gestSay');
+  if (!el) {
+    el = document.createElement('pre');
+    el.id = 'gestSay';
+    el.style.cssText =
+      'position:fixed;left:8px;top:8px;z-index:99;margin:0;padding:8px 10px;max-width:calc(100vw - 16px);white-space:pre-wrap;font:12px/1.5 ui-monospace,monospace;color:#fff;background:rgba(0,0,0,.78);border-radius:6px;pointer-events:none';
+    document.body.append(el);
+  }
+  el.textContent = text;
+}
 const toggleLook = (name, at) => {
+  if (GEST) gestSay(`${gest.pts.length > 1 ? describe(gest.pts, W, H) : ''}\n→ ${name}${look === name ? ' (already on show)' : ''}`);
   gest.down = false;
   gest.pts = [];
   gest.carry = null;
@@ -6058,29 +5639,20 @@ const HOLD = 1.2,
     // (a long stroke is thinned, not cut short: its beginning is part of what it means)
     if (P.length > 480) for (let i = P.length - 2; i > 0; i -= 2) P.splice(i, 1);
     // the strokes that are rules of their own (gestures.ts): a rub over one spot, or once round the rim of the screen
-    {
-      // (dust is brushed off a stroke at a time too: the strokes of the last moment count with this one)
-      const m = strokeMoving(P, W, H) || (gest.carry && performance.now() - gest.carryAt < CARRY && rub([...gest.carry, ...P]) ? 'dunhuang' : null);
-      if (m === 'dunhuang' || m === 'qinghua') {
-        const xs = P.map((p) => p[0]),
-          ys = P.map((p) => p[1]);
-        return void toggleLook(m, m === 'qinghua' ? [x, y] : [(Math.max(...xs) + Math.min(...xs)) / 2, (Math.max(...ys) + Math.min(...ys)) / 2]);
-      }
+    // (dust is brushed off a stroke at a time too: the strokes of the last moment count with this one)
+    const m = strokeMoving(P, W, H) || (gest.carry && performance.now() - gest.carryAt < CARRY && rub([...gest.carry, ...P]) ? 'dunhuang' : null);
+    if (m === 'dunhuang' || m === 'qinghua') {
+      const xs = P.map((p) => p[0]),
+        ys = P.map((p) => p[1]);
+      return void toggleLook(m, m === 'qinghua' ? [x, y] : [(Math.max(...xs) + Math.min(...xs)) / 2, (Math.max(...ys) + Math.min(...ys)) / 2]);
     }
     // (half way round a stir, the print's crests are sent for, so that it arrives as a wave)
     if (Math.abs(gest.turn) > Math.PI && look === 'water') loadWaves();
-    // stirred once round, wide enough to be meant
-    if (Math.abs(gest.turn) > Math.PI * 1.9 && gest.len > 260) {
-      let xs = P.map((p) => p[0]),
+    // stirred once round, wide enough to be meant (gestures.ts)
+    if (m === 'ukiyo') {
+      const xs = P.map((p) => p[0]),
         ys = P.map((p) => p[1]);
-      const w = Math.max(...xs) - Math.min(...xs),
-        h = Math.max(...ys) - Math.min(...ys);
-      // (not a long thin patch: that is a rub on its way)
-      if (Math.min(w, h) > Math.max(50, Math.max(w, h) * 0.3)) {
-        xs = (Math.max(...xs) + Math.min(...xs)) / 2;
-        ys = (Math.max(...ys) + Math.min(...ys)) / 2;
-        toggleLook('ukiyo', [xs, ys]);
-      }
+      toggleLook('ukiyo', [(Math.max(...xs) + Math.min(...xs)) / 2, (Math.max(...ys) + Math.min(...ys)) / 2]);
     }
   };
   const lift = (e) => {
@@ -6096,17 +5668,19 @@ const HOLD = 1.2,
       const [gx, gy] = glintAt();
       if (Math.hypot(x - gx, y - gy) < 46) toggleLook('glow', [gx, gy]);
       else {
-        // taps: three far apart join as a triangle of stars; four in one place are dabs of paint
+        // taps: three far apart join as a triangle of stars; four in one place are dabs of paint; five in a
+        // row are letters, where there are no keys
         const now = performance.now() / 1000;
-        gest.taps = [...(gest.taps || []).filter((q) => now - q.t < 2), { t: now, x, y }];
+        gest.taps = [...(gest.taps || []).filter((q) => now - q.t < 3), { t: now, x, y }];
         const t = tapsLook(gest.taps);
         if (t) {
-          const at = t === 'stars' ? gest.taps.slice(-3) : gest.taps.slice(-4);
+          const at = gest.taps.slice(t === 'stars' ? -3 : t === 'ascii' ? -5 : -4);
           gest.taps = [];
           toggleLook(t, [at.reduce((a, q) => a + q.x, 0) / at.length, at.reduce((a, q) => a + q.y, 0) / at.length]);
         }
       }
     } else if (strokeLifted(drawn) === 'relief') toggleLook('relief', [x, y]);
+    else if (GEST && drawn.length > 1) gestSay(`${describe(drawn, W, H)}\n→ nothing (lifted after ${dt.toFixed(1)} s)`);
     // a stroke that meant nothing by itself is kept a moment, in case it is one of several brushed over a spot
     if (gest.len >= 40 && drawn.length) {
       gest.carry = [...(gest.carry && performance.now() - gest.carryAt < CARRY ? gest.carry : []), ...drawn].slice(-300);
@@ -6130,7 +5704,7 @@ const HOLD = 1.2,
   });
   addEventListener('keydown', (e) => {
     const typing = /INPUT|TEXTAREA/.test((document.activeElement || {}).tagName || '');
-    if (typing || e.metaKey || e.ctrlKey || e.altKey || palOpen() || sheetOpen() || !/^[a-z]$/i.test(e.key) || SHORTCUT.test(e.key)) return;
+    if (typing || e.metaKey || e.ctrlKey || e.altKey || sheetOpen() || !/^[a-z]$/i.test(e.key) || SHORTCUT.test(e.key)) return;
     const now = performance.now() / 1000;
     // each letter floats onto the water where the pointer is, and ripples away
     const x = ptr.x || W * (big ? 0.7 : 0.5),
@@ -6155,7 +5729,7 @@ const HOLD = 1.2,
 addEventListener(
   'pointerdown',
   (e) => {
-    if (look === 'water' || sheetOpen() || palOpen() || e.button > 0 || e.target.closest('input, textarea, .veil, .pal-wrap')) return;
+    if (look === 'water' || sheetOpen() || e.button > 0 || e.target.closest('input, textarea, .veil')) return;
     const [x, y] = spot(e);
     if (x < 0 || y < 0 || x > W || y > H || !onHost(x, y)) return;
     e.preventDefault();
@@ -6356,10 +5930,8 @@ function tick() {
   if (phaseChoice === 'auto') setPhase('auto');
 }
 // Who is here: this visitor and everyone presence knows of, on the pond and on the old desktop alike.
-let online = 0;
 function census() {
   const here = [you, ...others.values()];
-  online = here.length;
   $('#dots').innerHTML = here
     .slice(0, 5)
     .map((k) => `<i style="background:${esc(k.dot)}"></i>`)
@@ -6436,8 +6008,8 @@ function busy(now) {
   // a look coming in is always drawn at the full pace, and so is a finger or pointer held down
   if (top !== base || (look === 'water' && inkR > 0) || gest.down) return true;
   if (away || saving) return false;
-  // under a chapter or the palette the pond is mostly hidden: only what was just touched keeps the pace up
-  if (sheetOpen() || palOpen()) return now - wokeAt < 1500;
+  // under a chapter the pond is mostly hidden: only what was just touched keeps the pace up
+  if (sheetOpen()) return now - wokeAt < 1500;
   return (
     now - wokeAt < IDLE_AFTER * 1000 ||
     now - stirred(now) < 2000 ||
@@ -6550,7 +6122,7 @@ function tick1(raw) {
   if (rainNow() && AM.ice < 0.3) {
     // drops a second, on time: about a hundred over a wide pond in steady rain; drizzle fewer, a storm more
     const k = { water: 1, ukiyo: 0.2 }[look] ?? 0.35,
-      hard = rainChosen || !wx ? 1 : Math.max(0.3, fx.rain);
+      hard = wx ? Math.max(0.3, fx.rain) : 1;
     rainAcc += raw * (big ? 99 : 33) * hard * (look === 'water' ? 1 : 0.5);
     for (; rainAcc >= 1; rainAcc--) {
       const x = rnd(0, W),
@@ -6563,7 +6135,7 @@ function tick1(raw) {
     }
   }
   // a storm, over the water only: now and then a far flash, and its thunder after
-  if (fx.thunder && raining && !rainChosen && look === 'water' && Math.random() < raw / 35) {
+  if (fx.thunder && raining && look === 'water' && Math.random() < raw / 35) {
     flashAt = T;
     plip('thunder');
   }
@@ -6803,22 +6375,6 @@ settled.then(loadSongs);
 settled.then(() => hintSoon(20000));
 // The weather where the visitor is: once the pond has settled, so it never holds up the title page; again
 // every half hour while it's shown (weather.ts keeps it for half an hour, so a reload doesn't fetch).
-function weatherLine() {
-  const w = wx,
-    names = {
-      clear: ['Clear', '晴', '晴れ'],
-      cloudy: ['Cloudy', '多云', 'くもり'],
-      overcast: ['Overcast', '阴', 'くもり'],
-      fog: ['Fog', '雾', '霧'],
-      drizzle: ['Drizzle', '小雨', '小雨'],
-      rain: ['Rain', '雨', '雨'],
-      snow: ['Snow', '雪', '雪'],
-      storm: ['Storm', '雷雨', '雷雨']
-    }[w.condition],
-    i = lang === 'zh' ? 1 : lang === 'ja' ? 2 : 0,
-    head = ['Weather where you are', '你那里的天气', 'あなたのところの天気'][i];
-  return `${head}${i ? '：' : ': '}${names[i]}${i ? '，' : ', '}${w.temp}°${w.unit}${i ? '，' : ', '}${w.city}`;
-}
 function weatherIn(w) {
   if (!w) return;
   wx = w;
@@ -6832,7 +6388,7 @@ function weatherIn(w) {
     // Qingming: softer light, and a drizzle if the sky allows
     if (pv.fest === 'qingming') fx = { ...fx, rain: Math.max(fx.rain, w.condition === 'clear' ? 0 : 0.5), light: fx.light * 0.9 };
   }
-  if (!rainChosen) raining = fx.rain > 0;
+  raining = fx.rain > 0;
   pond.toggleAttribute('data-fog', fx.fog > 0);
   if (south !== w.latitude < 0) {
     south = w.latitude < 0;
@@ -6942,7 +6498,6 @@ if (PANEL)
         invalidate();
       },
       weather(v) {
-        rainChosen = false;
         if (!v) return loadWeather().then(weatherIn);
         weatherIn({
           ...(wx || {

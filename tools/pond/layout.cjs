@@ -13,7 +13,6 @@ const Q = {
   alm: '.alm .txt',
   term: '#termV',
   snd: '#snd',
-  cmd: '#cmdBtn',
   lang: '#langBtn',
   clear: '#clear',
   talk: '#talk',

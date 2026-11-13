@@ -73,12 +73,8 @@ const fs = require('node:fs');
       states.add(s);
     }
     await strip('spider', spider);
-    // the dove: called from the command bar, followed until it has gone
-    await p.keyboard.press('Control+k');
-    await step(4);
-    await p.keyboard.type('dove');
-    await step(4);
-    await p.keyboard.press('Enter');
+    // the dove: due at once (it comes by itself every minute or two), followed until it has gone
+    await p.evaluate(() => (window.__pond.dove.next = 0));
     await step(2);
     const dove = [];
     let last = '',

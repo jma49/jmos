@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   NEXT,
+  WAY,
+  walked,
   clueFor,
   SEAL_WORDS,
   VOLUMES,
@@ -30,7 +32,7 @@ const preview = volumes(false).slice(0, 2),
 describe('the volumes', () => {
   it('hold every look in a release build, five to a volume', () => {
     expect(volumes(false)).toEqual(volumes(true));
-    expect(volumes(false).map((v) => v.id)).toEqual(['painted', 'drawn', 'hours']);
+    expect(volumes(false).map((v) => v.id)).toEqual(['painted', 'drawn', 'hours', 'end']);
     expect(live.map((v) => v.seals.map((s) => s.id))).toEqual([
       ['ink', 'ukiyo'],
       ['glow', 'blueprint', 'ascii']
@@ -107,8 +109,29 @@ describe('the clues', () => {
   });
 });
 
+describe('the end', () => {
+  it('is one seal in a volume of its own, and the album is not full without it', () => {
+    const all = volumes(false);
+    expect(all[3].seals.map((x) => x.id)).toEqual(['rubbing']);
+    let a = emptyAlbum();
+    for (const v of all.slice(0, 3)) for (const x of v.seals) a = stamp(a, x.id, '2026-11-13', all).album;
+    expect(allFull(a, all)).toBe(false);
+    expect(allFull(stamp(a, 'rubbing', '2026-11-14', all).album, all)).toBe(true);
+  });
+  it('is opened by pressing the looks\u2019 seals in the order the album keeps them', () => {
+    expect(WAY).toEqual(['ink', 'ukiyo', 'monet', 'qinghua', 'dunhuang', 'glow', 'blueprint', 'ascii', 'stars', 'relief']);
+    let steps: string[] = [];
+    for (const id of WAY) steps = walked(steps, id);
+    expect(steps).toEqual(WAY);
+    // a wrong seal starts the way again; the first seal starts it from one
+    expect(walked(['ink', 'ukiyo'], 'glow')).toEqual([]);
+    expect(walked(['ink', 'ukiyo'], 'ink')).toEqual(['ink']);
+    expect(walked([], 'ukiyo')).toEqual([]);
+  });
+});
+
 describe('the occasions', () => {
-  const all = volumes(false),
+  const all = volumes(false).slice(0, 3),
     hours = all[2];
   it('are five seals, each stamped once like any other, and the album is not full without them', () => {
     expect(hours.seals.map((s) => s.id)).toEqual(['rain', 'snow', 'moon', 'fest', 'dawn']);

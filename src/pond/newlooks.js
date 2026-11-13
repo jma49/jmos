@@ -436,20 +436,6 @@ export function muralLayout(W, H, wide) {
   };
 }
 
-/** The command bar's entries: found by name only, as the other looks are. */
-export const NEW_COMMANDS = [
-  ['monet', 'Water lilies', 'Monet’s pond in oil; or dab the water a few times in one place', 'monet water lilies oil paint impression giverny 睡莲 莫奈'],
-  ['qinghua', '青花 Blue and white', 'Porcelain; or run a finger round the rim of the screen', 'qinghua porcelain blue white china cobalt 青花瓷 染付'],
-  ['dunhuang', '敦煌 Dunhuang', 'A cave mural; or rub the wall back and forth', 'dunhuang mural cave fresco mogao 敦煌 壁画'],
-  ['stars', 'Star chart', 'The night sky in the water; or tap three points far apart', 'stars star chart atlas constellation night sky 星图 星図'],
-  [
-    'relief',
-    'Egyptian relief',
-    'Carved and painted stone; or draw a zigzag of three peaks',
-    'relief egypt egyptian carved stone tomb limestone nile 浮雕 埃及 レリーフ'
-  ]
-];
-
 /** The looks' functions, added to the water pass after the six that ship. */
 export const NEW_GLSL = `
 // ---------- the preview looks ----------

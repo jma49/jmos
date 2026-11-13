@@ -6,9 +6,10 @@
 //   ink         press and hold still, 1.2 s          timer     no movement past 8 px
 //   glow        one tap on the light on the water    lift      a tap, at the light
 //   ascii       five letters within 3 s              keys      the keyboard
+//               or five taps in a row, within 3 s    lift      each a step on from the last, along a level line
 //   ukiyo       stir once round                      moving    a full turn, wider than 50 px, not round the rim
 //   qinghua     once round the rim of the screen     moving    a full turn spanning most of the screen, near its edges
-//   dunhuang    rub or brush over a spot             moving    four passes along one line, in a thin patch, lifted or not
+//   dunhuang    rub or brush over a spot             moving    four passes along one line (any slant), in a thin patch, lifted or not
 //   blueprint   one long straight line               lift      over 320 px, straight
 //   relief      a zigzag of three peaks or more      lift      five sharp corners, travelling one way, wider than a rub
 //   stars       three taps far apart, within 1.5 s   lift      each over 150 px from the others
@@ -67,8 +68,9 @@ export function straight(pts: Pt[], len = lengthOf(pts)) {
 export function loop(pts: Pt[], W: number, H: number, turn = turnOf(pts), len = lengthOf(pts)): 'ukiyo' | 'qinghua' | null {
   if (Math.abs(turn) <= Math.PI * 1.9 || len <= 260) return null;
   const e = ext(pts);
-  // (a patch that long and thin is a rub on its way, whatever its turns add up to)
-  if (Math.min(e.w, e.h) <= Math.max(50, Math.max(e.w, e.h) * THIN)) return null;
+  // (a patch that long and thin, along its own line, is a rub on its way, whatever its turns add up to)
+  const own = ext(aligned(pts));
+  if (Math.min(e.w, e.h) <= 50 || own.h <= Math.max(50, own.w * THIN)) return null;
   if (e.w > W * 0.62 && e.h > H * 0.62) {
     const m = Math.max(90, Math.min(W, H) * 0.22),
       near = pts.filter(([x, y]) => Math.min(x, W - x, y, H - y) < m).length;
@@ -76,21 +78,51 @@ export function loop(pts: Pt[], W: number, H: number, turn = turnOf(pts), len = 
   }
   return 'ukiyo';
 }
+/**
+ * The points turned about their middle so that the way they run most lies along x. A hand rubs and
+ * draws on a slant as often as not, so a stroke's length and breadth are taken along its own line and
+ * not along the screen's.
+ */
+export function aligned(pts: Pt[]): Pt[] {
+  const n = pts.length;
+  if (n < 2) return pts;
+  let mx = 0,
+    my = 0;
+  for (const [x, y] of pts) {
+    mx += x / n;
+    my += y / n;
+  }
+  let sxx = 0,
+    sxy = 0,
+    syy = 0;
+  for (const [x, y] of pts) {
+    sxx += (x - mx) * (x - mx);
+    sxy += (x - mx) * (y - my);
+    syy += (y - my) * (y - my);
+  }
+  const th = 0.5 * Math.atan2(2 * sxy, sxx - syy),
+    c = Math.cos(th),
+    sn = Math.sin(th);
+  return pts.map(([x, y]) => [(x - mx) * c + (y - my) * sn, -(x - mx) * sn + (y - my) * c]);
+}
 // how thin a patch is a rub's and not a stir's: its breadth under this much of its length (or under 50 px)
 const THIN = 0.3;
 /**
- * Rubbed: back and forth along one line, three reversals at least (four passes), each pass 24 px or
- * more, in a thin patch. A hand rubs wider on a large screen and wanders as it goes, so the patch may be
+ * Rubbed: back and forth along one line (any line: a hand rubs on a slant), three reversals at least
+ * (four passes), each pass 20 px or more, in a thin patch. A hand rubs wider on a large screen and wanders as it goes, so the patch may be
  * long, and as broad as its length allows. Dust is also brushed off a stroke at a time, the hand lifted
  * between them: the pond hands this the strokes of the last moment joined end to end, and the way back
  * to where the next one starts counts as a pass.
  */
-export function rub(pts: Pt[]): boolean {
-  if (pts.length < 8) return false;
-  const e = ext(pts),
-    k = e.w >= e.h ? 0 : 1,
-    long = Math.max(e.w, e.h);
-  if (Math.min(e.w, e.h) >= Math.max(50, long * THIN) || long < 60 || long > 720) return false;
+export const rub = (pts: Pt[]): boolean => rubRead(pts).ok;
+/** What a stroke comes to as a rub: its patch along its own line, how many times it turned back, and whether that is one. */
+export function rubRead(all: Pt[]) {
+  const pts = aligned(all),
+    e = ext(pts),
+    k = 0,
+    long = e.w,
+    PASS = 20;
+  if (pts.length < 8) return { long, broad: e.h, turns: 0, ok: false };
   let dir = 0,
     turnAt = pts[0][k],
     far = pts[0][k],
@@ -98,39 +130,44 @@ export function rub(pts: Pt[]): boolean {
   for (const p of pts) {
     const v = p[k];
     if (dir === 0) {
-      if (Math.abs(v - turnAt) >= 24) {
+      if (Math.abs(v - turnAt) >= PASS) {
         dir = Math.sign(v - turnAt);
         far = v;
       }
     } else if ((v - far) * dir > 0) far = v;
-    else if ((far - v) * dir >= 24) {
+    else if ((far - v) * dir >= PASS) {
       n++;
       dir = -dir;
       turnAt = far;
       far = v;
     }
   }
-  return n >= 3;
+  return { long, broad: e.h, turns: n, ok: n >= 3 && e.h < Math.max(50, long * THIN) && long >= 44 && long <= 720 };
 }
 /**
  * A zigzag, as the sign for water is cut: it travels one way, swinging across its way at least five times
  * (three peaks and the two valleys between them, or more), each turn a sharp corner.
  */
-export function zigzag(pts: Pt[]): boolean {
-  if (pts.length < 12) return false;
-  const e = ext(pts),
-    k = e.w >= e.h ? 0 : 1,
-    j = 1 - k,
-    travel = Math.max(e.w, e.h),
-    swing = Math.min(e.w, e.h);
-  if (travel < 180 || swing < 50) return false;
+export const zigzag = (pts: Pt[]): boolean => zigzagRead(pts).ok;
+/** What a stroke comes to as a zigzag: how far it travels and swings along its own line, its sharp corners, and whether that is one. */
+export function zigzagRead(all: Pt[]) {
+  // (along its own line: a zigzag is drawn on a slant as often as level)
+  const pts = aligned(all),
+    e = ext(pts),
+    k = 0,
+    j = 1,
+    travel = e.w,
+    swing = e.h,
+    no = (why: string, sharp = 0) => ({ travel, swing, sharp, ok: false, why });
+  if (pts.length < 12) return no('short');
+  if (travel < 150 || swing < 40) return no('small');
   // it never doubles back along its way (a hand's peaks lean a little, more on a long stroke)
   const way = Math.sign(pts[pts.length - 1][k] - pts[0][k]),
     back = Math.max(24, travel * 0.1);
   let lead = pts[0][k];
   for (const p of pts) {
     if ((p[k] - lead) * way > 0) lead = p[k];
-    else if ((lead - p[k]) * way > back) return false;
+    else if ((lead - p[k]) * way > back) return no('turns back');
   }
   // where it turns across its way: the furthest point of each swing of 30 px or more
   const corners: number[] = [];
@@ -171,7 +208,7 @@ export function zigzag(pts: Pt[]): boolean {
       turn = Math.abs(Math.atan2(u[0] * w[1] - u[1] * w[0], u[0] * w[0] + u[1] * w[1]));
     return turn > 0.8;
   });
-  return sharp.length >= 5;
+  return sharp.length >= 5 ? { travel, swing, sharp: sharp.length, ok: true, why: '' } : no('corners', sharp.length);
 }
 /** What a stroke means while it is still being drawn. */
 export const strokeMoving = (pts: Pt[], W: number, H: number): 'dunhuang' | 'ukiyo' | 'qinghua' | null => (rub(pts) ? 'dunhuang' : loop(pts, W, H));
@@ -180,11 +217,33 @@ export const strokeLifted = (pts: Pt[]): 'blueprint' | 'relief' | null => {
   const ln = straight(pts);
   return ln && ln.chord > 320 ? 'blueprint' : zigzag(pts) ? 'relief' : null;
 };
-/** What the taps so far mean, the newest last: three far apart (a triangle of stars), or four in one place (dabs of paint). */
-export function tapsLook(taps: Tap[]): 'stars' | 'monet' | null {
+/** A stroke as the rules read it, in a line: for the readout shown with ?gest in the address. */
+export function describe(pts: Pt[], W: number, H: number): string {
+  const e = ext(pts),
+    r = rubRead(pts),
+    z = zigzagRead(pts),
+    ln = straight(pts),
+    n = (v: number) => Math.round(v);
+  return [
+    `${pts.length} pts, ${n(lengthOf(pts))} px, box ${n(e.w)}×${n(e.h)}, turn ${(turnOf(pts) / Math.PI).toFixed(1)}π`,
+    `rub ${r.ok ? 'YES' : 'no'}: ${n(r.long)}×${n(r.broad)} along its line, ${r.turns} turns back (3 needed)`,
+    `zigzag ${z.ok ? 'YES' : `no (${z.why})`}: travel ${n(z.travel)}, swing ${n(z.swing)}, ${z.sharp} sharp corners (5 needed)`,
+    `line ${ln && ln.chord > 320 ? 'YES' : 'no'}${ln ? `: ${n(ln.chord)} px (320 needed)` : ''}; loop ${loop(pts, W, H) || 'no'}`
+  ].join('\n');
+}
+/** What the taps so far mean, the newest last: three far apart (a triangle of stars), four in one place (dabs of paint), or five in a row (letters, without keys). */
+export function tapsLook(taps: Tap[]): 'stars' | 'monet' | 'ascii' | null {
   const now = taps.length ? taps[taps.length - 1].t : 0,
     three = taps.slice(-3),
-    four = taps.slice(-4);
+    four = taps.slice(-4),
+    five = taps.slice(-5);
+  // five in a row, each a step on from the last along a level line: five letters typed with a finger, for
+  // where there are no keys. The steps are closer than stars are far, and further than dabs are near.
+  if (five.length === 5 && now - five[0].t <= 3) {
+    const way = Math.sign(five[4].x - five[0].x),
+      level = Math.max(...five.map((q) => q.y)) - Math.min(...five.map((q) => q.y));
+    if (way && level <= 70 && five.every((q, i) => i === 0 || ((q.x - five[i - 1].x) * way >= 34 && (q.x - five[i - 1].x) * way <= 140))) return 'ascii';
+  }
   if (three.length === 3 && now - three[0].t <= 1.5 && three.every((a, i) => three.every((b, j) => i === j || Math.hypot(a.x - b.x, a.y - b.y) > 150)))
     return 'stars';
   if (four.length === 4 && now - four[0].t <= 1.8) {

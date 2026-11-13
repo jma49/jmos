@@ -46,7 +46,7 @@ pass, and the move from drawing things in code to painted pictures. How the pond
 | `life.cjs` | The dove and the spider through their states, as strips of crops round each, in the looks given (`HOUR` sets the time of day). It opens the page with `?perf`, which hands their places to `window.__pond`. Slow: six minutes a look and more. |
 | `virtual.cjs` | The virtual clock the newer tools share. |
 | `glide.cjs` | The layout glide between looks, measured: where each block stood, where it is drawn the moment the look's styles apply, where it ends. |
-| `finish.cjs` | The finish checklist as contact sheets: each look's title page, chapters, album and command bar, and a phone sheet. About three minutes a look. |
+| `finish.cjs` | The finish checklist as contact sheets: each look's title page and chapters (the album among them), and a phone sheet. About three minutes a look. |
 | `layout.cjs` | Where every block of the title page stands in each look, and which differ from the water's: `node layout.cjs <dist> [w] [h] [lang]`. |
   | `terms.cjs` | Ink in each of the 24 solar terms. |
   | `ab.cjs`, `abdiff.py` | A deterministic A/B of two builds (seeded random, virtual clock, frames stepped by hand) and the largest pixel difference. |
@@ -97,7 +97,7 @@ Jincheng's words that still stand:
   seal album and the one-line hint; ink's painted motifs and the season rules; each live look's own
   arrival; reduced motion as a cross-fade (never run under reduced motion: test it first).
 - **Preview only (`PUBLIC_POND_PREVIEW=1`):** Monet, 青花, Dunhuang, the star chart, their gestures,
-  commands and seals, painted koi, the Preview panel. `?preview` in the address also turns the
+  seals, painted koi, the Preview panel. `?preview` in the address also turns the
   panel's festival and weather previews on in any build of this branch; `?perf` shows the numbers
   overlay (fps, CPU per part, GPU time, which pass, scale).
 - **Open decision:** in a release build the album's first volume is only ink and ukiyo-e, and the
@@ -153,12 +153,12 @@ koi moved to the common sheet. What is left of those:
    visitor's colour more strongly, or keep to cobalt, is Jincheng's to say. Not done with two real
    browsers signed in.
 10. **The finish checklist: one pass done from contact sheets.** `tools/pond/finish.cjs` makes, for each
-    look, a sheet of the title page, every chapter, the album and the command bar at 1280 × 800, and a
-    phone sheet. All ten were looked at (in winter, English). Fixed: the command bar was dark glass
-    under dark type in 青花, Dunhuang and the relief. Since then: a painted koi under the
+    look, a sheet of the title page and every chapter (the album among them) at 1280 × 800, and a
+    phone sheet. All ten were looked at (in winter, English). Since then: a painted koi under the
     title's type is at half strength in ukiyo-e; in the relief a koi passes behind the tomb's
     carvings; 青花's medallion is paler. Left: ink's koi cross the greeting on a phone, as on the
-    water; the Preview pill sits on the search box on a phone (preview builds only). Not covered by
+    water; the Preview pill sits over the bottom row's controls on a phone (preview builds only). Not
+    covered by
     the sheets: hover, focus rings, scrollbars, selection, sounds, the other
     seasons and languages.
 11. **The final review by an independent reviewer:** looks × seasons × weather × chapters ×

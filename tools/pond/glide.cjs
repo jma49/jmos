@@ -17,7 +17,7 @@ const { chromium } = require('playwright');
     const out = await p.evaluate(
       (l) =>
         new Promise((done) => {
-          const Q = ['#lead', '.alm', '.hud .bl', '.hud .cmd', '.hud .br', '.gauge', '.preview'],
+          const Q = ['#lead', '.alm', '.hud .bl', '.hud .br', '.gauge', '.preview'],
             pond = document.querySelector('#pond'),
             at = () =>
               Q.map((q) => {
@@ -42,7 +42,7 @@ const { chromium } = require('playwright');
       l
     );
     console.log(`\n-> ${l}  (hud opacity after: ${out.hud})`);
-    ['#lead', '.alm', '.hud .bl', '.hud .cmd', '.hud .br', '.gauge', '.preview'].forEach((q, i) =>
+    ['#lead', '.alm', '.hud .bl', '.hud .br', '.gauge', '.preview'].forEach((q, i) =>
       console.log(q.padEnd(10), 'before', out.before[i].join(','), '| at swap', out.start[i].join(','), `(${out.anims[i]} anim)`, '| end', out.end[i].join(','))
     );
     await p.waitForTimeout(6000);
