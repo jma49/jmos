@@ -24,10 +24,13 @@ import {
   count as sealCount,
   dayOf,
   entryShows,
+  dayText,
   full,
+  has as hasSeal,
   markSealed,
   mayHint,
   readAlbum,
+  sealCell,
   sealMark,
   stamp,
   volumes,
@@ -3842,7 +3845,12 @@ const KINDS = [
 let logKind = 'all',
   logCompact = false;
 const SHEETS = {
-  seals: () => `<div class="album">${albumHTML(album, VOLS, lang, freshVols())}</div>`,
+  seals: () =>
+    `<div class="album">${albumHTML(album, VOLS, lang, freshVols())}${
+      PANEL && sealCount(album) > 0
+        ? `<p class="album-save"><button class="link" id="albumSave">${['Save as a picture', '存为图片', '画像で保存'][LANGS.indexOf(lang)]}</button></p>`
+        : ''
+    }</div>`,
   career:
     () => `<h1>${L('Soundings', ZH.career.title)}</h1><p class="lede">${L("Work, projects and school on one line, newest at the surface. Scroll, and the pond's focus sinks with you to the bed.", ZH.career.lede)}</p>
     <div class="filt" role="toolbar" aria-label="Show">${KINDS.map(([k, l]) => `<button data-kind="${k}">${L(l, ZH.career.kinds[k])}<em>${k === 'all' ? LOG.length : LOG.filter((e) => e.kind === k).length}</em></button>`).join('')}<span class="gap"></span>
@@ -5677,7 +5685,7 @@ function paintMural() {
    the small mark by the solar term, which shows once there is a seal to see. Someone who has found none is
    shown one quiet line on the water, once. None of it runs in the frame: a stamp is a CSS animation, and
    the line a timer. */
-const VOLS = volumes(false);
+const VOLS = volumes(PANEL);
 let album = readAlbum(load('pond-seals'));
 album = { ...album, visits: album.visits + 1 };
 save('pond-seals', writeAlbum(album));
@@ -5709,9 +5717,112 @@ function sealsPic() {
   if (sealsPic.asked) return;
   sealsPic.asked = true;
   const im = new Image();
-  im.onload = () => pond.setAttribute('data-seals', '');
+  im.onload = () => {
+    sealsPic.im = im;
+    pond.setAttribute('data-seals', '');
+  };
   im.src = '/pond/ink/seals.webp';
 }
+// The album as one picture, to keep or pass on (a trial, in preview builds): the leaves on paper, each
+// found seal with its name and day, the rest an outline. Nothing in it but the seals.
+function albumPicture() {
+  const Wd = 1080,
+    M = 72,
+    row = 330,
+    cv = document.createElement('canvas'),
+    c = cv.getContext('2d'),
+    words = SEAL_WORDS[lang],
+    RED = '#b8382a';
+  cv.width = Wd;
+  cv.height = 250 + VOLS.length * row;
+  c.fillStyle = '#efe6d2';
+  c.fillRect(0, 0, Wd, cv.height);
+  c.fillStyle = '#2a231c';
+  c.textBaseline = 'alphabetic';
+  c.font = "600 64px 'Cormorant Garamond', 'Zhi Mang Xing', serif";
+  c.fillText(words.title, M, 132);
+  c.font = '400 22px ui-monospace, monospace';
+  c.fillStyle = 'rgba(42,35,28,.6)';
+  c.fillText(`${sealCount(album)} / ${VOLS.flatMap((v) => v.seals).length} · ${dayText(dayOf(new Date()), lang)}`, M, 176);
+  // one seal, s across (a tall one narrower), centred on x, y: its cut from the sheet, or its characters
+  const seal = (q, x, y, s) => {
+    const at = sealCell(q.id),
+      tall = q.shape === 'tall',
+      w = tall ? (s * 150) / 246 : s;
+    if (at && sealsPic.im) {
+      const one = document.createElement('canvas'),
+        o = one.getContext('2d');
+      one.width = Math.round(w);
+      one.height = Math.round(s);
+      o.fillStyle = RED;
+      o.fillRect(0, 0, one.width, one.height);
+      o.globalCompositeOperation = 'destination-in';
+      o.drawImage(sealsPic.im, at[0] * 256 + (tall ? 53 : 12), at[1] * 256 + (tall ? 5 : 12), tall ? 150 : 232, tall ? 246 : 232, 0, 0, one.width, one.height);
+      c.drawImage(one, x - w / 2, y - s / 2);
+      return;
+    }
+    c.fillStyle = RED;
+    c.beginPath();
+    if (q.shape === 'round') c.arc(x, y, s / 2, 0, TAU);
+    else c.rect(x - w / 2, y - s / 2, w, s);
+    if (q.cut === 'red') {
+      c.lineWidth = s * 0.065;
+      c.strokeStyle = RED;
+      c.stroke();
+    } else {
+      c.fill();
+      c.fillStyle = '#f4ece0';
+    }
+    c.font = `400 ${s * 0.6}px 'Zhi Mang Xing', serif`;
+    c.textAlign = 'center';
+    c.fillText(q.chars, x, y + s * 0.2);
+    c.textAlign = 'left';
+  };
+  VOLS.forEach((v, i) => {
+    const top = 250 + i * row,
+      step = (Wd - M * 2) / Math.max(5, v.seals.length);
+    c.fillStyle = '#2a231c';
+    c.font = "600 30px 'Cormorant Garamond', 'Zhi Mang Xing', serif";
+    c.fillText(words.volumes[v.id], M, top);
+    c.fillStyle = 'rgba(120,96,60,.3)';
+    c.fillRect(M, top + 16, Wd - M * 2, 1);
+    v.seals.forEach((q, j) => {
+      const x = M + step * (j + 0.5),
+        y = top + 110;
+      if (hasSeal(album, q.id)) {
+        seal(q, x, y, 124);
+        c.textAlign = 'center';
+        c.fillStyle = '#2a231c';
+        c.font = "600 24px 'Cormorant Garamond', 'Zhi Mang Xing', serif";
+        c.fillText(words.names[q.id], x, y + 104);
+        c.font = '400 17px ui-monospace, monospace';
+        c.fillStyle = 'rgba(42,35,28,.6)';
+        c.fillText(dayText(album.found[q.id], lang), x, y + 130);
+        c.textAlign = 'left';
+      } else {
+        c.strokeStyle = 'rgba(92,58,40,.3)';
+        c.lineWidth = 1.5;
+        c.beginPath();
+        if (q.shape === 'round') c.arc(x, y, 56, 0, TAU);
+        else c.rect(x - (q.shape === 'tall' ? 34 : 56), y - 56, q.shape === 'tall' ? 68 : 112, 112);
+        c.stroke();
+      }
+    });
+  });
+  return cv;
+}
+document.addEventListener('click', (e) => {
+  if (!e.target.closest?.('#albumSave')) return;
+  albumPicture().toBlob((blob) => {
+    if (!blob) return;
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'pond-seals.png';
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  });
+});
+if (PERF) window.__album = albumPicture;
 // a seal's characters are centred by their own ink, measured once the brush has come for them
 function alignSeals(sel) {
   sealsPic();
@@ -5733,6 +5844,15 @@ function albumShown() {
   album = a;
   save('pond-seals', writeAlbum(a));
 }
+// The occasions' seals (a trial, in preview builds): one is stamped when the pond is in its state while
+// someone is there and nothing else is in front of the water. Looked at now and then, not every frame.
+function occasions() {
+  if (!settledNow || document.hidden || sheetOpen() || 'on' in $('#stamp').dataset) return;
+  const on = { rain: raining, snow: fx.snow > 0.02, moon: phase === 'night' && Math.abs(pv.age - 0.5) < 0.06, fest: !!pv.fest, dawn: phase === 'dawn' },
+    seal = VOLS.flatMap((v) => v.seals).find((x) => on[x.id] && !hasSeal(album, x.id));
+  if (seal) reached(seal.id);
+}
+setInterval(occasions, 4000);
 let stampTimer = 0;
 // a look has come in all the way: its seal, if this is the first time
 function reached(id) {

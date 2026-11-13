@@ -3311,7 +3311,7 @@ button.more:hover {
    cell of that sheet in the seal's colour, and the brushed characters under it are not shown. A square
    or round seal is 232 of its 256-pixel cell across, a tall one 150 by 246, each centred; --c and --r
    are its cell. The cut is on a layer of its own, so a look's shadow or glow still falls from it. */
-#pond[data-seals] b.seal-m:not(.blank),
+#pond[data-seals] b.seal-m[data-p],
 #pond[data-seals] .kuan .seal {
   --k: calc(var(--s) / 232);
   --ox: 12;
@@ -3323,7 +3323,7 @@ button.more:hover {
   border-radius: 0;
   outline: 0;
 }
-#pond[data-seals] b.seal-m[data-shape='tall']:not(.blank),
+#pond[data-seals] b.seal-m[data-p][data-shape='tall'],
 #pond[data-seals] .kuan .seal {
   --k: calc(var(--s) / 246);
   --ox: 53;
@@ -3337,11 +3337,11 @@ button.more:hover {
   --r: 2;
   --red: #b8382a;
 }
-#pond[data-seals] b.seal-m:not(.blank) span,
+#pond[data-seals] b.seal-m[data-p] span,
 #pond[data-seals] .kuan .seal span {
   visibility: hidden;
 }
-#pond[data-seals] b.seal-m:not(.blank)::before,
+#pond[data-seals] b.seal-m[data-p]::before,
 #pond[data-seals] .kuan .seal::before {
   content: '';
   position: absolute;
@@ -3642,6 +3642,11 @@ button.more:hover {
   }
 }
 
+.album .album-save {
+  max-width: none;
+  margin: 18px 0 0;
+  text-align: right;
+}
 /* with ?perf: the pond's numbers (perf.js) */
 .perf {
   position: fixed;

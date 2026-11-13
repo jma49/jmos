@@ -41,6 +41,18 @@ export const VOLUMES: Volume[] = [
       { id: 'stars', chars: '星', shape: 'round', cut: 'white' },
       { id: 'relief', chars: '刻', shape: 'square', cut: 'white' }
     ]
+  },
+  // Seals for an occasion and not a look: each is stamped when the pond is in that state while someone
+  // is there (the rain, snow, the full moon, a festival, the dawn). A trial, in preview builds only.
+  {
+    id: 'hours',
+    seals: [
+      { id: 'rain', chars: '雨', shape: 'square', cut: 'white', preview: true },
+      { id: 'snow', chars: '雪', shape: 'round', cut: 'white', preview: true },
+      { id: 'moon', chars: '月', shape: 'round', cut: 'red', preview: true },
+      { id: 'fest', chars: '节', shape: 'square', cut: 'red', preview: true },
+      { id: 'dawn', chars: '晨', shape: 'square', cut: 'white', preview: true }
+    ]
   }
 ];
 
@@ -142,7 +154,7 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
   en: {
     title: 'Seals',
     lede: 'The pond can look more than one way. Each look has a seal, stamped the first time you find it.',
-    volumes: { painted: 'Painted', drawn: 'Drawn' },
+    volumes: { painted: 'Painted', drawn: 'Drawn', hours: 'Occasions' },
     names: {
       ink: 'Ink',
       ukiyo: 'Ukiyo-e',
@@ -153,7 +165,12 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
       blueprint: 'Blueprint',
       ascii: 'ASCII',
       stars: 'Star chart',
-      relief: 'Relief'
+      relief: 'Relief',
+      rain: 'Rain',
+      snow: 'Snow',
+      moon: 'Full moon',
+      fest: 'Festival',
+      dawn: 'Dawn'
     },
     hints: {
       ink: 'Stillness leaves a mark.',
@@ -165,9 +182,18 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
       blueprint: 'Every drawing starts with one straight line.',
       ascii: 'Say something.',
       stars: 'Three stars, far apart, make a figure.',
-      relief: 'Water is written as a zigzag.'
+      relief: 'Water is written as a zigzag.',
+      rain: 'Come by when it rains where you are.',
+      snow: 'Some days the pond freezes over.',
+      moon: 'Once a month the night is bright.',
+      fest: 'A few days a year, the pond dresses up.',
+      dawn: 'Be here before the sun is.'
     },
-    thanks: { painted: 'Every painted one. Thank you for looking so closely.', drawn: 'Every drawn one. Thank you for trying things.' },
+    thanks: {
+      painted: 'Every painted one. Thank you for looking so closely.',
+      drawn: 'Every drawn one. Thank you for trying things.',
+      hours: 'Every occasion. Thank you for coming back.'
+    },
     koi: 'Your koi wears a seal from now on.',
     both: 'Both volumes are full. The gold koi wears one too, to match.',
     soon: 'Still to come.',
@@ -180,7 +206,7 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
   zh: {
     title: '集印册',
     lede: '池塘不止一种样子。每一种都有一方印，第一次遇见时盖上。',
-    volumes: { painted: '画', drawn: '线' },
+    volumes: { painted: '画', drawn: '线', hours: '时' },
     names: {
       ink: '水墨',
       ukiyo: '浮世绘',
@@ -191,7 +217,12 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
       blueprint: '蓝图',
       ascii: '字符',
       stars: '星图',
-      relief: '浮雕'
+      relief: '浮雕',
+      rain: '雨',
+      snow: '雪',
+      moon: '满月',
+      fest: '节日',
+      dawn: '清晨'
     },
     hints: {
       ink: '停一停，会留下痕迹。',
@@ -203,9 +234,18 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
       blueprint: '每张图纸，都从一条直线开始。',
       ascii: '说点什么。',
       stars: '隔得远远的三颗星，连成一个形。',
-      relief: '古人画水，画成一道折线。'
+      relief: '古人画水，画成一道折线。',
+      rain: '你那里下雨的时候，来看看。',
+      snow: '有些日子，池塘会结冰。',
+      moon: '每个月有一夜，特别亮。',
+      fest: '一年里有几天，池塘会打扮。',
+      dawn: '比太阳早一点到。'
     },
-    thanks: { painted: '画的这一册集齐了。谢谢你看得这么仔细。', drawn: '线的这一册集齐了。谢谢你什么都试一试。' },
+    thanks: {
+      painted: '画的这一册集齐了。谢谢你看得这么仔细。',
+      drawn: '线的这一册集齐了。谢谢你什么都试一试。',
+      hours: '时的这一册集齐了。谢谢你一次次回来。'
+    },
     koi: '你的锦鲤，从此带着一方印。',
     both: '两册都满了。金色的那条也盖了一方，和你作伴。',
     soon: '还没画好。',
@@ -218,7 +258,7 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
   ja: {
     title: '集印帳',
     lede: '池の姿はひとつではありません。姿ごとに印がひとつあり、初めて出会ったときに押されます。',
-    volumes: { painted: '絵', drawn: '線' },
+    volumes: { painted: '絵', drawn: '線', hours: '時' },
     names: {
       ink: '水墨',
       ukiyo: '浮世絵',
@@ -229,7 +269,12 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
       blueprint: '青写真',
       ascii: '文字',
       stars: '星図',
-      relief: 'レリーフ'
+      relief: 'レリーフ',
+      rain: '雨',
+      snow: '雪',
+      moon: '満月',
+      fest: '祭り',
+      dawn: '夜明け'
     },
     hints: {
       ink: 'じっとしていると、跡が残る。',
@@ -241,9 +286,18 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
       blueprint: 'どの図面も、まっすぐな一本から。',
       ascii: 'なにか言ってみて。',
       stars: '離れた星みっつで、かたちになる。',
-      relief: '水は、ぎざぎざの線で書く。'
+      relief: '水は、ぎざぎざの線で書く。',
+      rain: 'そちらが雨の日に、どうぞ。',
+      snow: '池が凍る日があります。',
+      moon: '月に一度、夜が明るい。',
+      fest: '年に数日、池は着飾ります。',
+      dawn: '日の出より先に。'
     },
-    thanks: { painted: '絵の一冊がそろいました。じっくり見てくれて、ありがとう。', drawn: '線の一冊がそろいました。いろいろ試してくれて、ありがとう。' },
+    thanks: {
+      painted: '絵の一冊がそろいました。じっくり見てくれて、ありがとう。',
+      drawn: '線の一冊がそろいました。いろいろ試してくれて、ありがとう。',
+      hours: '時の一冊がそろいました。何度も来てくれて、ありがとう。'
+    },
     koi: 'あなたの鯉に、印がひとつ付きました。',
     both: '二冊ともそろいました。金の鯉にも、おそろいの印を。',
     soon: 'まだ準備中。',
@@ -258,21 +312,23 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c] as string);
 /**
  * Where a seal is cut in the sheet of seals in seal script (public/pond/ink/seals.webp: cells four
- * across, the looks' seals in the volumes' order, then Jincheng's own), as [column, row].
+ * across, the looks' seals in order, then Jincheng's own), as [column, row].
  */
 export const OWN = 'own';
-export function sealCell(id: string): [number, number] {
-  const ids = [...VOLUMES.flatMap((v) => v.seals.map((x) => x.id)), OWN],
-    i = Math.max(0, ids.indexOf(id));
-  return [i % 4, Math.floor(i / 4)];
+const CUT = ['ink', 'ukiyo', 'monet', 'qinghua', 'dunhuang', 'glow', 'blueprint', 'ascii', 'stars', 'relief', OWN];
+/** A seal's cell in the sheet, or null for one the sheet doesn't have (it stays in the brush). */
+export function sealCell(id: string): [number, number] | null {
+  const i = CUT.indexOf(id);
+  return i < 0 ? null : [i % 4, Math.floor(i / 4)];
 }
+// (data-p marks a seal the sheet has: the styles put the cut picture only on those)
 const cellStyle = (id: string): string => {
-  const [c, r] = sealCell(id);
-  return `--c:${c};--r:${r}`;
+  const at = sealCell(id);
+  return at ? `data-p style="--c:${at[0]};--r:${at[1]}"` : '';
 };
 /** A seal's markup: its characters, each in its own cell (pond.css cuts and colours it). */
 export const sealMark = (s: Seal, cls = ''): string =>
-  `<b class="seal-m${cls ? ' ' + cls : ''}" data-shape="${s.shape}" data-cut="${s.cut}" data-n="${[...s.chars].length}" style="${cellStyle(s.id)}" lang="zh" aria-hidden="true">${[...s.chars].map((c) => `<span>${esc(c)}</span>`).join('')}</b>`;
+  `<b class="seal-m${cls ? ' ' + cls : ''}" data-shape="${s.shape}" data-cut="${s.cut}" data-n="${[...s.chars].length}" ${cellStyle(s.id)} lang="zh" aria-hidden="true">${[...s.chars].map((c) => `<span>${esc(c)}</span>`).join('')}</b>`;
 /** An empty place: the seal's outline and nothing in it. */
 export const sealBlank = (s: Seal): string => `<b class="seal-m blank" data-shape="${s.shape}" aria-hidden="true"></b>`;
 
@@ -297,7 +353,7 @@ export function albumHTML(a: Album, vols: Volume[], lang: Lang, fresh: string[] 
         ''
       )}${`<li class="soon"><b class="seal-m blank" data-shape="square" aria-hidden="true"></b><span class="hint">${esc(w.soon)}</span></li>`.repeat(v.soon ?? 0)}</ol>${
       done
-        ? `<p class="grand"${fresh.includes(v.id) ? ' data-fresh' : ''}><span>${esc(w.thanks[v.id])}${v.id === 'painted' ? `<br>${esc(w.koi)}` : ''}${allFull(a, vols) && i === vols.length - 1 && vols.length > 1 ? `<br>${esc(w.both)}` : ''}</span><b class="seal-m own" data-shape="tall" data-cut="white" data-n="2" style="${cellStyle(OWN)}" lang="zh" aria-hidden="true"><span>锦</span><span>程</span></b></p>`
+        ? `<p class="grand"${fresh.includes(v.id) ? ' data-fresh' : ''}><span>${esc(w.thanks[v.id])}${v.id === 'painted' ? `<br>${esc(w.koi)}` : ''}${allFull(a, vols) && i === vols.length - 1 && vols.length > 1 ? `<br>${esc(w.both)}` : ''}</span><b class="seal-m own" data-shape="tall" data-cut="white" data-n="2" ${cellStyle(OWN)} lang="zh" aria-hidden="true"><span>锦</span><span>程</span></b></p>`
         : ''
     }</div></section>`;
   };

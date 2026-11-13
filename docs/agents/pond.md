@@ -779,6 +779,13 @@ is most of it.
    (round, 朱), 图 (square, 白), 字 (square, 朱), 星 (round, 白), 刻 (square, 白, for the relief),
    锦程 (tall, 白, 锦 over 程), one cell empty. Tall is 3 : 5. Used in the album, the stamp and
    under the solar term.
+8. **Asked of the local thread: five more seals, for a trial volume of occasions** (preview builds
+   only for now: `hours` in `VOLUMES`, `seals.ts`). A second sheet `seals-2.webp` in
+   `public/pond/ink/`, 1024 × 512, cells of 256, 4 × 2, cut and coloured exactly as `seals.webp` is
+   (same face, same vermilion `#B8382A`, the tone in the alpha, square and round 232 across and
+   centred): row 1 雨 (square, 白), 雪 (round, 白), 月 (round, 朱), 节 (square, 朱); row 2 晨
+   (square, 白), then three cells empty. Under the budget for a file in `public/`. Until it comes
+   these five are their characters in the brush (`CUT` in `seals.ts` lists what the sheets hold).
 
 **Ukiyo-e.** Judge it by: a Hokusai or Hiroshige print at arm's length: flat colour, a key line,
 bokashi gradation, paper showing.
