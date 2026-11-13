@@ -3707,8 +3707,9 @@ button.more:hover {
 .toc .row {
   grid-template-columns: minmax(clamp(170px, 15.6vw, 200px), max-content) minmax(0, 1fr) 2.6em;
 }
+/* (wide enough for the longest word it holds, the Japanese) */
 .talk {
-  min-width: 88px;
+  width: 108px;
   justify-content: center;
 }
 @media (max-width: 860px) {
@@ -3722,6 +3723,10 @@ button.more:hover {
   }
   .toc .row {
     grid-template-columns: minmax(0, 1fr) 2.6em;
+  }
+  /* (Japanese greetings run long: set a little smaller, they keep to the two lines) */
+  #pond[lang='ja'] .hero {
+    font-size: clamp(34px, 10.2vw, 46px);
   }
   /* (the search box, which is as wide as its word in the look's face) */
   .hud .cmd {
