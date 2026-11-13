@@ -5580,7 +5580,7 @@ const toggleLook = (name, at) => {
 };
 const glintAt = () => [W * (big ? 0.6 : 0.74), H * (big ? 0.1 : 0.12)];
 const HOLD = 1.2,
-  HOLD_PX = 8,
+  HOLD_PX = 12,
   KEYS_TO_TYPE = 5,
   KEYS_WITHIN = 3,
   SHORTCUT = /^[iglfm]$/i;
@@ -5664,7 +5664,7 @@ const HOLD = 1.2,
     clearTimeout(gest.holdTimer);
     const drawn = gest.pts;
     if (ln && ln.chord > 320) toggleLook('blueprint', [x, y]);
-    else if (dt < 0.4 && gest.len < 10) {
+    else if (dt < 0.5 && gest.len < 14) {
       const [gx, gy] = glintAt();
       if (Math.hypot(x - gx, y - gy) < 46) toggleLook('glow', [gx, gy]);
       else {

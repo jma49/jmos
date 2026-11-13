@@ -163,6 +163,32 @@ describe('on a slant', () => {
   });
 });
 
+describe('a stir is meant', () => {
+  it('a bend that adds up to a turn but neither closes nor is round is no stir', () => {
+    // a spiral outwards that ends far from where it began
+    const spiral: Pt[] = Array.from({ length: 70 }, (_, i) => {
+      const a = (i / 69) * Math.PI * 2.1,
+        r = 30 + i * 4;
+      return [640 + Math.cos(a) * r, 400 + Math.sin(a) * r];
+    });
+    expect([...read(spiral)]).toEqual([]);
+    // a long flat oval
+    const oval: Pt[] = Array.from({ length: 80 }, (_, i) => [640 + Math.cos((i / 79) * 6.6) * 260, 400 + Math.sin((i / 79) * 6.6) * 70]);
+    expect([...read(oval)]).toEqual([]);
+  });
+  it('a loop as large as the screen that wanders in from the rim is nothing, not a stir', () => {
+    const big: Pt[] = Array.from({ length: 90 }, (_, i) => [W / 2 + Math.cos((i / 89) * 6.6) * W * 0.31, H / 2 + Math.sin((i / 89) * 6.6) * H * 0.31]);
+    expect([...read(big)]).toEqual([]);
+  });
+  it('a hand\u2019s rim, a little way in from the edges, is still the rim', () => {
+    expect([...read(rim(130))]).toEqual(['qinghua']);
+  });
+  it('a hand\u2019s ruled line, a little bowed, is still a line', () => {
+    const bowed: Pt[] = Array.from({ length: 50 }, (_, i) => [300 + i * 10, 500 + Math.sin((i / 49) * Math.PI) * 18]);
+    expect([...read(bowed)]).toEqual(['blueprint']);
+  });
+});
+
 describe('dust brushed off a stroke at a time', () => {
   it('four strokes the same way, joined end to end, are a rub; two are not', () => {
     const swipe = (k: number): Pt[] => line([500, 400 + k * 8], [760, 404 + k * 8], 14);
@@ -213,8 +239,8 @@ describe('taps', () => {
     ).toBe(null);
   });
   it('slow taps, or taps neither close nor far, mean nothing', () => {
-    expect(tapsLook(far.map((q, i) => ({ ...q, t: 10 + i })))).toBe(null);
-    expect(tapsLook(dabs.map((q, i) => ({ ...q, t: 10 + i * 0.8 })))).toBe(null);
+    expect(tapsLook(far.map((q, i) => ({ ...q, t: 10 + i * 1.5 })))).toBe(null);
+    expect(tapsLook(dabs.map((q, i) => ({ ...q, t: 10 + i })))).toBe(null);
     expect(
       tapsLook(
         taps([
