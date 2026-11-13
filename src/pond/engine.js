@@ -3059,6 +3059,7 @@ function atlas() {
 function placeKuan() {
   const k = $('.kuan');
   if (!inkOn || !k) return;
+  sealsPic();
   const a = $('.alm').getBoundingClientRect(),
     t = $('#termV').getBoundingClientRect(),
     // a brushed character's ink sits off the middle of its box: the axis is the ink's, for both columns
@@ -5701,8 +5702,19 @@ function sealsEntry() {
 }
 // the volumes whose large seal hasn't been seen yet: it stamps as the album opens, once
 const freshVols = () => VOLS.filter((v) => full(album, v) && !album.sealed.includes(v.id)).map((v) => v.id);
+// The seals cut in seal script are one picture, asked for the first time a seal is to be seen; until it
+// has come (and if it never does) a seal is its characters in the brush.
+function sealsPic() {
+  // (kept on the function: the inscription may ask before this part of the file has run)
+  if (sealsPic.asked) return;
+  sealsPic.asked = true;
+  const im = new Image();
+  im.onload = () => pond.setAttribute('data-seals', '');
+  im.src = '/pond/ink/seals.webp';
+}
 // a seal's characters are centred by their own ink, measured once the brush has come for them
 function alignSeals(sel) {
+  sealsPic();
   alignInk(sel);
   const chars = [...document.querySelectorAll(sel)].map((x) => x.textContent).join('');
   if (chars && document.fonts?.load)
@@ -5726,6 +5738,7 @@ let stampTimer = 0;
 function reached(id) {
   const r = stamp(album, id, dayOf(new Date()), VOLS);
   if (!r.fresh) return;
+  sealsPic();
   album = r.album;
   save('pond-seals', writeAlbum(album));
   koiSeals();

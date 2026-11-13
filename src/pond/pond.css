@@ -3307,6 +3307,53 @@ button.more:hover {
 .seal-m.blank[data-shape='round'] {
   border-radius: 50%;
 }
+/* Once the sheet of seals cut in small seal script has come (engine.js sets data-seals), a seal is its
+   cell of that sheet in the seal's colour, and the brushed characters under it are not shown. A square
+   or round seal is 232 of its 256-pixel cell across, a tall one 150 by 246, each centred; --c and --r
+   are its cell. The cut is on a layer of its own, so a look's shadow or glow still falls from it. */
+#pond[data-seals] b.seal-m:not(.blank),
+#pond[data-seals] .kuan .seal {
+  --k: calc(var(--s) / 232);
+  --ox: 12;
+  --oy: 12;
+  position: relative;
+  background: none;
+  box-shadow: none;
+  clip-path: none;
+  border-radius: 0;
+  outline: 0;
+}
+#pond[data-seals] b.seal-m[data-shape='tall']:not(.blank),
+#pond[data-seals] .kuan .seal {
+  --k: calc(var(--s) / 246);
+  --ox: 53;
+  --oy: 5;
+  width: calc(var(--k) * 150);
+  height: var(--s);
+}
+#pond[data-seals] .kuan .seal {
+  --s: 46px;
+  --c: 2;
+  --r: 2;
+  --red: #b8382a;
+}
+#pond[data-seals] b.seal-m:not(.blank) span,
+#pond[data-seals] .kuan .seal span {
+  visibility: hidden;
+}
+#pond[data-seals] b.seal-m:not(.blank)::before,
+#pond[data-seals] .kuan .seal::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--red);
+  -webkit-mask: url('/pond/ink/seals.webp') no-repeat;
+  mask: url('/pond/ink/seals.webp') no-repeat;
+  -webkit-mask-size: calc(var(--k) * 1024) calc(var(--k) * 768);
+  mask-size: calc(var(--k) * 1024) calc(var(--k) * 768);
+  -webkit-mask-position: calc(var(--k) * (var(--c) * -256 - var(--ox))) calc(var(--k) * (var(--r) * -256 - var(--oy)));
+  mask-position: calc(var(--k) * (var(--c) * -256 - var(--ox))) calc(var(--k) * (var(--r) * -256 - var(--oy)));
+}
 /* the stamp: pressed into the corner above the controls (on a phone, above the sound, where there is
    room), held a moment, then gone */
 .stamp {

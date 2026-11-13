@@ -259,19 +259,16 @@ export async function paint(cv, W, H, season) {
   hills(c, W, H, s);
   if (im) {
     const [x, y, size] = hang(W, H, season);
-    // the painting thins out towards its outer edges, as ink does where the brush leaves the paper, so it is
-    // never cut off square by the pond's edge
+    // the painting thins out towards its upper and lower edges, as ink does where the brush leaves the
+    // paper, and towards its right one where it stops short of the pond's edge; where it reaches that edge
+    // it runs off it whole, as a branch that grows in from outside the paper does
     const px = Math.round(size * dpr),
       one = document.createElement('canvas');
     one.width = one.height = px;
     const o = one.getContext('2d');
     o.drawImage(im, 0, 0, px, px);
     o.globalCompositeOperation = 'destination-in';
-    for (const [x0, y0, x1, y1] of [
-      [px, 0, px * 0.9, 0],
-      [0, 0, 0, px * 0.06],
-      [0, px, 0, px * 0.94]
-    ]) {
+    for (const [x0, y0, x1, y1] of [...(x + size < W - 1 ? [[px, 0, px * 0.9, 0]] : []), [0, 0, 0, px * 0.06], [0, px, 0, px * 0.94]]) {
       const g = o.createLinearGradient(x0, y0, x1, y1);
       g.addColorStop(0, 'rgba(0,0,0,0)');
       g.addColorStop(1, '#000');
