@@ -32,7 +32,7 @@ const preview = volumes(false).slice(0, 2),
 describe('the volumes', () => {
   it('hold every look in a release build, five to a volume', () => {
     expect(volumes(false)).toEqual(volumes(true));
-    expect(volumes(false).map((v) => v.id)).toEqual(['painted', 'drawn', 'hours', 'end']);
+    expect(volumes(false).map((v) => v.id)).toEqual(['painted', 'drawn', 'hours', 'end', 'idle']);
     expect(live.map((v) => v.seals.map((s) => s.id))).toEqual([
       ['ink', 'ukiyo'],
       ['glow', 'blueprint', 'ascii']
@@ -127,6 +127,16 @@ describe('the end', () => {
     expect(walked(['ink', 'ukiyo'], 'glow')).toEqual([]);
     expect(walked(['ink', 'ukiyo'], 'ink')).toEqual(['ink']);
     expect(walked([], 'ukiyo')).toEqual([]);
+  });
+});
+
+describe('the idle seals', () => {
+  it('are stamped like any other, and the album is full without them', () => {
+    const all = volumes(false);
+    let a = emptyAlbum();
+    for (const v of all.slice(0, 4)) for (const x of v.seals) a = stamp(a, x.id, '2026-11-13', all).album;
+    expect(allFull(a, all)).toBe(true);
+    expect(stamp(a, 'skip', '2026-11-14', all).fresh).toBe(true);
   });
 });
 
