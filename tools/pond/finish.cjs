@@ -4,7 +4,7 @@
 // 1280 × 800 (halved), and finish/<look>-phone.png: the title page and three chapters at 390 × 844.
 const { chromium } = require('playwright');
 const fs = require('node:fs');
-const SHEETS = ['career', 'photos', 'music', 'notes', 'chat', 'about', 'seals'];
+const SHEETS = ['seals', 'music', 'notes', 'chat', 'about'];
 (async () => {
   const [, , dir, looks] = process.argv;
   const { serveDist } = await import(require('node:url').pathToFileURL(require('node:path').join(__dirname, '../../scripts/serve-dist.mjs')).href);
@@ -42,7 +42,7 @@ const SHEETS = ['career', 'photos', 'music', 'notes', 'chat', 'about', 'seals'];
       await p.waitForTimeout(8000);
     }
     const shots = [await p.screenshot({ timeout: 180000 })];
-    for (const sh of phone ? ['career', 'music', 'chat'] : SHEETS) {
+    for (const sh of phone ? ['seals', 'music', 'chat'] : SHEETS) {
       await p.evaluate((sh) => document.querySelector(`[data-sheet=${sh}]`)?.click(), sh);
       await p.waitForTimeout(3200);
       shots.push(await p.screenshot({ timeout: 180000 }));

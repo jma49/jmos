@@ -3,22 +3,20 @@
 The pond is the site's home page, at `/`; the desktop it replaced is at
 `/os` ([decision 0025](../decisions/0025-the-pond.md)). It's a full-bleed
 pond seen from above: a title page set on the water (a greeting, the
-contents), and chapters (About, Timeline, Photos, Music, Notes, Chat)
+contents), and chapters (About, Seals, Music, Notes, Chat)
 that open as one tall sheet of glass. Everyone who visits is a koi.
 
 ## Where things are
 
 | File | What it holds |
 | --- | --- |
-| `src/pages/index.astro` | The markup, and everything gathered at build time: the timeline (each project's page plus `src/pond/content.ts`), the latest Unsplash photos (`src/lib/photos.ts`), covers resized by `getImage`. It hands them to the script as JSON (`#pond-data`) and keeps a plain-text copy for screen readers and visitors without JavaScript. |
+| `src/pages/index.astro` | The markup. It hands the pond's words (`src/pond/content.ts`) to the script as JSON (`#pond-data`) and keeps a plain-text copy of the About chapter for screen readers and visitors without JavaScript. |
 | `src/pond/engine.js` | Everything that moves: the water (a height field stepped on the CPU), the koi, lily pads, the 24 solar terms and the time of day, ice that cracks and breaks, boats, the dove's and spider's behaviour, the WebGL passes (the pond into a texture, then the glass over it), the chapters, the command bar, the sound effects, the opening. Its sections are marked `/* ===== … ===== */`. |
 | `src/pond/sprites.js` | The dove and the spider as rendered sprite sheets: which frame a moment calls for (`doveFrame()`, `spiderFrame()`), and how each look dresses the sheets (`dressed()`). `sprites.test.ts` holds the frames to the sheets' grids. |
 | `src/pond/music.ts` | The music: Ryuichi Sakamoto only, the songs `POND_MUSIC` in `content.ts` chooses first and the rest of his in the library the iPod plays (`/api/songs`, or `src/data/songs.json`), played with YouTube's player in a frame clipped to nothing. |
 | `src/pond/people.ts` | Accounts, presence, the guestbook's notes and the chat, through `src/os/social` (the same backend and rules as the desktop). |
-| `src/pond/content.ts` | The pond's wording: the timeline's jobs and schools, each project's colour, mark and highlights, This pond's own entry, the About chapter. |
+| `src/pond/content.ts` | The pond's wording: the About chapter, the page's and the chapters' words in Chinese and Japanese, and what the pond plays. |
 | `src/pond/pond.css` | The styles. |
-| `public/pond/marks/` | The 72-pixel marks of the companies, schools and projects on the timeline. |
-| `src/assets/pond/cover.jpg` | This pond's picture on the timeline: a capture of the title page. |
 
 `engine.js` is plain JavaScript, ported from the
 prototype the design was made on (the decision has why); the parts that
@@ -97,8 +95,8 @@ for; keep it true when the file changes.
 
   A new animation must be time-based (scale by `dt`), and anything that changes the picture without
   input must call `invalidate()`.
-- **Addresses:** a chapter is `#<chapter>`, and an entry on the timeline
-  `#career/<id>` (ids from `content.ts` and the project pages' slugs).
+- **Addresses:** a chapter is `#<chapter>` (`#about`, `#seals`, `#music`,
+  `#notes`, `#chat`).
 
 ## Ink and paper
 
@@ -121,10 +119,11 @@ languages). The first time a look comes in all the way (`reached()` in `engine.j
 gesture, key or ⌘K, its seal is stamped in the corner above the controls, in the look's own manner
 (`#pond[data-look] .stamp` in `pond.css`), with a soft thud; under reduced motion it only appears.
 
-- The album is a sheet (`#seals`, ⌘K "Seals"), not a numbered chapter: a leaf of paper for each volume
-  (册), found seals in vermilion with the day, the rest an outline and a hint that points at the gesture
-  without saying it. Its small mark sits under the clock's lines once there is a seal, or on a later
-  visit by someone the line on the water didn't reach.
+- The album is the first chapter in the contents (`#seals`, ⌘K "Seals"), there from the first visit;
+  its row says how many seals are found of how many there are (`#sealsN`, written by `sealsEntry()`).
+  Inside, a leaf of paper for each volume (册), found seals in vermilion with the day, the rest an
+  outline and a hint that points at the gesture without saying it. Its small mark also sits under the
+  clock's lines once there is a seal, or on a later visit by someone the line on the water didn't reach.
 - A full volume carries the large 锦程 seal and a line of thanks. The first volume full, the visitor's
   koi wears a small seal; every volume full, the gold koi does too. ⌘K then offers "Clear my seals".
 - Someone who has found no look is shown one line on the water, once: 20 s after the pond settles, or a
@@ -574,7 +573,6 @@ light and refraction, the glass) stays in the shader.
 | Borders and frames | pictures (青花's rim, the Dunhuang band, the relief's frieze) | In keeping | Done | in use (`qinghua/rim`, `corner`; `dunhuang/border`; `relief/frieze`) |
 | Solar-term block, chapter headers, the album's paper | type and CSS | In keeping | Keep | per look only where asked below |
 | Presses | shader, per look | Good where they are physics (rings, blots); ukiyo-e's claws are stiff | Ukiyo-e's replaced in a preview build | in use (`ukiyo/waves`) |
-| The pond's mark, timeline marks | PNG files already | n/a | Keep | none |
 
 Highest value, in order: Monet's painted bed; a koi sheet per look (one look first, as the proof);
 lily pads and flowers for the water look; the dove and the spider as rendered sprites; the seals in
@@ -890,12 +888,10 @@ green `#5E8F6A`, red ochre `#A8482C`, yellow `#D6A23E`, black line; transparent 
 The language is chosen apart from the look: the En / 中 / 日 segments
 beside 墨 (L steps through them; ⌘K too) turn the pond's words to plain,
 natural Chinese, set in the brush, or plain Japanese, and back: the
-greeting, the contents, the clock, every chapter and the timeline's
-entries. It's remembered (`pond-lang`); a first visit takes the
+greeting, the contents, the clock and every chapter. It's remembered (`pond-lang`); a first visit takes the
 browser's language. The words are `ZH` and `JA` in `content.ts`;
 `L(en, zh)` in `engine.js` picks them (from `ZH`, which points at the
-Japanese when 日 is chosen), `tr()` lays an entry's words over its
-English, and `speak()` rewrites the page's own words as the language
+Japanese when 日 is chosen), and `speak()` rewrites the page's own words as the language
 changes. A new piece of copy needs its Chinese in `ZH` and its Japanese
 in `JA` too.
 
@@ -1034,14 +1030,14 @@ end is for trying things: it shows with `?preview` in the address, or in a build
 
 ## Changing it
 
-- **Wording, a job, a school, a project's highlights:** `content.ts`; a
-  project's title, description, dates, stack and links come from its page
-  in `src/content/projects`. A new mark goes in `public/pond/marks/`
-  (72×72 PNG); `content.test.ts` checks every entry has one.
+- **Wording:** `content.ts`, in English, `ZH` and `JA` alike; the album's
+  words are in `seals.ts`.
 - **Something on the water:** its section in `engine.js`. Check it in a
   browser with motion on and off, on a phone width, and in winter and
   summer (⌘K → Winter, Summer).
-- **A chapter:** `SHEETS` and `CHAPTERS` in `engine.js`; add it to
+- **A chapter:** `SHEETS`, `CHAPTERS` and `ORDER` in `engine.js` (the
+  numbers in `CHAPTERS` are the contents' and the keys 0 to 4), its row in
+  `index.astro`'s `.toc`; add it to
   `scripts/smoke.mjs`'s list of the pond's chapters too.
 - `npm run test:smoke` opens the pond and every chapter; `astro dev` has a
   stand-in backend that works across tabs, for trying accounts, notes,
