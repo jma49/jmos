@@ -2313,7 +2313,8 @@ let festAt = 0;
 // The festivals' own pictures (public/pond/water/): the dragon boat in two paddling frames, the two
 // lanterns. Each is asked for the first time its festival draws, and what is drawn in code stands until
 // it has come, or for good if it never does.
-const festPics = {};
+const festPics = {},
+  FEST_PICS = { 'dragon-boat': '/pond/water/dragon-boat.webp', lanterns: '/pond/water/lanterns.webp' };
 function festPic(name) {
   if (!(name in festPics)) {
     festPics[name] = null;
@@ -2324,7 +2325,7 @@ function festPic(name) {
     };
     // (not having the picture is no fault: the drawn one is kept)
     im.onerror = () => {};
-    im.src = `/pond/water/${name}.webp`;
+    im.src = FEST_PICS[name];
   }
   return festPics[name];
 }

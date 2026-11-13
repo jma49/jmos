@@ -85,7 +85,7 @@ html = html.replace(/<link rel="stylesheet" href="[^"]+">/g, '');
 // images the data and the script name: covers, marks, the portrait
 const swap = (s) =>
   s.replace(
-    /\/(?:_astro|pond\/marks|pond\/dunhuang|pond\/ink|pond\/qinghua|pond\/ukiyo|pond\/stars|pond\/monet|pond\/relief|pond\/water)\/[\w.\-]+\.(?:png|jpg|webp|avif)/g,
+    /\/(?:_astro|pond\/marks|pond\/dunhuang|pond\/ink|pond\/qinghua|pond\/ukiyo|pond\/stars|pond\/monet|pond\/relief|pond\/water|pond\/blueprint)\/[\w.\-]+\.(?:png|jpg|webp|avif)/g,
     (p) => (existsSync(join(DIST, p)) ? dataUrl(p) : p)
   );
 html = swap(html);
