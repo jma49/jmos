@@ -167,9 +167,13 @@ koi moved to the common sheet. What is left of those:
 12. **Performance on a real Mac with `?perf`:** frame rate, GPU time and scale in each look and
     through each arrival. Nothing here could measure that (see the traps).
 
-Asked of the local thread now, as one round in a set order ("The round asked for now" in the art
-brief): the dragon boat and the lanterns (the festival code takes them the moment they come), a
-painted bed for ukiyo-e, and the P1 lines of every look's kit.
+The round asked of the local thread came back whole (nine looks' pictures, and each painted look's
+sheet of what drifts and flies), and it is wired in: each look's own lily pads, drift, flyers, dove
+and spider (`LOOK_ART`), ukiyo-e's painted water, 青花's medallion, the relief's papyrus, duck and
+cartouche, Monet's autumn pads, the water's drift and dragonfly, the dragon boat and the lanterns.
+Seen once each, in summer at 1280 × 800. Not used: ink's `stems`, ukiyo-e's `paper`, Monet's
+`strokes` and `canvas`, Dunhuang's `caisson`. Not looked at: autumn, winter and spring in each look,
+the dove and spider's own pictures in motion, phones, the festivals.
 
 Asked of the local thread since this page was first written, delivered, and in use: the relief's koi
 sheet and stone face, then a lighter lily sheet for the water, a grid that tiles for the star chart,

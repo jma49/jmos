@@ -583,7 +583,23 @@ flying thing seen from above (a crane or a butterfly for Dunhuang, a bee or a sw
 **The round asked for now** (every line is already in a look's kit below, or is new there; make them
 in this order, commit each lot as it is done, and say in its table what came out):
 
-All of it is delivered and waits to be wired in; what came out is in each look's table above.
+All of it is delivered, and all of it is in use (how is under "Each look's own pictures in the
+code" below) but five: ink's `stems` (how it sits with the plum and the reeds has to be composed), the
+star chart's old framed plate (gone), ukiyo-e's `paper` (the shader's own grain is still used),
+Monet's `strokes` and `canvas`, and Dunhuang's `caisson`; and the heights of the relief's `afloat`,
+`dove` and `spider`, since what floats and flies is drawn above the stone, not carved in it.
+
+**Each look's own pictures in the code.** `LOOK_ART` in `newlooks.js` says, for each look, which sheet
+holds its lily pads (by size, with their flowers and bud), what drifts and flies, and its dove and
+spider; `artOf()` in `engine.js` fetches a sheet the first time its look needs it, and until it has
+come what the pond draws for every look stands. `drawPads()`, `drawTop()`, the dragonflies in
+`drawAir()` and `drawCell()` each draw from the look's sheet when there is one, and the shaders of
+ukiyo-e, 青花 and Dunhuang lay painted pads and drift in as they are (`uArt`), without the line and
+flat colour they give the pond's own. On the star chart the pads' places hold planets, nebulae and
+clusters in the plate's line. Ukiyo-e's painted water is the top half of its texture, its crests the
+bottom half. 青花 has its medallion, large and pale, in the right of the bowl. The relief has its
+papyrus and duck from their own pictures and a cartouche round the solar term. A new look adds its
+entry to `LOOK_ART`; a new kind of thing adds a key there and a place that draws it.
 
 1. Water: `dragon-boat`, `lanterns`, `afloat`, `dragonfly`.
 2. Ukiyo-e: `bed`, `bed-tall`, `paper`, `lilies`.
@@ -696,16 +712,16 @@ like clear water over stones, nothing looks pasted on.
    light, seamless left to right, under 150 KB together.
 2. Koi: keep the pond's own. No sheet wanted.
 3. Delivered and in use (preview): `lilies-768.webp` (summer pads, autumn pads, two flowers and a
-   bud; cells of 192). Delivered, to wire in:
+   bud; cells of 192). Delivered and in use:
    `afloat.webp`, 1024 × 512, 4 × 2: two cherry petals, three autumn leaves (maple, ginkgo, oak), a
    folded paper boat from above in three tones.
 4. Ornaments: none.
 5. Press: none (it is the water itself).
 6. Dove and spider: the neutral sheets as rendered: delivered (`dove.webp`, `spider.webp`), and drawn
    from in a preview build; the revised ones replace them.
-7. Delivered, to wire in: `dragonfly.webp`, 1024 × 256, four frames of a dragonfly from above, wings in four positions
+7. Delivered and in use: `dragonfly.webp`, 1024 × 256, four frames of a dragonfly from above, wings in four positions
    of a beat.
-8. **Delivered, to wire in:** the dragon boat of the Dragon Boat festival, which is three paths today and reads as
+8. **Delivered and in use:** the dragon boat of the Dragon Boat festival, which is three paths today and reads as
    a red sliver. `dragon-boat.webp`, 1024 × 512, two frames stacked in rows of 256, the boat from
    straight above, bow to the right, about 940 pixels long and at most 110 across with its paddles,
    centred in its row. A long narrow hull in red lacquer with a band of gold scales along each side;
@@ -717,7 +733,7 @@ like clear water over stones, nothing looks pasted on.
    differ. No water, wake, spray or shadow (the pond draws its own wake). Drawn about 240 pixels
    long on screen, so keep the shapes bold: a head that reads at that size matters more than
    detail. In the manner of the water look's own pictures (like softened photographs). Under 120 KB.
-9. **Delivered, to wire in:** `lanterns.webp`, 512 × 256, two cells of 256, from straight above: a river lantern
+9. **Delivered and in use:** `lanterns.webp`, 512 × 256, two cells of 256, from straight above: a river lantern
    (a paper lotus of pale pink petals round a small candle) and a red paper lantern (round, gold
    caps top and bottom, ribs showing). No glow painted (the pond adds the light), no shadow. Each
    is drawn about 40 pixels across. Under 40 KB.
@@ -730,12 +746,12 @@ is most of it.
    `#B8382A`). It replaces the drawn ones only if it is clearly better in motion.
 3. Seasons: delivered and in use (`willow`, `lotus`, `reeds`, `plum`). Composited by multiplying
    into the paper, faded at their outer edges.
-   Delivered, to wire in: `stems.webp`, 1024 × 1024, withered lotus (残荷) in ink: a few dry bent stems, a curled brown
+   Delivered and in use: `stems.webp`, 1024 × 1024, withered lotus (残荷) in ink: a few dry bent stems, a curled brown
    leaf, a seed-pod, entering from the right edge like the others; it joins the reeds in late autumn
    and stands alone under the plum in winter.
 4. Ornaments: none; the inscription and the 锦程 seal are type.
 5. Press: the shader's blot. Nothing wanted.
-6. Dove and spider: delivered, to wire in: each as three ink-wash poses on one sheet `dove.webp` / `spider.webp`,
+6. Dove and spider: delivered and in use: each as three ink-wash poses on one sheet `dove.webp` / `spider.webp`,
    768 × 256 (sitting, moving, wings or legs spread), in the manner of Bada Shanren's birds:
    a few wet strokes, black and grey. Multiplied into the paper.
 7. P0 `seals.webp`, 1024 × 768, 4 × 3, true seal script (篆书), vermilion `#B8382A`, the stone's
@@ -747,7 +763,7 @@ is most of it.
 
 **Ukiyo-e.** Judge it by: a Hokusai or Hiroshige print at arm's length: flat colour, a key line,
 bokashi gradation, paper showing.
-1. **Delivered, to wire in:** `bed.webp`, 2048 × 1152, opaque to every edge, with `bed-tall.webp`, 1080 × 1920, the
+1. **Delivered and in use:** `bed.webp`, 2048 × 1152, opaque to every edge, with `bed-tall.webp`, 1080 × 1920, the
    same water painted again upright (not a crop). The water of a print, seen from above, with nothing
    in it: flat Prussian blue in three or four tones (`#16365f`, `#1f4a7a`, `#33638c`, a little
    `#8fb4c8`), the swell as long carved contour lines that run in parallel bands and curl at their
@@ -757,9 +773,9 @@ bokashi gradation, paper showing.
    of Hokusai's and Hiroshige's water, not a copy of a print. It replaces the shader's bands, which
    read as blotches; the shader keeps the moving foam and the press. Under 300 KB and 120 KB (a bed
    may pass the budget, with its line in the size check).
-   Delivered, to wire in: `paper.webp`, 512 × 512, washi grain with a few long fibres, greyscale, opaque, seamless.
+   Delivered and in use: `paper.webp`, 512 × 512, washi grain with a few long fibres, greyscale, opaque, seamless.
 2. Delivered and in use: `koi.webp` + mask, as a carp print.
-3. Delivered, to wire in: `lilies.webp`, 1024 × 512, 4 × 2: lotus leaves and flowers as a print draws them from above;
+3. Delivered and in use: `lilies.webp`, 1024 × 512, 4 × 2: lotus leaves and flowers as a print draws them from above;
    maple leaves and cherry petals for the seasons.
 4. Ornaments: none (no cartouche: it was tried and taken out).
 5. Delivered and in use: `waves.webp`, for the press and the arrival.
@@ -772,7 +788,7 @@ bokashi gradation, paper showing.
 2. P1 `koi.webp` (no mask needed: visitors are told apart by their dimension labels): white line
    drawings of a koi from above with a centre line, station marks along the spine and the fins'
    construction lines, line only, no fill, the line `#EAF3FF`.
-6. Dove and spider: delivered, to wire in: the same as line drawings, one pose each, 512 × 512.
+6. Dove and spider: delivered and in use: the same as line drawings, one pose each, 512 × 512.
 Everything else is ruled in the shader. Nothing more wanted.
 
 **ASCII.** Characters only. Nothing wanted.
@@ -780,25 +796,25 @@ Everything else is ruled in the shader. Nothing more wanted.
 **Monet.** Judge it by: at thumbnail size it is a late Nymphéas panel.
 1. Delivered and in use: `bed`, `bed-1280`, `bed-tall`.
 2. Delivered and in use: `koi-v2` + mask, to the common spec.
-3. Delivered and in use: `lilies`. Delivered, to wire in: an autumn row for it, `lilies-autumn.webp` (pads gone yellow-brown), 1024 × 256.
+3. Delivered and in use: `lilies`. Delivered and in use: an autumn row for it, `lilies-autumn.webp` (pads gone yellow-brown), 1024 × 256.
 4. Ornaments: none.
 5. Delivered, not yet used: `strokes`, `canvas`. For the press and the arrival.
-6. Dove and spider: delivered, to wire in: `dove.webp`, `spider.webp`, 768 × 256, three poses each as a few loaded
+6. Dove and spider: delivered and in use: `dove.webp`, `spider.webp`, 768 × 256, three poses each as a few loaded
    oil dabs, soft edges, no line.
-   Delivered, to wire in: `dragonfly.webp`, 512 × 256, two dragonflies as a few thin dabs (the drawn one is only
+   Delivered and in use: `dragonfly.webp`, 512 × 256, two dragonflies as a few thin dabs (the drawn one is only
    dimmed for now).
 7. Seal: on the ink sheet.
 
 **青花.** Judge it by: a Yuan or early Ming blue-and-white dish seen from above: cobalt only, on
 white, the blue pooling at line ends.
-1. Bed: the shader's glaze and crackle. Delivered, to wire in: `medallion.webp`, 1024 × 1024: a double ring, and in it
+1. Bed: the shader's glaze and crackle. Delivered and in use: `medallion.webp`, 1024 × 1024: a double ring, and in it
    two koi among lotus and water-weed in line and wash; it lies large and pale in the right half.
 2. Delivered: `koi` + mask, to the common spec.
-3. Delivered, to wire in: `lotus.webp`, 1024 × 512, 4 × 2, in the cobalt: three lotus leaves from above, two flowers,
+3. Delivered and in use: `lotus.webp`, 1024 × 512, 4 × 2, in the cobalt: three lotus leaves from above, two flowers,
    a bud, a seed-pod, a spray of water-weed. They replace the shader's pad outlines.
 4. Delivered: `rim`, `corner`.
 5. Press: the shader's craze line. Nothing wanted.
-6. Dove and spider: delivered, to wire in: `dove.webp`, `spider.webp`, 768 × 256, three poses each in cobalt line and
+6. Dove and spider: delivered and in use: `dove.webp`, `spider.webp`, 768 × 256, three poses each in cobalt line and
    wash.
 7. Seal: on the ink sheet; the stamp is shown in cobalt, as a reign mark is.
 
@@ -807,10 +823,10 @@ dark painted game mural.
 1. Delivered and in use: the figures, `sky-flowers`, `border`, `cloud-trail`, `halo`; `caisson`
    delivered, to be placed.
 2. Delivered and in use: `koi.webp` + mask, as mural fish.
-3. Delivered, to wire in: `lotus.webp`, 1024 × 512, 4 × 2: lotus leaves and flowers as cave ceilings paint them, flat
+3. Delivered and in use: `lotus.webp`, 1024 × 512, 4 × 2: lotus leaves and flowers as cave ceilings paint them, flat
    mineral green, white and cinnabar in the same line.
 4. Delivered: `border`. 5. Press: the shader's flaking. Nothing wanted.
-6. Dove and spider: delivered, to wire in: `dove.webp`, `spider.webp`, 768 × 256, three poses each in the wall's
+6. Dove and spider: delivered and in use: `dove.webp`, `spider.webp`, 768 × 256, three poses each in the wall's
    manner (the dove as the white birds of the murals).
 7. Seal: on the ink sheet.
 
@@ -818,11 +834,11 @@ dark painted game mural.
 1. Delivered and in use: `grid.webp`, a grid that tiles (the plate it replaced is gone).
 2. Delivered and in use: `koi-figures`. P1: the same to the common spec (four rows,
    outline and engraved scales only, with a mask of where a visitor's colour tints the line).
-3. Delivered, to wire in: `nebulae.webp`, 1024 × 512, 4 × 2: engraved discs and wreaths that stand for the lily pads
+3. Delivered and in use: `nebulae.webp`, 1024 × 512, 4 × 2: engraved discs and wreaths that stand for the lily pads
    (a ringed planet, a nebula as stippling, a cluster, an armillary ring), the pale line `#C9D4F0`.
 4. P2 `compass.webp`, 512 × 512, a compass rose in the same engraving.
 5. Press: the shader's star. Nothing wanted.
-6. Dove and spider: delivered, to wire in: as engraved constellation figures, one pose each, 512 × 512 (Columba the
+6. Dove and spider: delivered and in use: as engraved constellation figures, one pose each, 512 × 512 (Columba the
    dove; a spider in the same hand).
 7. Seal: on the ink sheet.
 
@@ -835,11 +851,11 @@ green `#5E8F6A`, red ochre `#A8482C`, yellow `#D6A23E`, black line; transparent 
 2. Delivered and in use: `koi-h.webp`, `koi-c.webp` + `koi-mask.webp`, to the common spec.
    Delivered and in use: the bolder cut, `koi-c-bold.webp`, `koi-h-bold.webp`, `koi-mask-bold.webp`
    (the first cut is gone).
-3. Delivered and in use: `fish`, `lotus`, `frieze`. Delivered, to wire in: `papyrus`, 512 × 1024, a papyrus clump; `duck`, 512 ×
+3. Delivered and in use: `fish`, `lotus`, `frieze`. Delivered and in use: `papyrus`, 512 × 1024, a papyrus clump; `duck`, 512 ×
    512, a duck in profile.
-4. Delivered, to wire in: `cartouche`, 512 × 768, an empty cartouche ring, upright, for the solar term. Nothing in it.
+4. Delivered and in use: `cartouche`, 512 × 768, an empty cartouche ring, upright, for the solar term. Nothing in it.
 5. Press: a chip and dust, in the shader. Nothing wanted.
-6. Dove and spider: delivered, to wire in (raised, like the rest): `dove-h/-c`, `spider-h/-c`, one pose each, 512 × 512 (the
+6. Dove and spider: delivered and in use (their paint; raised, like the rest): `dove-h/-c`, `spider-h/-c`, one pose each, 512 × 512 (the
    dove in the manner of the birds of the marsh scenes).
 7. Seal: 刻, on the ink sheet. No hieroglyphic text anywhere, real or invented.
 

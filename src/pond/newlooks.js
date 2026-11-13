@@ -29,14 +29,204 @@ export const NEW_SHADE = { monet: 0.5, qinghua: 0, dunhuang: 0, stars: 0, relief
 
 /**
  * What of the pond's seasons a look leaves out, because its manner has no place for it: the night sky has
- * neither lily pads nor dragonflies, and glaze, a painted wall and carved stone have no dragonflies.
+ * nothing flying over it, and neither it nor glaze, a painted wall or carved stone has fireflies (`bugs`).
+ * (What flies over those three is their own: a cobalt dragonfly, a crane, a bee and a swallow, in LOOK_ART.)
  */
-export const NEW_WITHOUT = { stars: { pads: true, flies: true }, qinghua: { flies: true }, dunhuang: { flies: true }, relief: { flies: true } };
+export const NEW_WITHOUT = { stars: { flies: true, bugs: true }, qinghua: { bugs: true }, dunhuang: { bugs: true }, relief: { bugs: true } };
+
+/**
+ * Each look's own pictures of what the pond shows in every look (public/pond/<look>/), asked for the first
+ * time the look needs them. A cell is [column, row] in a sheet of 256-pixel cells.
+ *  - pads: the lily pads by size (large, medium, small), their flowers, a bud, and `across`, how far a
+ *    large pad's paint reaches across its cell (so a pad is drawn at its real size); `autumn` is another
+ *    sheet whose first row replaces the pads as they wither.
+ *  - afloat: what drifts on the water (petals, leaves) and what flies over it (`fly`, heads to the right).
+ *  - fly: a sheet of its own for the dragonfly, `frames` cells along one row.
+ *  - dove, spider: the two visitors, three poses along a row (at rest, half way, spread) or one pose.
+ */
+export const LOOK_ART = {
+  water: {
+    afloat: {
+      src: '/pond/water/afloat.webp',
+      petals: [
+        [0, 0],
+        [1, 0]
+      ],
+      leaves: [
+        [2, 0],
+        [3, 0],
+        [0, 1]
+      ],
+      boats: [
+        [1, 1],
+        [2, 1],
+        [3, 1]
+      ]
+    },
+    fly: { src: '/pond/water/dragonfly.webp', frames: 4, beat: 22 }
+  },
+  ukiyo: {
+    pads: {
+      src: '/pond/ukiyo/lilies.webp',
+      large: [[0, 0]],
+      medium: [[1, 0]],
+      small: [[2, 0]],
+      flowers: [
+        [3, 0],
+        [0, 1]
+      ],
+      across: 0.88
+    },
+    afloat: {
+      src: '/pond/ukiyo/afloat.webp',
+      petals: [
+        [0, 0],
+        [1, 0]
+      ],
+      leaves: [
+        [2, 0],
+        [3, 0]
+      ],
+      fly: [
+        [2, 1],
+        [3, 1]
+      ]
+    }
+  },
+  monet: {
+    afloat: {
+      src: '/pond/monet/afloat.webp',
+      petals: [
+        [0, 0],
+        [1, 0]
+      ],
+      leaves: [
+        [2, 0],
+        [3, 0]
+      ]
+    },
+    fly: { src: '/pond/monet/dragonfly.webp', frames: 2, beat: 0 },
+    dove: { src: '/pond/monet/dove.webp', poses: 3 },
+    spider: { src: '/pond/monet/spider.webp', poses: 3 }
+  },
+  qinghua: {
+    pads: {
+      src: '/pond/qinghua/lotus.webp',
+      large: [
+        [0, 0],
+        [2, 0]
+      ],
+      medium: [[0, 0]],
+      small: [[1, 0]],
+      flowers: [
+        [3, 0],
+        [0, 1]
+      ],
+      bud: [1, 1],
+      across: 0.89
+    },
+    afloat: {
+      src: '/pond/qinghua/afloat.webp',
+      petals: [
+        [0, 0],
+        [1, 0]
+      ],
+      leaves: [
+        [2, 0],
+        [3, 0]
+      ],
+      fly: [[2, 1]]
+    },
+    dove: { src: '/pond/qinghua/dove.webp', poses: 3 },
+    spider: { src: '/pond/qinghua/spider.webp', poses: 3 }
+  },
+  dunhuang: {
+    pads: {
+      src: '/pond/dunhuang/lotus.webp',
+      large: [[0, 0]],
+      medium: [[1, 0]],
+      small: [[2, 0]],
+      flowers: [
+        [3, 0],
+        [0, 1],
+        [1, 1]
+      ],
+      bud: [2, 1],
+      across: 0.88
+    },
+    afloat: {
+      src: '/pond/dunhuang/afloat.webp',
+      petals: [
+        [0, 0],
+        [1, 0]
+      ],
+      leaves: [
+        [2, 0],
+        [3, 0]
+      ],
+      fly: [[2, 1]]
+    },
+    dove: { src: '/pond/dunhuang/dove.webp', poses: 3 },
+    spider: { src: '/pond/dunhuang/spider.webp', poses: 3 }
+  },
+  stars: {
+    // (the sky has no lily pads: where one would lie there is a planet, a nebula, a cluster, a wreath of stars)
+    pads: {
+      src: '/pond/stars/nebulae.webp',
+      large: [
+        [0, 0],
+        [3, 0],
+        [1, 1]
+      ],
+      medium: [
+        [1, 0],
+        [2, 1]
+      ],
+      small: [
+        [2, 0],
+        [3, 1]
+      ],
+      flowers: [],
+      across: 0.89,
+      light: true
+    },
+    dove: { src: '/pond/stars/dove.webp', poses: 1 },
+    spider: { src: '/pond/stars/spider.webp', poses: 1 }
+  },
+  relief: {
+    afloat: {
+      src: '/pond/relief/afloat-c.webp',
+      petals: [
+        [0, 0],
+        [1, 0]
+      ],
+      leaves: [
+        [2, 0],
+        [3, 0]
+      ],
+      fly: [
+        [2, 1],
+        [3, 1]
+      ]
+    },
+    dove: { src: '/pond/relief/dove-c.webp', poses: 1 },
+    spider: { src: '/pond/relief/spider-c.webp', poses: 1 }
+  },
+  blueprint: {
+    dove: { src: '/pond/blueprint/dove.webp', poses: 1 },
+    spider: { src: '/pond/blueprint/spider.webp', poses: 1 }
+  },
+  ink: {
+    dove: { src: '/pond/ink/dove.webp', poses: 3 },
+    spider: { src: '/pond/ink/spider.webp', poses: 3 }
+  }
+};
 
 /** 青花's pictures: the rim's lotus scroll and its corner, the koi and where a visitor's colour goes on them. */
 export const QINGHUA = {
   rim: '/pond/qinghua/rim.webp',
   corner: '/pond/qinghua/corner.webp',
+  medallion: '/pond/qinghua/medallion.webp',
   koi: '/pond/qinghua/koi.webp',
   koiMask: '/pond/qinghua/koi-mask.webp'
 };
@@ -95,10 +285,11 @@ export const MONET = {
   bed: '/pond/monet/bed.webp',
   bedSmall: '/pond/monet/bed-1280.webp',
   bedTall: '/pond/monet/bed-tall.webp',
-  lilies: '/pond/monet/lilies.webp'
+  lilies: '/pond/monet/lilies.webp',
+  autumn: '/pond/monet/lilies-autumn.webp'
 };
 /** Ukiyo-e's pictures (public/pond/ukiyo/): the wave crests of a press and of its arrival (the koi are in KOI_SHEETS). */
-export const UKIYO = { waves: '/pond/ukiyo/waves.webp' };
+export const UKIYO = { waves: '/pond/ukiyo/waves.webp', bed: '/pond/ukiyo/bed.webp', bedTall: '/pond/ukiyo/bed-tall.webp' };
 /**
  * The star chart's pictures (public/pond/stars/): an engraved grid that tiles, and a koi in outline for the
  * figure behind each constellation (`figure` is the straight koi's paint in its sheet).
@@ -119,13 +310,20 @@ export const RELIEF = {
   lotusH: '/pond/relief/lotus-h.webp',
   friezeC: '/pond/relief/frieze-c.webp',
   friezeH: '/pond/relief/frieze-h.webp',
-  stoneH: '/pond/relief/stone-h.webp'
+  stoneH: '/pond/relief/stone-h.webp',
+  papyrusC: '/pond/relief/papyrus-c.webp',
+  papyrusH: '/pond/relief/papyrus-h.webp',
+  duckC: '/pond/relief/duck-c.webp',
+  duckH: '/pond/relief/duck-h.webp',
+  cartoucheC: '/pond/relief/cartouche-c.webp',
+  cartoucheH: '/pond/relief/cartouche-h.webp'
 };
 /**
  * Where the relief's carvings go on a wall of W by H: the frieze along the top and the foot; in the right
  * half a marsh as tombs carve it (a papyrus clump, a duck, lotus in flower and in bud, a leaf) over two
  * tilapia; the left left bare for the title. A narrow wall has the frieze and one tilapia under the
- * contents. Each entry is [pair, source x, y, w, h, x, y, w, h]; nothing but the frieze lies under the controls.
+ * contents. Each entry is [pair, source x, y, w, h, x, y, w, h] (a negative source width mirrors it); nothing
+ * but the frieze lies under the controls.
  */
 export function reliefLayout(W, H, wide) {
   const band = wide ? 40 : 26,
@@ -150,8 +348,11 @@ export function reliefLayout(W, H, wide) {
     y1 = Math.min(H * 0.5, foot - h1 - h2 * 0.75);
   return [
     ...frieze,
-    motif(2, 1, W * 0.875, H * 0.3, u * 0.25),
-    motif(3, 1, W * 0.735, H * 0.27, u * 0.17),
+    // (the papyrus clump and the duck from their own, larger pictures; the duck faces the fish)
+    ['papyrus', 20, 216, 472, 592, W * 0.875 - u * 0.125, H * 0.3 - u * 0.157, u * 0.25, u * 0.3136],
+    ['duck', 492, 91, -472, 330, W * 0.735 - u * 0.085, H * 0.27 - u * 0.0594, u * 0.17, u * 0.1189],
+    // the ring round the solar term, where the clock stands (the term is upright only on a wide wall)
+    ['cartouche', 79, 20, 354, 728, W - Math.min(68, Math.max(20, W * 0.042)) - 17.5 - 31, 58 + 34.5 - 64, 62, 127.5],
     motif(0, 0, W * 0.8, H * 0.43, u * 0.13),
     motif(2, 0, W * 0.935, H * 0.5, u * 0.11),
     motif(0, 1, W * 0.6, H * 0.33, u * 0.13),
@@ -298,15 +499,18 @@ vec3 lookQinghua(){
   vec4 pd=textureLod(uPads,uv,0.); float pe=textureLod(uPads,uv,1.6).a, pw=textureLod(uPads,uv,3.).a;
   // (under the title's type the pads and the koi are only faintly there, as in the other looks)
   float clr=1.-gCalm*.78;
-  c=mix(c,wash,pw*.34*pool*clr); c=mix(c,deep,clamp(abs(pd.a-pe)*3.2,0.,1.)*pool*clr);
-  vec3 pc=pd.rgb/max(pd.a,1e-3); c=mix(c,deep,clamp((pc.r-pc.g)*2.2,0.,1.)*pd.a*.6);
+  // (painted leaves and flowers, uArt.x, are laid in as they are: cobalt line and wash)
+  vec3 pc=pd.rgb/max(pd.a,1e-3);
+  if(uArt.x>.5) c=mix(c,pc,pd.a*pool*clr);
+  else { c=mix(c,wash,pw*.34*pool*clr); c=mix(c,deep,clamp(abs(pd.a-pe)*3.2,0.,1.)*pool*clr); c=mix(c,deep,clamp((pc.r-pc.g)*2.2,0.,1.)*pd.a*.6); }
   // koi: outline in the deep blue, the body a wash, their red patches filled dark
   vec4 f0; float fa,fb,fc,red; fishAt(f0,fa,fb,fc,red);
   vec3 c0=c, cd=mix(c,f0.rgb/max(f0.a,1e-3),f0.a*clamp(pool+.3,0.,1.));   // painted koi, as they are
   c=mix(c,wash,fb*.5*pool); c=mix(c,deep,clamp((fa-fb)*3.6,0.,1.)*clamp(pool,0.,1.)); c=mix(c,deep,smoothstep(.2,.6,red)*.85*pool);
   c=mix(c,mix(wash,deep,.4),step(.5,f0.a)*smoothstep(.34,.46,abs(fract((P.x+P.y)*.11)-.5))*.35);
   c=mix(c0,mix(c,cd,uSprite),clr);
-  vec4 tp=textureLod(uTop,uv,0.); float te=textureLod(uTop,uv,1.5).a; c=mix(c,deep,clamp(abs(tp.a-te)*3.,0.,1.)*.8*pool);
+  vec4 tp=textureLod(uTop,uv,0.); float te=textureLod(uTop,uv,1.5).a;
+  c=mix(c,mix(deep,tp.rgb/max(tp.a,1e-3),uArt.y),mix(clamp(abs(tp.a-te)*3.,0.,1.)*.8,tp.a,uArt.y)*pool);
   // the rim: two lines and a row of petals between them
   float fs=mix(1.,.56,uCalm.x), e=min(min(P.x,uCss.x-P.x),min(P.y,uCss.y-P.y))/fs, along=((min(P.x,uCss.x-P.x)<min(P.y,uCss.y-P.y))?P.y:P.x)/fs;
   // (what is painted inside the bowl stops at the rim: nothing swims under it)
@@ -351,14 +555,15 @@ vec3 lookDunhuang(){
   c=mix(c,bc,(.12+.34*wet)*keep*(1.-gCalm*.96)*(1.-mu.a*.7)); c=mix(c,bai,smoothstep(.43,.5,abs(bf-.5))*(.2+.45*wet)*keep*(1.-gCalm*.96)*(1.-mu.a*.6));
   // lotus pads: mineral green, ringed dark; the flower red and white
   vec4 pd=textureLod(uPads,uv,0.); float pe=textureLod(uPads,uv,1.5).a; vec3 pc=pd.rgb/max(pd.a,1e-3);
-  c=mix(c,mix(lv*1.1,zhu,clamp((pc.r-pc.g)*2.5,0.,1.)),pd.a*.9*keep); c=mix(c,line,clamp(abs(pd.a-pe)*3.,0.,1.)*.85);
+  // (painted ones, uArt.x, as they are, under the wall's wear: they carry their line)
+  c=mix(c,mix(mix(lv*1.1,zhu,clamp((pc.r-pc.g)*2.5,0.,1.)),pc*.92,uArt.x),pd.a*.9*keep); c=mix(c,line,clamp(abs(pd.a-pe)*3.,0.,1.)*.85*(1.-uArt.x));
   // koi: flat colour inside a dark line, red where they are red
   vec4 f0; float fa,fb,fc,red; fishAt(f0,fa,fb,fc,red); vec3 fcol=f0.rgb/max(f0.a,1e-3);
   // (painted koi, from the look's own sheet, are laid in as they are: they carry their line)
   c=mix(c,mix(mix(mix(bai,vec3(.80,.56,.22),clamp((fcol.r-fcol.b)*1.6-.1,0.,1.)),zhu,smoothstep(.2,.5,red)),fcol,uSprite),f0.a*mix(1.,keep,.5));
   c=mix(c,line,clamp((fa-fb)*3.8,0.,1.)*(1.-uSprite));
   c=mix(c,wall*1.14,gCalm*.62*(1.-mu.a*.75*uCalm.x));
-  vec4 tp=textureLod(uTop,uv,0.); float te=textureLod(uTop,uv,1.5).a; c=mix(c,tp.rgb/max(tp.a,1e-3)*.8,tp.a*.8*keep*(1.-gCalm*.6)); c=mix(c,line,clamp(abs(tp.a-te)*3.,0.,1.)*.7);
+  vec4 tp=textureLod(uTop,uv,0.); float te=textureLod(uTop,uv,1.5).a; c=mix(c,tp.rgb/max(tp.a,1e-3)*mix(.8,.94,uArt.y),tp.a*.8*keep*(1.-gCalm*.6)); c=mix(c,line,clamp(abs(tp.a-te)*3.,0.,1.)*.7*(1.-uArt.y));
   // a press: the pigment lifts off in a patch, and its dust drifts out and settles
   for(int i=0;i<10;i++){ vec3 b=uBlot[i]; if(b.z<0.) continue;
     float t=b.z, R=10.+34.*(1.-exp(-t*3.)), d=length(P-b.xy)+(noise(P*.2)-.5)*16.;
@@ -391,6 +596,8 @@ vec3 lookStars(){
   // orbits: the ripples as thin rings
   float ring=smoothstep(.45,.5,abs(fract(gH*14.)-.5));
   c+=vec3(.45,.6,.9)*ring*smoothstep(.015,.07,abs(gLap)*4.+abs(gH)*.7)*.3*(1.-gCalm*.9);
+  // where a lily pad would lie, a planet, a nebula or a cluster in the plate's own line (pictures, uArt.x)
+  vec4 pd=textureLod(uPads,uv,0.); c+=vec3(.79,.83,.94)*pd.a*uArt.x*.5*(1.-gCalm*.6)*smoothstep(1.6,3.4,uLookT);
   // the koi, already drawn as stars and the lines between them
   // (their lines join once the stars are out)
   vec4 f=textureLod(uFish,uv+gRef*.2,0.); c+=(f.rgb*1.15+vec3(.25,.4,.8)*textureLod(uFish,uv,3.).a*.3)*smoothstep(1.8,2.8,uLookT);

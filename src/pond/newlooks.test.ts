@@ -69,7 +69,8 @@ describe('the relief', () => {
       [800, 500, false]
     ] as [number, number, boolean][])
       for (const [pair, , , , , x, y, w, h] of reliefLayout(W, H, wide)) {
-        if (pair === 'frieze') continue;
+        // (the frieze is the band itself, and the cartouche rings the solar term, which stands just under it)
+        if (pair === 'frieze' || pair === 'cartouche') continue;
         expect(y + h, `${pair} on ${W}×${H}`).toBeLessThanOrEqual(H - (wide ? MURAL_FOOT : MURAL_FOOT_NARROW) + 0.5);
         expect(x + w, `${pair} on ${W}×${H}`).toBeLessThanOrEqual(W + 0.5);
         expect(y, `${pair} on ${W}×${H}`).toBeGreaterThan(wide ? 40 : 26);

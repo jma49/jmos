@@ -51,6 +51,7 @@ import {
   NEW_SHADE,
   NEW_SID,
   NEW_WITHOUT,
+  LOOK_ART,
   QINGHUA,
   RELIEF,
   STARS,
@@ -777,9 +778,48 @@ const mixHex = (a, b, t) => {
     y = n(b);
   return `rgb(${x.map((v, i) => Math.round(v + (y[i] - v) * t)).join(',')})`;
 };
+// Each look's own pictures of the pads, of what drifts and flies, and of the two visitors (LOOK_ART in
+// newlooks.js), in a preview build. A picture is asked for the first time its look needs it; until it has
+// come, and if it never does, what the pond draws for every look stands.
+const artPics = new Map();
+function artOf(kind, name = look) {
+  const d = PREVIEW && LOOK_ART[name]?.[kind];
+  if (!d) return null;
+  if (!artPics.has(d.src)) {
+    artPics.set(d.src, null);
+    const im = new Image();
+    im.onload = () => {
+      artPics.set(d.src, im);
+      topAt = -1e9;
+      padsNow();
+      invalidate();
+    };
+    im.onerror = () => report(new Error(`no picture at ${d.src}`), 'pond pictures');
+    im.src = d.src;
+  }
+  const pic = artPics.get(d.src);
+  return pic ? { ...d, pic } : null;
+}
+// one cell of a sheet of 256-pixel cells, drawn d across about the origin
+const cellAt = (c, pic, [i, j], d) => c.drawImage(pic, i * 256, j * 256, 256, 256, -d / 2, -d / 2, d, d);
 // The water's own lily pads and flowers as pictures (public/pond/water/lilies-768.webp, cells of 192): a preview build
 // fetches the sheet once the pond has settled, never on the first screen, and the drawn pads stand until then.
-let waterLily = null;
+let waterLily = null,
+  autumnPic = null;
+function monetAutumn() {
+  if (autumnPic === null) {
+    autumnPic = false;
+    const im = new Image();
+    im.onload = () => {
+      autumnPic = im;
+      padKey = '';
+      invalidate();
+    };
+    im.onerror = () => report(new Error('no picture of Monet’s autumn pads'), 'pond pictures');
+    im.src = MONET.autumn;
+  }
+  return autumnPic;
+}
 function drawPads() {
   const c = padCv.getContext('2d'),
     s = padCv.width / W;
@@ -793,6 +833,21 @@ function drawPads() {
     if (grow < 0.03) continue;
     // in ink no pad lies under the season's painting: the painting has that part of the paper
     if (inkOn && crowdsPainting(x * W, y * H, W, H, inkSeason())) continue;
+    // a look with its own picture of them: by size, at the size the pond gives the pad, its flower or bud
+    // on it in season
+    const own = look !== 'water' && look !== 'monet' ? artOf('pads') : null;
+    if (own) {
+      const n = Math.floor(r0 * 7 + rot * 3),
+        set = r > 58 ? own.large : r > 34 ? own.medium : own.small,
+        cell = set[n % set.length],
+        d = (r * 2) / (own.across * (r > 58 ? 1 : r > 34 ? 0.8 : 0.62));
+      c.save();
+      c.translate(x * W, y * H);
+      c.rotate(rot);
+      c.globalAlpha = Math.min(1, grow * 1.6) * (own.light ? 1 : 1 - 0.3 * AM.brown);
+      cellAt(c, own.pic, cell, d);
+      c.restore();
+    }
     // on the water (a preview build) the pads are pictures of real ones, from their sheet: whole or
     // notched, by size, the withered ones laid over the green as autumn comes
     const real = waterLily && look === 'water';
@@ -811,7 +866,7 @@ function drawPads() {
       c.restore();
     }
     // in Monet's pond the pads are painted ones, from their sheet (large, medium and small, by size)
-    const lily = (lilyPic && look === 'monet') || real;
+    const lily = (lilyPic && look === 'monet') || real || !!own;
     if (lilyPic && look === 'monet') {
       const n = Math.floor(r0 * 7 + rot * 3),
         [ci, cj] =
@@ -832,6 +887,22 @@ function drawPads() {
       c.translate(x * W, y * H);
       c.rotate(rot);
       c.drawImage(lilyPic, ci * 256, cj * 256, 256, 256, -d / 2, -d / 2, d, d);
+      // (as autumn comes, the same pad gone ochre and rust, from the autumn row, laid over it)
+      const fall = AM.brown > 0.02 && monetAutumn();
+      if (fall) {
+        c.globalAlpha = Math.min(1, grow * 1.6) * Math.min(1, AM.brown * 1.25);
+        c.drawImage(
+          fall,
+          (n % 4) * 256,
+          0,
+          256,
+          256,
+          -(d * (r > 58 ? 1 : r > 34 ? 0.83 : 0.6)) / 2,
+          -(d * (r > 58 ? 1 : r > 34 ? 0.83 : 0.6)) / 2,
+          d * (r > 58 ? 1 : r > 34 ? 0.83 : 0.6),
+          d * (r > 58 ? 1 : r > 34 ? 0.83 : 0.6)
+        );
+      }
       c.restore();
     }
     c.save();
@@ -909,7 +980,17 @@ function drawPads() {
       py = cy + (ay / al) * r * off;
     if (r > 26 && Math.hypot(px - x * W, py - y * H) < r * 0.8) padSpots.push({ x: px, y: py, r: r * 0.36 });
     // and their flowers: a bud in spring, half open as summer comes, open at its height, in white or pink
-    if (real && kind === 1 && AM.bloom > 0.05) {
+    if (own) {
+      const fl =
+        own.flowers.length && AM.bloom > 0.55 ? own.flowers[Math.floor(r0 * 5) % own.flowers.length] : AM.bloom > 0.05 ? own.bud || own.flowers[0] : null;
+      if (kind === 1 && fl) {
+        const d = (big ? 92 : 72) * (0.6 + 0.4 * AM.bloom);
+        c.save();
+        c.translate(clamp(x * W, d / 2, W - d / 2) + Math.cos(rot) * r * 0.1, y * H - r * 0.12);
+        cellAt(c, own.pic, fl, d);
+        c.restore();
+      }
+    } else if (real && kind === 1 && AM.bloom > 0.05) {
       // (in bud as summer comes, open at its height, in white or pink)
       const open = AM.bloom > 0.55,
         ci = open ? Math.floor(r0 * 5) % 2 : 2,
@@ -954,7 +1035,7 @@ function drawPads() {
   }
 }
 function padsNow() {
-  const key = `${Math.round(AM.lush * 30)}|${Math.round(AM.brown * 20)}|${Math.round(AM.bloom * 20)}|${lilyPic && look === 'monet' ? Math.round(AM.petals * 4) + 1 : 0}|${waterLily && look === 'water' ? 1 : 0}|${inkOn ? inkSeason() + 1 : 0}`;
+  const key = `${Math.round(AM.lush * 30)}|${Math.round(AM.brown * 20)}|${Math.round(AM.bloom * 20)}|${lilyPic && look === 'monet' ? Math.round(AM.petals * 4) + 1 : 0}|${waterLily && look === 'water' ? 1 : 0}|${look}${artOf('pads') ? 1 : 0}|${inkOn ? inkSeason() + 1 : 0}`;
   if (key === padKey) return;
   padKey = key;
   drawPads();
@@ -1104,7 +1185,7 @@ precision highp float; in vec2 vUv; out vec4 o;
 uniform sampler2D uBed,uH,uFish,uPads,uTop,uIceN,uMural; uniform float uPic;
 uniform vec2 uRes,uGrid,uMoonPos,uCss; uniform float uTime,uAmb,uCaI,uMoon,uSwell,uFocus,uIce,uSnow,uFog,uStars; uniform vec3 uMoonPh; uniform vec2 uCalm;
 uniform vec3 uTint,uCaC,uSky,uSeason;
-uniform vec4 uBox[12]; uniform vec4 uBoxB[12]; uniform int uBoxN; uniform vec4 uCrack[6]; uniform float uBroke[6]; uniform vec4 uInk; uniform vec3 uBlot[10]; uniform int uStyle, uPrev; uniform float uGlint; uniform float uLookT,uLeave,uSprite,uDay;
+uniform vec4 uBox[12]; uniform vec4 uBoxB[12]; uniform int uBoxN; uniform vec4 uCrack[6]; uniform float uBroke[6]; uniform vec4 uInk; uniform vec3 uBlot[10]; uniform int uStyle, uPrev; uniform float uGlint; uniform float uLookT,uLeave,uSprite,uDay; uniform vec2 uArt;
 float hash1(vec2 p){ return fract(sin(dot(p,vec2(41.3,289.1)))*43758.5453); }
 vec2 hash2(vec2 p){ p=vec2(dot(p,vec2(127.1,311.7)),dot(p,vec2(269.5,183.3))); return fract(sin(p)*43758.5453); }
 float noise(vec2 p){ vec2 i=floor(p),f=fract(p); f=f*f*(3.-2.*f);
@@ -1217,12 +1298,18 @@ vec3 lookUkiyo(){
   float ln=1.-smoothstep(.0,.035,abs(fract(f)-.5)-.44);
   c=mix(c,vec3(.04,.1,.21),ln*.75);
   c=mix(c,vec3(.12,.25,.42),gCalm*.6);
+#ifdef CRESTS
+  // the print's own water (a picture, in the top half of the look's texture; its crests are in the bottom
+  // half): it takes the place of the bands and lines above, bent a little where the water moves
+  if(uPic>.5){ vec4 bd=texture(uMural,vec2(uv.x+gG.x*.012,clamp(uv.y+gG.y*.012,.002,.998)*.5)); c=mix(c,bd.rgb/max(bd.a,1e-3)*(1.-gCalm*.07),bd.a); }
+#endif
   // foam only on a big crest (a press, a koi breaking the surface), never on the rain's small rings, nor under the type
   float big=(1.-gCalm)*(1.-gCalm), cr=smoothstep(.07,.1,-gLap)*big, rim=clamp(smoothstep(.05,.07,-gLap)*big-cr,0.,1.);
   c=mix(c,vec3(.05,.1,.2),rim*.85); c=mix(c,vec3(.96,.93,.84),cr);
   vec4 pd=textureLod(uPads,uv+gG*gIa*.006,0.); float pe=textureLod(uPads,uv,2.5).a;
   vec3 pc=pd.rgb/max(pd.a,1e-3); pc=vec3(.3,.45,.3)+vec3(.08)*floor(dot(pc,vec3(.33))*3.)/3.;
-  c=mix(c,pc,step(.5,pd.a)); c=mix(c,vec3(.07,.07,.08),clamp(abs(pd.a-pe)*2.4,0.,1.)*.85);
+  // (the print's own leaves and flowers, uArt.x, are laid in as they are: they carry their key line)
+  c=mix(c,mix(pc,pd.rgb/max(pd.a,1e-3),uArt.x),step(.5,pd.a)); c=mix(c,vec3(.07,.07,.08),clamp(abs(pd.a-pe)*2.4,0.,1.)*.85*(1.-uArt.x));
   vec4 f0; float fa,fb,fc,red; fishAt(f0,fa,fb,fc,red);
   vec3 fcl=f0.rgb/max(f0.a,1e-3); fcl=floor(fcl*4.+.5)/4.; fcl=mix(fcl,vec3(.96,.93,.84),step(.75,dot(fcl,vec3(.33))));
   fcl=mix(fcl,vec3(.82,.25,.16),step(.4,red/max(f0.a,1e-3)));
@@ -1238,7 +1325,7 @@ vec3 lookUkiyo(){
     // the crest, from the print's own carved wavelets (a picture, uPic once it has come): six round the
     // ring, base to the middle, all breaking the same way, sinking as the splash dies
     if(uPic>.5){ float sc=an*6./6.2832+b.x*.013, wd=6.2832*R/6., ht=wd*.39*(.5+.5*life), vv=(d-R+ht*.25)/max(ht,1.);
-      vec4 wv=texture(uMural,vec2((mod(floor(sc)+floor(b.y),4.)*256.+44.+fract(sc)*167.)/1024.,(416.-vv*65.)/512.))*step(0.,vv)*step(vv,1.)*step(.05,life);
+      vec4 wv=texture(uMural,vec2((mod(floor(sc)+floor(b.y),4.)*256.+44.+fract(sc)*167.)/1024.,(416.-vv*65.)/1024.+.5))*step(0.,vv)*step(vv,1.)*step(.05,life);
       c=wv.rgb+c*(1.-wv.a); continue; }
 #endif
     // the crest breaks into claws: a scalloped edge, each scallop curled forward
@@ -1468,7 +1555,7 @@ void main(){
     if(uStyle==2&&uPic>.5&&uInk.w>=.3&&uInk.w<.999&&uInk.x>1.){
       float ft=(P.x-P.y)*.7071, fr=(P.x+P.y)*.7071+(noise(P*vec2(.02,.004))-.5)*26.+sin((P.x-P.y)*.012)*18.+sin((P.x-P.y)*.031)*6.;
       float ht=min(210.,uCss.y*.28)*smoothstep(0.,320.,uInk.x), vv=(fr-uInk.x+ht*.12)/max(ht,1.), sc=ft/(ht*1.09+1.);
-      vec4 wv=texture(uMural,vec2((mod(floor(sc),4.)*256.+20.+fract(sc)*215.)/1024.,(227.-vv*198.)/512.))*step(0.,vv)*step(vv,1.);
+      vec4 wv=texture(uMural,vec2((mod(floor(sc),4.)*256.+20.+fract(sc)*215.)/1024.,(227.-vv*198.)/1024.+.5))*step(0.,vv)*step(vv,1.);
       col=wv.rgb+col*(1.-wv.a);
     }
 #endif
@@ -1629,6 +1716,7 @@ const FS_U = [
   'uPic',
   'uSprite',
   'uDay',
+  'uArt',
   'uStars',
   'uMoonPh'
 ];
@@ -2118,11 +2206,17 @@ function drawTop() {
   c.setTransform(1, 0, 0, 1, 0, 0);
   c.clearRect(0, 0, topCv.width, topCv.height);
   c.setTransform(s, 0, 0, s, 0, 0);
+  const drift = artOf('afloat');
   for (const b of boats) {
     c.save();
     c.globalAlpha = b.a;
     c.translate(b.x, b.y);
     c.rotate((b.r * Math.PI) / 180);
+    if (drift?.boats) {
+      cellAt(c, drift.pic, drift.boats[Math.floor(Math.abs(b.x0 ?? b.r) * 7) % drift.boats.length], 64);
+      c.restore();
+      continue;
+    }
     c.scale(0.5, 0.5);
     c.translate(-60, -30);
     for (const [path, fill] of HULL) {
@@ -2143,6 +2237,11 @@ function drawTop() {
     c.translate(q.x, q.y);
     c.rotate(q.r);
     c.scale(sc, sc);
+    if (drift?.petals) {
+      cellAt(c, drift.pic, drift.petals[Math.floor(q.s * 97) % drift.petals.length], 26);
+      c.restore();
+      continue;
+    }
     c.fillStyle = q.tone;
     c.beginPath();
     c.moveTo(-7.5, 0);
@@ -2164,6 +2263,11 @@ function drawTop() {
     c.translate(q.x, q.y);
     c.rotate(q.r);
     c.scale(sc, sc);
+    if (drift?.leaves) {
+      cellAt(c, drift.pic, drift.leaves[q.kind % drift.leaves.length], 34);
+      c.restore();
+      continue;
+    }
     c.fillStyle = q.tone;
     c.fill(LEAF[q.kind]);
     c.strokeStyle = 'rgba(60,24,8,0.4)';
@@ -2398,6 +2502,32 @@ function drawCell(c, which, [row, i], x, y, a, half, shadow) {
     c.fillRect(-half, -half, half * 2, half * 2);
   }
   c.rotate(a);
+  // the look's own picture of it, where it has one: at rest, half way and spread along a row, or one pose
+  const own = artOf(which);
+  if (own) {
+    const pose =
+        own.poses === 1
+          ? 0
+          : which === 'dove'
+            ? row === 0
+              ? 0
+              : row === 2
+                ? i < 2 || i > 5
+                  ? 2
+                  : 1
+                : 1
+            : row === 3
+              ? 2
+              : row === 1
+                ? i % 4 < 2
+                  ? 1
+                  : 0
+                : 0,
+      m = own.pic.naturalHeight;
+    c.drawImage(own.pic, pose * m, 0, m, m, -half, -half, half * 2, half * 2);
+    c.restore();
+    return;
+  }
   laidIn(c, () => c.drawImage(life.pic(which, look, spriteLight()), i * n, row * n, n, n, -half, -half, half * 2, half * 2));
   c.restore();
 }
@@ -2845,6 +2975,8 @@ function setLook(name, from) {
         }
         if (name === 'water') delete pond.dataset.look;
         else pond.dataset.look = name;
+        // (the pads are the look's own picture of them, where it has one)
+        padsNow();
         speak();
         if (inkOn) {
           paintInk();
@@ -3438,6 +3570,28 @@ function drawAir() {
     c.globalAlpha = f.a2 * (look === 'monet' ? 0.42 : 1);
     c.translate(f.x, f.y);
     c.rotate(f.a);
+    // the look's own flyer: a sheet of wing frames, or a cell of what drifts and flies
+    const wing = artOf('fly'),
+      flyer = wing ? null : artOf('afloat');
+    if (wing) {
+      const i = flies.indexOf(f),
+        k = wing.beat ? Math.floor(T * wing.beat + i * 1.7) % wing.frames : i % wing.frames;
+      c.globalAlpha = f.a2;
+      c.drawImage(wing.pic, k * 256, 0, 256, 256, -30, -30, 60, 60);
+      c.restore();
+      continue;
+    }
+    if (flyer?.fly) {
+      c.globalAlpha = f.a2;
+      cellAt(c, flyer.pic, flyer.fly[flies.indexOf(f) % flyer.fly.length], 50);
+      c.restore();
+      continue;
+    }
+    // (a look whose manner has no drawn dragonfly, and whose own flyer hasn't come, goes without)
+    if (PREVIEW && LOOK_ART[look]?.afloat?.fly) {
+      c.restore();
+      continue;
+    }
     c.lineCap = 'round';
     c.fillStyle = 'rgba(225,245,250,0.42)';
     const beat = 0.8 + 0.2 * Math.sin(T * 70);
@@ -5144,11 +5298,20 @@ function paintRelief() {
       height = reliefImgs[`${pair}H`];
     // a carving is drawn only whole: its paint without its height would be a flat picture on the stone
     if (!paint || !height) continue;
-    c.drawImage(paint, sx, sy, sw, sh, x * k, y * k, w * k, h * k);
+    // (a source read from its right edge back, a negative width, is mirrored)
+    const put = (im, oy) => {
+      if (sw >= 0) return c.drawImage(im, sx, sy, sw, sh, x * k, oy + y * k, w * k, h * k);
+      c.save();
+      c.translate((x + w) * k, oy + y * k);
+      c.scale(-1, 1);
+      c.drawImage(im, sx + sw, sy, -sw, sh, 0, 0, w * k, h * k);
+      c.restore();
+    };
+    put(paint, 0);
     // (a height's mid grey is the face: laid in hard light it leaves the dressed stone as it is there, and
     // raises or cuts it where the carving does)
     c.globalCompositeOperation = 'hard-light';
-    c.drawImage(height, sx, sy, sw, sh, x * k, half + y * k, w * k, h * k);
+    put(height, half);
     c.globalCompositeOperation = 'source-over';
   }
   sendPic(cv);
@@ -5166,8 +5329,34 @@ function loadWaves() {
   waves.onerror = () => report(new Error(`no picture at ${UKIYO.waves}`), 'pond pictures');
   waves.src = UKIYO.waves;
 }
+// (the print's painted water lies in the top half of the same texture, fitted to the pond, upright on a
+// phone; until it has come the top half is clear and the shader's own water shows)
+let ukiyoBed = null;
 function paintWaves() {
-  if (glOK && waves && waves.complete && waves.naturalWidth) sendPic(waves, gl.CLAMP_TO_EDGE, true);
+  if (!glOK || !waves || !waves.complete || !waves.naturalWidth) return;
+  if (ukiyoBed === null) {
+    ukiyoBed = false;
+    const im = new Image();
+    im.onload = () => {
+      ukiyoBed = im;
+      paintPic();
+      invalidate();
+    };
+    im.onerror = () => report(new Error('no picture of the print’s water'), 'pond pictures');
+    im.src = H > W * 1.15 ? UKIYO.bedTall : UKIYO.bed;
+  }
+  const cv = document.createElement('canvas');
+  cv.width = 1024;
+  cv.height = 1024;
+  const c = cv.getContext('2d');
+  if (ukiyoBed) {
+    const f = Math.max(W / ukiyoBed.naturalWidth, H / ukiyoBed.naturalHeight),
+      w = W / f,
+      h = H / f;
+    c.drawImage(ukiyoBed, (ukiyoBed.naturalWidth - w) / 2, (ukiyoBed.naturalHeight - h) / 2, w, h, 0, 0, 1024, 512);
+  }
+  c.drawImage(waves, 0, 512);
+  sendPic(cv, gl.CLAMP_TO_EDGE, true);
 }
 // The star chart's grid: a picture that tiles on all four sides is the look's texture as it is, repeated,
 // with smaller copies (lookStars lays a tile over 520 pixels of the pond), so the grid runs on past every
@@ -5209,7 +5398,7 @@ let rimImgs = null;
 function loadRim() {
   if (rimImgs) return;
   rimImgs = {};
-  for (const k of ['rim', 'corner']) {
+  for (const k of ['rim', 'corner', 'medallion']) {
     const im = new Image();
     im.onload = () => {
       rimImgs[k] = im;
@@ -5257,6 +5446,13 @@ function paintRim() {
     c.scale(sx, sy);
     c.drawImage(rimImgs.corner, 0, 0, b * 2, b * 2);
     c.restore();
+  }
+  // the dish's own painting, large and pale in the right of the bowl, clear of the title: two koi among lotus
+  if (rimImgs.medallion && big) {
+    const d = Math.min(H * 0.7, W * 0.42);
+    c.globalAlpha = 0.34;
+    c.drawImage(rimImgs.medallion, W * 0.74 - d / 2, H * 0.5 - d / 2, d, d);
+    c.globalAlpha = 1;
   }
   sendPic(cv);
 }
@@ -6546,6 +6742,8 @@ function tick1(raw) {
   // how long the look on show has been arriving (what each builds up after its front), or leaving
   gl.uniform1f(U.uLookT, look === 'water' || RM ? 99 : since);
   gl.uniform1f(U.uDay, dayNow());
+  // whether the pads and what floats are the look's own pictures, to be laid in as they are
+  gl.uniform2f(U.uArt, artOf('pads') ? 1 : 0, artOf('afloat') ? 1 : 0);
   gl.uniform1f(U.uLeave, look === 'water' && inkR > 0 && !RM ? since : -1);
   gl.uniform1i(U.uStyle, SID[top]);
   gl.uniform1i(U.uPrev, SID[base]);
