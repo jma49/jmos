@@ -1,6 +1,6 @@
 // @ts-nocheck (a scratch tool kept from the session: see docs/agents/pond-handoff.md)
 // the finish checklist as contact sheets: node finish.cjs <dist> <look,look,..>
-// For each look, finish/<look>.png: the title page, every chapter, the command bar and the album at
+// For each look, finish/<look>.png: the title page and every chapter (the album is the first) at
 // 1280 × 800 (halved), and finish/<look>-phone.png: the title page and three chapters at 390 × 844.
 const { chromium } = require('playwright');
 const fs = require('node:fs');
@@ -48,13 +48,6 @@ const SHEETS = ['seals', 'music', 'notes', 'chat'];
       shots.push(await p.screenshot({ timeout: 180000 }));
       await p.keyboard.press('Escape');
       await p.waitForTimeout(900);
-    }
-    if (!phone) {
-      await p.keyboard.press('Control+k');
-      await p.waitForTimeout(1500);
-      await p.keyboard.type('pho');
-      await p.waitForTimeout(1200);
-      shots.push(await p.screenshot({ timeout: 180000 }));
     }
     // the sheet of them, on a page of its own
     const cols = phone ? 4 : 3,

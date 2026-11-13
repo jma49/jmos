@@ -59,10 +59,6 @@ const data = { zh: ZH, ja: JA };
           ></button
         >
       </div>
-      <button class="glass cmd" id="cmdBtn" data-r="20" aria-label="Search or type a command"
-        ><svg width="15" height="15" viewBox="0 0 16 16" stroke-width="1.6"><circle cx="7" cy="7" r="4.6"></circle><path d="m10.6 10.6 3.4 3.4" stroke-linecap="round"></path></svg
-        ><span class="long">Search, or type / for commands</span><span class="short">Search</span></button
-      >
       <div class="gauge" id="gauge" role="slider" tabindex="0" aria-label="Focus depth" aria-orientation="vertical" aria-valuemin="0" aria-valuemax="100">
         <span style="top:0">surface</span><span style="top:55%">koi</span><span style="top:100%">bed</span><i id="knob"></i>
       </div>
@@ -84,28 +80,6 @@ const data = { zh: ZH, ja: JA };
     <p class="whisper" id="whisper" aria-live="polite"></p>
     <div class="stamp" id="stamp" aria-hidden="true"></div>
     <p class="stamp-say" id="stampSay" role="status"></p>
-
-    <div class="pal-wrap" id="palWrap">
-      <div class="pal" role="dialog" aria-label="Command bar">
-        <div class="pal-in">
-          <svg width="17" height="17" viewBox="0 0 16 16" stroke-width="1.5"><circle cx="7" cy="7" r="4.6"></circle><path d="m10.6 10.6 3.4 3.4" stroke-linecap="round"></path></svg>
-          <input
-            id="palIn"
-            role="combobox"
-            aria-expanded="true"
-            aria-controls="palList"
-            aria-autocomplete="list"
-            placeholder="Search the pond, or type / for commands"
-            autocomplete="off"
-            autocapitalize="off"
-            spellcheck="false"
-            aria-label="Search the pond, or type / for commands"
-          /><kbd>esc</kbd>
-        </div>
-        <ul id="palList" role="listbox" aria-label="Results"></ul>
-        <div class="pal-foot"><span><kbd>↑</kbd><kbd>↓</kbd> move</span><span><kbd>↵</kbd> run</span><span><kbd>/</kbd> commands only</span><span class="n" id="palN"></span></div>
-      </div>
-    </div>
 
     <div class="veil" id="veil"><article class="sheet glass" id="sheet" data-r="26" role="dialog" aria-modal="true" tabindex="-1"></article></div>
   </div>

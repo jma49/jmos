@@ -172,10 +172,9 @@ export interface SealWords {
   both: string;
   soon: string;
   line: string;
-  open: string;
-  openHint: string;
+  /** The album's button that starts it again, and what it asks before it does. */
   clear: string;
-  clearHint: string;
+  clearAsk: string;
 }
 export const SEAL_WORDS: Record<Lang, SealWords> = {
   en: {
@@ -228,10 +227,8 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
     both: 'Every volume is full. The gold koi wears one too, to match.',
     soon: 'Still to come.',
     line: 'The water answers more than a tap.',
-    open: 'Seals',
-    openHint: 'The looks you have found',
     clear: 'Clear my seals',
-    clearHint: 'Start the album again'
+    clearAsk: 'Clear them all?'
   },
   zh: {
     title: '集印册',
@@ -283,10 +280,8 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
     both: '每一册都满了。金色的那条也盖了一方，和你作伴。',
     soon: '还没画好。',
     line: '水面不只会回应点击。',
-    open: '集印册',
-    openHint: '你遇见过的样子',
     clear: '清空我的印',
-    clearHint: '从头再集一次'
+    clearAsk: '全部清空？'
   },
   ja: {
     title: '集印帳',
@@ -338,10 +333,8 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
     both: 'どの冊もそろいました。金の鯉にも、おそろいの印を。',
     soon: 'まだ準備中。',
     line: '水面は、タップのほかにも応えます。',
-    open: '集印帳',
-    openHint: '出会った姿',
     clear: '印を消す',
-    clearHint: 'はじめから集めなおす'
+    clearAsk: 'すべて消しますか？'
   }
 };
 

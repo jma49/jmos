@@ -27,8 +27,9 @@ never did), and a chart-like timeline beside the one in soundings.
   desktop at `/os`; `/?open=…` links and `/pond` redirect (vercel.json). The desktop's code is kept in the private repository
   `jma49/jmos-classic` as well as in this one's history.
 - It keeps the desktop's accounts, chat, guestbook and presence (the
-  same backend and rules), reached from the command bar, a Chat button
-  that counts who's here, and chapters. Stickies, AirDrop, Soapbox and
+  same backend and rules), reached from a Chat button that counts who's
+  here, and chapters (amended 2026-11-13: the command bar is gone; the
+  pond has no search, see 0026). Stickies, AirDrop, Soapbox and
   the apps and applets don't come along for now.
 - Photos come from Unsplash at build time, newest first, at full size in
   the viewer; the music is the library the iPod plays.

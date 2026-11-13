@@ -94,7 +94,7 @@ const INIT = () => {
   );
   const errs = [];
   p.on('pageerror', (e) => errs.push(e.message));
-  await p.goto(srv.url, { waitUntil: 'load' });
+  await p.goto(new URL('?preview', srv.url).href, { waitUntil: 'load' });
   await p.waitForTimeout(1500);
   const step = (n) => p.evaluate((n) => window.__step(n), n);
   await step(60);
@@ -108,27 +108,18 @@ const INIT = () => {
     await p.screenshot({ timeout: 120000, path: `${__dirname}/ab/${tag}-${name}.png` });
   };
   await shot('water');
-  for (const [name, q] of [
-    ['ink', 'Ink and paper'],
-    ['ukiyo', 'ukiyo'],
-    ['ascii', 'ASCII']
-  ]) {
-    await p.keyboard.press('Escape');
-    await step(4);
-    await p.keyboard.press('Control+k');
-    await step(4);
-    await p.evaluate(() => 'open' in document.querySelector('#palWrap').dataset || console.log('PALETTE CLOSED'));
-    await p.keyboard.type(q);
-    await step(2);
-    if (process.env.DBG) await p.screenshot({ path: `${__dirname}/ab/dbg-${name}.png`, timeout: 120000 });
-    await p.keyboard.press('Enter');
+  // each look from the preview panel's own list (the page is opened with ?preview), then back to the water
+  const to = (l) =>
+    p.evaluate((l) => {
+      const s = document.querySelector('.preview [data-k=look]');
+      s.value = l;
+      s.dispatchEvent(new Event('input', { bubbles: true }));
+    }, l);
+  for (const name of ['ink', 'ukiyo', 'ascii']) {
+    await to(name);
     await step(100);
     await shot(name);
-    await p.keyboard.press('Control+k');
-    await step(4);
-    await p.keyboard.type('Back to the water');
-    await step(2);
-    await p.keyboard.press('Enter');
+    await to('water');
     await step(60);
   }
   console.log(tag, 'errors', errs);

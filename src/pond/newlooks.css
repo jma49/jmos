@@ -202,15 +202,12 @@
 }
 #pond[data-look='qinghua'] .hud .bl,
 #pond[data-look='qinghua'] .hud .br,
-#pond[data-look='qinghua'] .hud .cmd,
 #pond[data-look='qinghua'] .preview,
 #pond[data-look='dunhuang'] .hud .bl,
 #pond[data-look='dunhuang'] .hud .br,
-#pond[data-look='dunhuang'] .hud .cmd,
 #pond[data-look='dunhuang'] .preview,
 #pond[data-look='relief'] .hud .bl,
 #pond[data-look='relief'] .hud .br,
-#pond[data-look='relief'] .hud .cmd,
 #pond[data-look='relief'] .preview {
   bottom: calc(var(--frame) + 10px);
 }

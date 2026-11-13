@@ -26,14 +26,19 @@ it can draw well, and drop the rest.
   - ukiyo-e: stir the water once round;
   - glow: press the light on the water;
   - blueprint: draw a long straight line;
-  - ASCII: type five letters that aren't shortcuts. On a phone, type
-    "ascii" or "text" in ⌘K.
+  - ASCII: type five letters that aren't shortcuts.
 
   Each gesture shows a cue while it builds, so an ordinary press or
   stroke never surprises. Pressing the gold koi (Jincheng's) in any look
   brings the water back, and it takes precedence over whatever lies above
-  it. ⌘K finds the looks when they are searched for, and never lists
-  them.
+  it.
+- Amended 2026-11-13: the pond has no search at all. The search field
+  and the command bar (⌘K) are gone: things are found on the water by
+  gestures, not looked up, and nothing lists or names a look. What it
+  alone offered and is still wanted has a place of its own ("Clear my
+  seals" is in the album; the account is reached from the chat); forcing
+  a season, the rain or a time of day, calling the dove, and looks by
+  name are gone. ASCII, typed, has no way in on a phone.
 - The language is its own switch: English, 中文 or 日本語. Chinese stays in
   the brush. Japanese is set in Yuji Syuku and Shippori Mincho, with
   M PLUS 1 Code in ASCII and Klee One in blueprint.
