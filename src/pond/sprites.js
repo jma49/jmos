@@ -2,20 +2,42 @@
 // (engine.js): which frame a moment calls for, and how each look dresses the sheets. The sheets' grids and
 // frame order are in docs/agents/pond.md ("Water").
 /*
-   A sheet is a grid of equal cells, the creature facing right in each, its place on the ground at the
-   cell's centre, so the pond lays a cell where the creature is and turns it to its heading. A look's
-   dress is made once from the neutral sheet, when the look first shows it, and kept: nothing is tinted
-   in a frame. */
+   A sheet is rows of equal cells, the creature facing right in each, its place on the ground at the
+   cell's centre, so the pond lays a cell where the creature is and turns it to its heading. A sheet
+   comes as several files (its rows in order, left-aligned, the rest of each row empty), and is packed
+   here into one picture without the empty cells. A look's dress is made once from that picture, when
+   the look first shows it, and kept: nothing is tinted in a frame. */
 
 export const SHEETS = {
-  // `half` is how many of the creature's own units a cell spans either side of its centre
-  dove: { src: '/pond/water/dove.webp', cell: 256, half: 4 },
-  spider: { src: '/pond/water/spider.webp', cell: 192, half: 2.7 }
+  // `rows` is how many frames each row played holds (the dove's sheet ends with a walk the pond has no
+  // use for, which is left out); `half` is how many of the creature's own units a cell spans either
+  // side of its centre
+  dove: {
+    files: ['/pond/water/dove-v2-1.webp', '/pond/water/dove-v2-2.webp', '/pond/water/dove-v2-3.webp'],
+    cell: 384,
+    half: 4,
+    rows: [5, 6, 12, 6]
+  },
+  spider: {
+    files: ['/pond/water/spider-v2-1.webp', '/pond/water/spider-v2-2.webp', '/pond/water/spider-v2-3.webp'],
+    cell: 384,
+    half: 2.7,
+    rows: [4, 8, 2, 4]
+  }
 };
+// how many cells across the packed picture is
+const ACROSS = 6;
+/** Where a frame's cell is in a creature's packed picture, as [x, y] in pixels. */
+export function frameAt(which, row, i) {
+  const { cell, rows } = SHEETS[which];
+  let n = i;
+  for (let r = 0; r < row; r++) n += rows[r];
+  return [(n % ACROSS) * cell, Math.floor(n / ACROSS) * cell];
+}
 
 const TAU = Math.PI * 2;
-// while it looks about: mostly still, a turn of the head each way, and once a preen
-const IDLE = [0, 0, 1, 0, 0, 2, 0, 3, 3, 0];
+// while it looks about: mostly still, a turn of the head each way, a bob, and once a preen
+const IDLE = [0, 0, 1, 0, 4, 0, 2, 0, 3, 3, 0];
 /** How long the take-off's six frames take, in seconds, before the flight's beat. */
 export const TAKE_OFF = 0.45;
 /** Below this height (0 on the pad, 1 in full flight) an arriving dove is landing. */
@@ -35,9 +57,10 @@ export function doveFrame({ state, t, h, ph, idle = false }) {
   }
   if (state === 'out' && t < TAKE_OFF) return [1, Math.min(5, Math.floor((t / TAKE_OFF) * 6))];
   if (state === 'in' && h < LANDING) return [3, Math.min(3, Math.floor((1 - h / LANDING) * 4))];
-  // one beat a turn of the phase, the wings widest where the phase's sine peaks (the shadow follows that)
+  // one beat a turn of the phase, the wings widest (the fifth and sixth frames) where the phase's sine
+  // peaks (the shadow follows that)
   const beat = (((ph / TAU) % 1) + 1) % 1;
-  return [2, Math.floor(beat * 8 + 0.5) % 8];
+  return [2, Math.floor(beat * 12 + 2) % 12];
 }
 
 /**
@@ -103,9 +126,10 @@ function tinted(img, colour) {
 }
 /**
  * A sheet dressed for a look, as a canvas of the same size. `light` is the colour the time of day gives
- * (a CSS colour), used where the look keeps the rendering.
+ * (a CSS colour), used where the look keeps the rendering; `cell` the size of the sheet's cells, which
+ * a key line's width goes by.
  */
-export function dressed(img, look, light = '#fff') {
+export function dressed(img, look, light = '#fff', cell = 256) {
   const d = DRESS[look];
   if (!d) return tinted(img, light);
   const body = d.flat ? filled(img, d.flat) : tinted(img, d.mul),
@@ -135,7 +159,7 @@ export function dressed(img, look, light = '#fff') {
     const ring = blank(img),
       r = ring.getContext('2d'),
       ink = filled(img, d.line),
-      w = Math.max(1.5, img.height / 400);
+      w = Math.max(1.5, cell / 100);
     for (let i = 0; i < 8; i++) r.drawImage(ink, Math.cos((i / 8) * TAU) * w, Math.sin((i / 8) * TAU) * w);
     if (d.hollow != null) {
       r.globalCompositeOperation = 'destination-out';
@@ -154,6 +178,20 @@ const fetched = (src) =>
     im.onerror = () => fail(new Error(`no picture at ${src}`));
     im.src = src;
   });
+// a creature's files as one picture: the frames played, in order, six across
+async function packed(which) {
+  const { files, cell, rows } = SHEETS[which],
+    ims = await Promise.all(files.map(fetched)),
+    cv = document.createElement('canvas'),
+    c = cv.getContext('2d');
+  cv.width = ACROSS * cell;
+  cv.height = Math.ceil(rows.reduce((a, b) => a + b, 0) / ACROSS) * cell;
+  let row = 0;
+  for (const im of ims)
+    for (let y = 0; y < im.height && row < rows.length; y += cell, row++)
+      for (let i = 0; i < rows[row]; i++) c.drawImage(im, i * cell, y, cell, cell, ...frameAt(which, row, i), cell, cell);
+  return cv;
+}
 /**
  * `pic(which, look, light)` gives a creature's sheet dressed for the look, or null until the sheet has
  * come: it is fetched the first time it is asked for (and `changed` is called when it arrives), dressed
@@ -167,7 +205,7 @@ export function spritePics(changed) {
     if (!img[which]) {
       if (!asked[which]) {
         asked[which] = true;
-        fetched(SHEETS[which].src).then(
+        packed(which).then(
           (im) => {
             img[which] = im;
             changed();
@@ -181,7 +219,7 @@ export function spritePics(changed) {
     const key = lit(look) && look !== 'ukiyo' ? `${look} ${light}` : look,
       k = kept[which];
     if (k && k.key === key) return k.cv;
-    kept[which] = { key, cv: dressed(img[which], look, light) };
+    kept[which] = { key, cv: dressed(img[which], look, light, SHEETS[which].cell) };
     return kept[which].cv;
   };
 }

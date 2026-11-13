@@ -12,7 +12,7 @@ that open as one tall sheet of glass. Everyone who visits is a koi.
 | --- | --- |
 | `src/pages/index.astro` | The markup, and everything gathered at build time: the timeline (each project's page plus `src/pond/content.ts`), the latest Unsplash photos (`src/lib/photos.ts`), covers resized by `getImage`. It hands them to the script as JSON (`#pond-data`) and keeps a plain-text copy for screen readers and visitors without JavaScript. |
 | `src/pond/engine.js` | Everything that moves: the water (a height field stepped on the CPU), the koi, lily pads, the 24 solar terms and the time of day, ice that cracks and breaks, boats, the dove's and spider's behaviour, the WebGL passes (the pond into a texture, then the glass over it), the chapters, the command bar, the sound effects, the opening. Its sections are marked `/* ===== … ===== */`. |
-| `src/pond/sprites.js` | The dove and the spider as rendered sprite sheets, for a preview build: which frame a moment calls for (`doveFrame()`, `spiderFrame()`), and how each look dresses the sheets (`dressed()`). `sprites.test.ts` holds the frames to the sheets' grids. |
+| `src/pond/sprites.js` | The dove and the spider as rendered sprite sheets: which frame a moment calls for (`doveFrame()`, `spiderFrame()`), and how each look dresses the sheets (`dressed()`). `sprites.test.ts` holds the frames to the sheets' grids. |
 | `src/pond/music.ts` | The music: Ryuichi Sakamoto only, the songs `POND_MUSIC` in `content.ts` chooses first and the rest of his in the library the iPod plays (`/api/songs`, or `src/data/songs.json`), played with YouTube's player in a frame clipped to nothing. |
 | `src/pond/people.ts` | Accounts, presence, the guestbook's notes and the chat, through `src/os/social` (the same backend and rules as the desktop). |
 | `src/pond/content.ts` | The pond's wording: the timeline's jobs and schools, each project's colour, mark and highlights, This pond's own entry, the About chapter. |
@@ -443,14 +443,14 @@ In `public/pond/blueprint/`, delivered and not yet used.
 
 In `public/pond/water/`: Devot's dove and ocra's jumping spider as sprite sheets, modelled in Blender
 and rendered from straight above. The pond draws the two from them (`sprites.js`, `drawCell()` in `engine.js`), each sheet fetched the
-first time its creature is to be drawn; the three.js models they replaced are gone. They are the
-first renders, to be replaced by the revised ones when those are approved; in the looks that have
-their own picture of the two, that picture is drawn instead.
+first time its creature is to be drawn; the three.js models they replaced are gone. In the looks
+that have their own picture of the two, that picture is drawn instead.
 
 - **How they are played:** the pond's own behaviour is unchanged; only the picture is. The dove beats
   once a turn of the phase its shadow already follows, takes off through its six frames in 0.45 s, comes
   down through the landing's first four below 0.45 of its height and folds up in the last two, sits
-  still while it drinks, and turns its head and preens once it has. The spider's walk advances a loop
+  still while it drinks, and turns its head, bobs it and preens once it has. Its walk (the sheet's
+  last row) is not played: the pond's dove does not walk. The spider's walk advances a loop
   to each stride it actually covers, so its feet don't slide; it looks up when prey lands or a pointer
   moves close, gathers, jumps through three frames and lands splayed for a moment.
 - **How each look dresses them** (`DRESS` in `sprites.js`, made once for a look and kept): ink a flat
@@ -458,51 +458,16 @@ their own picture of the two, that picture is drawn instead.
   three flat tones inside a key line, 青花 a cobalt line and wash, Dunhuang the wall's white inside its
   dark line. The water and Monet keep the rendering, in the light of the time of day, with the soft
   shadow the model's ground gave it.
-- **A new sheet** (the `-v2` ones): change `SHEETS` (the file, the cell, the units a cell spans) and
-  the frame counts and order in `doveFrame()` and `spiderFrame()`; `sprites.test.ts` has the grid.
+- **How the files become a sheet:** a creature's three files are fetched together and packed into one
+  picture, the frames played in order, six across, without the empty cells (`packed()` and `frameAt()`
+  in `sprites.js`); a look's dress is made from that. For a new sheet, change `SHEETS` (the files, the
+  cell, the frames a row holds, the units a cell spans) and the order in `doveFrame()` and
+  `spiderFrame()`; `sprites.test.ts` has the grid.
 - `tools/pond/life.cjs` pictures both through their states in any look.
 
-| File | Size | Cells | Rows, left-aligned, the rest of each row empty |
-| --- | --- | --- | --- |
-| `dove.webp` | 2048 × 1024, 132 KB | 256 × 256, 8 × 4 | 1 sitting (4), 2 take-off (6), 3 flight (8), 4 landing (6) |
-| `spider.webp` | 1536 × 768, 117 KB | 192 × 192, 8 × 4 | 1 sitting (2), 2 walking (8), 3 crouch (2), 4 jump (4) |
-
-- **Framing is that of the models they replaced**, so a cell drops in where the 3D picture was drawn, at the same
-  size: the creature faces the right of its cell (heading 0), its place on the ground is the cell's
-  centre (128, 128 for the dove, 96, 96 for the spider), and the cell spans 4 units either side of
-  it for the dove (32 pixels a unit) and 2.7 for the spider (35.6). The paint is not centred on that
-  point, as it was not before. The dove sitting still is 131 pixels from beak to tail (57, 105 to
-  188, 151); the spider is 124 pixels with its legs (22, 46 to 146, 146). Nothing comes within 18
-  pixels of a cell's edge.
-- **The dove's frames:** sitting 1 still, 2 head turned to its left (up in the cell), 3 to its
-  right, 4 preening with the head laid back on the left shoulder. Take-off 1 crouch, 2 wings
-  lifting, 3 wings high, 4 first downstroke, 5 its end, 6 upstroke, which leads into flight 1.
-  Flight is one wing-beat that loops, 1 at the top, 2 to 4 down, 5 at the bottom, 6 to 8 up; about
-  60 ms a frame. Landing 1 braking with the tail fanned, 2 the back-stroke (the widest frame, 220
-  pixels of span), 3 wings up and half folded, 4 touching down, 5 folding, 6 settled, close to
-  sitting 1.
-- **The spider's frames:** sitting 1 still, 2 looking up with the front legs and palps raised.
-  Walking is a loop of 8 in an alternating gait, about 70 ms a frame; one loop is a stride of half a
-  unit (18 pixels at the cell's scale), so move the sprite that far a loop or its feet slide. Crouch
-  1 lowering, 2 gathered. Jump 1 launch, 2 in the air and tucked, 3 front legs reaching, 4 landed
-  and splayed; the jump is drawn in place, for the pond to move.
-- **Light and colour:** one soft light from the upper left and a little fill, no ground and no
-  shadow on one, the dove white to pale grey, the spider in greys, for a look to tint or line. The
-  light is baked in at heading 0: turned with the creature, the shading turns too. Straight alpha;
-  the transparent pixels round the paint carry its edge colour, so a filtered read shows no dark
-  fringe.
-- **What is weak:** the sitting dove (the folded wing's front edge is a straight step at the
-  shoulder, and the four sitting frames differ little); its half-folded frames (take-off 2, landing
-  3 to 5) have stiff wings; its legs never show from above; on pale paper it has little contrast
-  without a line. The spider's looking-up frame is close to its still one, and its pale leg bands
-  read as knobs at the knees. The loops were judged from still frames laid side by side, not played.
-  Both are clearly better than the 3D ones in flight and for the spider; the sitting dove only a
-  little.
-
-**The second version** (`-v2`), delivered and to wire in: the approved models rendered through every
-row asked for, in cells of 384 × 384, each sheet split by rows into three files of one width since
-neither fits one file under the budget. Stack a creature's files in order and the rows are the
-sheet's.
+The sheets are the approved models rendered through every row asked for, in cells of 384 × 384, each
+sheet split by rows into three files of one width since neither fits one file under the budget. Stack
+a creature's files in order and the rows are the sheet's.
 
 | File | Size | Rows it holds, left-aligned, the rest of each row empty |
 | --- | --- | --- |
@@ -711,7 +676,7 @@ pads and flowers as these sets: spring (small young pads), summer (full pads, bu
   keep the spine dead straight and paint nothing that only makes sense straight (no long straight
   highlight down the back). 青花's sheet is the model of a correct one.
 
-**The dove and the spider: the second version is delivered**, as `dove-v2-1.webp` to `-3` and
+**The dove and the spider: the second version is delivered and drawn**, as `dove-v2-1.webp` to `-3` and
 `spider-v2-1.webp` to `-3` in `public/pond/water/`: cells of 384, the rows in the order asked for,
 the orange on the pedipalps. The table under "Water" has the files, the rows each holds, the
 framing and what is weak.

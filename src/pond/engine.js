@@ -12,7 +12,7 @@
 import { report } from '../os/core/report';
 import { load, save } from '../os/core/storage';
 import { effectsOf, loadWeather, minutesAt, phaseAt, seasonOf } from './weather';
-import { SHEETS as SPRITES, doveFrame, lit as litLook, spiderFrame, spritePics } from './sprites.js';
+import { SHEETS as SPRITES, frameAt, doveFrame, lit as litLook, spiderFrame, spritePics } from './sprites.js';
 import { PANEL, WELCOME_BACK, festivalDate, festivalOn, moonAge, moonLit, panel, returning } from './preview.js';
 // the looks' type, as a stylesheet of its own: linked only once a look or 日 is chosen (loadType)
 import LOOKS_CSS from './looks.css?url';
@@ -2560,7 +2560,8 @@ function drawCell(c, which, [row, i], x, y, a, half, shadow) {
     c.restore();
     return;
   }
-  laidIn(c, () => c.drawImage(sheet, i * n, row * n, n, n, -half, -half, half * 2, half * 2));
+  const [sx, sy] = frameAt(which, row, i);
+  laidIn(c, () => c.drawImage(sheet, sx, sy, n, n, -half, -half, half * 2, half * 2));
   c.restore();
 }
 

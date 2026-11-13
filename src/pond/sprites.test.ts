@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { LANDING, SHEETS, TAKE_OFF, doveFrame, lit, spiderFrame } from './sprites.js';
+import { LANDING, SHEETS, TAKE_OFF, frameAt, doveFrame, lit, spiderFrame } from './sprites.js';
 
 // how many frames each row of each sheet holds (docs/agents/pond.md, "Water")
-const DOVE = [4, 6, 8, 6],
-  SPIDER = [2, 8, 2, 4];
+const DOVE = SHEETS.dove.rows,
+  SPIDER = SHEETS.spider.rows;
 const TAU = Math.PI * 2;
 
 describe('the dove', () => {
@@ -37,15 +37,14 @@ describe('the dove', () => {
     for (let t = 0.3; t < 12; t += 0.1) expect(doveFrame({ state: 'sit', t, h: 0, ph: 0, idle: false })).toEqual([0, 0]);
     const seen = new Set();
     for (let t = 0.3; t < 12; t += 0.1) seen.add(doveFrame({ state: 'sit', t, h: 0, ph: 0, idle: true })[1]);
-    expect([...seen].sort()).toEqual([0, 1, 2, 3]);
+    expect([...seen].sort()).toEqual([0, 1, 2, 3, 4]);
   });
   it('beats once a turn of the phase, every frame in order, widest at the phase’s peak', () => {
     const seen: number[] = [];
     for (let ph = 0; ph < TAU; ph += 0.01) seen.push(doveFrame({ state: 'in', t: 1, h: 1, ph })[1]);
-    expect([...new Set(seen)].sort()).toEqual([0, 1, 2, 3, 4, 5, 6, 7]);
-    for (let k = 1; k < seen.length; k++) expect((seen[k] - seen[k - 1] + 8) % 8).toBeLessThanOrEqual(1);
-    expect([2, 3]).toContain(doveFrame({ state: 'in', t: 1, h: 1, ph: Math.PI / 2 })[1]);
-    expect(doveFrame({ state: 'in', t: 1, h: 1, ph: -0.1 })[1]).toBe(0);
+    expect([...new Set(seen)].sort((a, b) => a - b)).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]);
+    for (let k = 1; k < seen.length; k++) expect((seen[k] - seen[k - 1] + 12) % 12).toBeLessThanOrEqual(1);
+    expect([4, 5]).toContain(doveFrame({ state: 'in', t: 1, h: 1, ph: Math.PI / 2 })[1]);
   });
 });
 
@@ -77,10 +76,25 @@ describe('the spider', () => {
 });
 
 describe('the sheets', () => {
-  it('are on the water look’s folder, in cells that divide them', () => {
-    expect(SHEETS.dove.src).toBe('/pond/water/dove.webp');
-    expect(2048 % SHEETS.dove.cell).toBe(0);
-    expect(1536 % SHEETS.spider.cell).toBe(0);
+  it('are on the water look’s folder, in cells that divide the files', () => {
+    for (const s of [SHEETS.dove, SHEETS.spider]) for (const f of s.files) expect(f).toMatch(/^\/pond\/water\/\w+-v2-\d\.webp$/);
+    expect(4608 % SHEETS.dove.cell).toBe(0);
+    expect(3072 % SHEETS.spider.cell).toBe(0);
+  });
+  it('pack every frame into a cell of its own, six across', () => {
+    for (const which of ['dove', 'spider'] as const) {
+      const seen = new Set<string>();
+      SHEETS[which].rows.forEach((n, row) => {
+        for (let i = 0; i < n; i++) {
+          const [x, y] = frameAt(which, row, i);
+          expect(x).toBeLessThan(6 * SHEETS[which].cell);
+          seen.add(`${x} ${y}`);
+        }
+      });
+      expect(seen.size).toBe(SHEETS[which].rows.reduce((a, b) => a + b, 0));
+    }
+    expect(frameAt('dove', 0, 0)).toEqual([0, 0]);
+    expect(frameAt('dove', 2, 1)).toEqual([0, 2 * 384]);
   });
   it('keep their own light on the water and in the print, and nowhere it would fight the look', () => {
     expect(lit('water')).toBe(true);
