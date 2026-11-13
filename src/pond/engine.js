@@ -5210,9 +5210,9 @@ const CLUES = {
   // the print: four flecks of spray fallen in one place
   ukiyo:
     '<svg viewBox="0 0 60 60" width="60" height="60"><g fill="#f6edd8" stroke="#0c1b27" stroke-width="1.2"><circle cx="27" cy="26" r="4"/><circle cx="35" cy="29" r="3.4"/><circle cx="29" cy="35" r="3.6"/><circle cx="34" cy="37" r="2.8"/></g></svg>',
-  // the lilies: one pad's edge in the bowl's cobalt
-  monet:
-    '<svg viewBox="0 0 120 84" width="120" height="84"><ellipse cx="60" cy="42" rx="54" ry="36" fill="none" stroke="#1c3f9a" stroke-width="3" stroke-dasharray="150 14 60 10"/></svg>',
+  // the lilies: none yet. A line drawn over the painting reads as a fault, not a clue: it waits for a
+  // painted one (asked for in the art brief).
+  monet: '',
   // the bowl: its mark under a film of dust
   qinghua: '<i></i>',
   // glow: one faint straight line by the light

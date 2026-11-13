@@ -2658,12 +2658,6 @@ button.more:hover {
   top: 37%;
   opacity: 0.9;
 }
-.clue[data-for='monet'] svg {
-  right: 22%;
-  bottom: 27%;
-  rotate: -14deg;
-  opacity: 0.75;
-}
 /* (the bowl's mark, dusted over: a tan film with a few scratches through it) */
 .clue[data-for='qinghua'] i {
   left: 68%;
