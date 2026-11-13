@@ -626,7 +626,7 @@ entry to `LOOK_ART`; a new kind of thing adds a key there and a place that draws
 4. Dunhuang: `lotus`.
 5. Star chart: `nebulae`.
 6. Monet: `lilies-autumn`, `dragonfly`.
-7. Ink: `stems`, and the seals (`seals.webp`).
+7. Ink: `stems`.
 8. Egyptian relief: `papyrus`, `duck`, `cartouche`, each as a pair.
 9. Each painted look's `afloat` sheet (above).
 10. The dove and the spider dressed for ink, Monet, 青花, Dunhuang, the star chart, the blueprint
@@ -773,7 +773,7 @@ is most of it.
 6. Dove and spider: delivered and in use: each as three ink-wash poses on one sheet `dove.webp` / `spider.webp`,
    768 × 256 (sitting, moving, wings or legs spread), in the manner of Bada Shanren's birds:
    a few wet strokes, black and grey. Multiplied into the paper.
-7. Delivered, to wire in: `seals.webp`, 1024 × 768, 4 × 3, true seal script (篆书), vermilion `#B8382A`, the stone's
+7. Delivered and drawn (a seal is its cell of the sheet in the seal's colour, by a CSS mask, once the sheet has come; the brushed characters until then: `sealsPic()` in `engine.js`, `sealCell()` in `seals.ts`): `seals.webp`, 1024 × 768, 4 × 3, true seal script (篆书), vermilion `#B8382A`, the stone's
    uneven edge, white characters out of red (白文) or red characters and border on transparent
    (朱文): 墨 (square, 白), 浮世 (tall, 朱), 莲 (round, 白), 青花 (tall, 白), 敦煌 (tall, 朱), 光
    (round, 朱), 图 (square, 白), 字 (square, 朱), 星 (round, 白), 刻 (square, 白, for the relief),

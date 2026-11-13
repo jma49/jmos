@@ -256,9 +256,23 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
 };
 
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c] as string);
+/**
+ * Where a seal is cut in the sheet of seals in seal script (public/pond/ink/seals.webp: cells four
+ * across, the looks' seals in the volumes' order, then Jincheng's own), as [column, row].
+ */
+export const OWN = 'own';
+export function sealCell(id: string): [number, number] {
+  const ids = [...VOLUMES.flatMap((v) => v.seals.map((x) => x.id)), OWN],
+    i = Math.max(0, ids.indexOf(id));
+  return [i % 4, Math.floor(i / 4)];
+}
+const cellStyle = (id: string): string => {
+  const [c, r] = sealCell(id);
+  return `--c:${c};--r:${r}`;
+};
 /** A seal's markup: its characters, each in its own cell (pond.css cuts and colours it). */
 export const sealMark = (s: Seal, cls = ''): string =>
-  `<b class="seal-m${cls ? ' ' + cls : ''}" data-shape="${s.shape}" data-cut="${s.cut}" data-n="${[...s.chars].length}" lang="zh" aria-hidden="true">${[...s.chars].map((c) => `<span>${esc(c)}</span>`).join('')}</b>`;
+  `<b class="seal-m${cls ? ' ' + cls : ''}" data-shape="${s.shape}" data-cut="${s.cut}" data-n="${[...s.chars].length}" style="${cellStyle(s.id)}" lang="zh" aria-hidden="true">${[...s.chars].map((c) => `<span>${esc(c)}</span>`).join('')}</b>`;
 /** An empty place: the seal's outline and nothing in it. */
 export const sealBlank = (s: Seal): string => `<b class="seal-m blank" data-shape="${s.shape}" aria-hidden="true"></b>`;
 
@@ -283,7 +297,7 @@ export function albumHTML(a: Album, vols: Volume[], lang: Lang, fresh: string[] 
         ''
       )}${`<li class="soon"><b class="seal-m blank" data-shape="square" aria-hidden="true"></b><span class="hint">${esc(w.soon)}</span></li>`.repeat(v.soon ?? 0)}</ol>${
       done
-        ? `<p class="grand"${fresh.includes(v.id) ? ' data-fresh' : ''}><span>${esc(w.thanks[v.id])}${v.id === 'painted' ? `<br>${esc(w.koi)}` : ''}${allFull(a, vols) && i === vols.length - 1 && vols.length > 1 ? `<br>${esc(w.both)}` : ''}</span><b class="seal-m own" data-shape="tall" data-cut="white" data-n="2" lang="zh" aria-hidden="true"><span>锦</span><span>程</span></b></p>`
+        ? `<p class="grand"${fresh.includes(v.id) ? ' data-fresh' : ''}><span>${esc(w.thanks[v.id])}${v.id === 'painted' ? `<br>${esc(w.koi)}` : ''}${allFull(a, vols) && i === vols.length - 1 && vols.length > 1 ? `<br>${esc(w.both)}` : ''}</span><b class="seal-m own" data-shape="tall" data-cut="white" data-n="2" style="${cellStyle(OWN)}" lang="zh" aria-hidden="true"><span>锦</span><span>程</span></b></p>`
         : ''
     }</div></section>`;
   };

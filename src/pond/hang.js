@@ -11,11 +11,11 @@ export function hang(W, H, season) {
     const size = Math.min(W * 0.86, H * 0.46);
     return [W - size, H - size - 76, size];
   }
-  // on a wide pond the right edge has the solar term's column above and the focus gauge in the middle:
-  // the painting hangs clear of both, a column's width in from the edge
-  const size = Math.min(H * 0.86, W * 0.48),
-    x = W - size - (W >= 860 ? 104 : 0);
-  return season === 0 ? [x, 0, size] : [x, H - size - 24, size];
+  // The lotus, the reeds and the plum grow in from the pond's right edge itself, below the solar term's
+  // column. The willow hangs from the top, where that column stands on a wide pond: it keeps a column's
+  // width in from the edge.
+  const size = Math.min(H * 0.86, W * 0.48);
+  return season === 0 ? [W - size - (W >= 860 ? 104 : 0), 0, size] : [W - size, H - size - 24, size];
 }
 /** Whether a place lies under the painting's own ink (its right two thirds, between its upper and lower margins). */
 export function underPainting(x, y, W, H, season) {
