@@ -2659,18 +2659,6 @@ button.more:hover {
   top: 37%;
   opacity: 0.9;
 }
-/* (the bowl's mark, dusted over: a tan film with a few scratches through it) */
-.clue[data-for='qinghua'] i {
-  left: 68%;
-  top: 50%;
-  width: 132px;
-  height: 132px;
-  translate: -50% -50%;
-  border-radius: 50%;
-  background:
-    repeating-linear-gradient(64deg, transparent 0 7px, rgba(120, 92, 58, 0.16) 7px 8px),
-    radial-gradient(closest-side, rgba(164, 132, 88, 0.42), rgba(164, 132, 88, 0.2) 60%, transparent);
-}
 .clue[data-for='glow'] i {
   left: 44%;
   top: 14%;
@@ -2703,10 +2691,6 @@ button.more:hover {
   opacity: 0.85;
 }
 @media (max-width: 760px) {
-  .clue[data-for='qinghua'] i {
-    left: 50%;
-    top: 70%;
-  }
   .clue[data-for='stars'] svg {
     left: 12%;
     top: 66%;

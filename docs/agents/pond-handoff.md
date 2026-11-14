@@ -178,6 +178,16 @@ Asked of the local thread since this page was first written, delivered, and in u
 sheet and stone face, then a lighter lily sheet for the water, a grid that tiles for the star chart,
 and a bolder cut of the relief's koi. The files each replaced are deleted.
 
+- **The first screen's brushed characters come from one small file.** The brush face comes in
+  chunks of about 60 KB and a page fetched every chunk one of its characters fell in: 300 KB for
+  the solar term and the language switch. `scripts/pond-first-brush.mjs` cuts those few dozen
+  characters into `public/pond/type/brush-first.woff2` (11 KB) and writes `src/pond/brush-first.css`,
+  declared after the chunks so the browser takes it for them. The pond's first load went from 528
+  KB to 222 KB (phone: 504 to 199). A test holds the stylesheet to the characters the source
+  names; cut the file again when a term, the seal or the switch gains a character.
+- **A look's pass alone is stood in for by its pass over the water** until it is built (`standIn`),
+  and starts building as the look comes in; the passes of the next three looks a visitor has not
+  found are built ahead once the pond is still, where passes build off the main thread.
 - **The first frame builds only the water's pass, and the whole pass is never built.** The whole
   pass, with every look in it, held the main thread for seconds under a software GPU when it was
   built before the first frame (CI's smoke test timed out on it), and on the owner's Mac it was not

@@ -216,6 +216,44 @@ export function zigzagRead(all: Pt[]) {
   });
   return sharp.length >= 5 ? { travel, swing, sharp: sharp.length, ok: true, why: '' } : no('corners', sharp.length);
 }
+/** A stone thrown: which way, how fast, and where it will touch the water. */
+export interface Throw {
+  speed: number;
+  /** each place it skips, in order, with how long after the last (ms); the last is where it sinks */
+  skips: { x: number; y: number; wait: number }[];
+}
+/**
+ * A flick: a short straight stroke (70 to 320 px) let go fast (under 0.4 s, over 1000 px/s), read as a
+ * flat stone thrown the way it was going from where it was let go. The faster, the more skips (two to
+ * nine); each is shorter and a little later than the last; the first is at most a fifth of the pond's
+ * short side, so that five fit on a phone; a stone that leaves the pond is gone. Null if the stroke is
+ * no flick: a longer line is the blueprint's, a slower one a brush at the wall's dust.
+ */
+export function thrown(pts: Pt[], dt: number, W: number, H: number): Throw | null {
+  const ln = pts.length > 2 ? straight(pts) : null;
+  if (!ln || ln.chord < 70 || ln.chord > 320 || dt >= 0.4) return null;
+  const speed = ln.chord / Math.max(dt, 0.02);
+  if (speed <= 1000) return null;
+  const [ax, ay] = pts[0],
+    [bx, by] = pts[pts.length - 1],
+    ux = (bx - ax) / ln.chord,
+    uy = (by - ay) / ln.chord,
+    n = Math.max(2, Math.min(9, Math.round(speed / 520))),
+    skips: Throw['skips'] = [];
+  let x = bx,
+    y = by,
+    hop = Math.max(50, Math.min(Math.max(60, Math.min(W, H) * 0.2), speed * 0.085)),
+    wait = 90;
+  for (let i = 0; i < n; i++) {
+    x += ux * hop;
+    y += uy * hop;
+    if (x < 0 || y < 0 || x > W || y > H) break;
+    skips.push({ x, y, wait });
+    hop *= 0.74;
+    wait = Math.max(70, wait * 1.12 + hop * 0.5);
+  }
+  return { speed, skips };
+}
 /** What a stroke means while it is still being drawn. */
 export const strokeMoving = (pts: Pt[], W: number, H: number): 'dunhuang' | 'ukiyo' | 'qinghua' | null => (rub(pts) ? 'dunhuang' : loop(pts, W, H));
 /** What a stroke means once the finger lifts. */

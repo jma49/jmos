@@ -360,3 +360,11 @@
 .album .slots li .seal-m {
   transition: scale 0.3s ease;
 }
+
+/* (on a phone the bowl's rim narrows the column and its face runs wide: the greeting is set a little
+   smaller there, so that it keeps to the two lines it has in every other look and nothing below it moves) */
+@media (max-width: 760px) {
+  #pond[data-look='qinghua'] .hero {
+    font-size: clamp(36px, 10.6vw, 48px);
+  }
+}
