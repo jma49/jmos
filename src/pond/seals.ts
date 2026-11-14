@@ -192,7 +192,7 @@ export interface SealWords {
 export const SEAL_WORDS: Record<Lang, SealWords> = {
   en: {
     title: 'Seals',
-    lede: 'The pond can look more than one way. Each look has a seal, stamped the first time you find it.',
+    lede: 'The pond can look more than one way. Each look has a seal, stamped the first time you find it. Stuck? Press an empty place.',
     volumes: { painted: 'Painted', drawn: 'Drawn', hours: 'Occasions', end: 'The end', idle: 'Idle hours' },
     names: {
       ink: 'Ink',
@@ -254,7 +254,7 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
   },
   zh: {
     title: '集印册',
-    lede: '池塘不止一种样子。每一种都有一方印，第一次遇见时盖上。',
+    lede: '池塘不止一种样子。每一种都有一方印，第一次遇见时盖上。找不到时，点一下空着的位置。',
     volumes: { painted: '画', drawn: '线', hours: '时', end: '终', idle: '闲' },
     names: {
       ink: '水墨',
@@ -316,7 +316,7 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
   },
   ja: {
     title: '集印帳',
-    lede: '池の姿はひとつではありません。姿ごとに印がひとつあり、初めて出会ったときに押されます。',
+    lede: '池の姿はひとつではありません。姿ごとに印がひとつあり、初めて出会ったときに押されます。迷ったら、空いている枠を押してみて。',
     volumes: { painted: '絵', drawn: '線', hours: '時', end: '終', idle: '閑' },
     names: {
       ink: '水墨',
@@ -398,6 +398,42 @@ const cellStyle = (id: string): string => {
 /** A seal's markup: its characters, each in its own cell (pond.css cuts and colours it). */
 export const sealMark = (s: Seal, cls = ''): string =>
   `<b class="seal-m${cls ? ' ' + cls : ''}" data-shape="${s.shape}" data-cut="${s.cut}" data-n="${[...s.chars].length}" ${cellStyle(s.id)} lang="zh" aria-hidden="true">${[...s.chars].map((c) => `<span>${esc(c)}</span>`).join('')}</b>`;
+/**
+ * Each gesture drawn small, in ink, for an empty place in the album: shown when the place is pressed, a
+ * hint for whoever the words did not reach. A path draws itself (class "s"), a dot is a press (class "t",
+ * `--d` its delay in the loop). 60 across. Seals with no gesture (the occasions, the end) have none.
+ */
+const dot = (x: number, y: number, d: number, r = 3) => `<circle class="t" cx="${x}" cy="${y}" r="${r}" style="--d:${d}s"/>`;
+export const TRACES: Record<string, string> = {
+  // held still: a press that spreads
+  ink: `<circle class="t hold" cx="30" cy="30" r="4" style="--d:0s"/><circle class="ring" cx="30" cy="30" r="16"/>`,
+  // a full turn
+  ukiyo: `<path pathLength="100" class="s" d="M30 12a18 18 0 1 1-.1 0"/>`,
+  // four dabs in one place
+  monet: dot(30, 30, 0) + dot(32, 28, 0.3) + dot(29, 32, 0.6) + dot(31, 31, 0.9),
+  // round the rim, near the edges
+  qinghua: `<path pathLength="100" class="s" d="M14 8h32a6 6 0 0 1 6 6v32a6 6 0 0 1-6 6H14a6 6 0 0 1-6-6V14a6 6 0 0 1 6-6z"/>`,
+  // to and fro along one line
+  dunhuang: `<path pathLength="100" class="s" d="M14 42 44 26 17 37 46 21 20 32 47 17"/>`,
+  // a press on the moon's glint
+  glow: `<circle class="moon" cx="40" cy="20" r="9"/>${dot(40, 20, 0.4)}`,
+  // one long straight line
+  blueprint: `<path pathLength="100" class="s" d="M8 50 52 10"/>`,
+  // five presses in a row
+  ascii: [10, 20, 30, 40, 50].map((x, i) => dot(x, 30, i * 0.22, 2.6)).join(''),
+  // three presses far apart
+  stars: dot(12, 14, 0) + dot(48, 22, 0.35) + dot(24, 50, 0.7),
+  // a zigzag
+  relief: `<path pathLength="100" class="s" d="M6 36 14 24 22 36 30 24 38 36 46 24 54 34"/>`,
+  // a flat stone thrown low and fast
+  skip: `<path pathLength="100" class="s fast" d="M6 52 54 26"/>${dot(36, 36, 0.5, 2)}${dot(46, 31, 0.65, 2)}${dot(53, 27, 0.8, 2)}`,
+  // food in one place, again and again
+  leap: dot(30, 30, 0) + dot(30, 30, 0.3) + dot(30, 30, 0.6) + dot(30, 30, 0.9),
+  // a lily pad pressed
+  catch: `<circle class="moon" cx="30" cy="32" r="14"/>${dot(30, 32, 0.4)}`,
+  // presses beside the boat
+  race: `<path class="moon" d="M8 22h44"/>${dot(20, 32, 0)}${dot(30, 32, 0.3)}${dot(40, 32, 0.6)}`
+};
 /** An empty place: the seal's outline, and the seal in it faintly, as a stamp album prints the stamp it waits for. */
 export const sealBlank = (s: Seal): string => sealMark(s, 'blank');
 
@@ -418,7 +454,7 @@ export function albumHTML(a: Album, vols: Volume[], lang: Lang, fresh: string[] 
       .map((s) =>
         has(a, s.id)
           ? `<li data-found data-id="${s.id}">${sealMark(s)}<span class="nm">${esc(w.names[s.id])}</span><time datetime="${a.found[s.id]}">${dayText(a.found[s.id], lang)}</time></li>`
-          : `<li>${sealBlank(s)}<span class="hint">${esc(w.hints[s.id])}</span></li>`
+          : `<li${TRACES[s.id] ? ` data-trace="${s.id}"` : ''}>${sealBlank(s)}${TRACES[s.id] ? `<svg class="trace" viewBox="0 0 60 60" aria-hidden="true">${TRACES[s.id]}</svg>` : ''}<span class="hint">${esc(w.hints[s.id])}</span></li>`
       )
       .join(
         ''

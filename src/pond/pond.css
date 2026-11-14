@@ -2567,6 +2567,104 @@ button.more:hover {
   min-width: 0;
   text-align: center;
 }
+/* A place not yet found, pressed, draws its gesture small in ink over its faint seal (TRACES in seals.ts):
+   a stroke drawing itself, presses landing in turn, over and over until it is pressed again. */
+.album .slots li[data-trace] {
+  position: relative;
+  cursor: pointer;
+}
+.album .slots .trace {
+  position: absolute;
+  left: 50%;
+  top: 2px;
+  width: 62px;
+  height: 62px;
+  translate: -50% 0;
+  overflow: visible;
+  fill: none;
+  stroke: #8a3a2a;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s;
+}
+.album .slots li[data-show] .trace {
+  opacity: 1;
+}
+.album .slots li[data-show] .seal-m.blank {
+  opacity: 0.35;
+}
+.album .slots li[data-show] .trace .s {
+  stroke-dasharray: 100;
+  animation: trace-draw 2.2s ease-in-out infinite;
+}
+.album .slots li[data-show] .trace .s.fast {
+  animation-timing-function: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.album .slots .trace .t {
+  transform-box: fill-box;
+  transform-origin: center;
+  fill: #8a3a2a;
+  stroke: none;
+  opacity: 0;
+}
+.album .slots li[data-show] .trace .t {
+  animation: trace-tap 2.2s var(--d, 0s) ease-out infinite;
+}
+.album .slots .trace .moon,
+.album .slots .trace .ring {
+  stroke: rgba(138, 58, 42, 0.35);
+  stroke-width: 1.4;
+}
+.album .slots .trace .ring {
+  opacity: 0;
+}
+.album .slots li[data-show] .trace .ring {
+  transform-origin: 30px 30px;
+  animation: trace-ring 2.2s 1s ease-out infinite;
+}
+@keyframes trace-draw {
+  0% {
+    stroke-dashoffset: 100;
+    opacity: 1;
+  }
+  70% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 0;
+  }
+}
+@keyframes trace-tap {
+  0% {
+    opacity: 0;
+    scale: 1.8;
+  }
+  8% {
+    opacity: 1;
+    scale: 1;
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes trace-ring {
+  0% {
+    opacity: 0.9;
+    scale: 0.3;
+  }
+  100% {
+    opacity: 0;
+    scale: 1.2;
+  }
+}
 /* every seal stands in a box of one height, so the names under them share a line */
 .album .slots .seal-m {
   --s: 54px;
