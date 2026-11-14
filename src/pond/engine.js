@@ -1506,8 +1506,11 @@ vec3 lookGlow(){
   float lit=1.-smoothstep(-90.,90.,length(P-uInk.yz)-(uLookT-.7)*620.); lit*=.55+.45*step(.5,fract(length(P-uInk.yz)/140.-uLookT*1.2))*step(uLookT,3.)+.45*step(3.,uLookT);
   c+=mix(vec3(.05,.55,1.),vec3(.2,1.,.85),.5+.5*sin(P.x*.004+uTime*.2))*rip*.55*lit;
   // plankton: where the water is stirred, by a koi's wake or a ripple, it sparks in points that wink out
+  // (and round the pointer, as round a hand held just over the water: they gather and spark there too)
+  vec2 tw=P-uPtr; float near=exp(-dot(tw,tw)/9000.)*smoothstep(2.,3.,uLookT), rp=max(rip,near*.35);
+  c+=vec3(.03,.25,.3)*near*.25*(1.-gCalm*.6);
   vec2 pc=floor(P/4.); float pk=hash1(pc+floor(uTime*5.+hash1(pc)*5.)*7.1), pd0=length(fract(P/4.)-.5);
-  c+=vec3(.45,1.,.9)*step(1.-rip*.2,pk)*smoothstep(.04,.2,rip)*smoothstep(.5,.12,pd0)*lit*(1.-gCalm*.85)*2.;
+  c+=vec3(.45,1.,.9)*step(1.-rp*.2,pk)*smoothstep(.04,.2,rp)*smoothstep(.5,.12,pd0)*lit*(1.-gCalm*.85)*2.;
   vec4 f0; float fa,fb,fc,red; fishAt(f0,fa,fb,fc,red);
   // (a koi under the type glows low, so the words over it read)
   float hush=1.-gCalm*.62;
