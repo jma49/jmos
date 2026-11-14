@@ -366,6 +366,9 @@ visitor's colour laid into their patches through `koi-mask.webp` (`koiPicture()`
 
 #### Ukiyo-e
 
+Where the pointer rests (`uPtr`), the baren has just gone over the block: the ink lies fuller and
+darker there, in the round streaks the pad leaves (`lookUkiyo()`).
+
 In `public/pond/ukiyo/`, and in use in every build, as every look's own pictures are but the water's
 (`pictured()` in `engine.js`); they are fetched when the look is first asked for, or half way round the
 stir that brings it, never on the first screen.

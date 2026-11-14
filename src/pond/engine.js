@@ -1488,7 +1488,12 @@ vec3 lookUkiyo(){
   // winter: flat pale-blue ice with dark key-line cracks, the snow as cream flecks
   if(gIce>0.){ c=mix(c,mix(vec3(.46,.62,.74),vec3(.2,.33,.5),gCalm),step(.5,gIce)); c=mix(c,vec3(.05,.1,.2),step(.3,gHit.x));
     c=mix(c,vec3(.96,.93,.84),step(1.-.1*uSnow,hash1(floor(gP/9.)))*step(.5,gIce)*(1.-gCalm)*step(length(fract(gP/9.)-.5),.24)); }
-  c=mix(paper,c,.93);
+  // where the pointer rests the baren has just gone over the block: the ink lies fuller and darker, in the
+  // round streaks the pad leaves
+  vec2 tw=P-uPtr; float rub=exp(-dot(tw,tw)/26000.)*(1.-gCalm*.6);
+  float sw=noise(vec2(length(tw)*.32+fbm(P*.03)*4.,fbm(P*.03+4.)*3.));
+  c*=1.-rub*(.05+.12*smoothstep(.45,.8,sw));
+  c=mix(paper,c,.93+.07*rub);
   c*=.93+.09*noise(P*vec2(.012,.45))+.03*noise(P*vec2(.4,.01));
   return c;
 }
