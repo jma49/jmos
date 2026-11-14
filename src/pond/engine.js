@@ -1807,7 +1807,12 @@ void main(){
       vec2 id=floor(P/uCell), cp=(id+.5)*uCell;
       vec3 sc=(scene(cp,0.)*2.+scene(cp+uCell*vec2(.25,.25),0.)+scene(cp-uCell*vec2(.25,.25),0.))/4.;
       float l=dot(sc,vec3(.3,.59,.11)), g=floor(clamp(pow(l*1.25,.85),0.,.999)*10.);
-      vec2 fq=fract(P/uCell); float a=texture(uAtlas,vec2((g+fq.x)/10.,fq.y)).a;
+      // on an outline the stroke follows the edge, as ASCII art is drawn: a bar, a slash or a dash across the brightness
+      // gradient, so a koi reads as a drawing, not a blur of density
+      vec3 Y=vec3(.3,.59,.11); vec2 h=uCell*.5;
+      vec2 gr=vec2(dot(scene(cp+vec2(h.x,0.),0.)-scene(cp-vec2(h.x,0.),0.),Y),dot(scene(cp+vec2(0.,h.y),0.)-scene(cp-vec2(0.,h.y),0.),Y));
+      if(length(gr)>.2&&l>.06&&l<.42) g=10.+mod(floor(mod(atan(gr.y,gr.x),3.14159)/.785398+.5),4.);
+      vec2 fq=fract(P/uCell); float a=texture(uAtlas,vec2((g+fq.x)/14.,fq.y)).a;
       vec3 tint=sc/max(max(sc.r,max(sc.g,sc.b)),.08); tint=mix(vec3(.72,.86,.82),tint,.7);
       col=mix(col,vec3(.01,.016,.018)+tint*a*(.5+.7*clamp(l*1.6,0.,1.)),m);
     }
@@ -3348,7 +3353,8 @@ function setLook(name, from) {
   plip(`look-${name}`);
 }
 // ASCII's characters, drawn once into a strip the glass pass reads by brightness: blank to dense.
-const RAMP = ' .:-=+*#%@',
+// (then the four strokes an outline is drawn in, picked by the edge's direction)
+const RAMP = ' .:-=+*#%@|/-\\',
   CELL = [9, 17];
 let atlasOn = false;
 function atlas() {
