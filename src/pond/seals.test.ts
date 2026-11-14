@@ -213,14 +213,16 @@ describe('days', () => {
 });
 
 describe('the album as a sheet', () => {
-  it('shows a found seal with its day, and a hint in place of one not yet found', () => {
+  it('shows a found seal with its day, and a hint and a faint print in place of one not yet found', () => {
     const a = stamp(emptyAlbum(), 'ink', '2026-11-12', live).album,
       html = albumHTML(a, live, 'en');
     expect(html).toContain('12 Nov 2026');
     expect(html).toContain('>墨<');
     expect(html).toContain(SEAL_WORDS.en.hints.ukiyo);
     expect(html).not.toContain(SEAL_WORDS.en.hints.ink);
-    expect(html).not.toContain('>浮<');
+    // one not found is printed faintly in its empty place, never as found
+    expect(html).toContain('<li><b class="seal-m blank" data-shape="tall"');
+    expect(html).not.toContain('data-id="ukiyo"');
     expect(html).toContain('1 / 2');
   });
   it('puts the large seal and its thanks on a full volume only', () => {

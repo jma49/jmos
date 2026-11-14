@@ -2302,6 +2302,21 @@ button.more:hover {
 .seal-m.blank[data-shape='round'] {
   border-radius: 50%;
 }
+/* (the seal waited for is printed in it faintly: its cut, once the sheet has come, or its characters) */
+.seal-m.blank {
+  color: rgba(92, 58, 40, 0.17);
+}
+#pond[data-seals] b.seal-m.blank[data-p] {
+  border-radius: 2px;
+  box-shadow: inset 0 0 0 1px rgba(92, 58, 40, 0.3);
+}
+#pond[data-seals] b.seal-m.blank[data-p][data-shape='round'] {
+  border-radius: 50%;
+}
+#pond[data-seals] b.seal-m.blank[data-p]::before {
+  background: rgba(92, 58, 40, 0.15);
+  scale: 0.82;
+}
 /* Once the sheet of seals cut in small seal script has come (engine.js sets data-seals), a seal is its
    cell of that sheet in the seal's colour, and the brushed characters under it are not shown. A square
    or round seal is 232 of its 256-pixel cell across, a tall one 150 by 246, each centred; --c and --r

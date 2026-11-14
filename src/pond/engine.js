@@ -1248,7 +1248,7 @@ float caustic(vec2 uv,float t){
   for(int n=0;n<4;n++){ float tt=t*(1.-(3.5/float(n+1)));
     i=p+vec2(cos(tt-i.x)+sin(tt+i.y),sin(tt-i.y)+cos(tt+i.x));
     c+=1./length(vec2(p.x/(sin(i.x+tt)/.005),p.y/(cos(i.y+tt)/.005))); }
-  c/=4.; c=1.17-pow(c,1.4); return pow(abs(c),8.);
+  c/=4.; c=1.17-pow(c,1.4); return pow(abs(c),6.);
 }
 // how soft a layer at this depth is drawn: nothing within reach of the focus, more beyond it
 float soft(float depth){ return max(0.,abs(depth-uFocus)-.42)*5.2; }
@@ -1530,7 +1530,7 @@ void main(){
   }
 #endif
   vec3 bed=vec3(textureLod(uBed,uv+ref*1.14,lb).r,textureLod(uBed,uv+ref,lb).g,textureLod(uBed,uv+ref*.86,lb).b);
-  float ca=caustic(p*2.1+g*.9,uTime*.4)*(1.-ice*.85)/(1.+lb*.9);
+  float ca=caustic(p*3.+g*.9,uTime*.4)*(1.-ice*.85)/(1.+lb*.9);
   float focus=clamp(-lap*3.2,-.4,1.);
   vec3 col=bed*uAmb;
   vec2 so=vec2(.011,.018)*ia;
@@ -2106,9 +2106,9 @@ const underGlass = (x, y) => {
 
 /* ================= the time of day ================= */
 const PH = {
-  dawn: { tint: [0.7, 0.8, 0.82], amb: 0.86, cai: 0.3, cac: [1, 0.86, 0.8], sky: [1, 0.8, 0.76], moon: 0 },
-  day: { tint: [0.78, 0.94, 0.88], amb: 1.04, cai: 0.72, cac: [1, 1, 0.9], sky: [0.84, 0.95, 1], moon: 0 },
-  dusk: { tint: [0.86, 0.66, 0.52], amb: 0.86, cai: 0.36, cac: [1, 0.72, 0.42], sky: [1, 0.66, 0.4], moon: 0 },
+  dawn: { tint: [0.7, 0.8, 0.82], amb: 0.86, cai: 0.42, cac: [1, 0.86, 0.8], sky: [1, 0.8, 0.76], moon: 0 },
+  day: { tint: [0.78, 0.94, 0.88], amb: 1.04, cai: 1.05, cac: [1, 1, 0.9], sky: [0.84, 0.95, 1], moon: 0 },
+  dusk: { tint: [0.86, 0.66, 0.52], amb: 0.86, cai: 0.5, cac: [1, 0.72, 0.42], sky: [1, 0.66, 0.4], moon: 0 },
   night: { tint: [0.36, 0.5, 0.68], amb: 0.74, cai: 0.14, cac: [0.7, 0.82, 1], sky: [0.55, 0.66, 0.95], moon: 1 }
 };
 let phaseChoice = 'auto',

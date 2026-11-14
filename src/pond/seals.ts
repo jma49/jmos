@@ -400,8 +400,8 @@ const cellStyle = (id: string): string => {
 /** A seal's markup: its characters, each in its own cell (pond.css cuts and colours it). */
 export const sealMark = (s: Seal, cls = ''): string =>
   `<b class="seal-m${cls ? ' ' + cls : ''}" data-shape="${s.shape}" data-cut="${s.cut}" data-n="${[...s.chars].length}" ${cellStyle(s.id)} lang="zh" aria-hidden="true">${[...s.chars].map((c) => `<span>${esc(c)}</span>`).join('')}</b>`;
-/** An empty place: the seal's outline and nothing in it. */
-export const sealBlank = (s: Seal): string => `<b class="seal-m blank" data-shape="${s.shape}" aria-hidden="true"></b>`;
+/** An empty place: the seal's outline, and the seal in it faintly, as a stamp album prints the stamp it waits for. */
+export const sealBlank = (s: Seal): string => sealMark(s, 'blank');
 
 /**
  * The album as a sheet: a leaf of paper for each volume, its seals in a row, found ones in vermilion with
