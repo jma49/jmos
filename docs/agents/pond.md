@@ -901,7 +901,8 @@ Everything else is ruled in the shader. Nothing more wanted.
 
 **青花.** Judge it by: a Yuan or early Ming blue-and-white dish seen from above: cobalt only, on
 white, the blue pooling at line ends.
-1. Bed: the shader's glaze and crackle. Delivered and in use: `medallion.webp`, 1024 × 1024: a double ring, and in it
+1. Bed: the shader's glaze and crackle, and the glaze's gloss: a soft four-pane window light that drifts
+   after the pointer (`uPtr`, eased in `engine.js`) and bends where the water under it moves. Delivered and in use: `medallion.webp`, 1024 × 1024: a double ring, and in it
    two koi among lotus and water-weed in line and wash; it lies large and pale in the right half.
 2. Delivered: `koi` + mask, to the common spec.
 3. Delivered and in use: `lotus.webp`, 1024 × 512, 4 × 2, in the cobalt: three lotus leaves from above, two flowers,
