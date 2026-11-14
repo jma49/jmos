@@ -192,7 +192,7 @@ export interface SealWords {
 export const SEAL_WORDS: Record<Lang, SealWords> = {
   en: {
     title: 'Seals',
-    lede: 'The pond can look more than one way. Each look has a seal, stamped the first time you find it.',
+    lede: 'The pond can look more than one way. Each look has a seal, stamped the first time you find it. Stuck? Press an empty place.',
     volumes: { painted: 'Painted', drawn: 'Drawn', hours: 'Occasions', end: 'The end', idle: 'Idle hours' },
     names: {
       ink: 'Ink',
@@ -254,7 +254,7 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
   },
   zh: {
     title: '集印册',
-    lede: '池塘不止一种样子。每一种都有一方印，第一次遇见时盖上。',
+    lede: '池塘不止一种样子。每一种都有一方印，第一次遇见时盖上。找不到时，点一下空着的位置。',
     volumes: { painted: '画', drawn: '线', hours: '时', end: '终', idle: '闲' },
     names: {
       ink: '水墨',
@@ -316,7 +316,7 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
   },
   ja: {
     title: '集印帳',
-    lede: '池の姿はひとつではありません。姿ごとに印がひとつあり、初めて出会ったときに押されます。',
+    lede: '池の姿はひとつではありません。姿ごとに印がひとつあり、初めて出会ったときに押されます。迷ったら、空いている枠を押してみて。',
     volumes: { painted: '絵', drawn: '線', hours: '時', end: '終', idle: '閑' },
     names: {
       ink: '水墨',
