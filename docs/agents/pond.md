@@ -946,8 +946,9 @@ is most of it.
    `public/pond/ink/`, 1024 × 512, cells of 256, 4 × 2, cut and coloured exactly as `seals.webp` is
    (same face, same vermilion `#B8382A`, the tone in the alpha, square and round 232 across and
    centred): row 1 雨 (square, 白), 雪 (round, 白), 月 (round, 朱), 节 (square, 朱); row 2 晨
-   (square, 白), 舟 (round, 白, the race's idle seal), then two cells empty. Under the budget for a file in `public/`. Until it comes
-   these five are their characters in the brush (`CUT` in `seals.ts` lists what the sheets hold).
+   (square, 白), 舟 (round, 白, the race's idle seal), 龙 (round, 朱, the Dragon Gate's idle seal, cut
+   in its full form 龍), then one cell empty. Under the budget for a file in `public/`. Until it comes
+   these are their characters in the brush (`CUT` in `seals.ts` lists what the sheets hold).
 
 **Ukiyo-e.** Judge it by: a Hokusai or Hiroshige print at arm's length: flat colour, a key line,
 bokashi gradation, paper showing.

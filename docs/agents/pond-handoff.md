@@ -26,6 +26,8 @@ what is left, and what was learnt. What is open now is section 0.
   `DRAGONS` and the code alone and say in the commit message which pictures came: the cloud thread
   lists each, looks at it in the pond, and takes the seal out of preview.
 - **Seeing it move before it is listed:** the last paragraph of "The dragon sheet".
+- **Its seal:** 龙 joins the second sheet of seals still asked for (`seals-2.webp`, item 8 under
+  "Ink" in the brief); until that sheet comes the seal is its character in the brush.
 - **To come, not asked yet:** the goldfish-scooping game will want a paper scoop, a few goldfish
   seen from above and a bowl. Its lines go into the brief when its design is settled; there is
   nothing to make for it yet.
