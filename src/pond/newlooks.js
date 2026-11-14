@@ -459,8 +459,11 @@ vec3 lookMonet(){
   vec2 uv=gUv, P=gP, ruv=uv+gG*gIa*.028+gRef*.3;
   vec4 bed=texture(uMural,ruv);
   vec3 col=mix(vec3(.27,.38,.52)*(.85+.3*fbm(P*.004)),bed.rgb,bed.a);
-  float ridge=dot(col-texture(uMural,ruv-vec2(0.,1.6)/uCss).rgb,vec3(.333))*bed.a;
-  col+=vec3(.55,.54,.48)*clamp(ridge*3.,-.05,.09);
+  // the paint's ridges catch the light, which comes from where the pointer is: the strokes that face it lift,
+  // and most near it, as impasto does under a gallery lamp
+  vec2 tw=uPtr-P; float near=exp(-dot(tw,tw)/60000.);
+  float ridge=dot(col-texture(uMural,ruv+normalize(tw+vec2(0.,-.01))*1.6/uCss).rgb,vec3(.333))*bed.a;
+  col+=vec3(.55,.54,.48)*clamp(ridge*(3.+6.*near),-.05,.09+.16*near);
   col+=vec3(.9,.95,1.)*clamp(abs(gLap)*3.,0.,.045)*(1.-gCalm*.8);
   vec4 pd=textureLod(uPads,uv+gG*gIa*.006,0.); float ps=textureLod(uPads,uv+vec2(.004,.007),2.).a;
   col*=1.-.24*ps*(1.-pd.a); col=pd.rgb*.97+col*(1.-pd.a);
