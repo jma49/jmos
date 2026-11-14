@@ -18,7 +18,7 @@ export const ZH = {
   faces: '找找它别的样子',
   talk: '聊天',
   firstLine: '留下第一句话',
-  clock: { yours: '你的时间', mine: '我在圣何塞' },
+  clock: { yours: '你的时间' },
   chapters: {
     music: '音乐',
     notes: '留言',
@@ -84,7 +84,7 @@ export const JA: typeof ZH = {
   faces: 'ほかの姿を探す',
   talk: 'チャット',
   firstLine: '最初のひとことを',
-  clock: { yours: 'あなたの時間', mine: 'サンノゼの私' },
+  clock: { yours: 'あなたの時間' },
   chapters: {
     music: '音楽',
     notes: '伝言',
@@ -135,8 +135,16 @@ export const JA: typeof ZH = {
  * src/data/songs.json) are named here, all official uploads. After them, the rest of his songs the
  * library has. Sakamoto's songs are found by artist.
  */
-export const POND_MUSIC: { artist: RegExp; first: string[]; extra: { id: string; title: string; artist: string; album: string }[] } = {
+// `lead` is the first song's name, shown in the contents before the library has loaded (it loads when
+// the music is opened or played)
+export const POND_MUSIC: {
+  artist: RegExp;
+  lead: { title: string; artist: string };
+  first: string[];
+  extra: { id: string; title: string; artist: string; album: string }[];
+} = {
   artist: /sakamoto|坂本/i,
+  lead: { title: 'aqua', artist: 'Ryuichi Sakamoto' },
   first: ['SJcbMTz2oNw', 'ELJf83TelA0', 'pygwK0sBUdM', 'n6OqLXvri3M', 'jHC_yMY9N0I', '__aJL8i1kL4', 'Se8cQsuBhaA', 'n59qeMSCAgA'],
   extra: [
     { id: 'ELJf83TelA0', title: 'Merry Christmas Mr. Lawrence', artist: 'Ryuichi Sakamoto', album: 'Playing the Piano 2022' },

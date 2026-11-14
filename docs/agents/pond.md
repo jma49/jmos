@@ -32,7 +32,8 @@ for; keep it true when the file changes.
   read once); `data-r` is its corner radius.
 - **The title page reads because the pond is calmer under it.** On a
   wide window the left of the pond is deeper and out of focus (`uCalm`
-  in the water's shader); on a phone, all of it. Type stays on that side.
+  in the water's shader); on a phone, from the top down to a little past the
+  contents' foot, so the water below is clear. Type stays on that side.
 - **Type:** Cormorant Garamond (self-hosted, `@fontsource/cormorant-garamond`)
   for what's set large, and every Chinese character, wherever it is,
   brushed in Zhi Mang Xing (`src/pond/brush.css`: the font's CJK chunks
