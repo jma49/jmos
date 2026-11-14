@@ -406,6 +406,8 @@ In `public/pond/stars/`, and in use. One colour, `#C9D4F0`, its strength in the 
 - **The figures:** the straight koi (`STARS.figure`) is kept as one row to the koi sheets' measure and
   bent along each constellation's spine by `Koi.drawSprite()`, faint, behind its stars. The koi in an S
   is not used: the spine does the bending.
+- **Where the pointer rests** (`uPtr`), the eye adjusts as it would at a telescope: a third, finer
+  layer of faint stars comes out around it once the sky is up (`lookStars()`), and nowhere else.
 
 | File | Size | What is in it |
 | --- | --- | --- |
