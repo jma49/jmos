@@ -1276,17 +1276,19 @@ float noise(vec2 p){ vec2 i=floor(p),f=fract(p); f=f*f*(3.-2.*f);
   return mix(mix(hash1(i),hash1(i+vec2(1,0)),f.x),mix(hash1(i+vec2(0,1)),hash1(i+vec2(1,1)),f.x),f.y); }
 vec3 pal(float id){ return id<.38?vec3(.52,.52,.5):id<.58?vec3(.42,.48,.52):id<.8?vec3(.58,.48,.37):id<.93?vec3(.74,.58,.34):vec3(.3,.31,.32); }
 // A pile of flat pebbles: each cell holds one ellipse, the highest one covering a
-// point wins, and the ones above it drop a soft shadow towards the lower right.
+// point wins, and the ones above it drop a soft shadow towards the lower right. The
+// highest stone's rim fades into the one under it, shadow and all, so where one stone
+// lies on another the edge is smooth rather than a stair of pixels.
 vec2 stoneQ(vec2 c, vec2 r, out float rad, out float asp, out vec2 cs){
   rad=mix(.44,.8,hash1(c+9.7)); asp=mix(.6,1.,hash1(c+1.9)); float ang=hash1(c+5.3)*3.1416; cs=vec2(cos(ang),sin(ang));
   return vec2(cs.x*r.x+cs.y*r.y,-cs.y*r.x+cs.x*r.y)/vec2(rad,rad*asp);
 }
-vec3 pebbles(vec2 x, out float cov, out float shade){
-  vec2 n=floor(x),f=fract(x); float topZ=-1.; vec3 col=vec3(0.); cov=0.; shade=0.;
+vec3 pebbles(vec2 x, vec3 under, float k){
+  vec2 n=floor(x),f=fract(x); float topZ=-1.,secZ=-1.,cov=0.,secA=0.,shTop=0.,shSec=0.; vec3 col=vec3(0.),sec=vec3(0.);
   for(int j=-2;j<=2;j++)for(int i=-2;i<=2;i++){
     vec2 g=vec2(float(i),float(j)),c=n+g; vec2 r=f-(g+hash2(c)); float z=hash1(c+3.1),rad,asp; vec2 cs;
     vec2 q=stoneQ(c,r,rad,asp,cs); float d=length(q);
-    if(d<1.&&z>topZ){ topZ=z; cov=smoothstep(1.,.965,d);
+    if(d<1.&&z>secZ){ float a=smoothstep(1.,.965,d);
       float hgt=sqrt(1.-d*d); vec2 nl=q/vec2(rad,rad*asp); vec2 nw=vec2(cs.x*nl.x-cs.y*nl.y,cs.y*nl.x+cs.x*nl.y);
       vec3 nn=normalize(vec3(nw*rad*.5,hgt+.28));
       float diff=clamp(dot(nn,normalize(vec3(-.5,-.62,.6))),0.,1.);
@@ -1295,20 +1297,21 @@ vec3 pebbles(vec2 x, out float cov, out float shade){
       c0*=.8+.4*(noise(x*30.+c)*.4+noise(x*75.)*.35+noise(x*160.)*.25);
       float wet=pow(clamp(dot(nn,normalize(vec3(-.32,-.42,.85))),0.,1.),26.)*.2;
       float edge=mix(.4,1.,smoothstep(1.,.6,d));
-      col=(c0*(.2+1.02*diff)+wet)*edge; }
+      vec3 s=(c0*(.2+1.02*diff)+wet)*edge;
+      if(z>topZ){ secZ=topZ; sec=col; secA=cov; topZ=z; col=s; cov=a; } else { secZ=z; sec=s; secA=a; } }
   }
   for(int j=-2;j<=2;j++)for(int i=-2;i<=2;i++){
-    vec2 g=vec2(float(i),float(j)),c=n+g; float z=hash1(c+3.1); if(z<=topZ) continue;
-    vec2 r=f-(g+hash2(c))-vec2(.07,.1); float rad,asp; vec2 cs; float d=length(stoneQ(c,r,rad,asp,cs));
-    shade=max(shade,smoothstep(1.18,.9,d));
+    vec2 g=vec2(float(i),float(j)),c=n+g; float z=hash1(c+3.1); if(z<=secZ) continue;
+    vec2 r=f-(g+hash2(c))-vec2(.07,.1); float rad,asp; vec2 cs; float sh=smoothstep(1.18,.9,length(stoneQ(c,r,rad,asp,cs)));
+    shSec=max(shSec,sh); if(z>topZ) shTop=max(shTop,sh);
   }
-  return col;
+  vec3 low=mix(under,sec,secA)*(1.-k*shSec);
+  return mix(low,col*(1.-k*shTop),cov);
 }
 void main(){
-  vec2 p=vec2(vUv.x,1.-vUv.y)*uRes/uStone; float a1,s1,a2,s2;
-  vec3 c1=pebbles(p,a1,s1); vec3 c2=pebbles(p*2.3+vec2(3.7,1.9),a2,s2);
-  vec3 under=mix(vec3(.05,.055,.05),c2*(1.-.5*s2),a2)*.5;
-  vec3 col=mix(under,c1,a1)*(1.-.62*s1);
+  vec2 p=vec2(vUv.x,1.-vUv.y)*uRes/uStone;
+  vec3 under=pebbles(p*2.3+vec2(3.7,1.9),vec3(.05,.055,.05),.5)*.5;
+  vec3 col=pebbles(p,under,.62);
   col*=.86+.28*noise(p*.7);
   o=vec4(col,1.);
 }`;
