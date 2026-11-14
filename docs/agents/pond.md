@@ -77,7 +77,7 @@ for; keep it true when the file changes.
     still: at 10 they stepped visibly.
   - Frames fall on the display's own beats, every nth (`due()`), so they come evenly; a timer that
     waited and then caught the next beat made the koi judder.
-  - None while the tab is hidden. Under reduced motion the koi still swim, at the quiet pace.
+  - None while the tab is hidden.
   - The quiet pace too while the window is in the background, the battery is low and not charging, or
     a chapter is open (there only what was just touched keeps 60). A look coming in, and
     a finger held down, are always drawn at 60.
@@ -131,7 +131,7 @@ paper; a new pane or control needs its ink colours there too.
 Each look has a seal (`seals.ts`: the seals, the volumes, the album's state and its words in the three
 languages). The first time a look comes in all the way (`reached()` in `engine.js`, from `stepInk`), by
 gesture, key or command, its seal is stamped in the corner above the controls, in the look's own manner
-(`#pond[data-look] .stamp` in `pond.css`), with a soft thud; under reduced motion it only appears.
+(`#pond[data-look] .stamp` in `pond.css`), with a soft thud.
 In the album a seal not yet found is printed faintly in its empty place, as a stamp album prints the
 stamp it waits for (`sealBlank()`): its cut once the sheet has come, else its characters.
 Pressed, an empty place draws its gesture small in ink over that print, over and over until pressed again
@@ -989,8 +989,9 @@ air) and ASCII (the pond in characters).
 - **The page through a change:** the title page's type fades out as a look comes and back in its
   face; the controls only dim. A look that puts the page's blocks elsewhere (青花's rim, the Dunhuang
   wall's bands, a face's own measure) has them glide there from where they stood (`glide()`, the
-  blocks in `GLIDES`); a new block that a look can move goes in that list. Under reduced motion they
-  just change.
+  blocks in `GLIDES`); a new block that a look can move goes in that list.
+- The pond ignores the system's reduced-motion setting (`RM` is false; docs/decisions/0027): a look's
+  arrival plays the same on every device.
 - **Finding them** (`gest` in `engine.js`), each with a cue while it
   builds (`drawGesture()`):
   - ink: hold still on the water for 1.2 s (I and 墨 still work);

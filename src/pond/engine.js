@@ -71,7 +71,10 @@ import * as people from './people';
 const $ = (s) => document.querySelector(s);
 /** What the page gathered at build time: the pond's words in Chinese and Japanese. */
 const D = JSON.parse($('#pond-data').textContent);
-const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+// The pond moves the same whatever the system asks of motion: a look's arrival is the point of it, and with
+// reduced motion it was a plain cross-fade over a still pond (docs/decisions/0027). The branches stay for a
+// quiet mode should one be wanted.
+const RM = false;
 // With ?preview: the real moon, the wind, the festivals, fireflies, stars, a welcome back (preview.js)
 const pv = {
   age: moonAge(),

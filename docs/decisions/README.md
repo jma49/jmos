@@ -39,3 +39,4 @@ replaces; don't delete the old one.
 | [0024](0024-the-browser-opens-on-ocras-page-here.md) | The Browser opens on ocra's page here | 2026-10-26 |
 | [0025](0025-the-pond.md) | The pond | 2026-11-11 |
 | [0026](0026-looks-and-gestures.md) | Looks, found by gestures | 2026-11-12 |
+| [0027](0027-the-pond-ignores-reduced-motion.md) | The pond ignores reduced motion | 2026-11-14 |
