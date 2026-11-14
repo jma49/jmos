@@ -61,18 +61,18 @@ const data = { zh: ZH, ja: JA };
           ></button
         >
       </div>
-      <div class="gauge" id="gauge" role="slider" tabindex="0" aria-label="Focus depth" aria-orientation="vertical" aria-valuemin="0" aria-valuemax="100">
+      <div class="gauge" id="gauge" role="slider" tabindex="0" aria-label="Focus depth" aria-orientation="vertical" aria-valuemin="0" aria-valuemax="100" aria-valuenow="60" aria-valuetext="the koi">
         <span style="top:0">surface</span><span style="top:55%">koi</span><span style="top:100%">bed</span><i id="knob"></i>
       </div>
       <div class="br">
-        <div class="pill glass seg" data-r="20" id="langBtn" role="group" aria-label="Language"><i class="seg-on" aria-hidden="true"></i><button data-lang="en" lang="en" aria-label="English" aria-pressed="false"><span>En</span></button><button data-lang="zh" lang="zh" aria-label="中文" aria-pressed="false"><span>中</span></button><button data-lang="ja" lang="ja" aria-label="日本語" aria-pressed="false"><span>日</span></button></div>
+        <div class="pill glass seg" data-r="20" id="langBtn" role="group" aria-label="Language"><i class="seg-on" aria-hidden="true"></i><button data-lang="en" lang="en" aria-pressed="false"><span>En</span></button><button data-lang="zh" lang="zh" aria-label="中文" aria-pressed="false"><span>中</span></button><button data-lang="ja" lang="ja" aria-label="日本語" aria-pressed="false"><span>日</span></button></div>
         <button class="pill glass ink-btn" data-r="20" id="inkBtn" aria-pressed="false" aria-label="Ink and paper (I)" hidden><span lang="zh">墨</span></button>
         <button class="pill icon glass" data-r="20" id="clear" aria-label="Hide the glass" aria-pressed="true"
           ><svg width="16" height="16" viewBox="0 0 16 16" stroke-width="1.4" stroke-linejoin="round"
             ><rect x="2" y="3" width="8.5" height="7" rx="2"></rect><path d="M12.6 6.2A2 2 0 0 1 14 8.1V11a2 2 0 0 1-2 2H7.6a2 2 0 0 1-1.9-1.4" stroke-linecap="round"></path></svg
           ></button
         >
-        <button class="pill glass talk" data-r="20" id="talk" data-sheet="chat" aria-label="Chat, and who is here"
+        <button class="pill glass talk" data-r="20" id="talk" data-sheet="chat"
           ><span class="here"><span id="dots"></span><b id="talkN">1</b></span><span>Chat</span></button
         >
       </div>
