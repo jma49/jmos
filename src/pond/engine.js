@@ -3085,7 +3085,7 @@ let look = 'water',
   inkO = [0, 0],
   timeScale = 1,
   simAcc = 0,
-  inkAt = -9,
+  inkK = 9,
   blots = [];
 const blotU = new Float32Array(30),
   lerpN = (a, b, t) => a + (b - a) * t;
@@ -3241,7 +3241,7 @@ function setLook(name, from) {
   // (the pads are painted ones in Monet's pond, and none lie under ink's painting)
   setTimeout(padsNow, 0);
   inkOn = name === 'ink';
-  inkAt = performance.now() / 1000;
+  inkK = 0;
   actx.setTransform(1, 0, 0, 1, 0, 0);
   actx.clearRect(0, 0, air.width, air.height);
   blots = [];
@@ -3380,17 +3380,20 @@ function stepInk(raw) {
   // A look can't be drawn until the pass that holds it is built (its own over the water: a moment on a
   // real GPU, seconds on a software one). Its arrival starts when it can be seen, not when it was asked
   // for: else it would be over, unseen, by the time the pass was ready.
+  // Its time is counted in frames drawn, each at most a twentieth of a second: a frame held up (a pass
+  // built where the browser can't build it aside, a slow phone) pauses the arrival instead of skipping it.
   if (look !== 'water' && glOK && inkR === 0 && progOK[passFor()] === undefined) {
     waterProg(passFor());
-    inkAt = performance.now() / 1000;
-  }
-  const k = performance.now() / 1000 - inkAt;
+    inkK = 0;
+  } else inkK += Math.min(raw, 0.05);
+  const k = inkK;
   if (look !== 'water') {
     if (top === 'blueprint') inkR = inkMax * Math.min(1, k / 1.5);
     else inkR = inkMax * (1 - Math.exp(-k * ({ ink: 1.25, ukiyo: 1.1, glow: 1.6, ascii: 1.4 }[top] || 1.6))) * Math.min(1, 0.2 + k * 3);
     if (k > 4.5) inkR = inkMax;
-    // (its pass alone starts building as it comes in, to be ready when it has)
-    if (glOK && inkR > 0 && SID[top] > 0) waterProg(1 + SID[top]);
+    // (its pass alone is built once it has come, a stand-in drawing the same until then: built as it came,
+    // it held the arrival up halfway wherever the browser builds on the page's own thread)
+    if (glOK && inkR >= inkMax && SID[top] > 0) waterProg(1 + SID[top]);
     if (inkR >= inkMax && base !== top) {
       base = top;
       snapOn = false;
@@ -6685,7 +6688,7 @@ function tick1(raw) {
   gl.uniform2f(U.uMoonPos, big ? 0.6 : 0.74, big ? 0.1 : 0.12);
   // under reduced motion a look comes and goes as a plain cross-fade (the front's place is its progress)
   const fade = RM && inkW === 0.5,
-    since = performance.now() / 1000 - inkAt;
+    since = inkK;
   gl.uniform4f(U.uInk, fade ? shown / inkMax : shown, inkO[0], inkO[1], fade ? 0.25 : inkW);
   // how long the look on show has been arriving (what each builds up after its front), or leaving
   gl.uniform1f(U.uLookT, look === 'water' || RM ? 99 : since);
@@ -6827,7 +6830,8 @@ settled.then(() =>
       .slice(0, 3)
       .map((id) => OVER_AT + SID[id]);
     const t = setInterval(() => {
-      if (document.hidden) return;
+      // (and not while a look comes or goes)
+      if (document.hidden || (look === 'water' ? inkR > 0 : inkR < inkMax)) return;
       if (!ahead.length) return void clearInterval(t);
       waterProg(ahead[0]);
       if (progOK[ahead[0]] !== undefined) ahead.shift();
