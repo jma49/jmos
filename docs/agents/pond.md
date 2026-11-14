@@ -143,7 +143,10 @@ gesture, key or command, its seal is stamped in the corner above the controls, i
   have come the largest leaps, drawn larger as it rises, and falls back with a splash: `gather` and
   `leapNow()` in `engine.js`), and **the catch** (a press on a lily pad while the spider is about
   calls a bug down on to it, and the spider watches, crouches and jumps: `dropBug(pad, true)`; the
-  seal is for a bug the visitor called). Pads under a control do not take a press. With `?perf`,
+  seal is for a bug the visitor called). Pads under a control do not take a press.
+  And **the race**, at Dragon Boat only: a press on the water beside the boat crossing far off is a
+  stroke of the paddles (`paddle()`), each sending it on a second and a half; ten before it is
+  across (`ROW`) and it is drummed in at the far bank, with the seal. With `?perf`,
   `window.__pond` has the koi's places, the pads and the bugs, for a tool to play them.
 - **A chain of clues.** A look on show carries a small mark that points to the next look's gesture
   (`NEXT` and `clueFor()` in `seals.ts`, `CLUES` and `clueNow()` in `engine.js`, `.clue` in
@@ -830,7 +833,7 @@ is most of it.
    `public/pond/ink/`, 1024 × 512, cells of 256, 4 × 2, cut and coloured exactly as `seals.webp` is
    (same face, same vermilion `#B8382A`, the tone in the alpha, square and round 232 across and
    centred): row 1 雨 (square, 白), 雪 (round, 白), 月 (round, 朱), 节 (square, 朱); row 2 晨
-   (square, 白), then three cells empty. Under the budget for a file in `public/`. Until it comes
+   (square, 白), 舟 (round, 白, the race's idle seal), then two cells empty. Under the budget for a file in `public/`. Until it comes
    these five are their characters in the brush (`CUT` in `seals.ts` lists what the sheets hold).
 
 **Ukiyo-e.** Judge it by: a Hokusai or Hiroshige print at arm's length: flat colour, a key line,

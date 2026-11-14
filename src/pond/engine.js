@@ -73,7 +73,19 @@ const $ = (s) => document.querySelector(s);
 const D = JSON.parse($('#pond-data').textContent);
 const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
 // With ?preview: the real moon, the wind, the festivals, fireflies, stars, a welcome back (preview.js)
-const pv = { age: moonAge(), fest: festivalOn(), flies: [], fliesOn: false, windX: 13, windY: 6, boatAt: -1e9, wakeAt: 0, lanterns: [] };
+const pv = {
+  age: moonAge(),
+  fest: festivalOn(),
+  flies: [],
+  fliesOn: false,
+  windX: 13,
+  windY: 6,
+  boatAt: -1e9,
+  wakeAt: 0,
+  lanterns: [],
+  strokes: 0,
+  won: false
+};
 const pond = $('#pond'),
   glc = $('#gl');
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -2204,8 +2216,26 @@ function leapNow() {
     reached('leap');
   }, 1100);
 }
+// The race, at Dragon Boat: a press on the water beside the boat is a stroke of the paddles. Each sends
+// it on (a second and a half of its crossing) with a splash at the blade; ROW of them before it is across
+// and the crossing was the visitor's.
+const ROW = 10;
+function paddle(x, y) {
+  if (pv.fest !== 'dragon') return false;
+  const k = (performance.now() / 1000 - pv.boatAt) / 40,
+    bx = -160 + k * (W + 320),
+    by = H * 0.16;
+  if (k < 0 || k >= 1 || Math.abs(x - bx) > 170 || Math.abs(y - by) > 110) return false;
+  pv.boatAt -= 1.5;
+  pv.strokes++;
+  drop(bx - 60, by + (y < by ? -14 : 14), 2.4, 0.7);
+  plip('drop', 0.7);
+  invalidate();
+  return true;
+}
 function feed(x, y) {
   hintSoon(1800);
+  if (paddle(x, y)) return;
   if (Math.hypot(x - gather.x, y - gather.y) < 90 && T - gather.at < 6) gather.n++;
   else Object.assign(gather, { x, y, n: 1 });
   gather.at = T;
@@ -2492,8 +2522,18 @@ function drawFestival(c) {
   }
   if (f === 'dragon') {
     // far off near the top: once every few minutes, a slow crossing of some forty seconds
-    if (now - pv.boatAt > 200) pv.boatAt = now;
+    if (now - pv.boatAt > 200) {
+      pv.boatAt = now;
+      pv.strokes = 0;
+      pv.won = false;
+    }
     const k = (now - pv.boatAt) / 40;
+    // the race: whoever paddled it home (ROW strokes) is drummed in at the far bank and earns an idle seal
+    if (k >= 1 && pv.strokes >= ROW && !pv.won) {
+      pv.won = true;
+      for (let i = 0; i < 3; i++) setTimeout(() => (drop(W - 30, H * 0.16 + (i - 1) * 26, 3, 0.8), plip('drop', 1), invalidate()), i * 180);
+      reached('race');
+    }
     const boat = festPic('dragon-boat');
     if (k < 1 && boat) {
       // from the picture, a quarter of its size: the two frames of the stroke in turn, to the drum's beat,
@@ -3251,6 +3291,7 @@ if (PERF)
     visitors: (list) => seeVisitors(list),
     koi: () => kois.map((k) => [k.id, Math.round(k.x), Math.round(k.y)]),
     bugs: () => bugs.length,
+    race: () => ({ fest: pv.fest, k: (performance.now() / 1000 - pv.boatAt) / 40, strokes: pv.strokes, won: pv.won }),
     pads: () => padSpots.map((q) => [Math.round(q.x), Math.round(q.y), Math.round(q.r)])
   };
 function callDove() {
@@ -6715,6 +6756,7 @@ if (PANEL)
         pv.fest = name;
         pv.lanterns = [];
         pv.boatAt = -1e9;
+        pv.strokes = 0;
         setYear(name ? yearToday(festivalDate(name)) : undefined);
         if (name === 'midautumn') setPhase('night');
         if (wx) weatherIn(wx);

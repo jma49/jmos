@@ -71,7 +71,8 @@ export const VOLUMES: Volume[] = [
     seals: [
       { id: 'skip', chars: '漂', shape: 'round', cut: 'red' },
       { id: 'leap', chars: '跃', shape: 'square', cut: 'white' },
-      { id: 'catch', chars: '捕', shape: 'square', cut: 'red' }
+      { id: 'catch', chars: '捕', shape: 'square', cut: 'red' },
+      { id: 'race', chars: '舟', shape: 'round', cut: 'white' }
     ]
   }
 ];
@@ -214,7 +215,8 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
       rubbing: 'Rubbing',
       skip: 'Skipping stones',
       leap: 'The leap',
-      catch: 'The catch'
+      catch: 'The catch',
+      race: 'The race'
     },
     hints: {
       ink: 'Stillness leaves a mark.',
@@ -235,7 +237,8 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
       rubbing: 'Fill the first two volumes. Then, here in the album, go back the way you came.',
       skip: 'A flat stone, thrown low and fast. Five skips.',
       leap: 'Feed them in one place, and keep feeding until they all come.',
-      catch: 'Tap a lily pad while the spider is about.'
+      catch: 'Tap a lily pad while the spider is about.',
+      race: 'At Dragon Boat a boat crosses, far off. Paddle with it: press the water beside it.'
     },
     thanks: {
       painted: 'Every painted one. Thank you for looking so closely.',
@@ -274,7 +277,8 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
       rubbing: '拓片',
       skip: '打水漂',
       leap: '鱼跃',
-      catch: '捕虫'
+      catch: '捕虫',
+      race: '竞渡'
     },
     hints: {
       ink: '停一停，会留下痕迹。',
@@ -295,7 +299,8 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
       rubbing: '集满前两册，再在这册子里，按来路走一遍。',
       skip: '一块扁石头，低低地、快快地甩出去。跳五下。',
       leap: '在同一处一直喂，喂到鱼都来。',
-      catch: '跳蛛在的时候，点一片荷叶。'
+      catch: '跳蛛在的时候，点一片荷叶。',
+      race: '端午那天，远处有龙舟划过。在船边点水，帮它划到对岸。'
     },
     thanks: {
       painted: '画的这一册集齐了。谢谢你看得这么仔细。',
@@ -334,7 +339,8 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
       rubbing: '拓本',
       skip: '水切り',
       leap: '跳ねる',
-      catch: '捕まえる'
+      catch: '捕まえる',
+      race: '競渡'
     },
     hints: {
       ink: 'じっとしていると、跡が残る。',
@@ -355,7 +361,8 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
       rubbing: '二冊をそろえたら、この帳の中で、来た道をもう一度。',
       skip: '平たい石を、低く、速く。五回はねたら。',
       leap: '同じところで餌をやりつづけて、みんなが来るまで。',
-      catch: '蜘蛛がいるとき、蓮の葉をたたく。'
+      catch: '蜘蛛がいるとき、蓮の葉をたたく。',
+      race: '端午の日、遠くを竜舟が渡る。そばの水をたたいて、いっしょに漕ぐ。'
     },
     thanks: {
       painted: '絵の一冊がそろいました。じっくり見てくれて、ありがとう。',
