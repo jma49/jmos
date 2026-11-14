@@ -1539,8 +1539,10 @@ vec3 lookBlueprint(){
   vec4 pd=textureLod(uPads,uv,0.); float pe=textureLod(uPads,uv,1.5).a;
   c=mix(c,vec3(.92,.96,1.),clamp(abs(pd.a-pe)*3.,0.,1.)*.8);
   vec4 f0; float fa,fb,fc,red; fishAt(f0,fa,fb,fc,red);
+  // a koi drawn as a part is on a drawing: its outline in line, its body sectioned with 45-degree hatching
   // (a koi under the type is drawn in a lighter line, so the words over it read)
-  float fe=clamp((fa-fb)*3.4,0.,1.)*(1.-gCalm*.6); c=mix(c,vec3(.96,.98,1.),fe); c=mix(c,vec3(.85,.92,1.),fb*.06);
+  float fo=textureLod(uFish,gUv+gRef*.25,1.6).a, hat=(1.-smoothstep(.05,.13,abs(fract((P.x-P.y)/6.)-.5)))*smoothstep(.45,.9,f0.a);
+  float fe=clamp(abs(f0.a-fo)*3.6+hat*.4+f0.a*.08,0.,1.)*(1.-gCalm*.6); c=mix(c,vec3(.96,.98,1.),fe); c=mix(c,vec3(.85,.92,1.),fb*.06);
   vec4 tp=textureLod(uTop,uv,0.); float te=textureLod(uTop,uv,1.5).a; c=mix(c,vec3(.92,.96,1.),clamp(abs(tp.a-te)*3.,0.,1.)*.7);
   for(int i=0;i<10;i++){ vec3 b=uBlot[i]; if(b.z<0.) continue;
     float t=b.z, R=12.+50.*sqrt(t), d=length(P-b.xy), k=exp(-t*.4);
