@@ -1590,6 +1590,8 @@ button.more:hover {
   color: var(--mist-dim);
 }
 .sheet .empty {
+  /* (a list's line for nothing yet spans the row, not the first of its columns) */
+  display: block;
   color: var(--mist-faint);
   font-style: italic;
   border: 0 !important;
