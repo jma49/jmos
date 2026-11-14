@@ -418,6 +418,9 @@ In `public/pond/stars/`, and in use. One colour, `#C9D4F0`, its strength in the 
 
 #### Ink
 
+Where the pointer rests (`uPtr`), the sheet is as if held up to a window: it lightens and its
+fibres show, meandering lines from a warped noise (`lookInk()`).
+
 In `public/pond/ink/`, and in use: `paint()` in `painting.js` hangs the season's one at the pond's
 right edge (`hang()`), over the hills, and the ink canvas multiplies it into the paper. Each is fetched
 the first time its season shows in ink; the brushed motifs remain only as what is drawn if one can't
