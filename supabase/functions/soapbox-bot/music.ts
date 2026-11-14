@@ -361,7 +361,7 @@ export function musicCommands({ db, telegram }: Deps) {
         await telegram('editMessageReplyMarkup', { chat_id: chat, message_id: cb.message.message_id, reply_markup: { inline_keyboard: [] } });
         try {
           const [song]: Found[] = await db(`songs?id=eq.${id}&select=id,title,artist,duration_ms`);
-          if (!song) return await say(chat, 'That song isn’t in the library any more.'), true;
+          if (!song) return (await say(chat, 'That song isn’t in the library any more.'), true);
           if (action === 'remove') await removeSong(chat, song);
           else if (action === 'play') await playSong(chat, song);
           else if (Number.isInteger(Number(arg)) && Math.abs(Number(arg)) <= 30000) await setOffset(chat, song, Number(arg));
