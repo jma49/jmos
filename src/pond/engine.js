@@ -1410,8 +1410,10 @@ vec3 lookGlow(){
   float lit=1.-smoothstep(-90.,90.,length(P-uInk.yz)-(uLookT-.7)*620.); lit*=.55+.45*step(.5,fract(length(P-uInk.yz)/140.-uLookT*1.2))*step(uLookT,3.)+.45*step(3.,uLookT);
   c+=mix(vec3(.05,.55,1.),vec3(.2,1.,.85),.5+.5*sin(P.x*.004+uTime*.2))*rip*.55*lit;
   vec4 f0; float fa,fb,fc,red; fishAt(f0,fa,fb,fc,red);
-  c+=(vec3(.05,.9,.85)*fc*.4+vec3(.2,1.,.9)*fb*.55+vec3(.75,1.,.97)*fa*.35)*lit;
-  c+=vec3(1.,.12,.65)*red*1.2+vec3(1.,.2,.7)*smoothstep(.1,.5,red)*fb*.3;
+  // (a koi under the type glows low, so the words over it read)
+  float hush=1.-gCalm*.62;
+  c+=(vec3(.05,.9,.85)*fc*.4+vec3(.2,1.,.9)*fb*.55+vec3(.75,1.,.97)*fa*.35)*lit*hush;
+  c+=(vec3(1.,.12,.65)*red*1.2+vec3(1.,.2,.7)*smoothstep(.1,.5,red)*fb*.3)*hush;
   vec4 pd=textureLod(uPads,uv,0.); float pe=textureLod(uPads,uv,2.).a;
   c+=vec3(.2,1.,.4)*clamp(abs(pd.a-pe)*2.,0.,1.)*.35+vec3(.0,.05,.03)*pd.a;
   vec4 tp=textureLod(uTop,uv,1.); c+=vec3(.6,.8,1.)*tp.a*.18;
@@ -1435,7 +1437,8 @@ vec3 lookBlueprint(){
   vec4 pd=textureLod(uPads,uv,0.); float pe=textureLod(uPads,uv,1.5).a;
   c=mix(c,vec3(.92,.96,1.),clamp(abs(pd.a-pe)*3.,0.,1.)*.8);
   vec4 f0; float fa,fb,fc,red; fishAt(f0,fa,fb,fc,red);
-  float fe=clamp((fa-fb)*3.4,0.,1.); c=mix(c,vec3(.96,.98,1.),fe); c=mix(c,vec3(.85,.92,1.),fb*.06);
+  // (a koi under the type is drawn in a lighter line, so the words over it read)
+  float fe=clamp((fa-fb)*3.4,0.,1.)*(1.-gCalm*.6); c=mix(c,vec3(.96,.98,1.),fe); c=mix(c,vec3(.85,.92,1.),fb*.06);
   vec4 tp=textureLod(uTop,uv,0.); float te=textureLod(uTop,uv,1.5).a; c=mix(c,vec3(.92,.96,1.),clamp(abs(tp.a-te)*3.,0.,1.)*.7);
   for(int i=0;i<10;i++){ vec3 b=uBlot[i]; if(b.z<0.) continue;
     float t=b.z, R=12.+50.*sqrt(t), d=length(P-b.xy), k=exp(-t*.4);
@@ -1461,7 +1464,8 @@ vec3 lookAscii(){
   float rip=clamp(abs(gLap)*30.+length(gG)*.8,0.,.8)*(1.-gCalm*.85);
   c+=vec3(.32,.5,.52)*rip*.55;
   vec4 pd=textureLod(uPads,uv+gG*gIa*.006,0.); c=mix(c,pd.rgb/max(pd.a,1e-3)*.5,pd.a*.85);
-  vec4 f=textureLod(uFish,uv+gRef*.3,0.); c=mix(c,f.rgb/max(f.a,1e-3),f.a);
+  // (a koi under the type is typed faintly, so its characters don't crowd the words)
+  vec4 f=textureLod(uFish,uv+gRef*.3,0.); c=mix(c,f.rgb/max(f.a,1e-3),f.a*(1.-gCalm*.7));
   vec4 tp=textureLod(uTop,uv,0.); c=mix(c,tp.rgb/max(tp.a,1e-3)*.9,tp.a*.9);
   for(int i=0;i<10;i++){ vec3 b=uBlot[i]; if(b.z<0.) continue;
     float t=b.z, R=10.+90.*sqrt(t), d=length(gP-b.xy); c+=vec3(.55,.8,.8)*exp(-pow((d-R)/6.,2.))*exp(-t*.8); }
@@ -3465,13 +3469,16 @@ function laidIn(c, draw) {
   c.restore();
 }
 let dimsAt = 0,
-  typeEdge = -1;
+  typeEdge = -1,
+  typeFoot = -1;
 // Blueprint: each koi measured along its back, each press a radius, in a draughtsman's hand.
 function drawDims(c) {
   // not over the title page's type: the measures keep to the open water
   if (!(dimsAt++ % 30)) {
     const r = $('#toc').getBoundingClientRect();
     typeEdge = r.width && r.right < W * 0.8 ? r.right + 30 : -1;
+    // (on a narrow pond the type is above the open water, not beside it)
+    typeFoot = r.width && typeEdge < 0 ? r.bottom - pond.getBoundingClientRect().top + 20 : -1;
   }
   c.save();
   c.strokeStyle = 'rgba(225,240,255,0.75)';
@@ -3479,7 +3486,7 @@ function drawDims(c) {
   c.lineWidth = 1;
   c.font = "11px 'IBM Plex Mono', ui-monospace, monospace";
   for (const k of kois) {
-    if (k.alpha < 0.5 || underGlass(k.x, k.y) || (k.x < typeEdge && !sheetOpen())) continue;
+    if (k.alpha < 0.5 || underGlass(k.x, k.y) || ((k.x < typeEdge || k.y < typeFoot) && !sheetOpen())) continue;
     const h = k.spine[0],
       t = k.spine[N - 1],
       a = Math.atan2(t.y - h.y, t.x - h.x),
