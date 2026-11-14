@@ -3106,7 +3106,8 @@ let lookNext = null,
   rubNext = false;
 // A still of the pond as it shows now (the scene before the glass), for a look that follows another to
 // come in over: straight from one look to the next, with no water between them. Held until it covers.
-let snapOn = false;
+let snapOn = false,
+  snapOf = 'water';
 function snapNow() {
   if (!glOK || !texSnap) return false;
   gl.activeTexture(gl.TEXTURE11);
@@ -3124,6 +3125,7 @@ function setLook(name, from) {
     // straight from one look to the next: the next comes in over a still of what shows now
     if (snapNow()) {
       snapOn = true;
+      snapOf = look;
       top = base = 'water';
       inkR = 0;
     } else {
@@ -6669,12 +6671,14 @@ function tick1(raw) {
     gs = [0.03 + cur.tint[0] * 0.03, 0.09 + cur.tint[1] * 0.04, 0.1 + cur.tint[2] * 0.045],
     GT = { ink: [0.95, 0.92, 0.85], ukiyo: [0.07, 0.17, 0.32], glow: [0.01, 0.02, 0.05], blueprint: [0.08, 0.24, 0.5], ...NEW_GLASS },
     gt = GT[top] || gs,
-    gf = GT[base] || gs;
+    // (under a still, the glass is still the last look's: the still is what shows outside the front)
+    from = snapOn ? snapOf : base,
+    gf = GT[from] || gs;
   gl.uniform3f(UG.uGlass, lerpN(gf[0], gt[0], pk), lerpN(gf[1], gt[1], pk), lerpN(gf[2], gt[2], pk));
   // the text: inside the front when ASCII comes in, outside it when another look comes in over it
-  const ascW = top === 'ascii' ? 1 : base === 'ascii' ? -1 : 0;
+  const ascW = top === 'ascii' ? 1 : from === 'ascii' ? -1 : 0;
   if (ascW) atlas();
-  gl.uniform4f(UG.uAscii, ascW > 0 && base === 'ascii' ? 1e5 : shown, inkO[0], inkO[1], ascW);
+  gl.uniform4f(UG.uAscii, ascW > 0 && from === 'ascii' ? 1e5 : shown, inkO[0], inkO[1], ascW);
   gl.uniform2f(UG.uCell, CELL[0], CELL[1]);
   gl.uniform1i(UG.uAtlas, 7);
   gl.uniform4fv(UG.uPane, paneA);
