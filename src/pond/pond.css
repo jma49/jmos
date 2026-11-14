@@ -1668,6 +1668,9 @@ button.more:hover {
 /* The plain-text copy is for screen readers and crawlers, and shows without JavaScript. */
 .pond-text {
   position: absolute;
+  /* (in the page's corner: left where it falls, after the pond, it made a phone's page a pixel taller) */
+  top: 0;
+  left: 0;
   width: 1px;
   height: 1px;
   overflow: hidden;
