@@ -5722,7 +5722,8 @@ function arrival() {
     return;
   }
   words.forEach((w, k) => later(350 + k * 70 + (k > 1 ? 500 : 0), () => (w.dataset.in = ''), id));
-  cards.forEach((c, i) => later(650 + i * 120, () => (c.dataset.in = ''), id));
+  // (the title first, as soon as the pond is up, then the rest in turn)
+  cards.forEach((c, i) => later(i ? 650 + i * 120 : 200, () => (c.dataset.in = ''), id));
   host.tag.dataset.on = '';
   you.tag.dataset.on = '';
   later(
