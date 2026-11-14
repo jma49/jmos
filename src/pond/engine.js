@@ -3265,28 +3265,39 @@ function setLook(name, from) {
   const far = Math.hypot(Math.max(inkO[0], W - inkO[0]), Math.max(inkO[1], H - inkO[1])) + 220;
   inkMax = top === 'blueprint' ? H + 40 : top === 'ukiyo' ? (W + H) * 0.7072 + 40 : far;
   if (name === 'water' && inkR > inkMax) inkR = inkMax;
-  pond.dataset.inking = '';
   clueNow();
   $('#inkBtn').setAttribute('aria-pressed', String(inkOn));
   clearTimeout(lookTimer);
-  lookTimer = setTimeout(
-    () =>
-      glide(() => {
-        pond.toggleAttribute('data-ink', inkOn);
-        if (name === 'water') delete pond.dataset.look;
-        else pond.dataset.look = name;
-        // (the pads are the look's own picture of them, where it has one)
-        padsNow();
-        speak();
-        if (inkOn) {
-          paintInk();
-          placeKuan();
-          alignSeg();
-        }
-        delete pond.dataset.inking;
-      }),
-    name === 'water' ? 900 : 700
-  );
+  // The page's type fades as the look starts to come and comes back in its colours partway in, both on
+  // the arrival's own clock: the arrival waits for its pass, and on the wall clock the type was gone, or
+  // dark over the old water, until it came. (on the wall clock past 4s, should no frame be drawn to count it)
+  const asked = performance.now();
+  const dress = () => {
+    const late = performance.now() - asked > 4000;
+    if (name === 'water' || inkK > 0 || late) pond.dataset.inking = '';
+    if (name !== 'water' && inkK < 0.7 && !late) {
+      lookTimer = setTimeout(dress, 50);
+      return;
+    }
+    glide(() => {
+      pond.toggleAttribute('data-ink', inkOn);
+      if (name === 'water') delete pond.dataset.look;
+      else pond.dataset.look = name;
+      // (the pads are the look's own picture of them, where it has one)
+      padsNow();
+      speak();
+      if (inkOn) {
+        paintInk();
+        placeKuan();
+        alignSeg();
+      }
+      delete pond.dataset.inking;
+    });
+  };
+  if (name === 'water') {
+    pond.dataset.inking = '';
+    lookTimer = setTimeout(dress, 900);
+  } else dress();
   audio();
   if (name === 'water') return;
   drop(inkO[0], inkO[1], { ink: 7, blueprint: 1.6 }[name] || 4, -3.2);
