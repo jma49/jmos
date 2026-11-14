@@ -1377,7 +1377,7 @@ vec4 struck(vec2 P, vec4 c, float broke){
   return vec4(line*fade*(1.-open),open,floe,rim);
 }
 // ---------- the looks, each drawn from what the water pass has worked out ----------
-vec2 gP,gUv,gG,gIa,gRef,gp; float gLap,gH,gLs,gCalm,gIce; vec3 gWater; vec4 gHit;
+vec2 gP,gUv,gG,gIa,gRef,gp; float gLap,gH,gLs,gCalm,gIce,gFront; vec3 gWater; vec4 gHit;
 // winter in a look: how much ice is here (plates afloat included), and where the snow lies on it
 float snowOn(){ return smoothstep(.48,.78,fbm(gp*4.+7.))*uSnow*gIce; }
 // the fish texture at three blurs: sharp, edge, halo; its colour; and how red it is (the koi's patches)
@@ -1588,6 +1588,7 @@ float reveal(int s,out float e){
   // the relief: sand blown off the stone, in long streaks down the wind
   else if(s==10){ r=length(P-uInk.yz)+(fbm(P*vec2(.004,.045)+3.)-.5)*300.+(noise(P*vec2(.03,.5))-.5)*46.; w=34.; }
   else { r=length(P-uInk.yz)+(noise(P*.01)-.5)*30.; w=30.; }
+  gFront=r-R;
   e=exp(-pow((r-R)/(s==1?38.:s==4?3.:s==2?10.:14.),2.))*step(1.,R)*(1.-step(.999,uInk.w));
   return 1.-smoothstep(R-w,R+w,r);
 }
@@ -1698,6 +1699,12 @@ void main(){
     if(uStyle==2&&uPic>.5) e*=.2;
 #endif
     col=mix(col,edgeCol(uStyle),e);
+    // the stars: the last of the sunset goes down ahead of the night, gold where it is still day, rose, then violet
+    if(uStyle==9&&uInk.w>=.3&&uInk.w<.999&&uInk.x>1.){
+      float d=(gFront-40.)/150., a=exp(-d*d)*(1.-smoothstep(.8,.999,uInk.w))*smoothstep(1.,80.,uInk.x);
+      vec3 dusk=d>0.?mix(vec3(.95,.48,.5),vec3(1.,.74,.4),smoothstep(0.,1.2,d)):mix(vec3(.95,.48,.5),vec3(.34,.22,.56),smoothstep(0.,1.4,-d));
+      col=mix(col,dusk*(.55+.45*uAmb),a*.5)+dusk*a*a*.18;
+    }
 #ifdef CRESTS
     // the print's front carries its great crests (the same picture), standing on the front and rising ahead of it
     if(uStyle==2&&uPic>.5&&uInk.w>=.3&&uInk.w<.999&&uInk.x>1.){
