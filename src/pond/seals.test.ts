@@ -114,7 +114,7 @@ describe('the end', () => {
     const all = volumes(false);
     expect(all[3].seals.map((x) => x.id)).toEqual(['rubbing']);
     let a = emptyAlbum();
-    for (const v of all.slice(0, 3)) for (const x of v.seals) a = stamp(a, x.id, '2026-11-13', all).album;
+    for (const v of all.slice(0, 2)) for (const x of v.seals) a = stamp(a, x.id, '2026-11-13', all).album;
     expect(allFull(a, all)).toBe(false);
     expect(allFull(stamp(a, 'rubbing', '2026-11-14', all).album, all)).toBe(true);
   });
@@ -134,25 +134,31 @@ describe('the idle seals', () => {
   it('are stamped like any other, and the album is full without them', () => {
     const all = volumes(false);
     let a = emptyAlbum();
-    for (const v of all.slice(0, 4)) for (const x of v.seals) a = stamp(a, x.id, '2026-11-13', all).album;
+    for (const v of all.filter((x) => !x.extra)) for (const x of v.seals) a = stamp(a, x.id, '2026-11-13', all).album;
     expect(allFull(a, all)).toBe(true);
     expect(stamp(a, 'skip', '2026-11-14', all).fresh).toBe(true);
   });
 });
 
 describe('the occasions', () => {
-  const all = volumes(false).slice(0, 3),
+  const all = volumes(false),
     hours = all[2];
-  it('are five seals, each stamped once like any other, and the album is not full without them', () => {
+  it('are five seals, each stamped once like any other, and the album is full without them', () => {
     expect(hours.seals.map((s) => s.id)).toEqual(['rain', 'snow', 'moon', 'fest', 'dawn']);
+    expect(hours.extra).toBe(true);
     let a = emptyAlbum();
-    for (const v of all.slice(0, 2)) for (const s of v.seals) a = stamp(a, s.id, '2026-11-13', all).album;
-    expect(allFull(a, all)).toBe(false);
+    for (const v of all.filter((x) => !x.extra)) for (const s of v.seals) a = stamp(a, s.id, '2026-11-13', all).album;
+    expect(allFull(a, all)).toBe(true);
     const r = stamp(a, 'rain', '2026-11-14', all);
     expect(r.fresh).toBe(true);
     expect(stamp(r.album, 'rain', '2026-11-15', all).fresh).toBe(false);
-    for (const s of hours.seals) a = stamp(a, s.id, '2026-11-14', all).album;
-    expect(allFull(a, all)).toBe(true);
+  });
+  it('leave the word for a full album under the last volume that counts', () => {
+    let a = emptyAlbum();
+    for (const v of all.filter((x) => !x.extra)) for (const s of v.seals) a = stamp(a, s.id, '2026-11-13', all).album;
+    const leaves = albumHTML(a, all, 'en').split('<section class="vol"').slice(1),
+      said = leaves.map((l) => l.includes(SEAL_WORDS.en.both));
+    expect(said).toEqual([false, false, false, true, false]);
   });
 });
 

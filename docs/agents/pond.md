@@ -121,7 +121,8 @@ gesture, key or command, its seal is stamped in the corner above the controls, i
 
 - **Five volumes.** Two hold the looks, five each. The third, `hours`, holds five seals for an
   occasion and not a look (the rain, snow, the full moon, a festival, the dawn): `occasions()` in
-  `engine.js` stamps one when the pond is in that state while someone is there.
+  `engine.js` stamps one when the pond is in that state while someone is there. Nobody can call the
+  weather, so this volume is marked `extra` like the idle seals: the album is full without it.
 - **The end.** The fourth volume holds one seal, for the pond as a rubbing taken from the carved
   stone. It has no gesture: once the two volumes of looks are full, their seals pressed in the album
   in the order it keeps them (`WAY` and `walked()` in `seals.ts`; the click handler by `let way` in

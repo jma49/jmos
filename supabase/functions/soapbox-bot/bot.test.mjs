@@ -92,8 +92,8 @@ globalThis.fetch = async (input, init = {}) => {
   }
   if (url.startsWith('https://itunes.apple.com/search?')) return json({ resultCount: world.itunes.length, results: world.itunes });
   if (url.startsWith('https://lrclib.net/api/search?')) return json(world.lrclib);
-  if (url.endsWith('/rest/v1/rpc/music_play')) return (world.playing = body.p_song), json({ song_id: body.p_song });
-  if (url.endsWith('/rest/v1/rpc/music_stop')) return (world.playing = null), new Response(null, { status: 204 });
+  if (url.endsWith('/rest/v1/rpc/music_play')) return ((world.playing = body.p_song), json({ song_id: body.p_song }));
+  if (url.endsWith('/rest/v1/rpc/music_stop')) return ((world.playing = null), new Response(null, { status: 204 }));
   const shelf = url.match(/db\.example\/rest\/v1\/discs(\?.*)?$/);
   if (shelf) {
     const params = new URLSearchParams((shelf[1] ?? '').slice(1));
@@ -108,8 +108,8 @@ globalThis.fetch = async (input, init = {}) => {
     const id = params.get('id')?.replace(/^eq\./, '');
     const title = params.get('title')?.replace(/^ilike\.\*|\*$/g, '');
     const matching = world.discs.filter((d) => (id ? d.id === id : title ? d.title.toLowerCase().includes(title.toLowerCase()) : true));
-    if (method === 'DELETE') return (world.discs = world.discs.filter((d) => !matching.includes(d))), new Response(null, { status: 204 });
-    if (method === 'PATCH') return matching.forEach((d) => Object.assign(d, body)), new Response(null, { status: 204 });
+    if (method === 'DELETE') return ((world.discs = world.discs.filter((d) => !matching.includes(d))), new Response(null, { status: 204 }));
+    if (method === 'PATCH') return (matching.forEach((d) => Object.assign(d, body)), new Response(null, { status: 204 }));
     return json(params.get('order') === 'added_at.desc' ? [...matching].reverse() : matching);
   }
   const home = url.match(/db\.example\/rest\/v1\/(diary|documents)(\?.*)?$/);
@@ -139,7 +139,7 @@ globalThis.fetch = async (input, init = {}) => {
         (!eq('day') || r.day === eq('day')) &&
         (!eq('folder') || r.folder === eq('folder'))
     );
-    if (method === 'PATCH') return matching.forEach((r) => Object.assign(r, body)), new Response(null, { status: 204 });
+    if (method === 'PATCH') return (matching.forEach((r) => Object.assign(r, body)), new Response(null, { status: 204 }));
     return json(params.get('order') === 'created_at.desc' ? [...matching].reverse() : matching);
   }
   const music = url.match(/db\.example\/rest\/v1\/(songs|music_settings)(\?.*)?$/);
@@ -149,7 +149,7 @@ globalThis.fetch = async (input, init = {}) => {
     const eq = (key) => params.get(key)?.replace(/^eq\./, '');
     if (table === 'music_settings') {
       const name = eq('name');
-      if (method === 'POST') return (world.music[body.name] = body.value), new Response(null, { status: 201 });
+      if (method === 'POST') return ((world.music[body.name] = body.value), new Response(null, { status: 201 }));
       if (method === 'DELETE' && params.get('name') === 'like.draft:*') {
         const before = params.get('value->>created')?.replace(/^lt\./, '');
         for (const [key, value] of Object.entries(world.music)) if (key.startsWith('draft:') && value.created < before) delete world.music[key];
@@ -175,8 +175,8 @@ globalThis.fetch = async (input, init = {}) => {
     const id = eq('id');
     const title = params.get('title')?.replace(/^ilike\.\*|\*$/g, '');
     const matching = world.songs.filter((s) => (id ? s.id === id : title ? s.title.toLowerCase().includes(title.toLowerCase()) : true));
-    if (method === 'DELETE') return (world.songs = world.songs.filter((s) => !matching.includes(s))), new Response(null, { status: 204 });
-    if (method === 'PATCH') return matching.forEach((s) => Object.assign(s, body)), new Response(null, { status: 204 });
+    if (method === 'DELETE') return ((world.songs = world.songs.filter((s) => !matching.includes(s))), new Response(null, { status: 204 }));
+    if (method === 'PATCH') return (matching.forEach((s) => Object.assign(s, body)), new Response(null, { status: 204 }));
     return json(matching);
   }
   const rest = url.match(/db\.example\/rest\/v1\/(.*)$/)?.[1];

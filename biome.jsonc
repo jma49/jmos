@@ -21,7 +21,13 @@
       "!src/pond/brush-first.css",
       "!src/pond/kana.css",
       // Biome reads only an Astro file's frontmatter, not its markup.
-      "!**/*.astro"
+      "!**/*.astro",
+      // Prose and workflows are written by hand: Biome 2.6 began formatting
+      // them, and its Markdown tables pad every row to the widest cell.
+      "!**/*.md",
+      "!**/*.mdx",
+      "!**/*.yml",
+      "!**/*.yaml"
     ]
   },
   "formatter": {
