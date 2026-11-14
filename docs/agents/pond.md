@@ -319,6 +319,7 @@ their dabs through the mask, a visitor's own or the pond's koi's own.
 | `dragonfly.webp` | 512 × 256, 21 KB | Two dragonflies in 256-pixel cells, from above, head to the right, each a blue-green body stroke and four pale lilac wing dabs (140 × 228). The two differ little, and the wings are broad for a dragonfly's. |
 | `dove.webp`, `spider.webp` | 768 × 256, 16 KB and 46 KB | Three poses each in 256-pixel cells, from above, facing right, at one scale. The dove in white with lilac and cream: sitting (113 × 54), wings half open (113 × 146), flying (116 × 234). The spider in umber with a touch of orange: sitting (185 × 127), walking (215 × 178), jumping (229 × 234). Both are painted more finely than a few dabs: closer to a small oil study than to the panel's own handling. |
 | `afloat.webp` | 1024 × 512, 100 KB | What drifts on the water through the year, in a 4 × 2 grid of 256-pixel cells, from above, each fitted to its cell (not at one scale) with 16 pixels clear. Top row: two spring petals, two autumn leaves. Bottom row: a snow crystal, a frost flower, two flying things, heads to the right. Here: a pink petal and a white one, a willow leaf in ochre, a poplar leaf in rust; the crystal and the frost flower in white and lilac; a dragonfly and a white butterfly. Painted more finely than a few dabs. |
+| `clue.webp` | 320 × 240, 19 KB | One lily pad from above in the painting's dabs and greens (about 256 × 204, centred, its notch at the bottom), its rim alone laid in the bowl's cobalt as a broken brush line, open at the notch; the edge feathers to nothing. Painted by the image model. The cobalt line is dashes more than one loaded stroke, and thin at this size. |
 
 #### 青花
 
@@ -337,6 +338,7 @@ visitor's colour laid into their patches through `koi-mask.webp` (`koiPicture()`
 | `medallion.webp` | 1024 × 1024, 172 KB | A double ring (944 pixels across, at 40, 45) and in it two koi circling head to tail, three lotus flowers, two leaves and sprays of water-weed, in cobalt line and wash on a transparent ground. The koi are drawn with patches and scales in full, so it is busy at full strength: it is meant large and pale. Its alpha is stored coarsely to keep it under the budget. |
 | `dove.webp`, `spider.webp` | 768 × 256, 20 KB and 47 KB | Three poses each in 256-pixel cells, from above, facing right, at one scale, in cobalt line and wash. The dove: sitting (101 × 50), wings half open (100 × 129), flying (100 × 234); its feathers are drawn densely. The spider, banded: sitting (141 × 111), walking (171 × 153), jumping (200 × 234); the walking one shows six legs clearly, not eight. |
 | `afloat.webp` | 1024 × 512, 130 KB | What drifts on the water through the year, in cobalt only, in a 4 × 2 grid of 256-pixel cells, from above, each fitted to its cell (not at one scale) with 16 pixels clear. Top row: two spring petals, two autumn leaves. Bottom row: a snow crystal, a frost flower, two flying things, heads to the right. Here: a plum petal and a peach petal, a maple leaf, a bamboo leaf; the crystal and a frost flower as fern-like needles (a little haze round them); a dragonfly, and a butterfly drawn from the side with its wings together. |
+| `clue.webp` | 240 × 240, 27 KB | A reign mark in cobalt as on the foot of a bowl: a double ring (about 185 across, centred) round the six characters 大明宣德年製 in two columns, read from the right. A film of ochre dust lies over its upper right third, with four strokes wiped through it; nothing under the mark, the edge feathered to nothing. Painted by the image model. The dust covers less than half, and the wiped strokes are evenly spaced, more a comb's than a finger's. |
 
 #### Ukiyo-e
 
@@ -404,6 +406,7 @@ its red), entering at the right edge and reaching left, the left third empty.
 | `reeds.webp` | 75 KB | Reeds bending from the right, a goose flying in at the top and one standing among them: 364, 90, 660, 840. |
 | `stems.webp` | 42 KB | Withered lotus (残荷), 1024 × 1024 like the others and stored the same way (near-black, the tone in the alpha): three dry stems entering from the right edge and folding over, a seed-pod hanging at 538, 236 and a curled dead leaf below it; the paint is 538, 236, 486, 587, and the left half is empty. Sparse, as asked; the stems are thin, so it may want more strength than the reeds when multiplied in. |
 | `seals.webp` | 94 KB | 1024 × 768, cells of 256, 4 × 3, vermilion `#B8382A` with the tone in the alpha. Row 1: 墨 (square, white characters out of red), 浮世 (tall, red characters and border), 莲 (round, white), 青花 (tall, white). Row 2: 敦煌 (tall, red), 光 (round, red), 图 (square, white), 字 (square, red). Row 3: 星 (round, white), 刻 (square, white), 锦程 (tall, white, 锦 over 程), one cell empty. Square and round seals are 232 across, centred; tall ones 150 × 246. Small seal script from the Shuowen Jiezi face of Taiwan's CNS 11643 character set (an open-data font, not in the repository), cut as a seal carver writes them: 蓮, 圖 and 錦 in their full forms, 花 as 華 (the Shuowen has no 花), and 星 as three suns over 生. The edges, chips and pinholes are made in code, so every stone is worn alike; the characters are a dictionary's even line, not a carver's hand. |
+| `seals-2.webp` | 53 KB | 1024 × 512, cells of 256, 4 × 2, cut and coloured as `seals.webp` is (the same face, vermilion, the tone in the alpha, 232 across and centred). Row 1: 雨 (square, white characters out of red), 雪 (round, white), 月 (round, red characters and border), 节 (square, red). Row 2: 晨 (square, white), 舟 (round, white), two cells empty. 节 is cut as 節; the face has no 雪, so it is built as the Shuowen has it, rain over a broom (雨 over 彗), and its lower half is finer than the rest. 月 and 舟 are the seal forms, which a reader of modern characters may take for each other. |
 | `dove.webp`, `spider.webp` | 16 KB and 27 KB | 768 × 256 each, three poses in 256-pixel cells, from above, facing right, at one scale, stored as the others are. The dove left as bare paper inside a few dark strokes at wing tips and tail: sitting (115 × 54), wings half open (117 × 134), flying (117 × 234). The spider in wet grey and black: sitting (193 × 94), walking (189 × 144), jumping (234 × 170). The dove's body has no tone of its own, so on the paper only its edges and tips show. |
 
 
@@ -814,7 +817,7 @@ is most of it.
    (round, 朱), 图 (square, 白), 字 (square, 朱), 星 (round, 白), 刻 (square, 白, for the relief),
    锦程 (tall, 白, 锦 over 程), one cell empty. Tall is 3 : 5. Used in the album, the stamp and
    under the solar term.
-9. **Asked of the local thread: two clues, painted.** A look on show carries a small mark that
+9. **Delivered, to wire in: two clues, painted** (`public/pond/monet/clue.webp`, `public/pond/qinghua/clue.webp`)**.** A look on show carries a small mark that
    points to the next look's gesture. Drawn in code over a painting two of them read as faults, so
    those two looks carry none for now (`CLUES` in `engine.js` holds what each look shows):
    - Monet's pond, pointing to the bowl (once round the rim): a file named clue.webp in the Monet
@@ -825,7 +828,7 @@ is most of it.
      about 240 × 240 with alpha, a reign mark in cobalt as on the foot of a bowl, half hidden under a
      film of ochre dust with a few strokes wiped through it, edges feathered to nothing.
 
-8. **Asked of the local thread: five more seals, for the volume of occasions** (`hours` in `VOLUMES`, `seals.ts`). A second sheet `seals-2.webp` in
+8. **Delivered, to wire in: five more seals, for the volume of occasions** (`hours` in `VOLUMES`, `seals.ts`). A second sheet `seals-2.webp` in
    `public/pond/ink/`, 1024 × 512, cells of 256, 4 × 2, cut and coloured exactly as `seals.webp` is
    (same face, same vermilion `#B8382A`, the tone in the alpha, square and round 232 across and
    centred): row 1 雨 (square, 白), 雪 (round, 白), 月 (round, 朱), 节 (square, 朱); row 2 晨
