@@ -47,7 +47,8 @@ calls this function; it emails through [Resend](https://resend.com).
 X window with the Keychain icon and an Aqua button, in inline styles and
 tables so mail clients render it. Clients that drop gradients (Gmail,
 Outlook) fall back to flat colours. The icon loads from the live site
-(`/os/icons/keychain.png`).
+(`/os/icons/keychain.png`, the desktop's Keychain icon kept as a PNG for
+mail clients; the desktop itself uses the WebP icons).
 
 To see a change before deploying:
 
