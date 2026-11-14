@@ -2057,12 +2057,19 @@ function sizeGL() {
 let iceN = new Float32Array(1),
   iceM = new Float32Array(1),
   iceB = new Float32Array(1),
-  iceKey = -1;
+  iceKey = -1,
+  iceNew = true;
 function makeIce() {
   iceN = new Float32Array(GW * GH);
   iceM = new Float32Array(GW * GH);
   iceB = new Float32Array(GW * GH);
   iceKey = -1;
+  iceNew = true;
+  setIce();
+}
+// (the noise is made only once there is ice to draw: most of the year there is none)
+function noiseIce() {
+  iceNew = false;
   const hh = (i, j) => {
     const v = Math.sin(i * 127.1 + j * 311.7) * 43758.5453;
     return v - Math.floor(v);
@@ -2087,12 +2094,12 @@ function makeIce() {
     gl.bindTexture(gl.TEXTURE_2D, texIce);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.R16F, GW, GH, 0, gl.RED, gl.FLOAT, iceN);
   }
-  setIce();
 }
 function setIce() {
   const key = Math.round(AM.ice * 80);
   if (key === iceKey) return;
   iceKey = key;
+  if (AM.ice > 0 && iceNew) noiseIce();
   const c = AM.ice * 1.4,
     asp = W / H;
   for (let j = 0; j < GH; j++)
@@ -3890,8 +3897,15 @@ function drawAir() {
 // it was opaque, so it was the one seen). Without WebGL the CSS shade still shows.
 let shadeCv = null;
 function makeShade() {
-  document.querySelectorAll('.shade i').forEach((el, n) => {
-    const cv = document.createElement('canvas');
+  // the GL pond draws only the right bough (in its shader); the still pond shows both as pictures, which
+  // come when the page is idle, after the title page is up
+  if (glOK) shadeBoughs(1);
+  else (window.requestIdleCallback || setTimeout)(() => shadeBoughs(0));
+}
+function shadeBoughs(from) {
+  [...document.querySelectorAll('.shade i')].slice(from).forEach((el, k) => {
+    const n = k + from,
+      cv = document.createElement('canvas');
     cv.width = 640;
     cv.height = 400;
     const x = cv.getContext('2d');
@@ -7060,7 +7074,12 @@ function start() {
   if (window.ResizeObserver) new ResizeObserver(refit).observe(pond);
 }
 // the water, the glass and what is painted for the pond's size, fitted to the size it is now
+let fitDpr = devicePixelRatio;
 function fit() {
+  // (a ResizeObserver reports the size it starts with: nothing to do when it hasn't changed)
+  const r = pond.getBoundingClientRect();
+  if (Math.max(1, r.width) === W && Math.max(1, r.height) === H && devicePixelRatio === fitDpr) return;
+  fitDpr = devicePixelRatio;
   resize();
   panesLive();
   invalidate();
