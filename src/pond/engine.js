@@ -1549,6 +1549,12 @@ vec3 lookBlueprint(){
 vec3 lookAscii(){
   vec2 uv=gUv;
   vec3 c=vec3(.01,.016,.018)+vec3(.0,.012,.012)*gCalm;
+  // the swell, typed as a map is: slow contour lines drifting over the pond, dim enough to come out as dots
+  vec2 q=gp; float sf=sin(q.x*2.3-q.y*1.7+uTime*.11)+.6*sin(q.y*3.1+q.x*.9-uTime*.08)+.9*noise(q*1.6+uTime*.03)+gH*6.;
+  float sd=abs(fract(sf*1.5)-.5)/max(fwidth(sf*1.5),1e-4);
+  // (kept off the corner, where the season and the time are written)
+  float corner=(1.-smoothstep(100.,150.,gP.y))*smoothstep(uCss.x-480.,uCss.x-420.,gP.x);
+  c+=vec3(.12,.2,.2)*(1.-smoothstep(1.5,3.5,sd))*(1.-gCalm*.95)*(1.-corner);
   float rip=clamp(abs(gLap)*30.+length(gG)*.8,0.,.8)*(1.-gCalm*.85);
   c+=vec3(.32,.5,.52)*rip*.55;
   vec4 pd=textureLod(uPads,uv+gG*gIa*.006,0.); c=mix(c,pd.rgb/max(pd.a,1e-3)*.5,pd.a*.85);
