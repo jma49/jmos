@@ -988,8 +988,8 @@ The first six looks ([decision 0026](../decisions/0026-looks-and-gestures.md)); 
 after are under "The five later looks":
 water, ink, ukiyo-e (a woodblock print), glow (the pond at night, lit by
 what moves, the stirred water sparking with plankton, which also gathers and sparks round the pointer
-as round a hand held over the water), blueprint (a drawing on blue paper, the koi measured in the
-air) and ASCII (the pond in characters, its swell typed as contour lines, three times as close round
+as round a hand held over the water), blueprint (a drawing on blue paper, each koi drawn as a part is, in outline with its body
+sectioned in 45-degree hatching, and measured in the air) and ASCII (the pond in characters, its swell typed as contour lines, three times as close round
 the pointer, as under a loupe; on an outline the character is a stroke along the edge, `|`, `/`, `-` or
 `\`, so a koi is drawn round a dense core, as ASCII art is).
 
