@@ -3897,8 +3897,15 @@ function drawAir() {
 // it was opaque, so it was the one seen). Without WebGL the CSS shade still shows.
 let shadeCv = null;
 function makeShade() {
-  document.querySelectorAll('.shade i').forEach((el, n) => {
-    const cv = document.createElement('canvas');
+  // the GL pond draws only the right bough (in its shader); the still pond shows both as pictures, which
+  // come when the page is idle, after the title page is up
+  if (glOK) shadeBoughs(1);
+  else (window.requestIdleCallback || setTimeout)(() => shadeBoughs(0));
+}
+function shadeBoughs(from) {
+  [...document.querySelectorAll('.shade i')].slice(from).forEach((el, k) => {
+    const n = k + from,
+      cv = document.createElement('canvas');
     cv.width = 640;
     cv.height = 400;
     const x = cv.getContext('2d');
