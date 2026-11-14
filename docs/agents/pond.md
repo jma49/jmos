@@ -129,6 +129,9 @@ gesture, key or command, its seal is stamped in the corner above the controls, i
 (`#pond[data-look] .stamp` in `pond.css`), with a soft thud; under reduced motion it only appears.
 In the album a seal not yet found is printed faintly in its empty place, as a stamp album prints the
 stamp it waits for (`sealBlank()`): its cut once the sheet has come, else its characters.
+Pressed, an empty place draws its gesture small in ink over that print, over and over until pressed again
+(`TRACES` in `seals.ts`, every gesture there is: the looks and the small games): a hint for whoever the
+words did not reach, there only for whoever asks.
 
 - **Five volumes.** Two hold the looks, five each. The third, `hours`, holds five seals for an
   occasion and not a look (the rain, snow, the full moon, a festival, the dawn): `occasions()` in

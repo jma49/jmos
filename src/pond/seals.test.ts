@@ -8,6 +8,7 @@ import {
   VOLUMES,
   albumHTML,
   allFull,
+  TRACES,
   clearSeals,
   count,
   dayOf,
@@ -162,6 +163,15 @@ describe('the occasions', () => {
   });
 });
 
+describe('the traces', () => {
+  it('draw every gesture there is: each look and each small game, and nothing for what has no gesture', () => {
+    const all = volumes(false),
+      gestures = all.filter((v) => v.id !== 'hours' && v.id !== 'end').flatMap((v) => v.seals.map((x) => x.id));
+    for (const id of gestures) expect(TRACES[id], id).toBeTruthy();
+    for (const id of ['rain', 'snow', 'moon', 'fest', 'dawn', 'rubbing']) expect(TRACES[id], id).toBeUndefined();
+  });
+});
+
 describe('clearing', () => {
   it('empties the seals and the large seals, and keeps what the visitor has already been shown', () => {
     let a = { ...emptyAlbum(), hinted: '2026-11-01', visits: 4 };
@@ -213,7 +223,10 @@ describe('the album as a sheet', () => {
     expect(html).toContain(SEAL_WORDS.en.hints.ukiyo);
     expect(html).not.toContain(SEAL_WORDS.en.hints.ink);
     // one not found is printed faintly in its empty place, never as found
-    expect(html).toContain('<li><b class="seal-m blank" data-shape="tall"');
+    expect(html).toContain('<li data-trace="ukiyo"><b class="seal-m blank" data-shape="tall"');
+    // with its gesture drawn small, to be shown when the place is pressed; a found seal has none
+    expect(html).toContain('<svg class="trace"');
+    expect(html.match(/class="trace"/g)).toHaveLength(4);
     expect(html).not.toContain('data-id="ukiyo"');
     expect(html).toContain('1 / 2');
   });

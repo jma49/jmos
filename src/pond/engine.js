@@ -5446,6 +5446,15 @@ function albumShown() {
   album = a;
   save('pond-seals', writeAlbum(a));
 }
+// A place not yet found, pressed, shows its gesture drawn small (TRACES, seals.ts); pressed again, or another
+// pressed, it goes.
+document.addEventListener('click', (e) => {
+  const li = e.target.closest?.('#sheet .slots li[data-trace]');
+  if (!li) return;
+  const on = 'show' in li.dataset;
+  document.querySelectorAll('#sheet .slots li[data-show]').forEach((x) => delete x.dataset.show);
+  if (!on) li.dataset.show = '';
+});
 // The end (seals.ts, WAY): with the two volumes of looks full, their seals pressed in the album in the
 // order it keeps them turn the pond into a rubbing of the carved stone: the relief, taken off on paper.
 let way = [];
