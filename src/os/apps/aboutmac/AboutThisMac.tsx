@@ -59,7 +59,7 @@ export default function AboutThisMac({ win }: AppProps) {
 
   return (
     <div className="os-app os-aboutmac">
-      <img className="os-aboutmac-apple" src="/os/icons/apple.png" alt="" width={72} height={72} />
+      <img className="os-aboutmac-apple" src="/os/icons/apple.webp" alt="" width={72} height={72} />
       <h2>Mac OS X</h2>
       <p className="os-aboutmac-version">JM/OS · Version 10.4.11</p>
       <button type="button" className="os-button" onClick={() => setUpdate((u) => !u)}>

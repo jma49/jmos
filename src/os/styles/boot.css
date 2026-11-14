@@ -14,7 +14,7 @@
 .os-boot-mark {
   width: 110px;
   height: 110px;
-  background: url('/os/icons/apple.png') center / contain no-repeat;
+  background: url('/os/icons/apple.webp') center / contain no-repeat;
   filter: grayscale(1) brightness(0.55) contrast(1.2);
   font-size: 0;
 }

@@ -47,7 +47,7 @@ export class AppBoundary extends Component<Props, { error: unknown }> {
     const offline = download && typeof navigator !== 'undefined' && !navigator.onLine;
     return (
       <div className="os-app os-crash" role="alert">
-        <img src="/os/icons/apple.png" alt="" width={40} height={40} />
+        <img src="/os/icons/apple.webp" alt="" width={40} height={40} />
         <h3>{download ? `${name} couldn’t be opened` : `${name} quit unexpectedly`}</h3>
         <p>
           {offline
