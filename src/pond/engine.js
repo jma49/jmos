@@ -1394,6 +1394,11 @@ vec3 lookInk(){
     // the paper: warm, uneven, with fibres
   vec3 paper=vec3(.925,.885,.8)*(.95+.07*fbm(gP*.012))-vec3(.04,.045,.05)*smoothstep(.62,.95,noise(gP*vec2(.9,.04)))-vec3(.025)*smoothstep(.7,1.,noise(gP*vec2(.03,.7)));
   paper*=1.-.18*dot(gUv-.5,gUv-.5);
+  // where the pointer rests the sheet is as if held up to a window: it lightens and its fibres show
+  { vec2 tw=gP-uPtr; float held=exp(-dot(tw,tw)/30000.)*(1.-gCalm*.6);
+    vec2 w=gP*.045+vec2(fbm(gP*.015),fbm(gP*.015+5.))*5.;
+    float fib=pow(1.-abs(noise(w)*2.-1.),14.)+pow(1.-abs(noise(w*2.3+9.)*2.-1.),18.)*.7;
+    paper=mix(paper,vec3(.985,.96,.9),held*.55)-vec3(.08,.08,.09)*fib*held; }
   vec3 INK=vec3(.075,.07,.065);
   // the fish: a pale wash for the body, dark where the body ends, the scales' patches as darker strokes, red kept as cinnabar
   vec2 fuv=gUv+gRef*.25;
