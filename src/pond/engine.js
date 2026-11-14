@@ -1242,7 +1242,7 @@ precision highp float; in vec2 vUv; out vec4 o;
 uniform sampler2D uBed,uH,uFish,uPads,uTop,uIceN,uMural; uniform float uPic;
 uniform vec2 uRes,uGrid,uMoonPos,uCss; uniform float uTime,uAmb,uCaI,uMoon,uSwell,uFocus,uIce,uSnow,uFog,uStars; uniform vec3 uMoonPh; uniform vec2 uCalm;
 uniform vec3 uTint,uCaC,uSky,uSeason;
-uniform vec4 uBox[12]; uniform vec4 uBoxB[12]; uniform int uBoxN; uniform vec4 uCrack[6]; uniform float uBroke[6]; uniform vec4 uInk; uniform vec3 uBlot[10]; uniform int uStyle, uPrev; uniform float uGlint; uniform float uLookT,uLeave,uSprite,uDay; uniform vec2 uArt;
+uniform vec4 uBox[12]; uniform vec4 uBoxB[12]; uniform int uBoxN; uniform vec4 uCrack[6]; uniform float uBroke[6]; uniform vec4 uInk; uniform vec3 uBlot[10]; uniform int uStyle, uPrev; uniform sampler2D uSnap; uniform float uSnapOn; uniform float uGlint; uniform float uLookT,uLeave,uSprite,uDay; uniform vec2 uArt;
 float hash1(vec2 p){ return fract(sin(dot(p,vec2(41.3,289.1)))*43758.5453); }
 vec2 hash2(vec2 p){ p=vec2(dot(p,vec2(127.1,311.7)),dot(p,vec2(269.5,183.3))); return fract(sin(p)*43758.5453); }
 float noise(vec2 p){ vec2 i=floor(p),f=fract(p); f=f*f*(3.-2.*f);
@@ -1608,7 +1608,8 @@ void main(){
     gP=P; gUv=uv; gG=g; gIa=ia; gRef=ref; gLap=lap; gH=h; gLs=ls; gCalm=calm; gWater=col; gp=p; gHit=hit;
     gIce=max(ice,hit.y>0.?smoothstep(0.,.25,hit.z)*hit.y:0.);
     float e; float m=reveal(uStyle,e);
-    vec3 top=look(uStyle), base=m<.999?look(uPrev):top;
+    // (a look that follows another comes in over a still of it, not over the water: uSnap, snapNow())
+    vec3 top=look(uStyle), base=m<.999?(uSnapOn>.5?textureLod(uSnap,vec2(uv.x,1.-uv.y),0.).rgb:look(uPrev)):top;
     col=mix(base,top,m);
 #ifdef CRESTS
     // (the print's front is a wave, not a line of light, once its crests have come)
@@ -1724,6 +1725,7 @@ let gl,
   texTop,
   texIce,
   texScene,
+  texSnap,
   texBlur,
   texShade,
   blurFbo,
@@ -1784,6 +1786,8 @@ const FS_U = [
   'uBlot',
   'uStyle',
   'uPrev',
+  'uSnap',
+  'uSnapOn',
   'uGlint',
   'uFog',
   'uLookT',
@@ -1907,6 +1911,8 @@ function initGL() {
   texTop = deep();
   // the scene is read sharp; the glass blurs a quarter-size copy of it, which keeps the smaller copies
   texScene = tex(gl.LINEAR);
+  texSnap = tex(gl.LINEAR);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
   texBlur = deep();
   texShade = tex(gl.LINEAR);
   fbo = gl.createFramebuffer();
@@ -3098,18 +3104,39 @@ const setInk = (on, from) => setLook(on ? 'ink' : 'water', from || $('#inkBtn'))
 // real GPU far too long to build.
 let lookNext = null,
   rubNext = false;
+// A still of the pond as it shows now (the scene before the glass), for a look that follows another to
+// come in over: straight from one look to the next, with no water between them. Held until it covers.
+let snapOn = false,
+  snapOf = 'water';
+function snapNow() {
+  if (!glOK || !texSnap) return false;
+  gl.activeTexture(gl.TEXTURE11);
+  gl.bindTexture(gl.TEXTURE_2D, texSnap);
+  gl.bindFramebuffer(gl.READ_FRAMEBUFFER, sceneFbo);
+  gl.copyTexImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, 0, 0, glc.width, glc.height, 0);
+  gl.bindFramebuffer(gl.READ_FRAMEBUFFER, null);
+  return true;
+}
 function setLook(name, from) {
   if (!LOOKS.includes(name) || name === look) return;
   lookNext = null;
   const others = [look, inkR > 0 ? top : 'water', inkR > 0 ? base : 'water'].filter((l) => l !== name && l !== 'water');
   if (name !== 'water' && others.length) {
-    // (the way out is a change of look like any other, and would forget that a rubbing was asked for)
-    const rub = rubNext;
-    if (look !== 'water') setLook('water', from);
-    rubNext = rub;
-    lookNext = [name, from];
-    return;
-  }
+    // straight from one look to the next: the next comes in over a still of what shows now
+    if (snapNow()) {
+      snapOn = true;
+      snapOf = look;
+      top = base = 'water';
+      inkR = 0;
+    } else {
+      // (the way out is a change of look like any other, and would forget that a rubbing was asked for)
+      const rub = rubNext;
+      if (look !== 'water') setLook('water', from);
+      rubNext = rub;
+      lookNext = [name, from];
+      return;
+    }
+  } else snapOn = false;
   if (name in PICTURED) {
     picLook = name;
     PICTURED[name]();
@@ -3277,6 +3304,7 @@ function stepInk(raw) {
     if (glOK && inkR > 0 && SID[top] > 0) waterProg(1 + SID[top]);
     if (inkR >= inkMax && base !== top) {
       base = top;
+      snapOn = false;
       reached(top);
       clueNow();
     }
@@ -5428,6 +5456,8 @@ document.addEventListener('click', async (e) => {
 });
 if (PERF) window.__scroll = () => picReady().then(scrollPicture);
 if (PERF) window.__album = () => picReady().then(albumPicture);
+// (where a change of look stands: for the tools that film one)
+if (PERF) window.__look = () => ({ look, top, base, inkR: Math.round(inkR), snapOn, pass: passFor(), ready: progOK[passFor()] });
 // a seal's characters are centred by their own ink, measured once the brush has come for them
 function alignSeals(sel) {
   sealsPic();
@@ -6498,7 +6528,8 @@ function tick1(raw) {
   gl.viewport(0, 0, glc.width, glc.height);
   // with no look shown the water alone is drawn, and a look alone once it covers the water
   const shown = top !== 'water' && SID[top] !== SID[base] ? inkR : SID[top] ? inkMax : 0,
-    inkW = shown > 0 ? (look !== 'water' && inkR >= inkMax ? 1 : 0.5) : 0,
+    // (a look coming in over a still of the last is drawn over it from the start, before its front has moved)
+    inkW = shown > 0 || snapOn ? (look !== 'water' && inkR >= inkMax ? 1 : 0.5) : 0,
     wp = waterProg(inkW === 0 ? 1 : inkW === 1 ? 1 + SID[top] : passFor());
   U = progU.get(wp);
   passNow = progs.indexOf(wp);
@@ -6559,6 +6590,10 @@ function tick1(raw) {
   gl.uniform1f(U.uLeave, look === 'water' && inkR > 0 && !RM ? since : -1);
   gl.uniform1i(U.uStyle, SID[top]);
   gl.uniform1i(U.uPrev, SID[base]);
+  gl.activeTexture(gl.TEXTURE11);
+  gl.bindTexture(gl.TEXTURE_2D, texSnap);
+  gl.uniform1i(U.uSnap, 11);
+  gl.uniform1f(U.uSnapOn, snapOn ? 1 : 0);
   gl.uniform1f(U.uGlint, (1 + gest.glint) * fx.glint);
   for (let i = 0; i < 10; i++) {
     const b = blots[i];
@@ -6604,7 +6639,8 @@ function tick1(raw) {
   gl.uniform3fv(U.uCaC, cur.cac);
   gl.uniform3fv(U.uSky, cur.sky);
   gl.uniform3fv(U.uSeason, AM.tint);
-  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+  // (while the next look's pass is still building, the still of the last one stays: the water stays hidden)
+  if (!(snapOn && progOK[passFor()] === undefined)) gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   // the glass's soft copy: the scene shrunk to a quarter, and its smaller copies made from that
   if (paneN) {
     gl.bindFramebuffer(gl.READ_FRAMEBUFFER, sceneFbo);
@@ -6635,12 +6671,14 @@ function tick1(raw) {
     gs = [0.03 + cur.tint[0] * 0.03, 0.09 + cur.tint[1] * 0.04, 0.1 + cur.tint[2] * 0.045],
     GT = { ink: [0.95, 0.92, 0.85], ukiyo: [0.07, 0.17, 0.32], glow: [0.01, 0.02, 0.05], blueprint: [0.08, 0.24, 0.5], ...NEW_GLASS },
     gt = GT[top] || gs,
-    gf = GT[base] || gs;
+    // (under a still, the glass is still the last look's: the still is what shows outside the front)
+    from = snapOn ? snapOf : base,
+    gf = GT[from] || gs;
   gl.uniform3f(UG.uGlass, lerpN(gf[0], gt[0], pk), lerpN(gf[1], gt[1], pk), lerpN(gf[2], gt[2], pk));
   // the text: inside the front when ASCII comes in, outside it when another look comes in over it
-  const ascW = top === 'ascii' ? 1 : base === 'ascii' ? -1 : 0;
+  const ascW = top === 'ascii' ? 1 : from === 'ascii' ? -1 : 0;
   if (ascW) atlas();
-  gl.uniform4f(UG.uAscii, ascW > 0 && base === 'ascii' ? 1e5 : shown, inkO[0], inkO[1], ascW);
+  gl.uniform4f(UG.uAscii, ascW > 0 && from === 'ascii' ? 1e5 : shown, inkO[0], inkO[1], ascW);
   gl.uniform2f(UG.uCell, CELL[0], CELL[1]);
   gl.uniform1i(UG.uAtlas, 7);
   gl.uniform4fv(UG.uPane, paneA);

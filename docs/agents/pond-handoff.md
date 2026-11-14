@@ -194,9 +194,11 @@ and a bolder cut of the relief's koi. The files each replaced are deleted.
   ready when looks were asked for: arrivals did not play, the look just appeared. A look now has two
   small passes of its own, built when it is first asked for: over the water (`OVER`, for coming in
   and going out) and alone. Its arrival's clock starts when its pass is ready (`stepInk`), and a
-  look always comes in over the water: one asked for while another shows waits for that one to
-  draw back first (`setLook`, `lookNext`). Every look added must keep to this; never put two looks
-  in one frame. With `?gest` the readout lists what each pass took to build.
+  look's own pass never draws two looks: one asked for while another shows comes in over a still of
+  the frame as it was (`snapNow()`, `uSnap`), and the frame holds that still while the new pass
+  builds, so no water shows between them (it once did: the last look drew back to the water first).
+  Without the still (no WebGL copy) it falls back to drawing back first (`lookNext`). Every look added
+  must keep to this; never put two looks in one pass. With `?gest` the readout lists what each pass took to build.
 
 ## 5. Rules learnt the hard way
 
