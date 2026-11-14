@@ -524,6 +524,12 @@ vec3 lookQinghua(){
     vec2 d=P-b.xy; float t=b.z, R=10.+150.*(1.-exp(-t*1.6)), r=length(d), an=atan(d.y,d.x)+noise(vec2(r*.03,b.x))*1.1;
     float ray=1.-smoothstep(0.,.9+r*.004,abs(sin(an*2.5+b.y*.1))*r*.5);
     c=mix(c,vec3(.36,.36,.42),ray*step(r,R)*(1.-r/R)*exp(-t*.07)*.8); }
+  // the glaze's gloss: a window's light caught in it, four panes, which moves as the eye would (after the
+  // pointer) and bends a little where the water under it moves
+  // (bowed, as a window is in a curved glaze, and soft at its edges)
+  vec2 gd=P-uPtr+gG*24., gq=gd/vec2(46.,36.); gq*=1.+.22*dot(gq,gq);
+  float win=(1.-smoothstep(.62,1.,max(abs(gq.x),abs(gq.y))))*smoothstep(.03,.12,abs(gq.x))*smoothstep(.04,.14,abs(gq.y));
+  c=mix(c,vec3(1.),clamp(exp(-dot(gd,gd)/135000.)*.12+win*(.35+.6*smoothstep(.9,-1.,gq.y+gq.x*.5)),0.,1.));
   // winter: the ice is the glaze itself, whiter and more crazed; its cracks in the blue
   if(gIce>0.){ c=mix(c,vec3(.97,.98,.99),gIce*.55); c=mix(c,vec3(.5,.52,.56),seams(P/9.)*.12*gIce); c=mix(c,deep,clamp(gHit.x,0.,1.)*.8);
     c=mix(c,wash,step(.9,hash1(floor(P/12.)))*uSnow*gIce*.5*(1.-smoothstep(.2,.4,length(fract(P/12.)-.5)))); }

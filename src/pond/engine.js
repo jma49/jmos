@@ -623,7 +623,8 @@ class Koi {
 const RED = '#dd5530',
   INK = '#1b1c20',
   WHITE = '#f3f0e8';
-const ptr = { x: 0, y: 0, lx: 0, ly: 0, moved: false, at: 0 };
+const ptr = { x: 0, y: 0, lx: 0, ly: 0, moved: false, at: 0 },
+  glossAt = [0, 0];
 let kois = [],
   host,
   you;
@@ -1325,7 +1326,7 @@ void main(){
 const FS_SRC = `#version 300 es
 precision highp float; in vec2 vUv; out vec4 o;
 uniform sampler2D uBed,uH,uFish,uPads,uTop,uIceN,uMural; uniform float uPic;
-uniform vec2 uRes,uGrid,uMoonPos,uCss; uniform float uTime,uAmb,uCaI,uMoon,uSwell,uFocus,uIce,uSnow,uFog,uStars; uniform vec3 uMoonPh; uniform vec2 uCalm;
+uniform vec2 uRes,uGrid,uMoonPos,uCss; uniform float uTime,uAmb,uCaI,uMoon,uSwell,uFocus,uIce,uSnow,uFog,uStars; uniform vec3 uMoonPh; uniform vec2 uCalm,uPtr;
 uniform vec3 uTint,uCaC,uSky,uSeason;
 uniform vec4 uBox[12]; uniform vec4 uBoxB[12]; uniform int uBoxN; uniform vec4 uCrack[6]; uniform float uBroke[6]; uniform vec4 uInk; uniform vec3 uBlot[10]; uniform int uStyle, uPrev; uniform sampler2D uSnap; uniform float uSnapOn; uniform float uGlint; uniform float uLookT,uLeave,uSprite,uDay; uniform vec2 uArt;
 float hash1(vec2 p){ return fract(sin(dot(p,vec2(41.3,289.1)))*43758.5453); }
@@ -1871,6 +1872,7 @@ const FS_U = [
   'uMoon',
   'uSwell',
   'uFocus',
+  'uPtr',
   'uIce',
   'uSnow',
   'uTint',
@@ -6749,6 +6751,14 @@ function tick1(raw) {
   gl.uniform1f(U.uTime, RM ? 3 : T);
   gl.uniform1f(U.uSwell, RM ? 0 : 1);
   gl.uniform1f(U.uFocus, focus);
+  // where the light off a glaze sits: it drifts after the pointer, slowly, as a reflection does when the head moves
+  if (!glossAt[0]) glossAt.splice(0, 2, W * 0.7, H * 0.3);
+  if (ptr.moved) {
+    const k = Math.min(1, lifeDt * 2.5);
+    glossAt[0] += (ptr.x - glossAt[0]) * k;
+    glossAt[1] += (ptr.y - glossAt[1]) * k;
+  }
+  gl.uniform2f(U.uPtr, glossAt[0], glossAt[1]);
   gl.uniform1f(U.uIce, AM.ice);
   gl.uniform1f(U.uSnow, AM.snow);
   const flash = Math.exp(-(T - flashAt) * 7) * 0.9;
