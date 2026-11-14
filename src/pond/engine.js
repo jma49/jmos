@@ -4030,7 +4030,7 @@ function fillNotes() {
   if (all) all.innerHTML = notesHtml();
 }
 const notesHtml = () =>
-  NOTES.map((n) => `<li><q>${esc(n.body)}</q><em>${esc(n.name)}, ${esc(ago(n.created_at))}</em></li>`).join('') ||
+  NOTES.map((n) => `<li><q>${esc(n.body)}</q><em>${n.name ? `${esc(n.name)}, ` : ''}${esc(ago(n.created_at))}</em></li>`).join('') ||
   `<li class="empty">${L('No boats yet.', ZH.notes.empty)}</li>`;
 function ago(iso) {
   const m = Math.max(0, (Date.now() - Date.parse(iso)) / 60000);
@@ -4069,6 +4069,11 @@ function fillMusic() {
   $('#playIcon').innerHTML = m.playing ? '<path d="M2 1h3v10H2zM7 1h3v10H7z"/>' : '<path d="M2.5 1v10l8-5z"/>';
   $('#bars').toggleAttribute('data-on', m.playing);
   const list = $('#songList');
+  // (a sheet opened before the songs came is drawn again once they have)
+  if (list && list.querySelectorAll('li[data-i]').length !== m.songs.length && sheetId === 'music' && sheetOpen()) {
+    $('#scroll').innerHTML = SHEETS.music();
+    return;
+  }
   if (list) list.querySelectorAll('li[data-i]').forEach((li) => li.toggleAttribute('data-now', +li.dataset.i === m.index));
   const cov = $('#nowCover');
   if (cov && song) {

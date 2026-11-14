@@ -261,6 +261,10 @@ a {
   font-style: normal;
   color: var(--ink-dim);
 }
+/* (a note left without a name has no byline) */
+.boat-tip em:empty {
+  display: none;
+}
 
 /* ---------- the home: a salutation, then the panes ---------- */
 .home {
