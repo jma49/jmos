@@ -501,6 +501,10 @@ In `public/pond/relief/`, each picture as a pair that lines up to the pixel: `-c
 
 In `public/pond/blueprint/`, delivered and not yet used.
 
+The look's own line follows the pointer (`uPtr`) as a draughtsman's square: a dashed cross through it,
+ticked every 10 px and longer every 50, with a small ring, fading out within a few hundred pixels
+(`lookBlueprint()`).
+
 | File | Size | What is in it |
 | --- | --- | --- |
 | `dove.webp`, `spider.webp` | 512 × 512, 43 KB and 55 KB | One pose each, from above, facing right, as line drawings in `#EAF3FF` with no fill (the tone carried by the alpha): the dove with wings spread (358 × 468 at 77, 22), the spider with legs spread (468 × 465 at 22, 23), each with a dashed centre line and a few station ticks. The dove's line is thin and faint next to the spider's, and the spider's joints are drawn as circles. |

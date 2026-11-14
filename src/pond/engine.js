@@ -1539,6 +1539,13 @@ vec3 lookBlueprint(){
     c=mix(c,vec3(.85,.92,1.),step(abs(gHit.w-6.),.5)*step(.5,fract((gP.x+gP.y)*.09))*.7);
     vec2 cc=fract(gP/16.)-.5; float cr=clamp(step(abs(cc.x),.03)*step(abs(cc.y),.18)+step(abs(cc.y),.03)*step(abs(cc.x),.18),0.,1.);
     c=mix(c,vec3(.95,.98,1.),cr*step(1.-.35*uSnow,hash1(floor(gP/16.)))*step(.5,gIce)); }
+  // the draughtsman's square follows the pointer: a dashed cross through it, ticked every 10 px (longer
+  // every 50), and a small ring, fading out away from it
+  { vec2 d=P-uPtr, a=abs(d); float fall=exp(-dot(d,d)/90000.)*(1.-gCalm*.6);
+    float mx=abs(mod(d.x+5.,10.)-5.), my=abs(mod(d.y+5.,10.)-5.), bx=step(abs(mod(d.x+25.,50.)-25.),1.), by=step(abs(mod(d.y+25.,50.)-25.),1.);
+    float ln=(1.-smoothstep(.3,.9,a.y))*step(.5,fract(d.x/8.))+(1.-smoothstep(.3,.9,a.x))*step(.5,fract(d.y/8.));
+    float tk=(1.-smoothstep(.3,.9,mx))*step(a.y,3.+4.*bx)+(1.-smoothstep(.3,.9,my))*step(a.x,3.+4.*by);
+    c=mix(c,vec3(.92,.96,1.),clamp(ln*.5+tk*.7+exp(-pow((length(d)-14.)/.8,2.))*.6,0.,1.)*fall*.55); }
   // the drawing is plotted in line first, over what was there, a row at a time behind the rule; the paper's
   // blue floods in after
   float fill=smoothstep(.25,.9,uLookT-gP.y/uCss.y*1.5);
