@@ -442,8 +442,9 @@ In `public/pond/relief/`, each picture as a pair that lines up to the pixel: `-c
   there is none under the type nor in the plain band under the frieze, where the clock stands. The
   surface's slope comes from the pass's own derivatives, so the height is read once a pixel.
 - **The light** follows the visitor's day (`uDay`, 0 to 1): low from the left in the morning, higher
-  and from above at noon, low from the right towards evening; by night a lamp held low at one side,
-  warmer and dimmer. What stands proud throws a short shadow away from it.
+  and from above at noon, low from the right towards evening; by night a lamp, warmer and dimmer,
+  held where the pointer is (`uPtr`): its light rakes out from there and falls off into the dark. What
+  stands proud throws a short shadow away from it.
 - **The pictures in the texture** (`paintRelief()` in `engine.js`): the paint of each carving in the top
   half of the look's one texture and its height in the bottom half, at the same places, where nothing
   is carved the stone's face (mid grey). `reliefLayout()` places them: the frieze along the top and the
