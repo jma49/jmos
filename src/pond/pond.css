@@ -2867,10 +2867,28 @@ button.more:hover {
 }
 .album .album-save {
   display: flex;
+  flex-wrap: wrap;
   justify-content: flex-end;
   gap: 7px;
   max-width: none;
   margin: 18px 0 0;
+}
+/* (each says its words on one line; on a narrow sheet the quiet one goes first, on a line of its own) */
+.album .album-save .link {
+  white-space: nowrap;
+}
+@media (max-width: 560px) {
+  #albumClear {
+    flex-basis: 100%;
+    text-align: left;
+  }
+  .album .album-save .link:not(#albumClear) {
+    flex: 1 1 0;
+    min-width: 0;
+    padding-inline: 8px;
+    justify-content: center;
+    text-align: center;
+  }
 }
 /* clearing is the quieter of the two: words alone, until it asks */
 #albumClear:not([data-ask]) {
