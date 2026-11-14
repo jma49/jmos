@@ -1219,6 +1219,12 @@ button.more:hover {
 .hero {
   text-wrap: balance;
 }
+.hero .w {
+  white-space: nowrap;
+}
+.hero:lang(ja) {
+  word-break: auto-phrase;
+}
 .toc .row {
   transition: background 0.25s;
 }

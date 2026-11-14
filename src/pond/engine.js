@@ -90,6 +90,20 @@ const pond = $('#pond'),
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const rnd = (a, b) => a + Math.random() * (b - a);
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+// The title, which in Chinese breaks only between words (Intl.Segmenter), its punctuation kept on the word
+// before, and in Japanese between phrases (word-break: auto-phrase, in pond.css): never inside a word.
+const ZH_WORDS = typeof Intl.Segmenter === 'function' ? new Intl.Segmenter('zh', { granularity: 'word' }) : null;
+function setHero(text) {
+  const el = $('#hero');
+  el.lang = /^(zh|ja)$/.test(lang) ? lang : 'en';
+  if (lang !== 'zh' || !ZH_WORDS) return void (el.textContent = text);
+  const words = [];
+  for (const { segment } of ZH_WORDS.segment(text)) {
+    if (words.length && /^[\s\p{P}]+$/u.test(segment)) words[words.length - 1] += segment;
+    else words.push(segment);
+  }
+  el.innerHTML = words.map((w) => `<span class="w">${esc(w)}</span>`).join('');
+}
 let W = 1,
   H = 1,
   big = true,
@@ -2990,7 +3004,7 @@ function speak() {
   $('.say').innerHTML = zhOn ? `${esc(ZH.say)} <button class="tlink" data-sheet="seals">${esc(ZH.faces)}</button>` : HOME.say;
   document.querySelectorAll('.toc .go').forEach((go) => (go.querySelector('b').textContent = chapterName(go.dataset.sheet)));
   $('#talk > span:last-child').textContent = zhOn ? ZH.talk : HOME.talk;
-  $('#hero').textContent = salute()[0];
+  setHero(salute()[0]);
   showTerm();
   tick();
   fillNotes();
@@ -5679,7 +5693,7 @@ function arrival() {
     [hello, sub] = salute(),
     el = $('#greet'),
     cards = [...document.querySelectorAll('.home .rise')];
-  $('#hero').textContent = pv.back ? backGreeting() : hello;
+  setHero(pv.back ? backGreeting() : hello);
   if (pv.back) later(1800, greetVisitor, id);
   el.innerHTML = sub;
   const words = [...el.querySelectorAll('w')];
@@ -6823,7 +6837,7 @@ if (PANEL)
         invalidate();
       },
       welcomeBack() {
-        $('#hero').textContent = backGreeting();
+        setHero(backGreeting());
         greetVisitor();
         invalidate();
       }
