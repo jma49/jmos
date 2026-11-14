@@ -161,8 +161,6 @@ export const clearSeals = (a: Album): Album => ({ ...a, found: {}, sealed: [] })
 /** A volume's large seal has been shown. */
 export const markSealed = (a: Album, vol: string): Album => (a.sealed.includes(vol) ? a : { ...a, sealed: [...a.sealed, vol] });
 
-/** Whether the album's small mark shows: once a seal is found, or on a later visit by someone the line didn't reach. */
-export const entryShows = (a: Album): boolean => count(a) > 0 || (a.hinted !== '' && a.visits > 1);
 /** Whether the line on the water may still be shown: once, and never after a seal. */
 export const mayHint = (a: Album): boolean => count(a) === 0 && a.hinted === '';
 

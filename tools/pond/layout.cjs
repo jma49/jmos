@@ -26,7 +26,7 @@ const Q = {
   const ctx = await b.newContext({ viewport: { width: +w, height: +h }, ...(+w < 600 ? { hasTouch: true, isMobile: true } : {}) });
   await ctx.addInitScript((g) => localStorage.setItem('pond-lang', JSON.stringify(g)), lang);
   const p = await ctx.newPage();
-  await p.goto(srv.url, { waitUntil: 'load' });
+  await p.goto(srv.url + '?gl', { waitUntil: 'load' });
   await p.waitForTimeout(9000);
   // one greeting for every look, so only the face differs
   const fix = () =>

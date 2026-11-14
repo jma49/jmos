@@ -151,7 +151,8 @@ try {
   if ([...targets.values()].some(({ url }) => url.startsWith('/'))) server = await serveDist();
 
   for (const [out, { url: target, width, height, quality, maxBytes }] of targets) {
-    const url = target.startsWith('/') ? new URL(target, server.url).href : target;
+    // (?gl: a headless browser draws WebGL in software, where the pond otherwise shows its still water)
+    const url = target.startsWith('/') ? new URL(`${target}?gl`, server.url).href : target;
     // Reduced motion also skips the JM/OS boot screen.
     const context = await browser.newContext({
       viewport: { width, height },

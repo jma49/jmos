@@ -11,7 +11,7 @@ const { chromium } = require('playwright');
   const p = await (await b.newContext({ viewport: { width: +w, height: +h } })).newPage();
   const errs = [];
   p.on('pageerror', (e) => errs.push(e.message.slice(0, 300)));
-  await p.goto(srv.url, { waitUntil: 'load' });
+  await p.goto(srv.url + '?gl', { waitUntil: 'load' });
   await p.waitForTimeout(9000);
   for (const l of [...looks.split(','), 'water']) {
     const out = await p.evaluate(

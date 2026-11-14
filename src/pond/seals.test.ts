@@ -13,7 +13,6 @@ import {
   dayOf,
   dayText,
   emptyAlbum,
-  entryShows,
   full,
   markSealed,
   mayHint,
@@ -182,13 +181,6 @@ describe('what shows when', () => {
     expect(mayHint(emptyAlbum())).toBe(true);
     expect(mayHint({ ...emptyAlbum(), hinted: '2026-11-01' })).toBe(false);
     expect(mayHint(stamp(emptyAlbum(), 'ink', '2026-11-12', live).album)).toBe(false);
-  });
-  it('shows the album’s mark after a first seal, or on a later visit once the line has been shown', () => {
-    expect(entryShows(emptyAlbum())).toBe(false);
-    expect(entryShows({ ...emptyAlbum(), hinted: '2026-11-01', visits: 1 })).toBe(false);
-    expect(entryShows({ ...emptyAlbum(), hinted: '2026-11-01', visits: 2 })).toBe(true);
-    expect(entryShows({ ...emptyAlbum(), visits: 5 })).toBe(false);
-    expect(entryShows(stamp(emptyAlbum(), 'glow', '2026-11-12', live).album)).toBe(true);
   });
 });
 

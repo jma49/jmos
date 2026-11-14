@@ -24,7 +24,6 @@ import {
   clueFor,
   count as sealCount,
   dayOf,
-  entryShows,
   dayText,
   full,
   has as hasSeal,
@@ -1831,9 +1830,24 @@ function deep() {
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
   return t;
 }
+const FORCE_GL = /[?&](gl|perf|preview)\b/.test(location.search);
+function softGL(g) {
+  const d = g.getExtension('WEBGL_debug_renderer_info'),
+    name = `${g.getParameter(g.RENDERER)} ${d ? g.getParameter(d.UNMASKED_RENDERER_WEBGL) : ''}`;
+  return /swiftshader|llvmpipe|softpipe|software|basic render/i.test(name);
+}
 function initGL() {
-  gl = glc.getContext('webgl2', { antialias: false, alpha: false, powerPreference: 'high-performance' });
+  gl = glc.getContext('webgl2', { antialias: false, alpha: false, powerPreference: 'high-performance', failIfMajorPerformanceCaveat: !FORCE_GL });
   if (!gl) return;
+  // A GPU drawn in software (SwiftShader, llvmpipe: a machine whose graphics are blocked, a headless
+  // browser) takes seconds over each frame of the water, and the page under it stops answering. There the
+  // pond is the still water and its koi (.nogl), which it draws easily. ?gl, ?perf or ?preview keep the water
+  // for the tools that look at it.
+  if (!FORCE_GL && softGL(gl)) {
+    gl.getExtension('WEBGL_lose_context')?.loseContext();
+    gl = null;
+    return;
+  }
   // Only the water alone is built before the first frame: it is all the first screen shows. A look's two
   // passes (over the water, as it comes and goes; alone, once it covers the water) are built when it is
   // first asked for. The whole pass, with every look in it, is never asked for: it can take a real GPU a
@@ -5170,11 +5184,6 @@ function koiSeals() {
 }
 function sealsEntry() {
   clueNow();
-  const b = $('#sealsBtn');
-  b.hidden = !entryShows(album);
-  b.toggleAttribute('data-some', sealCount(album) > 0);
-  b.toggleAttribute('data-all', allFull(album, VOLS));
-  b.setAttribute('aria-label', SEAL_WORDS[lang].title);
   $('#sealsN').textContent = `${sealCount(album)} / ${VOLS.flatMap((v) => v.seals).length}`;
 }
 // the volumes whose large seal hasn't been seen yet: it stamps as the album opens, once
@@ -6442,7 +6451,7 @@ function tick1(raw) {
     setStyle(k.tag, 'opacity', op);
   }
   span('air', drawAir);
-  if (!glOK) return;
+  if (!glOK) return void span('fish', drawKoi);
   span('fish', drawKoi);
   // the top layer (boats, food, petals, leaves) changes slowly: drawn and sent ten times a second
   const topNow = performance.now() - topAt > 100;
@@ -6849,7 +6858,14 @@ function start() {
     glOK = false;
     console.warn('The pond needs WebGL 2; showing it still.', err);
   }
-  if (!glOK) pond.classList.add('nogl');
+  if (!glOK) {
+    // Without the water's shader the koi and the lily pads are their own layers over the deep water, the
+    // pads above the koi, as they float above them: the pond is still alive, at a fraction of the work.
+    pond.classList.add('nogl');
+    fishCv.className = 'still-fish';
+    padCv.className = 'still-pads';
+    $('#gl').after(fishCv, padCv);
+  }
   if (load('pond-sound') === 'off') setMuted(true);
   paneEls = [...document.querySelectorAll('.glass')];
   resize();
