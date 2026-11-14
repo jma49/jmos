@@ -17,8 +17,9 @@ The only exceptions are content that is Chinese by nature:
   `supabase/migrations/` and Jincheng's name in Chinese
   (`alternateName` in `src/content/site.ts`), which may also be quoted
   in the docs;
-- the names of the 24 solar terms, which the pond shows beside their
-  English ones (`TERMS` in `src/pond/engine.js`), and the pond's
+- the names of the 24 solar terms and their 72 pentads, which the pond
+  shows beside their English ones (`TERMS` and `PENTADS` in
+  `src/pond/engine.js`), and the pond's
   Chinese copy (`ZH` in `src/pond/content.ts`, with the
   few words `engine.js` writes for it);
 - patterns that have to match Chinese text, such as the lyric credits in
