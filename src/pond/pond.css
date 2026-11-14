@@ -342,6 +342,33 @@ a {
   border-radius: 20px;
   box-shadow: inset 0 0 0 1px var(--hair);
 }
+/* without WebGL: the pebble bed as one picture under the water (tools/pond/bed-still.cjs draws it from the
+   water's own shader), darker where the type stands, and dimmer as the day goes */
+#pond.nogl::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(4, 20, 22, 0.62) 28%, rgba(4, 20, 22, 0.12) 64%),
+    url('/pond/water/bed-still.webp') center / cover,
+    var(--deep);
+  pointer-events: none;
+}
+@media (max-width: 860px) {
+  #pond.nogl::before {
+    background:
+      linear-gradient(180deg, rgba(4, 20, 22, 0.66) 62%, rgba(4, 20, 22, 0.1) 84%),
+      url('/pond/water/bed-still.webp') center / cover,
+      var(--deep);
+  }
+}
+#pond.nogl[data-phase='dawn']::before,
+#pond.nogl[data-phase='dusk']::before {
+  filter: brightness(0.8) sepia(0.18);
+}
+#pond.nogl[data-phase='night']::before {
+  filter: brightness(0.42) saturate(0.7);
+}
 /* without WebGL: the koi and the pads drawn straight on the page, quieter where the type stands */
 .still-fish,
 .still-pads {

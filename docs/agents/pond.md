@@ -29,8 +29,9 @@ for; keep it true when the file changes.
   (`public/pond/icon.svg`, `-32.png`, `-180.png`, written by `scripts/build-pond-icon.mjs`; the page asks
   for them with `icon` on its layout). The old desktop keeps the site's own icons.
 - **No water where WebGL is drawn in software.** With no WebGL 2, or one a GPU draws in software
-  (SwiftShader, llvmpipe: blocked graphics, a headless browser), the pond is still water with its koi
-  and pads drawn straight on the page (`.nogl`, `softGL()` in `engine.js`): software takes seconds over
+  (SwiftShader, llvmpipe: blocked graphics, a headless browser), the pond is still water over its pebble
+  bed as one picture (`public/pond/water/bed-still.webp`, drawn from the bed's shader by
+  `tools/pond/bed-still.cjs`), with its koi and pads drawn straight on the page (`.nogl`, `softGL()` in `engine.js`): software takes seconds over
   each frame of the water and the page stops answering. `?gl` (and `?perf`, `?preview`) keep the water
   regardless: the tools in `tools/pond/` and `scripts/capture-previews.mjs` ask for it.
 - **The glass is drawn with the water.** A `.glass` element's place and
