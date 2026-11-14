@@ -1493,21 +1493,6 @@ button.more:hover {
     border-radius: 20px;
   }
 }
-@media (prefers-reduced-motion: reduce) {
-  .greet,
-  .greet w,
-  .card,
-  .stone,
-  .sheet,
-  .veil,
-  #gl {
-    transition: none;
-  }
-  .shade i,
-  .bars[data-on] i {
-    animation: none;
-  }
-}
 
 /* ---------- what the pond has beyond the prototype: the music's player, the people ---------- */
 /* YouTube's player plays clipped to nothing: its chrome never shows (docs/agents/media.md). */
@@ -2174,11 +2159,6 @@ button.more:hover {
     translate: 8% 0;
   }
 }
-@media (prefers-reduced-motion: reduce) {
-  .mist i {
-    animation: none;
-  }
-}
 .kuan {
   position: absolute;
   top: calc(100% + 14px);
@@ -2487,12 +2467,6 @@ button.more:hover {
     scale: 1;
   }
 }
-@media (prefers-reduced-motion: reduce) {
-  .stamp[data-on] {
-    animation: none;
-    opacity: 1;
-  }
-}
 /* each look presses it in its own way: into paper, as a print's cartouche, in light, as a draughtsman's
    stamp, in characters */
 #pond[data-look='ink'] .stamp .seal-m {
@@ -2777,11 +2751,6 @@ button.more:hover {
     scale: 1;
   }
 }
-@media (prefers-reduced-motion: reduce) {
-  .album .grand[data-fresh] .seal-m {
-    animation: none;
-  }
-}
 @media (max-width: 560px) {
   .album .slots {
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -2861,11 +2830,6 @@ button.more:hover {
   .clue[data-for='stars'] svg {
     left: 12%;
     top: 66%;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .clue[data-for='blueprint'] span {
-    animation: none;
   }
 }
 /* the long scroll, unrolled in the album: it is wider than the leaf and is drawn along by hand */
