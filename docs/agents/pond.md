@@ -119,6 +119,8 @@ Each look has a seal (`seals.ts`: the seals, the volumes, the album's state and 
 languages). The first time a look comes in all the way (`reached()` in `engine.js`, from `stepInk`), by
 gesture, key or command, its seal is stamped in the corner above the controls, in the look's own manner
 (`#pond[data-look] .stamp` in `pond.css`), with a soft thud; under reduced motion it only appears.
+In the album a seal not yet found is printed faintly in its empty place, as a stamp album prints the
+stamp it waits for (`sealBlank()`): its cut once the sheet has come, else its characters.
 
 - **Five volumes.** Two hold the looks, five each. The third, `hours`, holds five seals for an
   occasion and not a look (the rain, snow, the full moon, a festival, the dawn): `occasions()` in
