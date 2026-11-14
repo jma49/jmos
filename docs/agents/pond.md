@@ -300,7 +300,9 @@ right edge. On an upright phone the contents reach down to the controls, so she 
 drawn worn nearly away (`WORN` in `newlooks.js`, as is the relief's fish there), so the words read. Faces are kept from flaking by
 position (`faces` in `muralLayout()`): if a picture is redrawn with the head elsewhere, say where. The
 ochre (`#CC8F38`) is read as gold leaf and made to glint, so anything meant as gold should keep that
-colour and anything not meant as gold should avoid it. The loose flowers are fixed on the wall, not
+colour and anything not meant as gold should avoid it. Near the pointer (`uPtr`) the leaf flashes, flake
+by flake, as gilding in a dark cave does when a torch passes. That flash takes only colours close to the
+ochre, so the figures' skin, which is near it, stays as painted. The loose flowers are fixed on the wall, not
 adrift: riding the petals' wind would need them as sprites on the top layer, which is a later step.
 
 Since then: the halo sits behind the pipa player's head on a wide wall (it reads from about a 1280

@@ -551,7 +551,9 @@ vec3 lookDunhuang(){
   float lost=clamp(flake,0.,1.)*(1.-face), gold=(1.-smoothstep(.1,.24,distance(mo,vec3(.80,.56,.22))))*mu.a*(1.-lost);
   vec3 mp=mo*(.70+.36*noise(P*.045))*(.9+.2*noise(P*.9)); mp=mix(mp,mp*mp*1.3,.42);
   c=mix(c,mp,mu.a*(1.-lost*.82)*(1.-.4*step(ml,.28)*step(.62,noise(P*.7)))*(1.-gCalm*mix(.75,.3,uCalm.x)));
-  c+=vec3(1.,.80,.42)*gold*(.08+.5*pow(noise(P*.3+vec2(uTime*.12,0.)),3.)+clamp(abs(gLap)*26.+length(gG)*1.2,0.,.6))*(1.-gCalm*.75);
+  // (and near the pointer it flashes, flake by flake, as gilding in a dark cave does when a torch passes)
+  vec2 tw=P-uPtr; float torch=exp(-dot(tw,tw)/42000.)*(.5+2.4*pow(noise(P*.42+tw*.012),2.));
+  c+=vec3(1.,.80,.42)*gold*(.08+.5*pow(noise(P*.3+vec2(uTime*.12,0.)),3.)+clamp(abs(gLap)*26.+length(gG)*1.2,0.,.6)+torch*(1.-smoothstep(.12,.17,distance(mo,vec3(.80,.56,.22)))))*(1.-gCalm*.75);
   // the water plays over it: ribbons that rise and fall together, thin, firmer where it moves
   float y=P.y+26.*sin(P.x*.011+uTime*.12)+10.*sin(P.x*.031-uTime*.2)+gH*70., band=y/30., bi=floor(band), bf=fract(band);
   vec3 bc=mod(bi,3.)<1.?qing:mod(bi,3.)<2.?lv:mix(qing,bai,.55); float wet=clamp(abs(gLap)*20.+length(gG)*1.5,0.,1.);
