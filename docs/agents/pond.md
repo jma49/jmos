@@ -25,6 +25,9 @@ for; keep it true when the file changes.
 
 ## Rules
 
+- **The pond's icon is the visitor's koi**, the white one with the red spot, from above on the deep water
+  (`public/pond/icon.svg`, `-32.png`, `-180.png`, written by `scripts/build-pond-icon.mjs`; the page asks
+  for them with `icon` on its layout). The old desktop keeps the site's own icons.
 - **No water where WebGL is drawn in software.** With no WebGL 2, or one a GPU draws in software
   (SwiftShader, llvmpipe: blocked graphics, a headless browser), the pond is still water with its koi
   and pads drawn straight on the page (`.nogl`, `softGL()` in `engine.js`): software takes seconds over

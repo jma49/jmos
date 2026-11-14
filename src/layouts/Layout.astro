@@ -12,9 +12,11 @@ interface Props {
   tabTitle?: string;
   /** The page fills the window itself (the pond): no page column and no skip link around it. */
   bleed?: boolean;
+  /** The page's own icons, as a path without its ending: `${icon}.svg`, `-32.png` and `-180.png` (the pond's koi). */
+  icon?: string;
 }
 
-const { path = '/' } = Astro.props;
+const { path = '/', icon } = Astro.props;
 const t = content;
 const title = Astro.props.title ?? t.meta.title;
 const description = Astro.props.description ?? t.meta.description;
@@ -79,9 +81,21 @@ const personLd = {
         }
       } catch {}
     </script>
-    <link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48" />
-    <link rel="icon" href="/favicon-32x32.png" type="image/png" sizes="32x32" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    {
+      icon ? (
+        <>
+          <link rel="icon" href={`${icon}.svg`} type="image/svg+xml" />
+          <link rel="icon" href={`${icon}-32.png`} type="image/png" sizes="32x32" />
+          <link rel="apple-touch-icon" href={`${icon}-180.png`} />
+        </>
+      ) : (
+        <>
+          <link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48" />
+          <link rel="icon" href="/favicon-32x32.png" type="image/png" sizes="32x32" />
+          <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        </>
+      )
+    }
     <meta
       name="google-site-verification"
       content="HhawtBpenGliesOLyFP46TlYilTGbHHQIcUnLtvQp4w"

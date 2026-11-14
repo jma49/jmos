@@ -211,6 +211,7 @@ significant change goes through.
 | `npm run photos:update` | Refreshes `src/data/photos.json` from Unsplash. |
 | `npm run songs:snapshot` | Saves the music library from Supabase to `src/data/songs.json`, the fallback. |
 | `node scripts/build-favicon.mjs` | Regenerates the favicons from one vector mark. |
+| `node scripts/build-pond-icon.mjs` | Regenerates the pond's own icon (the white koi with the red spot) in `public/pond/`. |
 | `node scripts/build-portrait.mjs <photo>` | Crops `public/portrait.jpg` from the source photo. |
 | `bash scripts/setup-soapbox.sh` | Sets up the Soapbox bot's secrets, deploy and webhook. |
 
