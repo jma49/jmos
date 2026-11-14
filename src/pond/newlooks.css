@@ -321,6 +321,10 @@
 #pond[data-look='relief'] .term-v {
   color: #a8482c;
 }
+/* the cartouche round the solar term is wider than the term: the clock keeps clear of it */
+#pond[data-look='relief'] .alm {
+  gap: 26px;
+}
 #pond[data-look='relief'] .tag {
   color: var(--mist);
   background: color-mix(in srgb, var(--deep) 78%, transparent);

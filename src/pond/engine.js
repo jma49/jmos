@@ -65,7 +65,7 @@ import {
   reliefLayout
 } from './newlooks.js';
 import { SocialError } from '../os/social/errors';
-import { coverOf, loadSongs, music, onMusic, play as playSongAt, setMusicMuted, toggle as toggleSong } from './music';
+import { LEAD, coverOf, loadSongs, music, onMusic, play as playSongAt, setMusicMuted, toggle as toggleSong } from './music';
 import * as people from './people';
 
 const $ = (s) => document.querySelector(s);
@@ -617,7 +617,7 @@ let kois = [],
 function makeKoi() {
   host = new Koi({
     id: 'host',
-    name: 'Jincheng',
+    name: '',
     dot: '#e6b144',
     x: -160,
     y: H * 0.62,
@@ -1519,7 +1519,7 @@ void main(){
   vec2 ref=g*ia*.06;
   float lb=soft(1.)+ice*1.7, lf=soft(.55)+ice*2., ls=soft(0.);
   // where the type stands: the left of a wide pond, all of a narrow one
-  float calm=uCalm.y*(uCalm.x<.5?1.-smoothstep(.26,.64,uv.x):.82); lb+=calm*2.7; lf+=calm*2.3; ls+=calm*1.7;
+  float calm=uCalm.y*(uCalm.x<.5?1.-smoothstep(.26,.64,uv.x):.82*(1.-smoothstep(uCalm.x-1.,uCalm.x-.86,uv.y))); lb+=calm*2.7; lf+=calm*2.3; ls+=calm*1.7;
 #if PART==2
   // a look that has come in all the way covers the water, and draws only from what is worked out above:
   // the water's own colour isn't needed (the same picture, for much less work)
@@ -3262,7 +3262,9 @@ function stepInk(raw) {
   const goal = inkOn ? (k < 0.5 ? 0.06 : 0.32) : look === 'glow' ? 0.7 : top === 'ink' && inkR > 0 ? 0.25 : 1;
   timeScale += (goal - timeScale) * Math.min(1, raw * (inkOn && k < 0.5 ? 9 : 1.6));
 }
-let calmNow = 1;
+let calmNow = 1,
+  calmEdge = 1,
+  calmEdgeAt = -1e9;
 function drawSpider(c) {
   if (!life || spider.alpha < 0.02 || spider.pad < 0 || !spider.feet.length) return;
   const u = spiderSize() * 0.46,
@@ -3916,8 +3918,8 @@ function ago(iso) {
 function fillMusic() {
   const m = music(),
     song = m.songs[m.index];
-  $('#npTitle').textContent = song ? song.title : m.ready ? '' : '…';
-  $('#npWho').textContent = song ? song.artist : '';
+  $('#npTitle').textContent = song ? song.title : m.ready ? '' : LEAD.title;
+  $('#npWho').textContent = song ? song.artist : m.ready ? '' : LEAD.artist;
   $('#songMore').textContent = m.songs.length || '';
   $('#play').setAttribute('aria-pressed', String(m.playing));
   $('#play').setAttribute('aria-label', m.playing ? 'Pause music' : 'Play music');
@@ -6167,23 +6169,9 @@ function tick() {
     city = place();
   $('#clockBig').textContent = `${h % 12 || 12}:${mm}`;
   $('#clockPart').textContent = `${h < 12 ? 'am' : 'pm'} · ${city || 'your time'}`;
-  let his = '';
-  try {
-    his = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Los_Angeles', hour: 'numeric', minute: '2-digit' }).format(d);
-  } catch (err) {
-    /* no time zones here: only the visitor's clock shows */
-  }
-  $('#hisTime').textContent = his ? `${his.replace(/\s?([AP])M$/, (_, x) => ` ${x.toLowerCase()}m`)} for me, in San Jose` : 'San Jose, California';
   if (zhOn) {
-    let his24 = '';
-    try {
-      his24 = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Los_Angeles', hour: 'numeric', minute: '2-digit', hourCycle: 'h23' }).format(d);
-    } catch (err) {
-      /* no time zones here: his hour goes unsaid */
-    }
     $('#clockBig').textContent = `${h}:${mm}`;
     $('#clockPart').textContent = ZH.clock.yours;
-    $('#hisTime').textContent = his24 ? `${ZH.clock.mine} · ${his24}` : ZH.clock.mine;
   }
   if (phaseChoice === 'auto') setPhase('auto');
 }
@@ -6419,21 +6407,13 @@ function tick1(raw) {
       hid = underGlass(k.x + 30, k.y + 24) || k.alpha < 0.5;
     const op = hid ? '0' : (k === you || k === host) && 'on' in k.tag.dataset ? '' : near ? '1' : '';
     // a tag that shows moves with its koi; one that doesn't is left alone
-    if (op !== '0' && (op !== '' || 'on' in k.tag.dataset)) setStyle(k.tag, 'transform', `translate3d(${Math.round(k.x + 16)}px,${Math.round(k.y + 18)}px,0)`);
+    if (op !== '0' && (op !== '' || 'on' in k.tag.dataset))
+      setStyle(
+        k.tag,
+        'transform',
+        `translate3d(${Math.round(clamp(k.x + 16, 8, W - (k.tagW ||= k.tag.offsetWidth || 60) - 8))}px,${Math.round(clamp(k.y + 18, 8, H - 30))}px,0)`
+      );
     setStyle(k.tag, 'opacity', op);
-  }
-  // the two visitors carry their projects' names
-  for (const [tag, x, y, on] of [
-    [doveTag, dove.x + 26, dove.y - 36, dove.state === 'sit'],
-    [
-      spiderTag,
-      spider.x + 22,
-      spider.y - 30,
-      spider.alpha > 0.6 && ptr.moved && Math.hypot(ptr.x - spider.x, ptr.y - spider.y) < 90 && !underGlass(spider.x, spider.y)
-    ]
-  ]) {
-    if (on) setStyle(tag, 'transform', `translate3d(${Math.round(x)}px,${Math.round(y)}px,0)`);
-    if (on !== 'on' in tag.dataset) tag.toggleAttribute('data-on', on);
   }
   span('air', drawAir);
   if (!glOK) return;
@@ -6522,7 +6502,13 @@ function tick1(raw) {
   }
   gl.uniform3fv(U.uBlot, blotU);
   calmNow += (('clear' in pond.dataset ? 0 : 1) - calmNow) * Math.min(1, lifeDt * 3);
-  gl.uniform2f(U.uCalm, big ? 0 : 1, calmNow);
+  // (on a phone the type is above and the water below: the calm reaches a little past the contents' foot)
+  if (!big && performance.now() - calmEdgeAt > 1000) {
+    calmEdgeAt = performance.now();
+    const r = $('#toc').getBoundingClientRect();
+    calmEdge = r.height ? clamp((r.bottom - pond.getBoundingClientRect().top) / H + 0.03, 0.3, 1) : 1;
+  }
+  gl.uniform2f(U.uCalm, big ? 0 : 1 + calmEdge, calmNow);
   gl.uniform1f(U.uTime, RM ? 3 : T);
   gl.uniform1f(U.uSwell, RM ? 0 : 1);
   gl.uniform1f(U.uFocus, focus);
@@ -6609,10 +6595,7 @@ let topAt = -1e9,
 const knobEl = $('#knob'),
   gaugeEl = $('#gauge');
 const crackU = new Float32Array(24),
-  brokeU = new Float32Array(6),
-  doveTag = Object.assign(document.createElement('span'), { className: 'tag', textContent: 'Devot' }),
-  spiderTag = Object.assign(document.createElement('span'), { className: 'tag', textContent: 'ocra' });
-$('#tags').append(doveTag, spiderTag);
+  brokeU = new Float32Array(6);
 // Settled: the opening has played and the browser is idle. What isn't on the first screen loads then.
 const settled = new Promise((resolve) => setTimeout(() => (window.requestIdleCallback || ((f) => setTimeout(f, 1)))(() => resolve()), 2600));
 // The dove and the spider are rendered sprites (sprites.js): each sheet is fetched the first time its

@@ -139,6 +139,16 @@ a {
   color: var(--mist-dim);
   text-shadow: 0 1px 6px rgba(0, 18, 20, 0.7);
 }
+/* the scale's words come only when the hand is on it: at rest it is a line and a bead */
+.gauge span {
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.gauge:hover span,
+.gauge:focus-visible span,
+.gauge[data-live] span {
+  opacity: 1;
+}
 .gauge span::after {
   content: '';
   position: absolute;

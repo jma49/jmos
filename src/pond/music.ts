@@ -38,6 +38,8 @@ export function onMusic(fn: (s: MusicState) => void) {
 }
 
 export const music = () => state;
+/** The first song, named before the library has loaded. */
+export const LEAD = POND_MUSIC.lead;
 
 /** The cover to show for a song: its own, or YouTube's still. */
 export const coverOf = (song: Song) => song.cover ?? `https://i.ytimg.com/vi/${song.id}/mqdefault.jpg`;
