@@ -3800,7 +3800,8 @@ function makeShade() {
       }
     }
     if (n) shadeCv = cv;
-    if (!glOK) el.style.backgroundImage = `url(${cv.toDataURL()})`;
+    // (encoded off the main thread, where a data URL held the page up while it was written)
+    if (!glOK) cv.toBlob((b) => b && (el.style.backgroundImage = `url(${URL.createObjectURL(b)})`));
   });
   shadeTex();
 }
