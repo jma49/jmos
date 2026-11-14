@@ -40,6 +40,7 @@ import {
 } from './seals';
 import { FPS, IDLE_AFTER, due, learnBeat, simSteps } from './clock.js';
 import { PERF, add, count, frameDone, span } from './perf.js';
+import { titleWords } from './words';
 import { describe, rub, strokeLifted, strokeMoving, tapsLook, thrown } from './gestures';
 import { crowdsPainting, underPainting } from './hang.js';
 import { paintingOf, seasonAmounts } from './seasons.js';
@@ -90,18 +91,14 @@ const pond = $('#pond'),
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const rnd = (a, b) => a + Math.random() * (b - a);
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
-// The title, which in Chinese breaks only between words (Intl.Segmenter), its punctuation kept on the word
-// before, and in Japanese between phrases (word-break: auto-phrase, in pond.css): never inside a word.
+// The title, which in Chinese breaks only between words (titleWords, words.ts), and in Japanese between
+// phrases (word-break: auto-phrase, in pond.css): never inside a word.
 const ZH_WORDS = typeof Intl.Segmenter === 'function' ? new Intl.Segmenter('zh', { granularity: 'word' }) : null;
 function setHero(text) {
   const el = $('#hero');
   el.lang = /^(zh|ja)$/.test(lang) ? lang : 'en';
   if (lang !== 'zh' || !ZH_WORDS) return void (el.textContent = text);
-  const words = [];
-  for (const { segment } of ZH_WORDS.segment(text)) {
-    if (words.length && /^[\s\p{P}]+$/u.test(segment)) words[words.length - 1] += segment;
-    else words.push(segment);
-  }
+  const words = titleWords(text, ZH_WORDS);
   el.innerHTML = words.map((w) => `<span class="w">${esc(w)}</span>`).join('');
 }
 let W = 1,
