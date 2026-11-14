@@ -1197,7 +1197,10 @@ button.more:hover {
   align-items: flex-start;
   gap: 14px;
   text-align: right;
-  text-shadow: 0 1px 10px rgba(0, 16, 18, 0.7);
+  /* (a close shadow as well as the soft one: the sunlit water behind it is bright) */
+  text-shadow:
+    0 0 3px rgba(0, 16, 18, 0.55),
+    0 1px 10px rgba(0, 16, 18, 0.7);
   pointer-events: none;
 }
 /* The solar term, read top to bottom, a character a line. Every Chinese character on the pond is
