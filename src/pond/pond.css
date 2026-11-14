@@ -1219,6 +1219,12 @@ button.more:hover {
 .hero {
   text-wrap: balance;
 }
+.hero .w {
+  white-space: nowrap;
+}
+.hero:lang(ja) {
+  word-break: auto-phrase;
+}
 .toc .row {
   transition: background 0.25s;
 }
@@ -1584,6 +1590,8 @@ button.more:hover {
   color: var(--mist-dim);
 }
 .sheet .empty {
+  /* (a list's line for nothing yet spans the row, not the first of its columns) */
+  display: block;
   color: var(--mist-faint);
   font-style: italic;
   border: 0 !important;

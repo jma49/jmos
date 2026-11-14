@@ -39,6 +39,9 @@ for; keep it true when the file changes.
   wide window the left of the pond is deeper and out of focus (`uCalm`
   in the water's shader); on a phone, from the top down to a little past the
   contents' foot, so the water below is clear. Type stays on that side.
+- **A title breaks between words.** In Chinese the title is set word by word (`setHero()`,
+  `Intl.Segmenter`), its punctuation kept on the word before; in Japanese the browser breaks it between
+  phrases (`word-break: auto-phrase`). Never inside a word, as 你找到这 / 儿了 did.
 - **Type:** Cormorant Garamond (self-hosted, `@fontsource/cormorant-garamond`)
   for what's set large, and every Chinese character, wherever it is,
   brushed in Zhi Mang Xing (`src/pond/brush.css`: the font's CJK chunks
