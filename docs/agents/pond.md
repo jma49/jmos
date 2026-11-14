@@ -664,7 +664,10 @@ light and refraction, the glass) stays in the shader.
 | Pebble bed (water look) | `BED` shader, drawn once | Good; it is what the refraction reads from, and the first thing seen | Keep for now | A Blender-rendered bed with a normal map would be the one thing to try, behind a flag, at no cost to the first visit's budget only if it fits in about 150 KB |
 | Ink: seasonal motif | `painting.js`, from pictures | Painted, and in use | Done | none |
 | Ink: far hills, mist | canvas washes, CSS | Good | Keep; hills later | `ink/hills` later |
-| Seals (ten looks and 锦程) | the brush face in CSS | A family, but running script, not seal script | Replace | `ink/seals` (asked) |
+| Seals | cut in seal script from two sheets (`ink/seals`, `seals-2`); four still in the brush (漂, 跃, 捕, 拓) | The cut ones are a family; the brushed ones stand out beside them | Replace the last four | asked: `seals-3` |
+| Clues | pictures in Monet and 青花; ukiyo-e's flecks and the star chart's zigzag are SVG; ink's is brushed type, glow's a line of light, the blueprint's and ASCII's are characters | The two SVG ones are the only drawn marks left | Replace those two | asked: a clue each for ukiyo-e and the star chart |
+| The bug the spider hunts | three ellipses in `drawBugs()` | Small enough to pass, but it is a drawn thing among pictures | Replace | asked: `bug` (P2) |
+| Food | two dots | A pellet is a dot | Keep | none |
 | Ink: inscription | the brush face | Good | Keep | none |
 | The Dragon Gate's dragon | a painted sheet laid along its way (`dragon.js`); nothing in code | No picture yet, so no dragon rises | A picture only | asked: `dragon` for the water, then each painted look (the dragon sheet in the brief) |
 | Festival things (preview) | canvas paths | Lanterns pass; the dragon boat is crude | Replace the boat and the lanterns | asked: `water/dragon-boat`, `water/lanterns` |
@@ -695,9 +698,20 @@ pair) a sheet `afloat.webp`, 1024 × 512,
 leaves, a snow crystal or a frost flower, and, where the manner has one, a dragonfly or another small
 flying thing seen from above (a crane or a butterfly for Dunhuang, a bee or a swallow for the relief).
 
-**Asked for now: the dragon** of the Dragon Gate, on "The dragon sheet" below: the water's first,
-then each painted look's. All seven are delivered, to list in `DRAGONS`: what came out is in each look's table (the water's with its dragon boat). A thing the pond newly shows is asked for here and
-painted; it is not drawn in code.
+**Asked for now**, in this order. A thing the pond shows is asked for here and painted; it is not
+drawn in code, and what is still drawn in code that a picture would better is on this list too.
+
+1. **The dragon** of the Dragon Gate, on "The dragon sheet" below: the water's first, then each
+   painted look's. All seven are delivered; what came out is in each look's table (the water's with
+   its dragon boat).
+2. **A third sheet of seals**, `seals-3.webp` (item 10 under "Ink"): the four seals still in the
+   brush, and the seals of the small games to come.
+3. **Two more clues, painted** (item 9 under "Ink"): ukiyo-e's and the star chart's, which are still
+   drawn in code.
+4. **P2: the bug the spider hunts**, `bug.webp` in the water's folder: 128 × 64, two cells of 64, a
+   midge seen from above, its wings out in the first cell and beaten back in the second; a dark
+   body, pale wings you can see through. It is drawn about 12 pixels long, so it must be bold. Now
+   three ellipses in code (`drawBugs()` in `engine.js`).
 
 **The round asked for before** (every line is already in a look's kit below, or is new there; make them
 in this order, commit each lot as it is done, and say in its table what came out):
@@ -941,9 +955,9 @@ is most of it.
    (round, 朱), 图 (square, 白), 字 (square, 朱), 星 (round, 白), 刻 (square, 白, for the relief),
    锦程 (tall, 白, 锦 over 程), one cell empty. Tall is 3 : 5. Used in the album, the stamp and
    under the solar term.
-9. **Delivered, to wire in: two clues, painted** (`public/pond/monet/clue.webp`, `public/pond/qinghua/clue.webp`)**.** A look on show carries a small mark that
+9. **Delivered and in use: two clues, painted** (`public/pond/monet/clue.webp`, `public/pond/qinghua/clue.webp`; Monet's is shown only in the seasons that have lily pads)**.** A look on show carries a small mark that
    points to the next look's gesture. Drawn in code over a painting two of them read as faults, so
-   those two looks carry none for now (`CLUES` in `engine.js` holds what each look shows):
+   those two are pictures (`CLUES` in `engine.js` holds what each look shows):
    - Monet's pond, pointing to the bowl (once round the rim): a file named clue.webp in the Monet
      folder under `public/pond/`, about 320 × 240 with alpha, one lily pad seen from above in the
      painting's own hand and palette, its rim alone picked out in the bowl's cobalt (`#1c3f9a`) as a
@@ -952,13 +966,33 @@ is most of it.
      about 240 × 240 with alpha, a reign mark in cobalt as on the foot of a bowl, half hidden under a
      film of ochre dust with a few strokes wiped through it, edges feathered to nothing.
 
-8. **Delivered, to wire in: six more seals, for the volume of occasions** (`hours` in `VOLUMES`, `seals.ts`). A second sheet `seals-2.webp` in
+   **Asked for now: two more**, for the two looks whose clue is still drawn in code:
+   - Ukiyo-e, pointing to Monet's pond (four dabs in one place): clue.webp in the ukiyo-e folder,
+     240 × 240 with alpha, shown 60 px across: four flecks of spray fallen close together, as a print
+     cuts them at the tips of a wave's claws: cream-white, each a different size, each with its key
+     line; nothing else.
+   - The star chart, pointing to the relief (a zigzag): clue.webp in the star chart's folder,
+     920 × 280 with alpha, shown 230 px across: one small constellation in the plate's engraved
+     manner, seven stars of differing magnitude joined by a thin line as a zigzag of three peaks,
+     pale gold (`#f0cf8a`); no letters, no frame.
+
+10. **Asked for now: a third sheet of seals**, `seals-3.webp` in `public/pond/ink/`, 1024 × 512,
+    cells of 256, 4 × 2, cut and coloured exactly as the first two are. Row 1, the four still in
+    the brush: 漂 (round, 朱, skipping stones), 跃 (square, 白, the leap), 捕 (square, 朱, the catch),
+    拓 (square, 白, the rubbing). Row 2, the small games to come: 琴 (round, 朱, the lotus zither),
+    太极 (tall, 白, 太 over 極, the koi's circle), 金鱼 (tall, 朱, 金 over 魚, goldfish scooping), then
+    one cell empty. Until it comes these are their characters in the brush.
+
+8. **Delivered and in use: seven more seals, for the volume of occasions and two of the idle seals** (`hours` and `idle` in `VOLUMES`, `seals.ts`). A second sheet `seals-2.webp` in
    `public/pond/ink/`, 1024 × 512, cells of 256, 4 × 2, cut and coloured exactly as `seals.webp` is
    (same face, same vermilion `#B8382A`, the tone in the alpha, square and round 232 across and
    centred): row 1 雨 (square, 白), 雪 (round, 白), 月 (round, 朱), 节 (square, 朱); row 2 晨
    (square, 白), 舟 (round, 白, the race's idle seal), 龙 (round, 朱, the Dragon Gate's idle seal, cut
-   in its full form 龍), then one cell empty. Under the budget for a file in `public/`. Until it comes
-   these are their characters in the brush (`CUT` in `seals.ts` lists what the sheets hold).
+   in its full form 龍), then one cell empty. Under the budget for a file in `public/`. It is asked
+   for with the first sheet, except where only Jincheng's own seal is wanted (ink's inscription), and
+   until it has come these are their characters in the brush (`CUT` in `seals.ts` lists what the
+   sheets hold; `sealsPic()` in `engine.js` fetches them). The idle seals without a cut (漂, 跃, 捕)
+   and the rubbing's (拓) stay in the brush.
 
 **Ukiyo-e.** Judge it by: a Hokusai or Hiroshige print at arm's length: flat colour, a key line,
 bokashi gradation, paper showing.

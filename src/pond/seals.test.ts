@@ -18,6 +18,8 @@ import {
   markSealed,
   mayHint,
   readAlbum,
+  sealCell,
+  sealMark,
   stamp,
   volumes,
   writeAlbum
@@ -167,6 +169,32 @@ describe('the occasions', () => {
     const leaves = albumHTML(a, all, 'en').split('<section class="vol"').slice(1),
       said = leaves.map((l) => l.includes(SEAL_WORDS.en.both));
     expect(said).toEqual([false, false, false, true, false]);
+  });
+});
+
+describe('the cut seals', () => {
+  const all = VOLUMES.flatMap((v) => v.seals);
+  it("are on two sheets: the looks' on the first, the occasions' and two idle ones on the second", () => {
+    expect(sealCell('ink')).toEqual([0, 0, 0]);
+    expect(sealCell('relief')).toEqual([1, 2, 0]);
+    expect(sealCell('own')).toEqual([2, 2, 0]);
+    expect(['rain', 'snow', 'moon', 'fest', 'dawn', 'race', 'dragon'].map((id) => sealCell(id))).toEqual([
+      [0, 0, 1],
+      [1, 0, 1],
+      [2, 0, 1],
+      [3, 0, 1],
+      [0, 1, 1],
+      [1, 1, 1],
+      [2, 1, 1]
+    ]);
+    // the rubbing and the other idle seals have no cut: they stay in the brush
+    for (const id of ['rubbing', 'skip', 'leap', 'catch']) expect(sealCell(id)).toBeNull();
+  });
+  it('say in their markup which sheet they are on, and nothing where they have no cut', () => {
+    const mark = (id: string) => sealMark(all.find((q) => q.id === id)!);
+    expect(mark('ink')).toContain('data-p="1" style="--c:0;--r:0"');
+    expect(mark('dragon')).toContain('data-p="2" style="--c:2;--r:1"');
+    expect(mark('skip')).not.toContain('data-p');
   });
 });
 

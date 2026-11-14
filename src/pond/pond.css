@@ -2363,22 +2363,24 @@ button.more:hover {
 .seal-m.blank {
   color: rgba(92, 58, 40, 0.17);
 }
-#pond[data-seals] b.seal-m.blank[data-p] {
+:is(#pond[data-seals] b.seal-m[data-p='1'], #pond[data-seals2] b.seal-m[data-p='2']).blank {
   border-radius: 2px;
   box-shadow: inset 0 0 0 1px rgba(92, 58, 40, 0.3);
 }
-#pond[data-seals] b.seal-m.blank[data-p][data-shape='round'] {
+:is(#pond[data-seals] b.seal-m[data-p='1'], #pond[data-seals2] b.seal-m[data-p='2']).blank[data-shape='round'] {
   border-radius: 50%;
 }
-#pond[data-seals] b.seal-m.blank[data-p]::before {
+:is(#pond[data-seals] b.seal-m[data-p='1'], #pond[data-seals2] b.seal-m[data-p='2']).blank::before {
   background: rgba(92, 58, 40, 0.15);
   scale: 0.82;
 }
-/* Once the sheet of seals cut in small seal script has come (engine.js sets data-seals), a seal is its
-   cell of that sheet in the seal's colour, and the brushed characters under it are not shown. A square
-   or round seal is 232 of its 256-pixel cell across, a tall one 150 by 246, each centred; --c and --r
-   are its cell. The cut is on a layer of its own, so a look's shadow or glow still falls from it. */
-#pond[data-seals] b.seal-m[data-p],
+/* Once a sheet of seals cut in small seal script has come (engine.js sets data-seals for the first, the
+   looks' and Jincheng's own, and data-seals2 for the second, the occasions' and the idle seals'), a seal on
+   it (data-p says which sheet) is its cell of that sheet in the seal's colour, and the brushed characters
+   under it are not shown. A square or round seal is 232 of its 256-pixel cell across, a tall one 150 by
+   246, each centred; --c and --r are its cell. The cut is on a layer of its own, so a look's shadow or
+   glow still falls from it. */
+:is(#pond[data-seals] b.seal-m[data-p='1'], #pond[data-seals2] b.seal-m[data-p='2']),
 #pond[data-seals] .kuan .seal {
   --k: calc(var(--s) / 232);
   --ox: 12;
@@ -2390,7 +2392,7 @@ button.more:hover {
   border-radius: 0;
   outline: 0;
 }
-#pond[data-seals] b.seal-m[data-p][data-shape='tall'],
+:is(#pond[data-seals] b.seal-m[data-p='1'], #pond[data-seals2] b.seal-m[data-p='2'])[data-shape='tall'],
 #pond[data-seals] .kuan .seal {
   --k: calc(var(--s) / 246);
   --ox: 53;
@@ -2404,11 +2406,11 @@ button.more:hover {
   --r: 2;
   --red: #b8382a;
 }
-#pond[data-seals] b.seal-m[data-p] span,
+:is(#pond[data-seals] b.seal-m[data-p='1'], #pond[data-seals2] b.seal-m[data-p='2']) span,
 #pond[data-seals] .kuan .seal span {
   visibility: hidden;
 }
-#pond[data-seals] b.seal-m[data-p]::before,
+:is(#pond[data-seals] b.seal-m[data-p='1'], #pond[data-seals2] b.seal-m[data-p='2'])::before,
 #pond[data-seals] .kuan .seal::before {
   content: '';
   position: absolute;
@@ -2420,6 +2422,13 @@ button.more:hover {
   mask-size: calc(var(--k) * 1024) calc(var(--k) * 768);
   -webkit-mask-position: calc(var(--k) * (var(--c) * -256 - var(--ox))) calc(var(--k) * (var(--r) * -256 - var(--oy)));
   mask-position: calc(var(--k) * (var(--c) * -256 - var(--ox))) calc(var(--k) * (var(--r) * -256 - var(--oy)));
+}
+/* (the second sheet is four cells by two) */
+#pond[data-seals2] b.seal-m[data-p='2']::before {
+  -webkit-mask-image: url('/pond/ink/seals-2.webp');
+  mask-image: url('/pond/ink/seals-2.webp');
+  -webkit-mask-size: calc(var(--k) * 1024) calc(var(--k) * 512);
+  mask-size: calc(var(--k) * 1024) calc(var(--k) * 512);
 }
 /* the stamp: pressed into the corner above the controls (on a phone, above the sound, where there is
    room), held a moment, then gone */
@@ -2830,6 +2839,34 @@ button.more:hover {
   .clue[data-for='stars'] svg {
     left: 12%;
     top: 66%;
+  }
+}
+/* (Monet's and the bowl's are paintings: a lily pad out on the open water, and a reign mark at the foot of
+   the bowl; on a phone both sit under the contents) */
+.clue[data-for='monet'] img {
+  left: 58%;
+  top: 60%;
+  width: 160px;
+  height: 120px;
+}
+.clue[data-for='qinghua'] img {
+  left: 36%;
+  bottom: 8%;
+  width: 120px;
+  height: 120px;
+}
+@media (max-width: 760px) {
+  .clue[data-for='monet'] img {
+    left: 52%;
+    top: 74%;
+    width: 120px;
+    height: 90px;
+  }
+  .clue[data-for='qinghua'] img {
+    left: 56%;
+    bottom: 15%;
+    width: 96px;
+    height: 96px;
   }
 }
 /* the long scroll, unrolled in the album: it is wider than the leaf and is drawn along by hand */

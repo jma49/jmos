@@ -3462,7 +3462,7 @@ function atlas() {
 function placeKuan() {
   const k = $('.kuan');
   if (!inkOn || !k) return;
-  sealsPic();
+  sealsPic(false);
   const a = $('.alm').getBoundingClientRect(),
     t = $('#termV').getBoundingClientRect(),
     // a brushed character's ink sits off the middle of its box: the axis is the ink's, for both columns
@@ -5485,31 +5485,36 @@ function sealsEntry() {
 }
 // the volumes whose large seal hasn't been seen yet: it stamps as the album opens, once
 const freshVols = () => VOLS.filter((v) => full(album, v) && !album.sealed.includes(v.id)).map((v) => v.id);
-// The seals cut in seal script are one picture, asked for the first time a seal is to be seen; until it
-// has come (and if it never does) a seal is its characters in the brush.
-function sealsPic() {
+// The seals cut in seal script are two pictures: the looks' seals and Jincheng's own, and the occasions' and
+// the idle seals'. The first is asked for the first time a seal is to be seen, the second with it unless only
+// Jincheng's own is wanted (ink's inscription); until a sheet has come (and if it never does) its seals are
+// their characters in the brush.
+function sealsPic(both = true) {
   // (kept on the function: the inscription may ask before this part of the file has run)
-  if (sealsPic.asked) return;
-  sealsPic.asked = true;
-  const im = new Image();
-  sealsPic.ready = new Promise((done) => {
-    im.onload = () => {
-      sealsPic.im = im;
-      pond.setAttribute('data-seals', '');
-      done();
-    };
-    im.onerror = done;
-  });
-  im.src = '/pond/ink/seals.webp';
+  sealsPic.ims ??= [];
+  sealsPic.ready ??= [];
+  for (const i of both ? [0, 1] : [0]) {
+    if (sealsPic.ready[i]) continue;
+    const im = new Image();
+    sealsPic.ready[i] = new Promise((done) => {
+      im.onload = () => {
+        sealsPic.ims[i] = im;
+        pond.setAttribute(i ? 'data-seals2' : 'data-seals', '');
+        done();
+      };
+      im.onerror = done;
+    });
+    im.src = ['/pond/ink/seals.webp', '/pond/ink/seals-2.webp'][i];
+  }
 }
-// What a picture of the album draws with: the sheet of cut seals, and the brushed characters of the seals it
-// has no cut for (a canvas draws a character in the brush only once its part of the font has come). Asked
+// What a picture of the album draws with: the sheets of cut seals, and the brushed characters of the seals
+// they have no cut for (a canvas draws a character in the brush only once its part of the font has come). Asked
 // for when the album opens, so a picture saved from it is whole; waited for, a few seconds at most.
 function picReady() {
   sealsPic();
   const chars = [...new Set(VOLS.flatMap((v) => v.seals.map((q) => q.chars)).join('') + '锦程')].join('');
   picReady.p ??= Promise.all([
-    sealsPic.ready,
+    ...sealsPic.ready,
     document.fonts?.load(`400 40px 'Zhi Mang Xing'`, chars).catch(() => {}),
     document.fonts?.load(`400 40px 'Cormorant Garamond'`, 'Seals').catch(() => {})
   ]);
@@ -5521,7 +5526,8 @@ function drawSeal(c, q, x, y, s) {
   const at = sealCell(q.id),
     tall = q.shape === 'tall',
     w = tall ? (s * 150) / 246 : s;
-  if (at && sealsPic.im) {
+  const sheet = at && sealsPic.ims?.[at[2]];
+  if (sheet) {
     const one = document.createElement('canvas'),
       o = one.getContext('2d');
     one.width = Math.round(w);
@@ -5529,7 +5535,7 @@ function drawSeal(c, q, x, y, s) {
     o.fillStyle = RED;
     o.fillRect(0, 0, one.width, one.height);
     o.globalCompositeOperation = 'destination-in';
-    o.drawImage(sealsPic.im, at[0] * 256 + (tall ? 53 : 12), at[1] * 256 + (tall ? 5 : 12), tall ? 150 : 232, tall ? 246 : 232, 0, 0, one.width, one.height);
+    o.drawImage(sheet, at[0] * 256 + (tall ? 53 : 12), at[1] * 256 + (tall ? 5 : 12), tall ? 150 : 232, tall ? 246 : 232, 0, 0, one.width, one.height);
     c.drawImage(one, x - w / 2, y - s / 2);
     return;
   }
@@ -5770,11 +5776,11 @@ const CLUES = {
   // the print: four flecks of spray fallen in one place
   ukiyo:
     '<svg viewBox="0 0 60 60" width="60" height="60"><g fill="#f6edd8" stroke="#0c1b27" stroke-width="1.2"><circle cx="27" cy="26" r="4"/><circle cx="35" cy="29" r="3.4"/><circle cx="29" cy="35" r="3.6"/><circle cx="34" cy="37" r="2.8"/></g></svg>',
-  // the lilies: none yet. A line drawn over the painting reads as a fault, not a clue: it waits for a
-  // painted one (asked for in the art brief).
-  monet: '',
-  // the bowl: none yet, for the same reason (a film of dust drawn in code sat on the type like a stain)
-  qinghua: '',
+  // the lilies: one more lily pad, painted, its rim alone in the bowl's cobalt (a line drawn in code over
+  // the painting read as a fault). It is there only in the seasons that have lily pads.
+  monet: '<img src="/pond/monet/clue.webp" alt="" width="160" height="120" decoding="async">',
+  // the bowl: a reign mark, painted, under a film of dust with a few strokes wiped through it
+  qinghua: '<img src="/pond/qinghua/clue.webp" alt="" width="120" height="120" decoding="async">',
   // glow: one faint straight line by the light
   glow: '<i></i>',
   // the blueprint: five blanks waiting in the title block
@@ -5789,7 +5795,7 @@ function clueNow() {
   const el = $('#clue'),
     // (only for a look that has come in all the way and is not on its way out)
     next = look !== 'water' && base === look ? clueFor(look, album) : '',
-    want = next ? look : '';
+    want = next && (look !== 'monet' || padSpots.length) ? look : '';
   if ((el.dataset.for || '') === want) return;
   if (want) {
     el.innerHTML = CLUES[want] || '';

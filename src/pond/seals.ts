@@ -388,20 +388,27 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
 
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c] as string);
 /**
- * Where a seal is cut in the sheet of seals in seal script (public/pond/ink/seals.webp: cells four
- * across, the looks' seals in order, then Jincheng's own), as [column, row].
+ * Where a seal is cut in the sheets of seals in seal script (public/pond/ink/, cells four across), as
+ * [column, row, sheet]: seals.webp has the looks' seals in order, then Jincheng's own; seals-2.webp has the
+ * occasions' and the idle seals that have a cut.
  */
 export const OWN = 'own';
-const CUT = ['ink', 'ukiyo', 'monet', 'qinghua', 'dunhuang', 'glow', 'blueprint', 'ascii', 'stars', 'relief', OWN];
-/** A seal's cell in the sheet, or null for one the sheet doesn't have (it stays in the brush). */
-export function sealCell(id: string): [number, number] | null {
-  const i = CUT.indexOf(id);
-  return i < 0 ? null : [i % 4, Math.floor(i / 4)];
+const CUT = [
+  ['ink', 'ukiyo', 'monet', 'qinghua', 'dunhuang', 'glow', 'blueprint', 'ascii', 'stars', 'relief', OWN],
+  ['rain', 'snow', 'moon', 'fest', 'dawn', 'race', 'dragon']
+];
+/** A seal's cell and its sheet, or null for one no sheet has (it stays in the brush). */
+export function sealCell(id: string): [number, number, number] | null {
+  for (const [sheet, ids] of CUT.entries()) {
+    const i = ids.indexOf(id);
+    if (i >= 0) return [i % 4, Math.floor(i / 4), sheet];
+  }
+  return null;
 }
-// (data-p marks a seal the sheet has: the styles put the cut picture only on those)
+// (data-p marks a seal a sheet has, and says which: the styles put the cut picture only on those)
 const cellStyle = (id: string): string => {
   const at = sealCell(id);
-  return at ? `data-p style="--c:${at[0]};--r:${at[1]}"` : '';
+  return at ? `data-p="${at[2] + 1}" style="--c:${at[0]};--r:${at[1]}"` : '';
 };
 /** A seal's markup: its characters, each in its own cell (pond.css cuts and colours it). */
 export const sealMark = (s: Seal, cls = ''): string =>
