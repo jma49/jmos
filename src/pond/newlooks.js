@@ -601,6 +601,10 @@ vec3 lookStars(){
   for(int k=0;k<2;k++){ float sz=k==0?46.:19.; vec2 id=floor(S/sz), f=fract(S/sz)-.5, o=(hash2(id+float(k)*7.)-.5)*.7; float h=hash1(id+float(k)*13.);
     float tw=.75+.25*sin(uTime*(1.+h*2.)+h*40.), m=step(k==0?.72:.6,h);
     c+=mix(vec3(.8,.87,1.),vec3(1.,.9,.74),step(.9,h))*(k==0?star4((f-o)*sz,1.1+h*1.2):exp(-dot(f-o,f-o)*sz*sz/.7))*m*tw*(k==0?.9:.5)*smoothstep(0.,.5,uLookT-.5-(1.-h)*4.2*(k==0?1.:1.4)); }
+  // where the pointer rests the eye adjusts, as at a telescope: fainter stars come out around it
+  { vec2 tw=P-uPtr; float near=exp(-dot(tw,tw)/26000.)*smoothstep(3.,4.5,uLookT)*(1.-gCalm*.7);
+    if(near>.01){ vec2 id=floor(S/8.), f=fract(S/8.)-.5, o=(hash2(id+31.)-.5)*.7; float h=hash1(id+37.);
+      c+=vec3(.8,.87,1.)*exp(-dot(f-o,f-o)*128.)*step(.55,h)*near*(.25+.5*h); } }
   // orbits: the ripples as thin rings
   float ring=smoothstep(.45,.5,abs(fract(gH*14.)-.5));
   c+=vec3(.45,.6,.9)*ring*smoothstep(.015,.07,abs(gLap)*4.+abs(gH)*.7)*.3*(1.-gCalm*.9);
