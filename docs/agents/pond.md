@@ -320,7 +320,8 @@ has no place yet.
 In `public/pond/monet/`, and the look is built on them: the painted water is the bed (`paintBed()` in
 `engine.js` lays the upright one on a phone, the small one on a small window, the large one where the
 pond is drawn large, into the one texture a look's picture lies in, `uMural`), the water over it bends
-it a little and catches a sheen (`lookMonet()`), the pads and their flowers are drawn from `lilies`
+it a little and catches a sheen (`lookMonet()`; the paint's ridges are lit from where the pointer is,
+`uPtr`, and lift most near it, as impasto does under a lamp), the pads and their flowers are drawn from `lilies`
 (`drawPads()`: a bud in spring, half open then open in summer, none in winter), and the koi from
 `koi` along their own spines (`Koi.drawSprite()`). Nothing is synthesised a stroke at a time any more.
 Not used yet: `strokes` and `canvas` (the press is a soft dab drawn in the shader, and the arrival's
