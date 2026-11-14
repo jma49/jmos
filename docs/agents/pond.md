@@ -970,7 +970,7 @@ in `JA` too.
 The first six looks ([decision 0026](../decisions/0026-looks-and-gestures.md)); the five that came
 after are under "The five later looks":
 water, ink, ukiyo-e (a woodblock print), glow (the pond at night, lit by
-what moves), blueprint (a drawing on blue paper, the koi measured in the
+what moves, the stirred water sparking with plankton), blueprint (a drawing on blue paper, the koi measured in the
 air) and ASCII (the pond in characters).
 
 - **How they're drawn:** each is a function in the water's shader
