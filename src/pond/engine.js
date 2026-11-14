@@ -1576,6 +1576,9 @@ vec3 lookAscii(){
   // (kept off the corner, where the season and the time are written)
   float corner=(1.-smoothstep(100.,150.,gP.y))*smoothstep(uCss.x-480.,uCss.x-420.,gP.x);
   c+=vec3(.12,.2,.2)*(1.-smoothstep(1.5,3.5,sd))*(1.-gCalm*.95)*(1.-corner);
+  // round the pointer, as under a loupe on the map, the contours come in three times as close and brighter
+  vec2 tw=gP-uPtr; float near=exp(-dot(tw,tw)/14000.), sd2=abs(fract(sf*4.5)-.5)/max(fwidth(sf*4.5),1e-4);
+  c+=vec3(.16,.27,.27)*(1.-smoothstep(1.5,3.5,sd2))*near*(1.-gCalm*.9)*(1.-corner);
   float rip=clamp(abs(gLap)*30.+length(gG)*.8,0.,.8)*(1.-gCalm*.85);
   c+=vec3(.32,.5,.52)*rip*.55;
   vec4 pd=textureLod(uPads,uv+gG*gIa*.006,0.); c=mix(c,pd.rgb/max(pd.a,1e-3)*.5,pd.a*.85);
