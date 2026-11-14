@@ -325,6 +325,8 @@ export const RELIEF = {
  * contents. Each entry is [pair, source x, y, w, h, x, y, w, h] (a negative source width mirrors it); nothing
  * but the frieze lies under the controls.
  */
+// how much of a picture is left where it has to lie under the type on a phone: worn, so the words read
+const WORN = 0.36;
 export function reliefLayout(W, H, wide) {
   const band = wide ? 40 : 26,
     frieze = [];
@@ -336,8 +338,12 @@ export function reliefLayout(W, H, wide) {
   if (!wide) {
     const w = Math.min(W * 0.78, H * 0.5),
       h = (w * 272) / 472;
-    // (under the contents on an upright wall; at the right of a small one that is wider than tall)
-    return [...frieze, fish(0, W > H ? W * 0.95 - w : W * 0.5 - w / 2, Math.min(H * (W > H ? 0.36 : 0.66), H - MURAL_FOOT_NARROW - h), w)];
+    // (under the contents on an upright wall; at the right of a small one that is wider than tall). An upright
+    // wall has no open stone below its contents, so there the fish lies under the type worn nearly away.
+    return [
+      ...frieze,
+      [...fish(0, W > H ? W * 0.95 - w : W * 0.5 - w / 2, Math.min(H * (W > H ? 0.36 : 0.66), H - MURAL_FOOT_NARROW - h), w), W > H ? 1 : WORN]
+    ];
   }
   const foot = H - Math.max(MURAL_FOOT, band + 46),
     u = Math.min(H, W * 0.6),
@@ -394,7 +400,11 @@ export function muralLayout(W, H, wide) {
       x = W * 0.03,
       y = Math.min(H * 0.615, H - MURAL_FOOT_NARROW - (w / 2) * 0.83);
     return {
-      draw: [sky(1, 0, W * 0.84, H * 0.6, W * 0.2), ['pipa', 0, 0, 1536, 768, x, y, w, w / 2]],
+      // (on an upright wall she lies under the contents, and is worn nearly away there, as the caves' paint is)
+      draw: [
+        [...sky(1, 0, W * 0.84, H * 0.6, W * 0.2), W > H ? 1 : WORN],
+        ['pipa', 0, 0, 1536, 768, x, y, w, w / 2, W > H ? 1 : WORN]
+      ],
       faces: [
         [x + w * 0.11, y + w * 0.2, w * 0.05],
         [0, 0, 0]

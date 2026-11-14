@@ -4732,7 +4732,7 @@ function paintRelief() {
     for (let x = 0; x < cv.width; x += t) for (let y = 0; y < half; y += t) c.drawImage(reliefImgs.stoneH, x, half + y, t, t);
     c.globalAlpha = 1;
   }
-  for (const [pair, sx, sy, sw, sh, x, y, w, h] of reliefLayout(W, H, big)) {
+  for (const [pair, sx, sy, sw, sh, x, y, w, h, strength = 1] of reliefLayout(W, H, big)) {
     const paint = reliefImgs[`${pair}C`],
       height = reliefImgs[`${pair}H`];
     // a carving is drawn only whole: its paint without its height would be a flat picture on the stone
@@ -4746,12 +4746,15 @@ function paintRelief() {
       c.drawImage(im, sx + sw, sy, -sw, sh, 0, 0, w * k, h * k);
       c.restore();
     };
+    // (a worn carving: its paint and its depth both laid in thinly)
+    c.globalAlpha = strength;
     put(paint, 0);
     // (a height's mid grey is the face: laid in hard light it leaves the dressed stone as it is there, and
     // raises or cuts it where the carving does)
     c.globalCompositeOperation = 'hard-light';
     put(height, half);
     c.globalCompositeOperation = 'source-over';
+    c.globalAlpha = 1;
   }
   sendPic(cv);
 }

@@ -281,7 +281,8 @@ her three falling lotus are continued by a lotus, a bud and petals from `sky-flo
 pond. Three clouds and the pearl are placed by the figures; the half-open lotus and the green cloud's
 twin are unused so far. On a narrow wall only the pipa player is drawn, in the open water under the contents (at the top
 she lay under the greeting), 1.25 walls wide so her body fills the width and the ribbons run off the
-right edge. Faces are kept from flaking by
+right edge. On an upright phone the contents reach down to the controls, so she lies under them and is
+drawn worn nearly away (`WORN` in `newlooks.js`, as is the relief's fish there), so the words read. Faces are kept from flaking by
 position (`faces` in `muralLayout()`): if a picture is redrawn with the head elsewhere, say where. The
 ochre (`#CC8F38`) is read as gold leaf and made to glint, so anything meant as gold should keep that
 colour and anything not meant as gold should avoid it. The loose flowers are fixed on the wall, not
