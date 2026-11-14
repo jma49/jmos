@@ -6573,9 +6573,12 @@ function tick1(raw) {
   // the ripples step on time: the same speed whatever the frame rate
   const [steps, left] = simSteps(simAcc, raw, timeScale);
   simAcc = left;
-  span('sim', () => {
-    for (let i = 0; i < steps; i++) stepSim();
-  });
+  // (the still pond draws no rings and no top layer, so it has no ripples to step: what drops on it is let go)
+  if (glOK)
+    span('sim', () => {
+      for (let i = 0; i < steps; i++) stepSim();
+    });
+  else hA.fill(0);
   stepAfloat(dt);
   stepSpider(dt);
   stepAir(dt);
