@@ -989,7 +989,8 @@ after are under "The five later looks":
 water, ink, ukiyo-e (a woodblock print), glow (the pond at night, lit by
 what moves, the stirred water sparking with plankton, which also gathers and sparks round the pointer
 as round a hand held over the water), blueprint (a drawing on blue paper, the koi measured in the
-air) and ASCII (the pond in characters, its swell typed as dotted contour lines).
+air) and ASCII (the pond in characters, its swell typed as dotted contour lines, three times as close round
+the pointer, as under a loupe).
 
 - **How they're drawn:** each is a function in the water's shader
   (`look()`, brought in by `reveal()`); ASCII's characters are the glass
