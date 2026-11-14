@@ -4732,7 +4732,7 @@ function paintRelief() {
     for (let x = 0; x < cv.width; x += t) for (let y = 0; y < half; y += t) c.drawImage(reliefImgs.stoneH, x, half + y, t, t);
     c.globalAlpha = 1;
   }
-  for (const [pair, sx, sy, sw, sh, x, y, w, h] of reliefLayout(W, H, big)) {
+  for (const [pair, sx, sy, sw, sh, x, y, w, h, strength = 1] of reliefLayout(W, H, big)) {
     const paint = reliefImgs[`${pair}C`],
       height = reliefImgs[`${pair}H`];
     // a carving is drawn only whole: its paint without its height would be a flat picture on the stone
@@ -4746,12 +4746,15 @@ function paintRelief() {
       c.drawImage(im, sx + sw, sy, -sw, sh, 0, 0, w * k, h * k);
       c.restore();
     };
+    // (a worn carving: its paint and its depth both laid in thinly)
+    c.globalAlpha = strength;
     put(paint, 0);
     // (a height's mid grey is the face: laid in hard light it leaves the dressed stone as it is there, and
     // raises or cuts it where the carving does)
     c.globalCompositeOperation = 'hard-light';
     put(height, half);
     c.globalCompositeOperation = 'source-over';
+    c.globalAlpha = 1;
   }
   sendPic(cv);
 }
@@ -5183,11 +5186,28 @@ function sealsPic() {
   if (sealsPic.asked) return;
   sealsPic.asked = true;
   const im = new Image();
-  im.onload = () => {
-    sealsPic.im = im;
-    pond.setAttribute('data-seals', '');
-  };
+  sealsPic.ready = new Promise((done) => {
+    im.onload = () => {
+      sealsPic.im = im;
+      pond.setAttribute('data-seals', '');
+      done();
+    };
+    im.onerror = done;
+  });
   im.src = '/pond/ink/seals.webp';
+}
+// What a picture of the album draws with: the sheet of cut seals, and the brushed characters of the seals it
+// has no cut for (a canvas draws a character in the brush only once its part of the font has come). Asked
+// for when the album opens, so a picture saved from it is whole; waited for, a few seconds at most.
+function picReady() {
+  sealsPic();
+  const chars = [...new Set(VOLS.flatMap((v) => v.seals.map((q) => q.chars)).join('') + '锦程')].join('');
+  picReady.p ??= Promise.all([
+    sealsPic.ready,
+    document.fonts?.load(`400 40px 'Zhi Mang Xing'`, chars).catch(() => {}),
+    document.fonts?.load(`400 40px 'Cormorant Garamond'`, 'Seals').catch(() => {})
+  ]);
+  return Promise.race([picReady.p, new Promise((done) => setTimeout(done, 4000))]);
 }
 // One seal on a canvas, s across (a tall one narrower), centred on x, y: its cut from the sheet, or its characters.
 function drawSeal(c, q, x, y, s) {
@@ -5219,9 +5239,12 @@ function drawSeal(c, q, x, y, s) {
     c.fill();
     c.fillStyle = '#f4ece0';
   }
-  c.font = `400 ${s * 0.6}px 'Zhi Mang Xing', serif`;
+  // (a tall seal's characters stand one above the other, as in the album)
+  const cs = [...q.chars],
+    f = tall ? s * 0.38 : s * 0.6;
+  c.font = `400 ${f}px 'Zhi Mang Xing', serif`;
   c.textAlign = 'center';
-  c.fillText(q.chars, x, y + s * 0.2);
+  cs.forEach((ch, i) => c.fillText(ch, x, y + f * 0.34 + (i - (cs.length - 1) / 2) * f * 1.04));
   c.textAlign = 'left';
 }
 // The album as one picture, to keep or pass on: the leaves on paper, each
@@ -5346,7 +5369,7 @@ function scrollPicture() {
 }
 // what "Save as a picture" saves: the scroll while it is unrolled, the album otherwise
 const savedPicture = () => ($('#scrollView') ? [scrollPicture(), 'pond-scroll.png'] : [albumPicture(), 'pond-seals.png']);
-document.addEventListener('click', (e) => {
+document.addEventListener('click', async (e) => {
   if (e.target.closest?.('#albumScroll')) {
     // unroll it above the album's foot, or roll it up again; it opens at its right end, where it begins
     const open = $('#scrollView');
@@ -5356,6 +5379,7 @@ document.addEventListener('click', (e) => {
     box.id = 'scrollView';
     box.className = 'scroll-view';
     im.alt = '';
+    await picReady();
     im.src = scrollPicture().toDataURL('image/png');
     box.append(im);
     $('#sheet .album-save').before(box);
@@ -5363,6 +5387,7 @@ document.addEventListener('click', (e) => {
     return;
   }
   if (!e.target.closest?.('#albumSave')) return;
+  await picReady();
   const [cv, name] = savedPicture();
   cv.toBlob((blob) => {
     if (!blob) return;
@@ -5373,8 +5398,8 @@ document.addEventListener('click', (e) => {
     setTimeout(() => URL.revokeObjectURL(a.href), 4000);
   });
 });
-if (PERF) window.__scroll = scrollPicture;
-if (PERF) window.__album = albumPicture;
+if (PERF) window.__scroll = () => picReady().then(scrollPicture);
+if (PERF) window.__album = () => picReady().then(albumPicture);
 // a seal's characters are centred by their own ink, measured once the brush has come for them
 function alignSeals(sel) {
   sealsPic();
@@ -5388,6 +5413,7 @@ function alignSeals(sel) {
 }
 function albumShown() {
   alignSeals('#sheet .seal-m span');
+  void picReady();
   const fresh = freshVols();
   if (!fresh.length) return;
   if (!RM) setTimeout(() => sheetOpen() && sheetId === 'seals' && plip('stamp'), 700);
