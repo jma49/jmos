@@ -50,7 +50,7 @@ const AT = [
       [m, d]
     );
     const p = await ctx.newPage();
-    await p.goto(srv.url, { waitUntil: 'load' });
+    await p.goto(srv.url + '?gl', { waitUntil: 'load' });
     await p.waitForTimeout(8000);
     await p.evaluate(() => {
       const s = document.querySelector('.preview [data-k=look]');

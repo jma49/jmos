@@ -24,7 +24,7 @@ const { INIT } = require('./virtual.cjs');
   );
   const errs = [];
   p.on('pageerror', (e) => errs.push(e.message.slice(0, 300)));
-  await p.goto(srv.url + (process.env.VISITORS ? '?perf' : ''), { waitUntil: 'load' });
+  await p.goto(srv.url + (process.env.VISITORS ? '?perf' : '?gl'), { waitUntil: 'load' });
   await p.waitForTimeout(2500);
   const step = (n) => p.evaluate((n) => window.__step(n), n);
   const set = (l) =>

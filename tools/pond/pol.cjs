@@ -32,7 +32,7 @@ const { chromium } = require('playwright');
   const p = await ctx.newPage();
   const errs = [];
   p.on('pageerror', (e) => errs.push(e.message.slice(0, 400)));
-  await p.goto(srv.url + (process.env.VISITORS ? '?perf' : ''), { waitUntil: 'load' });
+  await p.goto(srv.url + (process.env.VISITORS ? '?perf' : '?gl'), { waitUntil: 'load' });
   await p.waitForTimeout(10000);
   if (process.env.VISITORS)
     await p.evaluate(() =>

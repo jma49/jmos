@@ -86,7 +86,7 @@ const INIT = () => {
   );
   const errs = [];
   p.on('pageerror', (e) => errs.push(e.message.slice(0, 300)));
-  await p.goto(srv.url, { waitUntil: 'load' });
+  await p.goto(srv.url + '?gl', { waitUntil: 'load' });
   await p.waitForTimeout(2500);
   const step = (n) => p.evaluate((n) => window.__step(n), n);
   const set = (l) =>

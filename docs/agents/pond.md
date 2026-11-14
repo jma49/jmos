@@ -25,6 +25,11 @@ for; keep it true when the file changes.
 
 ## Rules
 
+- **No water where WebGL is drawn in software.** With no WebGL 2, or one a GPU draws in software
+  (SwiftShader, llvmpipe: blocked graphics, a headless browser), the pond is still water with its koi
+  and pads drawn straight on the page (`.nogl`, `softGL()` in `engine.js`): software takes seconds over
+  each frame of the water and the page stops answering. `?gl` (and `?perf`, `?preview`) keep the water
+  regardless: the tools in `tools/pond/` and `scripts/capture-previews.mjs` ask for it.
 - **The glass is drawn with the water.** A `.glass` element's place and
   opacity are read every frame (`panes()`), and the glass pass draws a
   rounded pane there that blurs and bends what's under it. A new pane is
@@ -163,8 +168,7 @@ stamp it waits for (`sealBlank()`): its cut once the sheet has come, else its ch
 - The album is the first chapter in the contents (`#seals`), there from the first visit;
   its row says how many seals are found of how many there are (`#sealsN`, written by `sealsEntry()`).
   Inside, a leaf of paper for each volume (册), found seals in vermilion with the day, the rest an
-  outline and a hint that points at the gesture without saying it. Its small mark also sits under the
-  clock's lines once there is a seal, or on a later visit by someone the line on the water didn't reach.
+  outline and a hint that points at the gesture without saying it.
 - A full volume carries the large 锦程 seal and a line of thanks. The first volume full, the visitor's
   koi wears a small seal; every volume full, the gold koi does too.
 - "Clear my seals" is a small button at the foot of the album, beside "Save as a picture", once a seal

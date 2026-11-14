@@ -22,7 +22,7 @@ const SHEETS = ['seals', 'music', 'notes', 'chat'];
     await ctx.addInitScript((s) => localStorage.setItem('pond-seals', s), seals);
     const p = await ctx.newPage();
     p.on('pageerror', (e) => errs.push(`${look}: ${e.message.slice(0, 200)}`));
-    await p.goto(srv.url, { waitUntil: 'load' });
+    await p.goto(srv.url + '?gl', { waitUntil: 'load' });
     await p.waitForTimeout(9000);
     if (look !== 'water') {
       await p.evaluate((l) => {

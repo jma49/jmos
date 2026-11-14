@@ -10,7 +10,7 @@ const { chromium } = require('playwright');
   const p = await b.newPage({ viewport: { width: W, height: H } });
   const errs = [];
   p.on('pageerror', (e) => errs.push(e.message));
-  await p.goto(srv.url, { waitUntil: 'load' });
+  await p.goto(srv.url + '?gl', { waitUntil: 'load' });
   await p.waitForTimeout(12000);
   const m = p.mouse;
   const path = async (pts) => {
@@ -75,7 +75,7 @@ const { chromium } = require('playwright');
   };
   const G = only ? { [only]: G0[only] } : G0;
   for (const [name, f] of Object.entries(G)) {
-    await p.goto(srv.url, { waitUntil: 'load' });
+    await p.goto(srv.url + '?gl', { waitUntil: 'load' });
     await p.waitForTimeout(11000);
     await f();
     let got = '';
