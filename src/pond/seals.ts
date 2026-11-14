@@ -66,7 +66,11 @@ export const VOLUMES: Volume[] = [
   {
     id: 'idle',
     extra: true,
-    seals: [{ id: 'skip', chars: '漂', shape: 'round', cut: 'red' }]
+    seals: [
+      { id: 'skip', chars: '漂', shape: 'round', cut: 'red' },
+      { id: 'leap', chars: '跃', shape: 'square', cut: 'white' },
+      { id: 'catch', chars: '捕', shape: 'square', cut: 'red' }
+    ]
   }
 ];
 /** The way back through the album that opens the end: the looks' seals in the order the volumes keep them. */
@@ -206,7 +210,9 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
       fest: 'Festival',
       dawn: 'Dawn',
       rubbing: 'Rubbing',
-      skip: 'Skipping stones'
+      skip: 'Skipping stones',
+      leap: 'The leap',
+      catch: 'The catch'
     },
     hints: {
       ink: 'Stillness leaves a mark.',
@@ -225,7 +231,9 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
       fest: 'A few days a year, the pond dresses up.',
       dawn: 'Be here before the sun is.',
       rubbing: 'Fill the first two volumes. Then, here in the album, go back the way you came.',
-      skip: 'A flat stone, thrown low and fast. Five skips.'
+      skip: 'A flat stone, thrown low and fast. Five skips.',
+      leap: 'Feed them in one place, and keep feeding until they all come.',
+      catch: 'Tap a lily pad while the spider is about.'
     },
     thanks: {
       painted: 'Every painted one. Thank you for looking so closely.',
@@ -262,7 +270,9 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
       fest: '节日',
       dawn: '清晨',
       rubbing: '拓片',
-      skip: '打水漂'
+      skip: '打水漂',
+      leap: '鱼跃',
+      catch: '捕虫'
     },
     hints: {
       ink: '停一停，会留下痕迹。',
@@ -281,7 +291,9 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
       fest: '一年里有几天，池塘会打扮。',
       dawn: '比太阳早一点到。',
       rubbing: '集满前两册，再在这册子里，按来路走一遍。',
-      skip: '一块扁石头，低低地、快快地甩出去。跳五下。'
+      skip: '一块扁石头，低低地、快快地甩出去。跳五下。',
+      leap: '在同一处一直喂，喂到鱼都来。',
+      catch: '跳蛛在的时候，点一片荷叶。'
     },
     thanks: {
       painted: '画的这一册集齐了。谢谢你看得这么仔细。',
@@ -318,7 +330,9 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
       fest: '祭り',
       dawn: '夜明け',
       rubbing: '拓本',
-      skip: '水切り'
+      skip: '水切り',
+      leap: '跳ねる',
+      catch: '捕まえる'
     },
     hints: {
       ink: 'じっとしていると、跡が残る。',
@@ -337,7 +351,9 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
       fest: '年に数日、池は着飾ります。',
       dawn: '日の出より先に。',
       rubbing: '二冊をそろえたら、この帳の中で、来た道をもう一度。',
-      skip: '平たい石を、低く、速く。五回はねたら。'
+      skip: '平たい石を、低く、速く。五回はねたら。',
+      leap: '同じところで餌をやりつづけて、みんなが来るまで。',
+      catch: '蜘蛛がいるとき、蓮の葉をたたく。'
     },
     thanks: {
       painted: '絵の一冊がそろいました。じっくり見てくれて、ありがとう。',

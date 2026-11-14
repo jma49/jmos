@@ -138,6 +138,12 @@ gesture, key or command, its seal is stamped in the corner above the controls, i
   that skips the way it was going, each skip a ring on the water; the faster, the more skips, and
   five earn the seal. A flick is not kept to count with the next stroke, so it is never part of a
   rub.
+  Two more: **the leap** (food thrown in one place four times running gathers the koi; once three
+  have come the largest leaps, drawn larger as it rises, and falls back with a splash: `gather` and
+  `leapNow()` in `engine.js`), and **the catch** (a press on a lily pad while the spider is about
+  calls a bug down on to it, and the spider watches, crouches and jumps: `dropBug(pad, true)`; the
+  seal is for a bug the visitor called). Pads under a control do not take a press. With `?perf`,
+  `window.__pond` has the koi's places, the pads and the bugs, for a tool to play them.
 - **A chain of clues.** A look on show carries a small mark that points to the next look's gesture
   (`NEXT` and `clueFor()` in `seals.ts`, `CLUES` and `clueNow()` in `engine.js`, `.clue` in
   `pond.css`), laid in a few seconds after the look has come, until that next seal is found.
