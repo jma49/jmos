@@ -31,7 +31,8 @@ const preview = volumes(false).slice(0, 2),
 
 describe('the volumes', () => {
   it('hold every look in a release build, five to a volume', () => {
-    expect(volumes(false)).toEqual(volumes(true));
+    // (a preview build differs only by the idle seal that waits for its picture)
+    expect(volumes(false).slice(0, 4)).toEqual(volumes(true).slice(0, 4));
     expect(volumes(false).map((v) => v.id)).toEqual(['painted', 'drawn', 'hours', 'end', 'idle']);
     expect(live.map((v) => v.seals.map((s) => s.id))).toEqual([
       ['ink', 'ukiyo'],
@@ -138,6 +139,12 @@ describe('the idle seals', () => {
     expect(allFull(a, all)).toBe(true);
     expect(stamp(a, 'skip', '2026-11-14', all).fresh).toBe(true);
     expect(all.at(-1)?.seals.map((x) => x.id)).toEqual(['skip', 'leap', 'catch', 'race']);
+    // (the Dragon Gate's seal is a preview until its dragon has a picture)
+    expect(
+      volumes(true)
+        .at(-1)
+        ?.seals.map((x) => x.id)
+    ).toEqual(['skip', 'leap', 'catch', 'race', 'dragon']);
   });
 });
 

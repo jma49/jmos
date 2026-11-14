@@ -44,6 +44,7 @@ import { titleWords } from './words';
 import { describe, rub, strokeLifted, strokeMoving, tapsLook, thrown } from './gestures';
 import { crowdsPainting, underPainting } from './hang.js';
 import { paintingOf, seasonAmounts } from './seasons.js';
+import { dragonCopy, dragonHead, dragonSrc, drawDragon, drawDragonStars, makeDragon } from './dragon.js';
 import {
   KOI_SHEETS,
   MONET,
@@ -784,6 +785,7 @@ function drawKoi() {
     k.draw(fctx);
     fctx.restore();
   }
+  dragonNow();
   drawShades(fctx);
 }
 
@@ -1328,7 +1330,7 @@ precision highp float; in vec2 vUv; out vec4 o;
 uniform sampler2D uBed,uH,uFish,uPads,uTop,uIceN,uMural; uniform float uPic;
 uniform vec2 uRes,uGrid,uMoonPos,uCss; uniform float uTime,uAmb,uCaI,uMoon,uSwell,uFocus,uIce,uSnow,uFog,uStars; uniform vec3 uMoonPh; uniform vec2 uCalm,uPtr;
 uniform vec3 uTint,uCaC,uSky,uSeason;
-uniform vec4 uBox[12]; uniform vec4 uBoxB[12]; uniform int uBoxN; uniform vec4 uCrack[6]; uniform float uBroke[6]; uniform vec4 uInk; uniform vec3 uBlot[10]; uniform int uStyle, uPrev; uniform sampler2D uSnap; uniform float uSnapOn; uniform float uGlint; uniform float uLookT,uLeave,uSprite,uDay; uniform vec2 uArt;
+uniform vec4 uBox[12]; uniform vec4 uBoxB[12]; uniform int uBoxN; uniform vec4 uCrack[6]; uniform float uBroke[6]; uniform vec4 uInk; uniform vec3 uBlot[10]; uniform int uStyle, uPrev; uniform sampler2D uSnap; uniform float uSnapOn; uniform float uGlint; uniform float uLookT,uLeave,uSprite,uDay; uniform vec2 uArt; uniform vec3 uDragon;
 float hash1(vec2 p){ return fract(sin(dot(p,vec2(41.3,289.1)))*43758.5453); }
 vec2 hash2(vec2 p){ p=vec2(dot(p,vec2(127.1,311.7)),dot(p,vec2(269.5,183.3))); return fract(sin(p)*43758.5453); }
 float noise(vec2 p){ vec2 i=floor(p),f=fract(p); f=f*f*(3.-2.*f);
@@ -1677,6 +1679,8 @@ void main(){
   col*=uTint*uSeason;
   vec4 f=textureLod(uFish,uv+ref*.55,lf);
   vec3 fc=f.rgb*(uAmb*.8+.2)*mix(vec3(1.),uTint*uSeason,.42)*(1.+uCaI*ca*.6+focus*.25)*(1.-.3*bs);
+  // (by night the dragon is its own light, and lights the koi near it)
+  if(uDragon.z>0.){ vec2 dd=P-uDragon.xy; fc*=1.+uDragon.z*2.4*max(0.,1.-uAmb)*exp(-dot(dd,dd)/220000.); }
   col=fc+col*(1.-f.a);
   // the canopy and the sky above, mirrored in the water: it comes forward as the focus rises
   float up=pow(clamp((.52-uFocus)/.52,0.,1.),1.3)*(1.-ice);
@@ -1692,6 +1696,8 @@ void main(){
   vec2 md=(uv-uMoonPos)*vec2(asp,1.)+g*2.4;
   // the sun's glint by day where the moon's light lies at night: pressed, the lights go out (glow)
   col+=uGlint*(1.-uMoon)*(1.-ice*.7)*(vec3(1.,.98,.92)*smoothstep(.022,.006,length(md))*.55+vec3(1.,.95,.85)*exp(-dot(md,md)*160.)*.22);
+  // the dragon lights the water gold about its head as it goes
+  if(uDragon.z>0.){ vec2 dd=P-uDragon.xy; col+=vec3(1.,.72,.3)*(exp(-dot(dd,dd)/60000.)*.3+exp(-dot(dd,dd)/6000.)*.12)*uDragon.z; }
   // the moon's phase (uMoonPh: how much is lit, and which side): the dark part of the disc is cut away
   float mlit=smoothstep(-.12,.12,uMoonPh.y*md.x/.034-(1.-2.*uMoonPh.x));
   col+=uMoon*(1.-ice*.7)*(vec3(.95,.97,1.)*smoothstep(.05,.018,length(md))*.6*mlit+vec3(.5,.62,.85)*exp(-dot(md,md)*60.)*.3*(.2+.8*uMoonPh.x));
@@ -1903,6 +1909,7 @@ const FS_U = [
   'uSwell',
   'uFocus',
   'uPtr',
+  'uDragon',
   'uIce',
   'uSnow',
   'uTint',
@@ -2383,6 +2390,10 @@ function leapNow() {
   drop(k.x, k.y, 4.5, -2.6);
   plip('drop', 1);
   invalidate();
+  // every third leap of a visit clears the Dragon Gate, where the look on show has a dragon: at the top of
+  // it the koi does not turn back
+  const gate = dragonPic();
+  if (++leaps % 3 === 0 && gate) return void setTimeout(() => riseDragon(k), 550);
   setTimeout(() => {
     drop(k.x, k.y, 5.5, 2.4);
     drop(k.x, k.y, 2.5, -1.2);
@@ -2390,6 +2401,64 @@ function leapNow() {
     invalidate();
     reached('leap');
   }, 1100);
+}
+// 鲤鱼跃龙门: the koi that cleared the gate goes as a dragon (dragon.js), rippling the water under it and, in
+// the water, lighting it gold. The koi is back in the pond once the dragon has gone, and the visit has its
+// seal. Its picture is fetched at the first leap, so it has come by the third. (`pin` holds the dragon at one
+// moment and `src` is a picture to try, both for a tool: `window.__pond.dragon`.)
+let leaps = 0;
+const dragon = { d: null, k: null, at: 0, pin: null, src: '', wake: 0, x: 0, y: 0, lit: 0 },
+  dragonPics = new Map();
+function dragonPic() {
+  const name = inkR > inkMax * 0.45 ? look : 'water',
+    src = dragon.src || dragonSrc(name, !!KOI_SHEETS[name] || name === 'stars');
+  if (!src) return null;
+  if (!dragonPics.has(src)) {
+    const im = new Image();
+    im.onerror = () => report(new Error(`no picture at ${src}`), 'pond pictures');
+    im.src = src;
+    dragonPics.set(src, im);
+  }
+  const im = dragonPics.get(src);
+  return im.complete && im.naturalWidth ? im : null;
+}
+function riseDragon(k, pin) {
+  // (one dragon at a time: the koi of one still in the air is let back first)
+  if (dragon.d) dragon.k.shown = true;
+  Object.assign(dragon, { d: makeDragon(k.x, k.y, W, H), k, at: performance.now() / 1000, pin: pin ?? null });
+  k.shown = false;
+  drop(k.x, k.y, 7, 3);
+  plip('dragon');
+  invalidate();
+}
+function dragonNow() {
+  const d = dragon.d,
+    pic = d && dragonPic();
+  dragon.lit = 0;
+  if (!d) return;
+  // (timed by the clock on the wall, not the pond's, which a look may slow)
+  const t = dragon.pin ?? performance.now() / 1000 - dragon.at;
+  // (gone over the top, or the look changed to one that has no dragon)
+  if (t > d.time || !pic) {
+    dragon.d = null;
+    dragon.k.shown = true;
+    reached('leap');
+    if (pic) reached('dragon');
+    return;
+  }
+  [dragon.x, dragon.y] = dragonHead(d, t);
+  dragon.lit = Math.min(1, t / 0.8, (d.time - t) / 1.5);
+  if (T > dragon.wake && dragon.y > 0) {
+    drop(dragon.x, dragon.y, 2.2, 0.45);
+    dragon.wake = T + 0.1;
+  }
+  const stars = look === 'stars' && inkR > inkMax * 0.45,
+    m = dragonCopy(d, fishCv.width / W);
+  fctx.save();
+  if (stars) fctx.globalAlpha = 0.4;
+  drawDragon(fctx, d, t, shrunk(pic, m), m);
+  fctx.restore();
+  if (stars) drawDragonStars(fctx, d, t);
 }
 // The race, at Dragon Boat: a press on the water beside the boat is a stroke of the paddles. Each sends
 // it on (a second and a half of its crossing) with a splash at the blade; ROW of them before it is across
@@ -3505,6 +3574,12 @@ if (PERF)
     visitors: (list) => seeVisitors(list),
     koi: () => kois.map((k) => [k.id, Math.round(k.x), Math.round(k.y)]),
     bugs: () => bugs.length,
+    // the dragon, now: held at `pin` seconds if given, and from the picture at `src` if given (one to try
+    // before it is listed in DRAGONS); false until the picture has come
+    dragon: (pin, src) => {
+      dragon.src = src || '';
+      return !!dragonPic() && (riseDragon(kois.find((k) => k !== you) || you, pin), true);
+    },
     race: () => ({ fest: pv.fest, k: (performance.now() / 1000 - pv.boatAt) / 40, strokes: pv.strokes, won: pv.won }),
     pads: () => padSpots.map((q) => [Math.round(q.x), Math.round(q.y), Math.round(q.r)])
   };
@@ -4805,6 +4880,14 @@ function plip(kind, vol) {
     const v = 0.07 * (vol || 1);
     hiss(t, 0.5, 900, 0.6, v * 0.35);
     bubble(t, rnd(180, 220), v, 0.4);
+    return;
+  }
+  if (kind === 'dragon') {
+    // the gate cleared: a low drum, the rush of water, and a run up the scale as it climbs
+    const v = 0.06 * (vol || 1);
+    bubble(t, 62, v * 1.8, 0.6);
+    hiss(t, 1.6, 520, 0.5, v * 0.5);
+    [293.66, 349.23, 440, 587.33, 698.46, 880].forEach((f, i) => pluck(t + 0.3 + i * 0.17, f, v * 0.7));
     return;
   }
   if (kind === 'stamp') {
@@ -6766,6 +6849,7 @@ function tick1(raw) {
   gl.uniform1i(U.uSnap, 11);
   gl.uniform1f(U.uSnapOn, snapOn ? 1 : 0);
   gl.uniform1f(U.uGlint, (1 + gest.glint) * fx.glint);
+  gl.uniform3f(U.uDragon, dragon.x, dragon.y, dragon.lit);
   for (let i = 0; i < 10; i++) {
     const b = blots[i];
     blotU.set(b ? [b.x, b.y, wall() - b.at] : [0, 0, -1], i * 3);

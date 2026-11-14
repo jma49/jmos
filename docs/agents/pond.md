@@ -167,6 +167,17 @@ words did not reach, there only for whoever asks.
   stroke of the paddles (`paddle()`), each sending it on a second and a half; ten before it is
   across (`ROW`) and it is drummed in at the far bank, with the seal. With `?perf`,
   `window.__pond` has the koi's places, the pads and the bugs, for a tool to play them.
+  And **the Dragon Gate** (鲤鱼跃龙门): at every third leap of a visit the koi does not come down. At
+  the top of its leap it goes as a dragon (`riseDragon()` in `engine.js`, `dragon.js`), which winds
+  on to a wide circle over the open water, goes once round and climbs away over the top; the water
+  ripples under it and, on the water, is lit gold about its head (`uDragon`). The koi is back in the
+  pond once it has gone, with the seal 龙. The dragon is a painted sheet laid in slices along the way
+  its head has gone, as a painted koi is laid along its spine, on the fish's layer: ink, glow, the
+  blueprint and ASCII restyle it as they do the pond's koi, and the star chart sets stars down its
+  back. A look that paints its own koi has a dragon only with its own picture. **No picture has come
+  yet** (`DRAGONS` in `dragon.js` is empty), so no dragon rises and the seal is a preview: what is
+  wanted is "The dragon sheet" in the art brief. With `?perf`, `window.__pond.dragon(seconds,
+  picture)` raises one, held that far into its flight, from a picture to try.
 - **A chain of clues.** A look on show carries a small mark that points to the next look's gesture
   (`NEXT` and `clueFor()` in `seals.ts`, `CLUES` and `clueNow()` in `engine.js`, `.clue` in
   `pond.css`), laid in a few seconds after the look has come, until that next seal is found.
@@ -645,6 +656,7 @@ light and refraction, the glass) stays in the shader.
 | Ink: far hills, mist | canvas washes, CSS | Good | Keep; hills later | `ink/hills` later |
 | Seals (ten looks and 锦程) | the brush face in CSS | A family, but running script, not seal script | Replace | `ink/seals` (asked) |
 | Ink: inscription | the brush face | Good | Keep | none |
+| The Dragon Gate's dragon | a painted sheet laid along its way (`dragon.js`); nothing in code | No picture yet, so no dragon rises | A picture only | asked: `dragon` for the water, then each painted look (the dragon sheet in the brief) |
 | Festival things (preview) | canvas paths | Lanterns pass; the dragon boat is crude | Replace the boat and the lanterns | asked: `water/dragon-boat`, `water/lanterns` |
 | Borders and frames | pictures (青花's rim, the Dunhuang band, the relief's frieze) | In keeping | Done | in use (`qinghua/rim`, `corner`; `dunhuang/border`; `relief/frieze`) |
 | Solar-term block, chapter headers, the album's paper | type and CSS | In keeping | Keep | per look only where asked below |
@@ -673,7 +685,11 @@ pair) a sheet `afloat.webp`, 1024 × 512,
 leaves, a snow crystal or a frost flower, and, where the manner has one, a dragonfly or another small
 flying thing seen from above (a crane or a butterfly for Dunhuang, a bee or a swallow for the relief).
 
-**The round asked for now** (every line is already in a look's kit below, or is new there; make them
+**Asked for now: the dragon** of the Dragon Gate, on "The dragon sheet" below: the water's first,
+then each painted look's. None of it is delivered. A thing the pond newly shows is asked for here and
+painted; it is not drawn in code.
+
+**The round asked for before** (every line is already in a look's kit below, or is new there; make them
 in this order, commit each lot as it is done, and say in its table what came out):
 
 All of it is delivered, and all of it is in use (how is under "Each look's own pictures in the
@@ -750,6 +766,68 @@ pads and flowers as these sets: spring (small young pads), summer (full pads, bu
 - How it is used: cut into 28 slices along its length, each laid along the swimming koi's spine, so
   keep the spine dead straight and paint nothing that only makes sense straight (no long straight
   highlight down the back). 青花's sheet is the model of a correct one.
+
+**The dragon sheet, the same for every look** (asked for now; none delivered). It is for the Dragon
+Gate, under "Idle seals and the small games": a koi that leaps a third time goes as a dragon.
+
+- `dragon.webp`, 2048 × 512, in the look's folder: one Chinese dragon (龙) seen from straight above,
+  lying dead straight, head to the left. Its spine is the picture's middle line (y 256), from the tip
+  of the snout at x 64 to the tip of the tail's tuft at x 1984. Transparent ground.
+- Its build: long and slender, a dragon and not a lizard. The body is about 100 pixels across at its
+  widest, just behind the shoulders, and narrows evenly to the tail. The head is about 260 long and
+  150 across: a long muzzle, two antlers swept back, a mane behind them, and two long whiskers
+  trailing back beside the neck. Four legs are spread to the sides with the claws open: the front
+  pair about 330 pixels behind the snout's tip (x 390), the hind pair halfway along (x 1020). A
+  crest runs down the back, and the tail ends in a tuft like a flame. Left and right are alike, as
+  the koi's are: it is seen from above and turns both ways.
+- Nothing nearer the top or the bottom edge than 20 pixels, and nothing cut by an edge.
+- How it is used: cut into 120 slices along its length, each laid along the way the dragon's head
+  has gone, so it winds as a snake does (`drawDragon()` in `dragon.js`, as a painted koi is laid
+  along its spine). So keep the spine dead straight and on the middle line; paint nothing that only
+  makes sense straight (no long straight highlight down the back); and keep the legs, the antlers
+  and the whiskers within about 150 pixels of the middle line, since what stands far out fans open
+  on a tight turn.
+- How large it is seen: the whole dragon is 720 px long on a desktop, the picture at three eighths
+  of its size, and about 400 px on a phone. Paint the scales, the eyes and the claws to read at
+  that: a detail finer than 4 pixels is lost.
+- No shadow, no glow, no water, no splash: the pond adds its shadow on the bed, the ripples under
+  it and, on the water, a gold light about its head.
+- It may be painted in parts (the head, a length of body, the tail) and joined, so long as no join
+  shows and the whole is one straight dragon at the size above.
+
+Which to make, in this order. The first opens the gate; each of the others gives its look a dragon:
+
+1. **P0** the water's, in `public/pond/water/`: a golden dragon in the hand of the pond's own koi as
+   the water shows them, naturalistic and softly modelled, lit from above: gold scales, darker down
+   the flanks; the crest, the mane and the tail's tuft vermilion; antlers, claws and whiskers pale
+   as bone. It also serves ink, glow, the blueprint and ASCII, which redraw it from its shape as
+   they do the koi: ink washes it and keeps its reds as vermilion, the blueprint outlines and
+   hatches it, ASCII types it. So its outline must read on its own (the head, the antlers, four
+   legs, the tuft), and its reds must be a true vermilion, red well above green and blue.
+2. **P1** ukiyo-e's: a woodblock dragon as Kuniyoshi's prints cut them: key-block line, flat colour
+   (an indigo body, vermilion flames), scales in rows of cut arcs. In the hand of the look's koi.
+3. **P1** 青花's: cobalt on white, the dragon of a Ming jar without its clouds: drawn in dark cobalt
+   line, washed in paler blue, no other colour. In the hand of the look's koi.
+4. **P1** Dunhuang's: a mural dragon in the wall's own pigments (malachite, azurite, cinnabar,
+   ochre), in a fine even line. In the hand of the look's koi.
+5. **P1** Monet's: oil in broken strokes, no outline: a long stroke of golds and oranges under the
+   water. In the hand of `koi-v2`.
+6. **P2** the star chart's, `dragon-figure.webp`: the atlas's figure of Draco, straightened, in the
+   plate's pale engraved line on a transparent ground, as the koi's figures are. The pond draws it
+   faintly and sets stars down its back.
+7. **P2** the relief's, as a pair `dragon-c.webp` (the faded paint) and `dragon-h.webp` (the
+   height), made as its koi's pair is. Egypt has no dragon: its is the great serpent that guards
+   the sun's boat (Mehen), long and straight, with a beard and a crest and no legs. The code does
+   not take a pair for the dragon yet; it will, through `carved()`, once this has come.
+
+To see one in the pond before it is listed: build the site and serve it (`npm run build`, then
+`npm run preview`), open it with `?preview&perf` in the address, and in the console run
+`window.__pond.dragon(null, '/pond/water/dragon.webp')`, the picture's path being the one the site
+serves it at. A number in place of `null` holds the dragon that many seconds into its flight: 3.5
+is the middle of it. It answers `false` until the picture has loaded: run it again. Each look's is
+tried with that look on show (the panel's list of looks). A delivered picture is listed in
+`DRAGONS` in `dragon.js` by the thread that writes the code, which then takes the seal out of
+preview.
 
 **The dove and the spider: the second version is delivered and drawn**, as `dove-v2-1.webp` to `-3` and
 `spider-v2-1.webp` to `-3` in `public/pond/water/`: cells of 384, the rows in the order asked for,
