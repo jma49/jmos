@@ -1022,7 +1022,9 @@ air) and ASCII (the pond in characters, its swell typed as dotted contour lines)
   - in ink as fine dry strokes;
   - in ukiyo-e as Hiroshige's straight lines;
   - in ASCII as falling `|` and `/`;
-  - on the star chart as a shower of meteors, with nothing falling on the water.
+  - on the star chart as a shower of meteors, with nothing falling on the water. Rain or not,
+    a single star falls there now and then (`lookStars()`, about one every 23 seconds, never
+    over the type).
 
   Glow and blueprint hold it off. In ukiyo-e the swell's bands and foam follow only large crests,
   so the rain's rings never cut them up.

@@ -607,6 +607,12 @@ vec3 lookStars(){
     c+=vec3(.9,.95,1.)*star4(d,(3.+10.*exp(-t*3.))*puls)*k*1.4;
     vec2 dir=normalize(vec2(.8,.6)*sign(fract(b.x*.13)-.5)), hp=b.xy+dir*t*520.; float al=dot(P-hp,dir), pr=length(P-hp-dir*al);
     c+=vec3(.8,.9,1.)*exp(-pr*pr/3.)*smoothstep(-90.,0.,al)*step(al,0.)*step(t,.9)*(1.-t/.9); }
+  // now and then a star falls, rain or not: a short bright streak across the upper sky, gone in a second, and
+  // never over the type
+  { float n=floor(uTime/23.), tt=uTime-n*23.;
+    if(tt<1.1){ vec2 h=hash2(vec2(n,7.)), dir=normalize(vec2(h.x<.5?1.:-1.,.5+.35*h.y)), hp=vec2(uCss.x*(.35+.55*h.x),uCss.y*(.04+.3*h.y))+dir*uCss.x*.3*tt/1.1;
+      float al=dot(P-hp,dir), pr=length(P-hp-dir*al), len=uCss.x*.1;
+      c+=vec3(.85,.92,1.)*(exp(-pr*pr/1.1)*(1.+al/len)*step(-len,al)*step(al,0.)+star4(P-hp,1.6)*.6)*sin(tt/1.1*3.1416)*(1.-gCalm)*smoothstep(3.,4.,uLookT); } }
   // winter: a thin veil of light across the sky where the ice lies, its cracks as faint lines
   if(gIce>0.){ c+=vec3(.05,.14,.16)*gIce*(.5+.5*fbm(P*.01+uTime*.02)); c+=vec3(.5,.7,.9)*gHit.x*.6;
     c+=vec3(.8,.9,1.)*step(.997-.002*uSnow,hash1(floor((P+vec2(0.,uTime*14.))/4.)))*uSnow*gIce*.6; }
