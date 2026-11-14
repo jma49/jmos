@@ -668,6 +668,10 @@ vec3 lookRelief(){
   float dayT=clamp((uDay-.25)/.5,0.,1.), night=step(uDay,.25)+step(.75,uDay);
   float th=mix(mix(-2.62,-.52,dayT),2.25,night), el=mix(mix(.4,.66,sin(dayT*3.1416)),.38,night);
   vec3 L=vec3(cos(th)*cos(el),sin(th)*cos(el),sin(el));
+  // (and that lamp is the visitor's: held low where the pointer is, its light raking out from there over the
+  // carving and falling off into the dark)
+  vec2 tw=uPtr-P; float lamp=mix(1.,.6+.7*exp(-dot(tw,tw)/(uCss.x*uCss.x*.15)),night);
+  L=normalize(mix(L,normalize(vec3(tw.x,-tw.y,200.)),night));
   vec2 dh=vec2(dFdx(h),dFdy(h))*(uRes.x/uCss.x); vec3 n=normalize(vec3(-dh,1.));
   float lit=dot(n,L)/L.z;
   // what stands proud throws a short shadow away from the light
@@ -685,7 +689,7 @@ vec3 lookRelief(){
   c=mix(c,dark,clamp(max(max((fa-fb)*3.4,abs(pd.a-pb)*2.6),abs(tp.a-tb)*2.4),0.,1.)*.7*flt);
   c=mix(c,stone*1.06,bare);
   c*=mix(1.,clamp(lit,.42,1.65),.9)*(1.-shade*.34);
-  c*=mix(vec3(1.),vec3(1.,.92,.78)*.88,night);
+  c*=mix(vec3(1.),vec3(1.,.92,.78)*.88,night)*lamp;
   c+=vec3(.9,.88,.82)*dust*.5;
   // winter: frost on the stone, white in the cuts
   if(gIce>0.){ c=mix(c,vec3(.95,.96,.97),gIce*.4*(.6+.4*noise(P*.5))); c=mix(c,vec3(1.),step(.9,hash1(floor(P/7.)))*(1.-smoothstep(.9,2.,length(fract(P/7.)*7.-3.5-(hash2(floor(P/7.))-.5)*3.)))*uSnow*gIce*.7); }
