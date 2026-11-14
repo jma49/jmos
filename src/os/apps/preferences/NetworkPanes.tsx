@@ -83,7 +83,7 @@ export function SoftwareUpdatePane() {
   return (
     <Group title="Software Update">
       <div className="os-prefs-update">
-        <img src="/os/icons/software-update.png" alt="" width={64} height={64} />
+        <img src="/os/icons/software-update.webp" alt="" width={64} height={64} />
         <div>
           <p className="os-prefs-lead">
             <strong>JM/OS 10.4.11</strong>

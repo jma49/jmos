@@ -87,11 +87,11 @@
   width: 16px;
   height: 22px;
   background:
-    url('/os/icons/apple.png') center / 28px no-repeat,
+    url('/os/icons/apple.webp') center / 28px no-repeat,
     var(--os-accent);
   background-blend-mode: luminosity;
-  -webkit-mask: url('/os/icons/apple.png') center / 28px no-repeat;
-  mask: url('/os/icons/apple.png') center / 28px no-repeat;
+  -webkit-mask: url('/os/icons/apple.webp') center / 28px no-repeat;
+  mask: url('/os/icons/apple.webp') center / 28px no-repeat;
 }
 
 .os-menu-title[data-open='true'] .os-logo {

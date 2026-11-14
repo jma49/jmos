@@ -135,7 +135,7 @@ export function AccountsPane() {
           </div>
         ) : (
           <div className="os-prefs-account">
-            <img src="/os/icons/users.png" alt="" width={48} height={48} />
+            <img src="/os/icons/users.webp" alt="" width={48} height={48} />
             <div>
               <strong>Guest</strong>
               <small>Not signed in</small>

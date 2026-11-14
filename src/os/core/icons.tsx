@@ -6,7 +6,7 @@ export type IconComponent = ComponentType<{ size?: number }>;
 
 export function pngIcon(name: string): IconComponent {
   const Icon = ({ size = 64 }: { size?: number }) => (
-    <img src={`/os/icons/${name}.png`} width={size} height={size} alt="" draggable={false} className="os-icon" />
+    <img src={`/os/icons/${name}.webp`} width={size} height={size} alt="" draggable={false} className="os-icon" />
   );
   Icon.displayName = `Icon(${name})`;
   return Icon;

@@ -257,7 +257,7 @@ export default function Account({ win }: AppProps) {
   if (account) {
     return (
       <div className="os-app os-account os-account-signed-in">
-        <img src="/os/icons/account.png" alt="" width={64} height={64} />
+        <img src="/os/icons/account.webp" alt="" width={64} height={64} />
         <p>
           Signed in as <strong>{account.username}</strong>
         </p>
@@ -314,7 +314,7 @@ export default function Account({ win }: AppProps) {
         {tab === 'forgot' &&
           (sentFor ? (
             <div className="os-account-sent" role="status">
-              <img src="/os/icons/mail.png" alt="" width={64} height={64} />
+              <img src="/os/icons/mail.webp" alt="" width={64} height={64} />
               <h3>Check Your Email</h3>
               <p>
                 If <strong>{sentFor}</strong> has a recovery email, a link to choose a new password is on its way. It works once, for 30 minutes.
@@ -326,7 +326,7 @@ export default function Account({ win }: AppProps) {
             </div>
           ) : (
             <div className="os-account-intro">
-              <img src="/os/icons/mail.png" alt="" width={40} height={40} />
+              <img src="/os/icons/mail.webp" alt="" width={40} height={40} />
               <p className="os-account-lead">
                 Forgot your password? Enter your username, and a link to choose a new one goes to the recovery email on your account.
               </p>
