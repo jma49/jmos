@@ -1131,6 +1131,82 @@ const TERMS = [
   ['大寒', 'Major Cold', 1, 20]
 ];
 // where today falls among the terms: the term's index, and how far through it
+// The 72 pentads (七十二候), three to each term from 立春: what the season does in each five days, as the old
+// almanacs give it, with a short English gloss. The corner shows the one now.
+const PENTADS = [
+  ['东风解冻', 'East wind melts the ice'],
+  ['蛰虫始振', 'Sleeping insects stir'],
+  ['鱼陟负冰', 'Fish rise to the ice'],
+  ['獭祭鱼', 'Otters lay out their fish'],
+  ['候雁北', 'Wild geese fly north'],
+  ['草木萌动', 'Plants begin to bud'],
+  ['桃始华', 'Peach trees bloom'],
+  ['仓庚鸣', 'Orioles sing'],
+  ['鹰化为鸠', 'Hawks turn into doves'],
+  ['玄鸟至', 'Swallows return'],
+  ['雷乃发声', 'Thunder is heard'],
+  ['始电', 'Lightning begins'],
+  ['桐始华', 'Paulownias bloom'],
+  ['田鼠化为鴽', 'Moles turn into quails'],
+  ['虹始见', 'Rainbows appear'],
+  ['萍始生', 'Duckweed grows'],
+  ['鸣鸠拂其羽', 'Doves preen their wings'],
+  ['戴胜降于桑', 'Hoopoes alight in the mulberries'],
+  ['蝼蝈鸣', 'Mole crickets chirp'],
+  ['蚯蚓出', 'Earthworms come up'],
+  ['王瓜生', 'Snake gourds grow'],
+  ['苦菜秀', 'Sow thistle flowers'],
+  ['靡草死', 'Fine grasses wither'],
+  ['麦秋至', 'The wheat is ripe'],
+  ['螳螂生', 'Mantises hatch'],
+  ['鵙始鸣', 'Shrikes begin to call'],
+  ['反舌无声', 'Mockingbirds fall quiet'],
+  ['鹿角解', 'Deer shed their antlers'],
+  ['蜩始鸣', 'Cicadas begin to sing'],
+  ['半夏生', 'Crow-dipper grows'],
+  ['温风至', 'Warm winds come'],
+  ['蟋蟀居壁', 'Crickets keep to the walls'],
+  ['鹰始挚', 'Young hawks learn to strike'],
+  ['腐草为萤', 'Fireflies rise from the grass'],
+  ['土润溽暑', 'The earth is damp, the heat heavy'],
+  ['大雨时行', 'Great rains come'],
+  ['凉风至', 'Cool winds come'],
+  ['白露降', 'White dew falls'],
+  ['寒蝉鸣', 'Autumn cicadas sing'],
+  ['鹰乃祭鸟', 'Hawks lay out their prey'],
+  ['天地始肃', 'Heaven and earth grow stern'],
+  ['禾乃登', 'The grain is in'],
+  ['鸿雁来', 'Wild geese come'],
+  ['玄鸟归', 'Swallows leave'],
+  ['群鸟养羞', 'Birds lay in food'],
+  ['雷始收声', 'Thunder falls silent'],
+  ['蛰虫坯户', 'Insects seal their burrows'],
+  ['水始涸', 'The waters begin to dry'],
+  ['鸿雁来宾', 'Wild geese arrive as guests'],
+  ['雀入大水为蛤', 'Sparrows turn into clams'],
+  ['菊有黄华', 'Chrysanthemums bloom yellow'],
+  ['豺乃祭兽', 'Jackals lay out their prey'],
+  ['草木黄落', 'Leaves yellow and fall'],
+  ['蛰虫咸俯', 'Insects lie low'],
+  ['水始冰', 'Water begins to freeze'],
+  ['地始冻', 'The ground begins to harden'],
+  ['雉入大水为蜃', 'Pheasants turn into clams'],
+  ['虹藏不见', 'Rainbows hide'],
+  ['天气上升地气下降', 'Heaven rises, earth sinks'],
+  ['闭塞而成冬', 'All closes, and it is winter'],
+  ['鹖鴠不鸣', 'Night birds fall silent'],
+  ['虎始交', 'Tigers begin to court'],
+  ['荔挺出', 'Iris shoots come up'],
+  ['蚯蚓结', 'Earthworms curl up'],
+  ['麋角解', 'Elk shed their antlers'],
+  ['水泉动', 'Springs begin to stir'],
+  ['雁北乡', 'Geese turn north'],
+  ['鹊始巢', 'Magpies begin to nest'],
+  ['雉始雊', 'Pheasants begin to call'],
+  ['鸡始乳', 'Hens begin to lay'],
+  ['征鸟厉疾', 'Birds of prey fly fierce'],
+  ['水泽腹坚', 'The ponds freeze through']
+];
 function yearToday(now = new Date()) {
   const doy = (m, d) => Math.round((Date.UTC(2001, m - 1, d) - Date.UTC(2001, 0, 1)) / 864e5),
     t = doy(now.getMonth() + 1, now.getDate()),
@@ -1172,7 +1248,10 @@ function showTerm() {
   placeKuan();
   paintInk();
   $('#termV').innerHTML = [...((lang === 'ja' && TERM_JA[TERMS[i][0]]) || TERMS[i][0])].map((ch) => `<span>${ch}</span>`).join('');
-  $('#termTxt').textContent = zhOn ? '' : TERMS[i][1];
+  // (the term itself stands upright beside it; in Chinese the line is the pentad as written. Japan keeps
+  // pentads of its own, in its own forms, so in Japanese the line stays empty, as it was)
+  const pentad = PENTADS[Math.floor(yearGoal * 3) % 72];
+  $('#termTxt').textContent = lang === 'ja' ? '' : zhOn ? pentad[0] : `${TERMS[i][1]} · ${pentad[1]}`;
 }
 function stepYear(dt) {
   let d = yearGoal - year;
