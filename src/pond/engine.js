@@ -5741,11 +5741,13 @@ function greetVisitor() {
 }
 pv.back = returning();
 // A word for whoever came: some for the hour, some for any hour, one picked each time.
+// (and one for the season the pond is showing, so no one is told to mind lily pads under ice)
 function salute() {
-  const h = new Date().getHours();
+  const h = new Date().getHours(),
+    sn = inkSeason();
   if (zhOn) {
     const g = ZH.greetings,
-      pool = [...(h < 5 || h >= 21 ? g.night : h < 12 ? g.morning : h < 17 ? g.afternoon : g.evening), ...g.any];
+      pool = [...(h < 5 || h >= 21 ? g.night : h < 12 ? g.morning : h < 17 ? g.afternoon : g.evening), ...g.any, ...g.season[sn]];
     return [pool[(Math.random() * pool.length) | 0], ''];
   }
   const hour =
@@ -5761,14 +5763,13 @@ function salute() {
   const pool = [
     ...hour,
     'Welcome to the pond.',
-    "Come in, the water's fine.",
     "Glad you're here.",
     'Hello, stranger.',
     'Oh, hello.',
     'You found the pond.',
     'Take your time.',
-    'Mind the lily pads.',
-    'Nice of you to drop by.'
+    'Nice of you to drop by.',
+    ...[["The pond's waking up."], ['Mind the lily pads.', "Come in, the water's fine."], ['The leaves are turning.'], ['Cold out there. Come in.']][sn]
   ];
   return [pool[(Math.random() * pool.length) | 0], ''];
 }
