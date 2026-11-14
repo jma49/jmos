@@ -19,7 +19,7 @@ export interface Volume {
   seals: Seal[];
   /** places kept for looks still to come */
   soon?: number;
-  /** a volume of play, apart from the album proper: the album is full without it */
+  /** a volume apart from the album proper (play, or what only the weather brings): the album is full without it */
   extra?: boolean;
 }
 /** The volumes in order. A new look's seal is added to a volume, or a volume added, here and nowhere else. */
@@ -45,9 +45,11 @@ export const VOLUMES: Volume[] = [
     ]
   },
   // Seals for an occasion and not a look: each is stamped when the pond is in that state while someone
-  // is there (the rain, snow, the full moon, a festival, the dawn).
+  // is there (the rain, snow, the full moon, a festival, the dawn). Nobody can call the weather, so the
+  // album is full without them.
   {
     id: 'hours',
+    extra: true,
     seals: [
       { id: 'rain', chars: '雨', shape: 'square', cut: 'white' },
       { id: 'snow', chars: '雪', shape: 'round', cut: 'white' },
@@ -243,7 +245,7 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
       idle: 'Time well wasted.'
     },
     koi: 'Your koi wears a seal from now on.',
-    both: 'Every volume is full. The gold koi wears one too, to match.',
+    both: 'The album is full. The gold koi wears one too, to match.',
     soon: 'Still to come.',
     line: 'The water answers more than a tap.',
     clear: 'Clear my seals',
@@ -303,7 +305,7 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
       idle: '偷得浮生半日闲。'
     },
     koi: '你的锦鲤，从此带着一方印。',
-    both: '每一册都满了。金色的那条也盖了一方，和你作伴。',
+    both: '册子集齐了。金色的那条也盖了一方，和你作伴。',
     soon: '还没画好。',
     line: '水面不只会回应点击。',
     clear: '清空我的印',
@@ -363,7 +365,7 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
       idle: 'よい暇つぶしでした。'
     },
     koi: 'あなたの鯉に、印がひとつ付きました。',
-    both: 'どの冊もそろいました。金の鯉にも、おそろいの印を。',
+    both: '印譜がそろいました。金の鯉にも、おそろいの印を。',
     soon: 'まだ準備中。',
     line: '水面は、タップのほかにも応えます。',
     clear: '印を消す',
@@ -402,6 +404,8 @@ export const sealBlank = (s: Seal): string => `<b class="seal-m blank" data-shap
 export function albumHTML(a: Album, vols: Volume[], lang: Lang, fresh: string[] = []): string {
   const w = SEAL_WORDS[lang],
     roman = ['I', 'II', 'III', 'IV', 'V', 'VI'];
+  // the last volume the album proper counts: the word for a full album is said under it
+  const last = vols.filter((x) => !x.extra).at(-1)?.id;
   const leaf = (v: Volume, i: number) => {
     const n = v.seals.filter((s) => has(a, s.id)).length,
       done = full(a, v);
@@ -415,7 +419,7 @@ export function albumHTML(a: Album, vols: Volume[], lang: Lang, fresh: string[] 
         ''
       )}${`<li class="soon"><b class="seal-m blank" data-shape="square" aria-hidden="true"></b><span class="hint">${esc(w.soon)}</span></li>`.repeat(v.soon ?? 0)}</ol>${
       done
-        ? `<p class="grand"${fresh.includes(v.id) ? ' data-fresh' : ''}><span>${esc(w.thanks[v.id])}${v.id === 'painted' ? `<br>${esc(w.koi)}` : ''}${allFull(a, vols) && i === vols.filter((x) => !x.extra).length - 1 && vols.length > 1 ? `<br>${esc(w.both)}` : ''}</span><b class="seal-m own" data-shape="tall" data-cut="white" data-n="2" ${cellStyle(OWN)} lang="zh" aria-hidden="true"><span>锦</span><span>程</span></b></p>`
+        ? `<p class="grand"${fresh.includes(v.id) ? ' data-fresh' : ''}><span>${esc(w.thanks[v.id])}${v.id === 'painted' ? `<br>${esc(w.koi)}` : ''}${allFull(a, vols) && v.id === last && vols.length > 1 ? `<br>${esc(w.both)}` : ''}</span><b class="seal-m own" data-shape="tall" data-cut="white" data-n="2" ${cellStyle(OWN)} lang="zh" aria-hidden="true"><span>锦</span><span>程</span></b></p>`
         : ''
     }</div></section>`;
   };
