@@ -744,7 +744,20 @@ function drawKoi() {
   fctx.setTransform(1, 0, 0, 1, 0, 0);
   fctx.clearRect(0, 0, fishCv.width, fishCv.height);
   fctx.setTransform(s, 0, 0, s, 0, 0);
-  for (const k of kois) k.draw(fctx);
+  for (const k of kois) {
+    // (one in a leap is drawn larger as it rises, about its own middle)
+    const up = k.leap && T - k.leap < 1.1 ? Math.sin((Math.PI * (T - k.leap)) / 1.1) : 0;
+    if (!up) {
+      k.draw(fctx);
+      continue;
+    }
+    fctx.save();
+    fctx.translate(k.x, k.y);
+    fctx.scale(1 + up * 0.6, 1 + up * 0.6);
+    fctx.translate(-k.x, -k.y);
+    k.draw(fctx);
+    fctx.restore();
+  }
   drawShades(fctx);
 }
 
@@ -2168,8 +2181,34 @@ function launchBoat(text, by, from) {
   boats.push(b);
   return b;
 }
+// The leap, a small game: food thrown in one place four times running gathers the koi there, and once
+// three of them have come the largest of them leaps: it rises off the water, larger as it comes up, and
+// falls back with a splash. It earns an idle seal.
+const gather = { x: 0, y: 0, n: 0, at: -1e9 };
+function leapNow() {
+  if (gather.n < 4 || T - gather.at > 8) return;
+  const near = kois.filter((k) => k !== you && k.alpha > 0.5 && Math.hypot(k.x - gather.x, k.y - gather.y) < 170);
+  if (near.length < 3) return;
+  const k = near.reduce((a, b) => (b.size > a.size ? b : a));
+  gather.n = 0;
+  k.leap = T;
+  k.burst = 1;
+  drop(k.x, k.y, 4.5, -2.6);
+  plip('drop', 1);
+  invalidate();
+  setTimeout(() => {
+    drop(k.x, k.y, 5.5, 2.4);
+    drop(k.x, k.y, 2.5, -1.2);
+    plip('drop', 1);
+    invalidate();
+    reached('leap');
+  }, 1100);
+}
 function feed(x, y) {
   hintSoon(1800);
+  if (Math.hypot(x - gather.x, y - gather.y) < 90 && T - gather.at < 6) gather.n++;
+  else Object.assign(gather, { x, y, n: 1 });
+  gather.at = T;
   for (let i = 0; i < 4 && food.length < 28; i++)
     food.push({ x: clamp(x + rnd(-24, 24), 10, W - 10), y: clamp(y + rnd(-24, 24), 10, H - 10), vx: rnd(-22, 22), vy: rnd(-22, 22), born: T });
 }
@@ -2180,6 +2219,7 @@ function eat(q, k) {
   drop(q.x, q.y, 1.7, 0.55);
   k.burst = Math.max(k.burst, 0.35);
   plip('eat', 0.7);
+  leapNow();
 }
 function makePetals() {
   petals.length = leaves.length = 0;
@@ -2649,9 +2689,10 @@ function otherPad() {
     rr = rnd(0, q.r * 0.4);
   leap(q.x + Math.cos(ang) * rr, q.y + Math.sin(ang) * rr, i);
 }
-function dropBug() {
+// (`pad` and `mine`: a bug a visitor called down on to a pad, for the spider to catch: a small game)
+function dropBug(pad, mine = false) {
   if (!padSpots.length || bugs.length > 5) return;
-  const q = padSpots[(Math.random() * padSpots.length) | 0],
+  const q = pad || padSpots[(Math.random() * padSpots.length) | 0],
     ang = rnd(0, TAU),
     rr = q.r * rnd(0.3, 0.9);
   bugs.push({
@@ -2662,7 +2703,8 @@ function dropBug() {
     state: 'fly',
     t: 0,
     rip: 0,
-    r: rnd(0, 6)
+    r: rnd(0, 6),
+    mine
   });
 }
 function stepSpider(dt) {
@@ -2794,6 +2836,8 @@ function stepSpider(dt) {
         if (i >= 0) {
           bugs.splice(i, 1);
           plip('eat', 0.6);
+          // (the catch: a bug the visitor called down earns an idle seal)
+          if (spider.grab.mine) reached('catch');
         }
         spider.grab = spider.prey = null;
         spider.next = T + rnd(5, 9);
@@ -3200,7 +3244,15 @@ const flies = [0, 1].map((i) => ({ x: -50, y: -50, a: 0, tx: 0, ty: 0, next: 0, 
 const doveSize = () => (big ? 64 : 48);
 // with ?perf, for the tools that picture the pond (tools/pond/): where the two are and what they are doing,
 // and a way to show visitors who are not there (it changes this browser's picture only)
-if (PERF) window.__pond = { dove, spider, visitors: (list) => seeVisitors(list) };
+if (PERF)
+  window.__pond = {
+    dove,
+    spider,
+    visitors: (list) => seeVisitors(list),
+    koi: () => kois.map((k) => [k.id, Math.round(k.x), Math.round(k.y)]),
+    bugs: () => bugs.length,
+    pads: () => padSpots.map((q) => [Math.round(q.x), Math.round(q.y), Math.round(q.r)])
+  };
 function callDove() {
   if (!life || dove.state !== 'away') return;
   const spots = padSpots.filter((_, i) => i !== spider.pad),
@@ -5660,6 +5712,15 @@ pond.addEventListener('pointerdown', (e) => {
     feed(x, y);
     plip(`press-${look}`, 0.8);
     for (const k of kois) if (k !== you && Math.hypot(k.x - x, k.y - y) < 130) k.burst = 0.5;
+    return;
+  }
+  // The catch, a small game: a press on a lily pad while the spider is about calls a bug down on to it,
+  // for the spider to watch and jump at.
+  const pad = spider.alpha > 0.5 && padSpots.find((q) => Math.hypot(q.x - x, q.y - y) < Math.max(26, q.r * 2));
+  if (pad) {
+    dropBug(pad, true);
+    drop(x, y, 1.6, -0.6);
+    plip('drop', 0.4);
     return;
   }
   drop(x, y, 3.2, -2);
