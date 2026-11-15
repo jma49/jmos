@@ -134,7 +134,6 @@ export function drawDragon(c, d, t, pic, m = 1) {
     way = (i) => Math.atan2(P[i + 1][1] - P[i][1], P[i + 1][0] - P[i][0]);
   for (let i = 0; i < P.length - 1; i++) {
     const [x0, y0] = P[i],
-      [x1, y1] = P[i + 1],
       a = way(i);
     // on a turn a slice runs on under the next, by as much as the turn opens between them at the reach of
     // its claws: else what stands out from the body fans open into a comb

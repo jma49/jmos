@@ -3004,6 +3004,8 @@ function stepSpider(dt) {
         d = Math.hypot(dx, dy) || 1;
       b.x += (dx / d) * 330 * dt + Math.sin(T * 23 + b.r) * 1.6;
       b.y += (dy / d) * 330 * dt + Math.cos(T * 19 + b.r) * 1.6;
+      // (it flies head first, and sits as it came down)
+      b.a = Math.atan2(dy, dx);
       if (d < 8) {
         b.state = 'land';
         b.t = 0;
@@ -3151,23 +3153,16 @@ function stepSpider(dt) {
     }
   });
 }
+// The bug the spider hunts is a midge from a picture (two cells of 64, its head to the right: wings out,
+// wings beaten back), fetched when the first one comes down; it flies beating them and sits with them back.
 function drawBugs(c) {
+  const art = bugs.length ? artOf('bug', 'water') : null;
+  if (!art) return;
   for (const b of bugs) {
     c.save();
     c.translate(b.x, b.y);
-    c.rotate(b.r);
-    c.fillStyle = 'rgba(235,245,250,0.55)';
-    const beat = b.state === 'fly' ? 0.6 + 0.4 * Math.sin(T * 60) : 1;
-    c.beginPath();
-    c.ellipse(-0.5, -3.2 * beat, 2, 3.4, 0.5, 0, TAU);
-    c.fill();
-    c.beginPath();
-    c.ellipse(-0.5, 3.2 * beat, 2, 3.4, -0.5, 0, TAU);
-    c.fill();
-    c.fillStyle = '#14181a';
-    c.beginPath();
-    c.ellipse(0, 0, 3, 1.7, 0, 0, TAU);
-    c.fill();
+    c.rotate(b.a ?? b.r);
+    c.drawImage(art.pic, b.state === 'fly' && Math.floor(T * 24) % 2 === 0 ? 0 : 64, 0, 64, 64, -8, -8, 16, 16);
     c.restore();
   }
 }
@@ -5488,26 +5483,26 @@ function sealsEntry() {
 }
 // the volumes whose large seal hasn't been seen yet: it stamps as the album opens, once
 const freshVols = () => VOLS.filter((v) => full(album, v) && !album.sealed.includes(v.id)).map((v) => v.id);
-// The seals cut in seal script are two pictures: the looks' seals and Jincheng's own, and the occasions' and
-// the idle seals'. The first is asked for the first time a seal is to be seen, the second with it unless only
-// Jincheng's own is wanted (ink's inscription); until a sheet has come (and if it never does) its seals are
-// their characters in the brush.
-function sealsPic(both = true) {
+// The seals cut in seal script are three pictures: the looks' seals and Jincheng's own; the occasions'; the
+// idle seals' and the rubbing's. The first is asked for the first time a seal is to be seen, the others with
+// it unless only Jincheng's own is wanted (ink's inscription); until a sheet has come (and if it never
+// does) its seals are their characters in the brush.
+function sealsPic(all = true) {
   // (kept on the function: the inscription may ask before this part of the file has run)
   sealsPic.ims ??= [];
   sealsPic.ready ??= [];
-  for (const i of both ? [0, 1] : [0]) {
+  for (const i of all ? [0, 1, 2] : [0]) {
     if (sealsPic.ready[i]) continue;
     const im = new Image();
     sealsPic.ready[i] = new Promise((done) => {
       im.onload = () => {
         sealsPic.ims[i] = im;
-        pond.setAttribute(i ? 'data-seals2' : 'data-seals', '');
+        pond.setAttribute(['data-seals', 'data-seals2', 'data-seals3'][i], '');
         done();
       };
       im.onerror = done;
     });
-    im.src = ['/pond/ink/seals.webp', '/pond/ink/seals-2.webp'][i];
+    im.src = ['/pond/ink/seals.webp', '/pond/ink/seals-2.webp', '/pond/ink/seals-3.webp'][i];
   }
 }
 // What a picture of the album draws with: the sheets of cut seals, and the brushed characters of the seals
@@ -5776,9 +5771,8 @@ document.addEventListener('click', (e) => {
 const CLUES = {
   // ink: a line added to the inscription, "one turn makes a wave"
   ink: '<span lang="zh">一圈成浪</span>',
-  // the print: four flecks of spray fallen in one place
-  ukiyo:
-    '<svg viewBox="0 0 60 60" width="60" height="60"><g fill="#f6edd8" stroke="#0c1b27" stroke-width="1.2"><circle cx="27" cy="26" r="4"/><circle cx="35" cy="29" r="3.4"/><circle cx="29" cy="35" r="3.6"/><circle cx="34" cy="37" r="2.8"/></g></svg>',
+  // the print: four flecks of spray fallen in one place, as a block cuts them
+  ukiyo: '<img src="/pond/ukiyo/clue.webp" alt="" width="60" height="60" decoding="async">',
   // the lilies: one more lily pad, painted, its rim alone in the bowl's cobalt (a line drawn in code over
   // the painting read as a fault). It is there only in the seasons that have lily pads.
   monet: '<img src="/pond/monet/clue.webp" alt="" width="160" height="120" decoding="async">',
@@ -5791,8 +5785,7 @@ const CLUES = {
   // the characters: three stars, far apart
   ascii: '<b style="left:17%;top:31%">✦</b><b style="left:79%;top:24%">✦</b><b style="left:56%;top:79%">✦</b>',
   // the sky: one figure whose stars are joined as a zigzag
-  stars:
-    '<svg viewBox="0 0 230 70" width="230" height="70"><polyline points="8,52 44,16 80,54 116,18 152,56 188,20 222,50" fill="none" stroke="#f0cf8a" stroke-width="0.8" stroke-opacity=".7"/><g fill="#f0cf8a"><circle cx="8" cy="52" r="2.2"/><circle cx="44" cy="16" r="2.6"/><circle cx="80" cy="54" r="2"/><circle cx="116" cy="18" r="2.8"/><circle cx="152" cy="56" r="2"/><circle cx="188" cy="20" r="2.4"/><circle cx="222" cy="50" r="2.2"/></g></svg>'
+  stars: '<img src="/pond/stars/clue.webp" alt="" width="230" height="70" decoding="async">'
 };
 function clueNow() {
   const el = $('#clue'),

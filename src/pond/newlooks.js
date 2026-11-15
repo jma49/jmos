@@ -63,7 +63,9 @@ export const LOOK_ART = {
         [3, 1]
       ]
     },
-    fly: { src: '/pond/water/dragonfly.webp', frames: 4, beat: 22 }
+    fly: { src: '/pond/water/dragonfly.webp', frames: 4, beat: 22 },
+    // the midge the spider hunts, in every look
+    bug: { src: '/pond/water/bug.webp' }
   },
   ukiyo: {
     pads: {

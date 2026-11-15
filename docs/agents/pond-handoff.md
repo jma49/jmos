@@ -19,11 +19,10 @@ what is left, and what was learnt. What is open now is section 0.
   it, is the list "Asked for now" in the art brief in [pond.md](pond.md); the rules every picture
   keeps are under "For every picture" there.
 - **Delivered on this branch and in use:** the dragon for seven looks (the water's, ukiyo-e's,
-  青花's, Dunhuang's, Monet's, the star chart's figure, the relief's pair); the second sheet of
-  seals (`seals-2.webp`, with the Dragon Gate's 龙); the painted clues of Monet's pond and the bowl.
-  Each was looked at in the pond, in its own look, at 1280 × 800.
-- **Still asked:** a third sheet of seals, for the four still in the brush and for the games to
-  come; painted clues for ukiyo-e and the star chart; the bug the spider hunts.
+  青花's, Dunhuang's, Monet's, the star chart's figure, the relief's pair); the second and third
+  sheets of seals, so every seal is cut; painted clues for Monet's pond, the bowl, ukiyo-e and the
+  star chart; the midge the spider hunts. Each was looked at in the pond at 1280 × 800.
+- **Still asked:** nothing, until the next game's pictures are written into the brief.
 - **Asked again, where a picture can be bettered** (each is P2: what is there is in use and reads
   well enough). The cloud thread writes these here and in the brief after seeing a picture in the
   pond; a second version takes the first one's name, and the table says what changed.

@@ -670,9 +670,9 @@ light and refraction, the glass) stays in the shader.
 | Pebble bed (water look) | `BED` shader, drawn once | Good; it is what the refraction reads from, and the first thing seen | Keep for now | A Blender-rendered bed with a normal map would be the one thing to try, behind a flag, at no cost to the first visit's budget only if it fits in about 150 KB |
 | Ink: seasonal motif | `painting.js`, from pictures | Painted, and in use | Done | none |
 | Ink: far hills, mist | canvas washes, CSS | Good | Keep; hills later | `ink/hills` later |
-| Seals | cut in seal script from two sheets (`ink/seals`, `seals-2`); four still in the brush (漂, 跃, 捕, 拓) | The cut ones are a family; the brushed ones stand out beside them | Replace the last four | asked: `seals-3` |
-| Clues | pictures in Monet and 青花; ukiyo-e's flecks and the star chart's zigzag are SVG; ink's is brushed type, glow's a line of light, the blueprint's and ASCII's are characters | The two SVG ones are the only drawn marks left | Replace those two | asked: a clue each for ukiyo-e and the star chart |
-| The bug the spider hunts | three ellipses in `drawBugs()` | Small enough to pass, but it is a drawn thing among pictures | Replace | asked: `bug` (P2) |
+| Seals | cut in seal script from three sheets (`ink/seals`, `seals-2`, `seals-3`) | A family | Done | in use |
+| Clues | pictures in ukiyo-e, Monet, 青花 and the star chart; ink's is brushed type, glow's a line of light, the blueprint's and ASCII's are characters | In keeping | Done | in use |
+| The bug the spider hunts | a picture (`water/bug`) | Small, and in keeping | Done | in use |
 | Food | two dots | A pellet is a dot | Keep | none |
 | Ink: inscription | the brush face | Good | Keep | none |
 | The Dragon Gate's dragon | a painted sheet laid along its way (`dragon.js`), one for each painted look; nothing in code but the star chart's stars | In keeping in every look | Done | in use (`dragon` in each painted look's folder, `stars/dragon-figure`, the relief's pair) |
@@ -712,16 +712,16 @@ drawn in code, and what is still drawn in code that a picture would better is on
    look at in the pond: ukiyo-e's second version, under the first one's name, drawn at its true
    proportions and not stretched, with a print dragon's fierce eyes under brows in place of round
    ones, its antlers clear of the mane and its legs a little larger.
-2. **Delivered, to wire in: a third sheet of seals**, `seals-3.webp` (item 10 under "Ink"): the four seals still in the
+2. **Delivered and in use: a third sheet of seals**, `seals-3.webp` (item 10 under "Ink"): the four seals still in the
    brush, and the seals of the small games to come.
-3. **Delivered, to wire in: two more clues, painted** (item 9 under "Ink"): ukiyo-e's and the star chart's, which are still
-   drawn in code. Delivered, to look at in the pond: Monet's second version, under the first
+3. **Delivered and in use: two more clues, painted** (item 9 under "Ink"): ukiyo-e's and the star chart's.
+   Delivered, to look at in the pond: Monet's second version, under the first
    one's name, its cobalt rim as one loaded stroke about 6 pixels wide, broken only at the notch,
    so it reads at the 160 px it is shown at.
-4. **Delivered, to wire in: the bug the spider hunts**, `bug.webp` in the water's folder: 128 × 64, two cells of 64, a
+4. **Delivered and in use: the bug the spider hunts**, `bug.webp` in the water's folder: 128 × 64, two cells of 64, a
    midge seen from above, its wings out in the first cell and beaten back in the second; a dark
-   body, pale wings you can see through. It is drawn about 12 pixels long, so it must be bold. Now
-   three ellipses in code (`drawBugs()` in `engine.js`).
+   body, pale wings you can see through. It is drawn about 12 pixels long, so it must be bold
+   (`drawBugs()` in `engine.js`; nothing is drawn until the picture has come).
 
 **The round asked for before** (every line is already in a look's kit below, or is new there; make them
 in this order, commit each lot as it is done, and say in its table what came out):
@@ -975,7 +975,7 @@ is most of it.
      about 240 × 240 with alpha, a reign mark in cobalt as on the foot of a bowl, half hidden under a
      film of ochre dust with a few strokes wiped through it, edges feathered to nothing.
 
-   **Delivered, to wire in: two more**, for the two looks whose clue is still drawn in code:
+   **Delivered and in use: two more**, for the two looks whose clue was drawn in code:
    - Ukiyo-e, pointing to Monet's pond (four dabs in one place): clue.webp in the ukiyo-e folder,
      240 × 240 with alpha, shown 60 px across: four flecks of spray fallen close together, as a print
      cuts them at the tips of a wave's claws: cream-white, each a different size, each with its key
@@ -985,7 +985,7 @@ is most of it.
      manner, seven stars of differing magnitude joined by a thin line as a zigzag of three peaks,
      pale gold (`#f0cf8a`); no letters, no frame.
 
-10. **Delivered, to wire in: a third sheet of seals**, `seals-3.webp` in `public/pond/ink/`, 1024 × 512,
+10. **Delivered and in use: a third sheet of seals**, `seals-3.webp` in `public/pond/ink/`, 1024 × 512,
     cells of 256, 4 × 2, cut and coloured exactly as the first two are. Row 1, the four still in
     the brush: 漂 (round, 朱, skipping stones), 跃 (square, 白, the leap), 捕 (square, 朱, the catch),
     拓 (square, 白, the rubbing). Row 2, the small games to come: 琴 (round, 朱, the lotus zither),
@@ -1000,8 +1000,7 @@ is most of it.
    in its full form 龍), then one cell empty. Under the budget for a file in `public/`. It is asked
    for with the first sheet, except where only Jincheng's own seal is wanted (ink's inscription), and
    until it has come these are their characters in the brush (`CUT` in `seals.ts` lists what the
-   sheets hold; `sealsPic()` in `engine.js` fetches them). The idle seals without a cut (漂, 跃, 捕)
-   and the rubbing's (拓) stay in the brush.
+   sheets hold; `sealsPic()` in `engine.js` fetches them).
 
 **Ukiyo-e.** Judge it by: a Hokusai or Hiroshige print at arm's length: flat colour, a key line,
 bokashi gradation, paper showing.
