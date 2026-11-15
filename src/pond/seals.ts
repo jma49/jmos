@@ -73,7 +73,8 @@ export const VOLUMES: Volume[] = [
       { id: 'leap', chars: '跃', shape: 'square', cut: 'white' },
       { id: 'catch', chars: '捕', shape: 'square', cut: 'red' },
       { id: 'race', chars: '舟', shape: 'round', cut: 'white' },
-      { id: 'dragon', chars: '龙', shape: 'round', cut: 'red' }
+      { id: 'dragon', chars: '龙', shape: 'round', cut: 'red' },
+      { id: 'taiji', chars: '太极', shape: 'tall', cut: 'white' }
     ]
   }
 ];
@@ -216,7 +217,8 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
       leap: 'The leap',
       catch: 'The catch',
       race: 'The race',
-      dragon: 'The Dragon Gate'
+      dragon: 'The Dragon Gate',
+      taiji: 'The koi’s circle'
     },
     hints: {
       ink: 'Stillness leaves a mark.',
@@ -239,7 +241,8 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
       leap: 'Feed them in one place, and keep feeding until they all come.',
       catch: 'Tap a lily pad while the spider is about.',
       race: 'At Dragon Boat a boat crosses, far off. Paddle with it: press the water beside it.',
-      dragon: 'A koi that leaps often enough may never come down.'
+      dragon: 'A koi that leaps often enough may never come down.',
+      taiji: 'Ink remembers an old code: ↑ ↑ ↓ ↓ ← → ← → B A.'
     },
     thanks: {
       painted: 'Every painted one. Thank you for looking so closely.',
@@ -280,7 +283,8 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
       leap: '鱼跃',
       catch: '捕虫',
       race: '竞渡',
-      dragon: '龙门'
+      dragon: '龙门',
+      taiji: '太极'
     },
     hints: {
       ink: '停一停，会留下痕迹。',
@@ -303,7 +307,8 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
       leap: '在同一处一直喂，喂到鱼都来。',
       catch: '跳蛛在的时候，点一片荷叶。',
       race: '端午那天，远处有龙舟划过。在船边点水，帮它划到对岸。',
-      dragon: '鱼跃得够多，就不再落下。'
+      dragon: '鱼跃得够多，就不再落下。',
+      taiji: '墨里还认一句老口诀：↑ ↑ ↓ ↓ ← → ← → B A。'
     },
     thanks: {
       painted: '画的这一册集齐了。谢谢你看得这么仔细。',
@@ -344,7 +349,8 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
       leap: '跳ねる',
       catch: '捕まえる',
       race: '競渡',
-      dragon: '登竜門'
+      dragon: '登竜門',
+      taiji: '太極'
     },
     hints: {
       ink: 'じっとしていると、跡が残る。',
@@ -367,7 +373,8 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
       leap: '同じところで餌をやりつづけて、みんなが来るまで。',
       catch: '蜘蛛がいるとき、蓮の葉をたたく。',
       race: '端午の日、遠くを竜舟が渡る。そばの水をたたいて、いっしょに漕ぐ。',
-      dragon: '何度も跳ねた鯉は、もう落ちてこない。'
+      dragon: '何度も跳ねた鯉は、もう落ちてこない。',
+      taiji: '墨は古い合言葉を覚えている：↑ ↑ ↓ ↓ ← → ← → B A。'
     },
     thanks: {
       painted: '絵の一冊がそろいました。じっくり見てくれて、ありがとう。',
@@ -450,7 +457,9 @@ export const TRACES: Record<string, string> = {
   // presses beside the boat
   race: `<path class="moon" d="M8 22h44"/>${dot(20, 32, 0)}${dot(30, 32, 0.3)}${dot(40, 32, 0.6)}`,
   // a leap, again and again, and up and away
-  dragon: `${dot(30, 50, 0)}${dot(30, 50, 0.3)}${dot(30, 50, 0.6)}<path pathLength="100" class="s" d="M30 46C48 40 46 24 30 24S14 10 34 6"/>`
+  dragon: `${dot(30, 50, 0)}${dot(30, 50, 0.3)}${dot(30, 50, 0.6)}<path pathLength="100" class="s" d="M30 46C48 40 46 24 30 24S14 10 34 6"/>`,
+  // two fish head to tail round one point
+  taiji: `<path pathLength="100" class="s" d="M30 14a16 16 0 0 1 0 32a8 8 0 0 1 0-16a8 8 0 0 0 0-16"/><circle class="ring" cx="30" cy="30" r="16"/>`
 };
 /** An empty place: the seal's outline, and the seal in it faintly, as a stamp album prints the stamp it waits for. */
 export const sealBlank = (s: Seal): string => sealMark(s, 'blank');
