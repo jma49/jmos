@@ -139,7 +139,7 @@ describe('the idle seals', () => {
     for (const v of all.filter((x) => !x.extra)) for (const x of v.seals) a = stamp(a, x.id, '2026-11-13', all).album;
     expect(allFull(a, all)).toBe(true);
     expect(stamp(a, 'skip', '2026-11-14', all).fresh).toBe(true);
-    expect(all.at(-1)?.seals.map((x) => x.id)).toEqual(['skip', 'leap', 'catch', 'race', 'dragon']);
+    expect(all.at(-1)?.seals.map((x) => x.id)).toEqual(['skip', 'leap', 'catch', 'race', 'dragon', 'taiji']);
   });
 });
 

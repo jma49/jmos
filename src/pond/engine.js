@@ -194,15 +194,21 @@ class Koi {
     this.next = T + rnd(5, 10);
   }
   update(dt) {
-    if (this.mode === 'wander' && (T > this.next || Math.hypot(this.tx - this.x, this.ty - this.y) < 110)) this.wander();
+    // (in the koi's circle every koi has a place to make for, and nothing else calls it away)
+    const ring = taijiSpot(this);
+    if (ring) {
+      [this.tx, this.ty] = ring;
+      this.next = T + 2;
+    }
+    if (!ring && this.mode === 'wander' && (T > this.next || Math.hypot(this.tx - this.x, this.ty - this.y) < 110)) this.wander();
     // Round the pointer, not at it: the point made for is always a little further along a circle about it.
-    if (this.mode === 'greet') {
+    if (!ring && this.mode === 'greet') {
       // swims over to the visitor's koi and round it once
       const a = T * 0.9;
       this.tx = you.x + Math.cos(a) * 80;
       this.ty = you.y + Math.sin(a) * 80;
     }
-    if (this.mode === 'you' || this.mode === 'visit') {
+    if (!ring && (this.mode === 'you' || this.mode === 'visit')) {
       const R = this.mode === 'you' ? 74 : 124,
         ang = Math.atan2(this.y - ptr.y, this.x - ptr.x) + (this.mode === 'you' ? 0.9 : -0.9);
       this.tx = ptr.x + Math.cos(ang) * R;
@@ -211,7 +217,7 @@ class Koi {
     // visitors drift between the surface and the bed; food brings everyone but you up and over
     if (this.drift) this.depth = 0.5 + 0.5 * Math.sin(T * 0.11 + this.seed * 3);
     let meal = null;
-    if ((this.mode === 'wander' || this.mode === 'visit') && food.length) {
+    if (!ring && (this.mode === 'wander' || this.mode === 'visit') && food.length) {
       let bd = 640;
       for (const q of food) {
         const d = Math.hypot(q.x - this.x, q.y - this.y);
@@ -2403,6 +2409,32 @@ function leapNow() {
     reached('leap');
   }, 1100);
 }
+// The koi's circle (太极), in ink only: an old cheat typed on the keys (up up down down left right left right
+// B A) and for three quarters of a minute the visitor's koi and the gold one swim head to tail round one point, as the
+// two fish of the taiji do, with the rest in a wide ring the other way about. It earns an idle seal.
+const CHEAT = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
+const taiji = { until: 0, keys: [] };
+function taijiSpot(k) {
+  if (performance.now() > taiji.until || look !== 'ink') return null;
+  const cx = W * (big ? 0.66 : 0.5),
+    cy = H * 0.5,
+    inner = k === you || k === host,
+    rest = kois.filter((q) => q !== you && q !== host),
+    R = inner ? Math.min(W, H) * 0.09 : Math.min(W, H) * 0.3,
+    // (where it should be on its ring now, and a little further on, so it is always swimming round)
+    at = inner ? T * 1.5 + (k === host ? Math.PI : 0) : -T * 0.5 + (rest.indexOf(k) / Math.max(1, rest.length)) * TAU,
+    lead = inner ? 0.7 : -0.5;
+  return [cx + Math.cos(at + lead) * R, cy + Math.sin(at + lead) * R];
+}
+addEventListener('keydown', (e) => {
+  taiji.keys = [...taiji.keys, e.key.length === 1 ? e.key.toLowerCase() : e.key].slice(-CHEAT.length);
+  if (look !== 'ink' || base !== 'ink' || sheetOpen() || taiji.keys.join() !== CHEAT.join()) return;
+  taiji.keys = [];
+  taiji.until = performance.now() + 45000;
+  plip('ink', 1);
+  invalidate();
+  setTimeout(() => look === 'ink' && reached('taiji'), 14000);
+});
 // 鲤鱼跃龙门: the koi that cleared the gate goes as a dragon (dragon.js), rippling the water under it and, in
 // the water, lighting it gold. The koi is back in the pond once the dragon has gone, and the visit has its
 // seal. Its picture is fetched at the first leap, so it has come by the third. (`pin` holds the dragon at one
@@ -3539,7 +3571,8 @@ function stepInk(raw) {
       if (lookNext) setLook(...lookNext);
     }
   }
-  const goal = inkOn ? (k < 0.5 ? 0.06 : 0.32) : look === 'glow' ? 0.7 : top === 'ink' && inkR > 0 ? 0.25 : 1;
+  // (ink's slow time picks up for the koi's circle, so they gather in seconds and not minutes)
+  const goal = inkOn ? (k < 0.5 ? 0.06 : performance.now() < taiji.until ? 0.9 : 0.32) : look === 'glow' ? 0.7 : top === 'ink' && inkR > 0 ? 0.25 : 1;
   timeScale += (goal - timeScale) * Math.min(1, raw * (inkOn && k < 0.5 ? 9 : 1.6));
 }
 let calmNow = 1,

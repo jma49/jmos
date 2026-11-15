@@ -167,6 +167,11 @@ words did not reach, there only for whoever asks.
   stroke of the paddles (`paddle()`), each sending it on a second and a half; ten before it is
   across (`ROW`) and it is drummed in at the far bank, with the seal. With `?perf`,
   `window.__pond` has the koi's places, the pads and the bugs, for a tool to play them.
+  And **the koi's circle** (太极), in ink only: the old cheat typed on the keys (up up down down left
+  right left right B A) and for three quarters of a minute the visitor's koi and the gold one swim
+  head to tail round one point, as the two fish of the taiji do, with the rest in a wide ring the
+  other way about (`taijiSpot()` and `CHEAT` in `engine.js`); ink's slow time picks up while it
+  lasts. It has no way in without keys yet.
   And **the Dragon Gate** (鲤鱼跃龙门): at every third leap of a visit the koi does not come down. At
   the top of its leap it goes as a dragon (`riseDragon()` in `engine.js`, `dragon.js`), which winds
   on to a wide circle over the open water, goes once round and climbs away over the top; the water
