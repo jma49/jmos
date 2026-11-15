@@ -40,3 +40,4 @@ replaces; don't delete the old one.
 | [0025](0025-the-pond.md) | The pond | 2026-11-11 |
 | [0026](0026-looks-and-gestures.md) | Looks, found by gestures | 2026-11-12 |
 | [0027](0027-the-pond-ignores-reduced-motion.md) | The pond ignores reduced motion | 2026-11-14 |
+| [0028](0028-the-pond-has-three-endings.md) | The pond has three endings | 2026-11-15 |

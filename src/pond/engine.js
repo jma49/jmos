@@ -22,6 +22,9 @@ import {
   allFull,
   clearSeals,
   clueFor,
+  layStroke,
+  signed,
+  STROKES,
   count as sealCount,
   dayOf,
   dayText,
@@ -4424,6 +4427,7 @@ $('#veil').addEventListener('pointerdown', (e) => {
 $('#sheet').addEventListener('click', (e) => {
   const wipe = e.target.closest('#albumClear');
   if (e.target.closest('.x')) closeSheet();
+  else if (e.target.closest('.vol[data-vol="own"] .seal-m') && signed(album) && !hasSeal(album, 'true')) signedNow();
   else if (wipe) {
     // clearing the album asks once, in place: the words turn to a question, and only a second press within
     // a few seconds clears; left alone, the button reads as before
@@ -5538,26 +5542,26 @@ function sealsEntry() {
 }
 // the volumes whose large seal hasn't been seen yet: it stamps as the album opens, once
 const freshVols = () => VOLS.filter((v) => full(album, v) && !album.sealed.includes(v.id)).map((v) => v.id);
-// The seals cut in seal script are three pictures: the looks' seals and Jincheng's own; the occasions'; the
-// idle seals' and the rubbing's. The first is asked for the first time a seal is to be seen, the others with
+// The seals cut in seal script are four pictures: the looks' seals and Jincheng's own; the occasions'; the
+// idle seals' and the rubbing's; the signature's. The first is asked for the first time a seal is to be seen, the others with
 // it unless only Jincheng's own is wanted (ink's inscription); until a sheet has come (and if it never
 // does) its seals are their characters in the brush.
 function sealsPic(all = true) {
   // (kept on the function: the inscription may ask before this part of the file has run)
   sealsPic.ims ??= [];
   sealsPic.ready ??= [];
-  for (const i of all ? [0, 1, 2] : [0]) {
+  for (const i of all ? [0, 1, 2, 3] : [0]) {
     if (sealsPic.ready[i]) continue;
     const im = new Image();
     sealsPic.ready[i] = new Promise((done) => {
       im.onload = () => {
         sealsPic.ims[i] = im;
-        pond.setAttribute(['data-seals', 'data-seals2', 'data-seals3'][i], '');
+        pond.setAttribute(['data-seals', 'data-seals2', 'data-seals3', 'data-seals4'][i], '');
         done();
       };
       im.onerror = done;
     });
-    im.src = ['/pond/ink/seals.webp', '/pond/ink/seals-2.webp', '/pond/ink/seals-3.webp'][i];
+    im.src = `/pond/ink/seals${i ? `-${i + 1}` : ''}.webp`;
   }
 }
 // What a picture of the album draws with: the sheets of cut seals, and the brushed characters of the seals
@@ -5821,6 +5825,86 @@ document.addEventListener('click', (e) => {
   }
   reached('rubbing');
 });
+// The signature (decision 0028): once every look is found, the gesture that found a look, made again in
+// that look, lays one stroke of 真 where the look would be signed, in its own hand. Each painted look's
+// stroke is a picture (public/pond/<look>/stroke.webp; the relief's a pair, its paint and the groove's
+// height); in glow, the blueprint and ASCII it is light, ruled line and characters, which the styles draw.
+// With all ten laid the seal's place in the album can be pressed: the gold koi comes round the visitor's,
+// and the seal is theirs.
+const STROKE_PICS = Object.fromEntries(['ink', 'ukiyo', 'monet', 'qinghua', 'dunhuang', 'stars'].map((k) => [k, `/pond/${k}/stroke.webp`]));
+// The relief's stroke is a groove: its height lit from the upper left as the wall is (the wall of the cut
+// nearer the light in shadow, the farther one lit, its bed a little dark), and the paint lying in it.
+function groove(cv) {
+  const load = (src) =>
+    new Promise((done, fail) => {
+      const im = new Image();
+      im.onload = () => done(im);
+      im.onerror = () => fail(new Error(`no picture at ${src}`));
+      im.src = src;
+    });
+  Promise.all([load('/pond/relief/stroke-c.webp'), load('/pond/relief/stroke-h.webp')])
+    .then(([paint, hi]) => {
+      const n = (cv.width = cv.height = 256),
+        c = cv.getContext('2d');
+      c.drawImage(hi, 0, 0, n, n);
+      const px = c.getImageData(0, 0, n, n),
+        h = Float32Array.from({ length: n * n }, (_, i) => px.data[i * 4]);
+      for (let y = 0; y < n; y++)
+        for (let x = 0; x < n; x++) {
+          const i = y * n + x,
+            a = h[Math.max(0, y - 1) * n + Math.max(0, x - 1)],
+            b = h[Math.min(n - 1, y + 1) * n + Math.min(n - 1, x + 1)],
+            slope = (b - a) * 14,
+            deep = Math.max(0, 128 - h[i]) * 2.2,
+            v = slope > deep ? 255 : 0;
+          px.data[i * 4] = px.data[i * 4 + 1] = px.data[i * 4 + 2] = v;
+          px.data[i * 4 + 3] = clamp(Math.abs(slope - deep) + (slope > deep ? 0 : deep * 0.4), 0, 150);
+        }
+      c.putImageData(px, 0, 0);
+      c.globalAlpha = 0.9;
+      c.drawImage(paint, 0, 0, n, n);
+    })
+    .catch((e) => report(e, 'pond pictures'));
+}
+function signNow(name) {
+  const r = layStroke(album, name, dayOf(new Date()));
+  if (!r.fresh) return;
+  album = r.album;
+  save('pond-seals', writeAlbum(album));
+  signShow();
+  plip('stamp', 0.6);
+  drop(W * (big ? 0.7 : 0.5), H * 0.5, 2.4, 0.5);
+  whisper(`真 · ${Object.keys(album.strokes).length} / ${STROKES.length}`);
+  if (sheetOpen() && sheetId === 'seals') openSheet('seals');
+  invalidate();
+}
+// (the stroke of the look on show, once laid and the look has come in all the way)
+function signShow() {
+  const el = $('#sign'),
+    on = look !== 'water' && base === look && look in album.strokes ? look : '';
+  if ((el.dataset.for || '') === on) return;
+  if (!on) return void delete el.dataset.for;
+  el.innerHTML = STROKE_PICS[on] ? `<img src="${STROKE_PICS[on]}" alt="" decoding="async">` : on === 'relief' ? '<canvas></canvas>' : '<i></i>';
+  if (on === 'relief') groove(el.firstChild);
+  el.dataset.for = on;
+  el.dataset.n = String(STROKES.indexOf(on) + 1);
+}
+function signedNow() {
+  closeSheet();
+  greetVisitor();
+  setTimeout(() => reached('true'), 2500);
+}
+// one quiet line on the water, by the visitor's koi, for a few seconds
+function whisper(text) {
+  const el = $('#whisper');
+  el.textContent = text;
+  const half = Math.min(W - 40, el.offsetWidth) / 2;
+  el.style.left = `${Math.round(clamp(you.x, 20 + half, W - 20 - half))}px`;
+  el.style.top = `${Math.round(clamp(you.y + 54, 90, H - 130))}px`;
+  el.dataset.on = '';
+  clearTimeout(whisper.t);
+  whisper.t = setTimeout(() => delete el.dataset.on, 4500);
+}
 // A look on show carries a clue to the next look's gesture (seals.ts, NEXT) until that one is found: a
 // small mark in the look's own manner, laid in quietly once the look has come in all the way.
 const CLUES = {
@@ -5843,6 +5927,7 @@ const CLUES = {
   stars: '<img src="/pond/stars/clue.webp" alt="" width="230" height="70" decoding="async">'
 };
 function clueNow() {
+  signShow();
   const el = $('#clue'),
     // (only for a look that has come in all the way and is not on its way out)
     next = look !== 'water' && base === look ? clueFor(look, album) : '',
@@ -6238,6 +6323,7 @@ const toggleLook = (name, at) => {
   gest.pts = [];
   gest.carry = null;
   if (look !== name) setLook(name, at);
+  else if (base === name) signNow(name);
 };
 const glintAt = () => [W * (big ? 0.6 : 0.74), H * (big ? 0.1 : 0.12)];
 const HOLD = 1.2,
@@ -6379,7 +6465,7 @@ const HOLD = 1.2,
     drop(k.x, k.y, 1.6, -0.5);
     audio();
     plip('cue-ascii', 0.8);
-    if (look !== 'ascii' && gest.keys.length >= KEYS_TO_TYPE) {
+    if (gest.keys.length >= KEYS_TO_TYPE) {
       gest.keys = [];
       toggleLook('ascii', [x, y]);
     }
