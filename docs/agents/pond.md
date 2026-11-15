@@ -732,6 +732,20 @@ drawn in code, and what is still drawn in code that a picture would better is on
    midge seen from above, its wings out in the first cell and beaten back in the second; a dark
    body, pale wings you can see through. It is drawn about 12 pixels long, so it must be bold
    (`drawBugs()` in `engine.js`; nothing is drawn until the picture has come).
+6. **The ten strokes of the second ending** ([decision 0028](../decisions/0028-the-pond-has-three-endings.md)):
+   in each painted look, one stroke of the character 真, laid where that look would be signed. One
+   file a look, `stroke.webp`, 512 × 512 with alpha, the stroke alone in the look's own hand, about
+   360 pixels long, centred, with nothing round it. The strokes in the order 真 is written, and
+   whose each is: (1) ink, the top 横: one stroke of a loaded brush, dry at its end; (2) ukiyo-e,
+   the 竖 through it: a cut line with its key line, as a block prints one; (3) Monet, the left 竖 of
+   目: one loaded dab drawn down; (4) 青花, the 横折: cobalt, pooling at the turn; (5) Dunhuang, a
+   横 inside 目: mineral red in an even line, a little flaked; (8) the star chart, a 横: a row of
+   small stars joined by a fine line; (9) the relief, the 撇: a carved groove with its lit and
+   shadowed edges (a pair, `stroke-c` and `stroke-h`, as its other pictures are). Strokes 6, 7 and
+   10 belong to glow, the blueprint and ASCII, which are light, ruled line and characters and need
+   no picture; stained glass, when it takes the blueprint's place, wants stroke 7 as a strip of
+   ruby glass in lead. And a seal for it: 真 (square, 朱), on a fourth sheet `seals-4.webp`, 1024 ×
+   512, cut as the others are, its other cells empty for now.
 5. **A new look, stained glass, in the blueprint's place**: its kit is "Stained glass" below, with
    the order to make it in. All eight lines are delivered, to wire in; what came out is in the
    table under the kit.
