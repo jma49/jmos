@@ -1151,7 +1151,8 @@ the pointer, as under a loupe; on an outline the character is a stroke along the
     by day);
   - blueprint: draw a long straight line;
   - Egyptian relief: draw a zigzag of three peaks or more;
-  - Monet: four taps in one place; 青花: once round the rim of the screen; Dunhuang: rub back and
+  - Monet: four taps side by side in one place (16 px or more across: four on one spot are food
+    thrown there, so the koi can be fed fast without the look changing); 青花: once round the rim of the screen; Dunhuang: rub back and
     forth over a spot; the star chart: three taps far apart (the table is in `gestures.ts`);
   - ASCII: type five letters that aren't shortcuts within 3 s (each
     lands on the water at the pointer); or, where there are no keys, tap five times in a row along
