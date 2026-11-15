@@ -174,10 +174,12 @@ words did not reach, there only for whoever asks.
   pond once it has gone, with the seal 龙. The dragon is a painted sheet laid in slices along the way
   its head has gone, as a painted koi is laid along its spine, on the fish's layer: ink, glow, the
   blueprint and ASCII restyle it as they do the pond's koi, and the star chart sets stars down its
-  back. A look that paints its own koi has a dragon only with its own picture. **No picture has come
-  yet** (`DRAGONS` in `dragon.js` is empty), so no dragon rises and the seal is a preview: what is
-  wanted is "The dragon sheet" in the art brief. With `?perf`, `window.__pond.dragon(seconds,
-  picture)` raises one, held that far into its flight, from a picture to try.
+  back over the atlas's figure of it. Each painted look has its own dragon (`DRAGONS` in
+  `dragon.js`; the brief's "The dragon sheet" says what each is): the water's golden one also
+  serves ink, glow, the blueprint and ASCII, and the relief's is the serpent of the sun's boat, its
+  paint and height made into one picture as its koi's are (`carved()`). The picture is fetched at a
+  visit's first leap, never before. With `?perf`, `window.__pond.dragon(seconds, picture)` raises
+  one, held that far into its flight, from a picture to try if one is given.
 - **A chain of clues.** A look on show carries a small mark that points to the next look's gesture
   (`NEXT` and `clueFor()` in `seals.ts`, `CLUES` and `clueNow()` in `engine.js`, `.clue` in
   `pond.css`), laid in a few seconds after the look has come, until that next seal is found.
@@ -673,7 +675,7 @@ light and refraction, the glass) stays in the shader.
 | The bug the spider hunts | three ellipses in `drawBugs()` | Small enough to pass, but it is a drawn thing among pictures | Replace | asked: `bug` (P2) |
 | Food | two dots | A pellet is a dot | Keep | none |
 | Ink: inscription | the brush face | Good | Keep | none |
-| The Dragon Gate's dragon | a painted sheet laid along its way (`dragon.js`); nothing in code | No picture yet, so no dragon rises | A picture only | asked: `dragon` for the water, then each painted look (the dragon sheet in the brief) |
+| The Dragon Gate's dragon | a painted sheet laid along its way (`dragon.js`), one for each painted look; nothing in code but the star chart's stars | In keeping in every look | Done | in use (`dragon` in each painted look's folder, `stars/dragon-figure`, the relief's pair) |
 | Festival things (preview) | canvas paths | Lanterns pass; the dragon boat is crude | Replace the boat and the lanterns | asked: `water/dragon-boat`, `water/lanterns` |
 | Borders and frames | pictures (青花's rim, the Dunhuang band, the relief's frieze) | In keeping | Done | in use (`qinghua/rim`, `corner`; `dunhuang/border`; `relief/frieze`) |
 | Solar-term block, chapter headers, the album's paper | type and CSS | In keeping | Keep | per look only where asked below |
@@ -705,13 +707,16 @@ flying thing seen from above (a crane or a butterfly for Dunhuang, a bee or a sw
 **Asked for now**, in this order. A thing the pond shows is asked for here and painted; it is not
 drawn in code, and what is still drawn in code that a picture would better is on this list too.
 
-1. **The dragon** of the Dragon Gate, on "The dragon sheet" below: the water's first, then each
-   painted look's. All seven are delivered; what came out is in each look's table (the water's with
-   its dragon boat).
+1. **The dragon** of the Dragon Gate, on "The dragon sheet" below: all seven are delivered and in
+   use; what came out is in each look's table (the water's with its dragon boat). Asked again, as
+   a second version if it can be bettered (P2): ukiyo-e's, drawn at its true proportions and not
+   stretched, with a print dragon's fierce eyes under brows in place of round ones, its antlers
+   clear of the mane and its legs a little larger.
 2. **Delivered, to wire in: a third sheet of seals**, `seals-3.webp` (item 10 under "Ink"): the four seals still in the
    brush, and the seals of the small games to come.
 3. **Delivered, to wire in: two more clues, painted** (item 9 under "Ink"): ukiyo-e's and the star chart's, which are still
-   drawn in code.
+   drawn in code. And, if it can be bettered (P2), Monet's again: its cobalt rim as one loaded
+   stroke about 6 pixels wide, broken only at the notch, so it reads at the 160 px it is shown at.
 4. **Delivered, to wire in: the bug the spider hunts**, `bug.webp` in the water's folder: 128 × 64, two cells of 64, a
    midge seen from above, its wings out in the first cell and beaten back in the second; a dark
    body, pale wings you can see through. It is drawn about 12 pixels long, so it must be bold. Now
@@ -795,7 +800,7 @@ pads and flowers as these sets: spring (small young pads), summer (full pads, bu
   keep the spine dead straight and paint nothing that only makes sense straight (no long straight
   highlight down the back). 青花's sheet is the model of a correct one.
 
-**The dragon sheet, the same for every look** (delivered, to wire in). It is for the Dragon
+**The dragon sheet, the same for every look** (delivered and in use). It is for the Dragon
 Gate, under "Idle seals and the small games": a koi that leaps a third time goes as a dragon.
 
 - `dragon.webp`, 2048 × 512, in the look's folder: one Chinese dragon (龙) seen from straight above,
@@ -845,17 +850,16 @@ Which to make, in this order. The first opens the gate; each of the others gives
    faintly and sets stars down its back.
 7. **P2** the relief's, as a pair `dragon-c.webp` (the faded paint) and `dragon-h.webp` (the
    height), made as its koi's pair is. Egypt has no dragon: its is the great serpent that guards
-   the sun's boat (Mehen), long and straight, with a beard and a crest and no legs. The code does
-   not take a pair for the dragon yet; it will, through `carved()`, once this has come.
+   the sun's boat (Mehen), long and straight, with a beard and a crest and no legs.
 
 To see one in the pond before it is listed: build the site and serve it (`npm run build`, then
 `npm run preview`), open it with `?preview&perf` in the address, and in the console run
 `window.__pond.dragon(null, '/pond/water/dragon.webp')`, the picture's path being the one the site
 serves it at. A number in place of `null` holds the dragon that many seconds into its flight: 3.5
 is the middle of it. It answers `false` until the picture has loaded: run it again. Each look's is
-tried with that look on show (the panel's list of looks). A delivered picture is listed in
-`DRAGONS` in `dragon.js` by the thread that writes the code, which then takes the seal out of
-preview.
+tried with that look on show (the panel's list of looks). Without a path it raises the look's
+listed dragon. A delivered picture is listed in `DRAGONS` in `dragon.js` by the thread that writes
+the code.
 
 **The dove and the spider: the second version is delivered and drawn**, as `dove-v2-1.webp` to `-3` and
 `spider-v2-1.webp` to `-3` in `public/pond/water/`: cells of 384, the rows in the order asked for,

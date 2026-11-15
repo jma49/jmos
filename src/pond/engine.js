@@ -2411,16 +2411,19 @@ const dragon = { d: null, k: null, at: 0, pin: null, src: '', wake: 0, x: 0, y: 
   dragonPics = new Map();
 function dragonPic() {
   const name = inkR > inkMax * 0.45 ? look : 'water',
-    src = dragon.src || dragonSrc(name, !!KOI_SHEETS[name] || name === 'stars');
-  if (!src) return null;
+    d = dragon.src || dragonSrc(name, !!KOI_SHEETS[name] || name === 'stars');
+  if (!d) return null;
+  const src = d.src || d;
   if (!dragonPics.has(src)) {
+    dragonPics.set(src, null);
     const im = new Image();
+    // (the relief's comes as paint and height, made into one picture as its koi's are)
+    im.onload = () =>
+      d.height ? carved(im, { height: d.height, bare: KOI_SHEETS.relief.bare }).then((cv) => dragonPics.set(src, cv)) : dragonPics.set(src, im);
     im.onerror = () => report(new Error(`no picture at ${src}`), 'pond pictures');
     im.src = src;
-    dragonPics.set(src, im);
   }
-  const im = dragonPics.get(src);
-  return im.complete && im.naturalWidth ? im : null;
+  return dragonPics.get(src);
 }
 function riseDragon(k, pin) {
   // (one dragon at a time: the koi of one still in the air is let back first)

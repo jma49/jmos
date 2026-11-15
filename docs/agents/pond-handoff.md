@@ -14,23 +14,29 @@ what is left, and what was learnt. What is open now is section 0.
   origin cloud/modest-noether-l6tvpo` before a push. The cloud thread opens the pull requests and
   merges them; after a merge it brings main back into the branch and does not rewrite it, so a
   clone of the branch stays good.
-- **What is asked: the dragon of the Dragon Gate** (鲤鱼跃龙门: a koi that leaps a third time in a visit
-  goes as a dragon). The code is in and waits for its picture: no dragon rises, and its seal is a
-  preview, until `DRAGONS` in `src/pond/dragon.js` lists one. The whole of what is wanted, in the
-  order to make it, is "The dragon sheet" in the art brief in [pond.md](pond.md); the rules every
-  picture keeps are just above it ("For every picture"). Make the water's first: it alone opens
-  the gate, on the water and in ink, glow, the blueprint and ASCII.
+- **What the round is for:** the pond's small games, the first being the Dragon Gate (鲤鱼跃龙门: a
+  koi that leaps a third time in a visit goes as a dragon). What is wanted, in the order to make
+  it, is the list "Asked for now" in the art brief in [pond.md](pond.md); the rules every picture
+  keeps are under "For every picture" there.
+- **Delivered on this branch and in use:** the dragon for seven looks (the water's, ukiyo-e's,
+  青花's, Dunhuang's, Monet's, the star chart's figure, the relief's pair); the second sheet of
+  seals (`seals-2.webp`, with the Dragon Gate's 龙); the painted clues of Monet's pond and the bowl.
+  Each was looked at in the pond, in its own look, at 1280 × 800.
+- **Still asked:** a third sheet of seals, for the four still in the brush and for the games to
+  come; painted clues for ukiyo-e and the star chart; the bug the spider hunts.
+- **Asked again, where a picture can be bettered** (each is P2: what is there is in use and reads
+  well enough). The cloud thread writes these here and in the brief after seeing a picture in the
+  pond; a second version takes the first one's name, and the table says what changed.
+  - Ukiyo-e's dragon: at its true proportions (it was stretched 1.35 times across), with a print
+    dragon's fierce eyes under brows, the antlers clear of the mane, the legs a little larger.
+  - Monet's clue: the cobalt rim as one loaded stroke, about 6 pixels wide, broken only at the
+    notch. At the 160 px it is shown at, the dashes are faint.
 - **Handing a picture back:** commit it under `public/pond/<look>/` with the name the brief gives;
   run `node scripts/check-public-sizes.mjs` (200 KB a file); add its line to that look's table of
-  pictures in pond.md, with what came out and what is weak; pull with rebase, and push. Leave
-  `DRAGONS` and the code alone and say in the commit message which pictures came: the cloud thread
-  lists each, looks at it in the pond, and takes the seal out of preview.
-- **Seeing it move before it is listed:** the last paragraph of "The dragon sheet".
-- **Also asked, after the water's dragon** (the list is "Asked for now" in the brief): a third
-  sheet of seals for the four still in the brush and for the games to come; painted clues for
-  ukiyo-e and the star chart; the bug the spider hunts.
-- **Delivered on this branch so far, and in use:** the second sheet of seals (`seals-2.webp`, with
-  the Dragon Gate's 龙) and the painted clues of Monet's pond and the bowl.
+  pictures in pond.md, with what came out and what is weak; pull with rebase, and push. Leave the
+  code alone and say in the commit message which pictures came: the cloud thread lists each and
+  looks at it in the pond.
+- **Seeing a dragon move before it is listed:** the last paragraph of "The dragon sheet".
 - **Jincheng's to decide:** whether the water's own koi, which are drawn in code and read well,
   should be tried as a painted sheet too. Nothing is asked for it until he says.
 - **To come, not asked yet:** the goldfish-scooping game will want a paper scoop, a few goldfish

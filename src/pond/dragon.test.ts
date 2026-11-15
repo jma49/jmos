@@ -71,16 +71,19 @@ describe('its spine', () => {
 });
 
 describe('its pictures', () => {
-  it('are in the site, each one listed', () => {
-    for (const src of Object.values(DRAGONS as Record<string, string>)) expect(existsSync(`public${src}`), src).toBe(true);
+  type Listed = string | { src: string; height: string };
+  const table = DRAGONS as Record<string, Listed>;
+  it("are in the site, each one listed (the relief's with its height)", () => {
+    for (const d of Object.values(table)) for (const src of typeof d === 'string' ? [d] : [d.src, d.height]) expect(existsSync(`public${src}`), src).toBe(true);
   });
   it("serve a look that paints its own koi only when it has its own; the water's serves the rest", () => {
-    const table = DRAGONS as Record<string, string>;
     expect(dragonSrc('ink', false)).toBe(table.water);
+    expect(dragonSrc('glow', false)).toBe(table.water);
     expect(dragonSrc('ukiyo', true)).toBe(table.ukiyo);
+    expect(dragonSrc('a look still to come', true)).toBeUndefined();
   });
   it('and its seal is a preview for as long as the water has no dragon', () => {
     const seal = VOLUMES.flatMap((v) => v.seals).find((s) => s.id === 'dragon');
-    expect(!!seal?.preview).toBe(!(DRAGONS as Record<string, string>).water);
+    expect(!!seal?.preview).toBe(!table.water);
   });
 });

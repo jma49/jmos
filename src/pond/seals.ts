@@ -9,7 +9,7 @@ export interface Seal {
   chars: string;
   shape: 'square' | 'round' | 'tall';
   cut: 'white' | 'red';
-  /** Only in a preview build: one visitors can't earn yet (the Dragon Gate's, until its dragon has a picture). */
+  /** Only in a preview build: one visitors can't earn yet (none is, as it stands). */
   preview?: boolean;
   /** A place kept in the album for a look that isn't chosen yet: shown as coming, never stamped. */
   soon?: boolean;
@@ -73,8 +73,7 @@ export const VOLUMES: Volume[] = [
       { id: 'leap', chars: '跃', shape: 'square', cut: 'white' },
       { id: 'catch', chars: '捕', shape: 'square', cut: 'red' },
       { id: 'race', chars: '舟', shape: 'round', cut: 'white' },
-      // (a preview until the dragon's picture has come: DRAGONS in dragon.js)
-      { id: 'dragon', chars: '龙', shape: 'round', cut: 'red', preview: true }
+      { id: 'dragon', chars: '龙', shape: 'round', cut: 'red' }
     ]
   }
 ];

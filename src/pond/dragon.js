@@ -4,11 +4,20 @@
 // koi restyle it as they do them: washed in ink, outlined and hatched on the blueprint, typed in ASCII.
 
 /**
- * Each look's dragon (public/pond/<look>/), once its picture has come. The water's also serves the looks
- * that draw the pond's own koi; a look that paints its koi has a dragon only with its own picture. None has
- * come yet, so no dragon rises: what is wanted is under "The dragon sheet" in docs/agents/pond.md.
+ * Each look's dragon (public/pond/<look>/). The water's also serves the looks that draw the pond's own koi
+ * (ink, glow, the blueprint, ASCII); a look that paints its koi has its own. The star chart's is the atlas's
+ * figure, drawn faintly under its stars. The relief's is a pair, the faded paint and the height, made into
+ * one picture as its koi's pair is.
  */
-export const DRAGONS = {};
+export const DRAGONS = {
+  water: '/pond/water/dragon.webp',
+  ukiyo: '/pond/ukiyo/dragon.webp',
+  monet: '/pond/monet/dragon.webp',
+  qinghua: '/pond/qinghua/dragon.webp',
+  dunhuang: '/pond/dunhuang/dragon.webp',
+  stars: '/pond/stars/dragon-figure.webp',
+  relief: { src: '/pond/relief/dragon-c.webp', height: '/pond/relief/dragon-h.webp' }
+};
 /** The picture `look`'s dragon is drawn from, if it has one; `own` is whether the look paints its own koi. */
 export const dragonSrc = (look, own) => DRAGONS[look] ?? (own ? undefined : DRAGONS.water);
 // the sheet: 2048 x 512, its spine along the middle, from the tip of the snout at x 64 to the tail's at x 1984
@@ -70,10 +79,10 @@ export function makeDragon(x0, y0, W, H) {
     }
     let turn = Math.atan2(wy, wx) - h;
     turn -= Math.round(turn / TAU) * TAU;
-    h += clamp(turn, -2.6 * dt, 2.6 * dt);
+    h += clamp(turn, -2.2 * dt, 2.2 * dt);
     // it comes up slowly and leaves fast; its heading swings from side to side as a snake's does
     const v = 300 * s * (0.3 + 0.7 * ease(t / 1.2)) * (out < 0 ? 1 : 1 + 1.7 * ease((t - out) / 1.5)),
-      a = h + 0.5 * Math.sin((far / (190 * s)) * TAU);
+      a = h + 0.4 * Math.sin((far / (230 * s)) * TAU);
     x += Math.cos(a) * v * dt;
     y += Math.sin(a) * v * dt;
     far += v * dt;
@@ -119,15 +128,25 @@ export function drawDragon(c, d, t, pic, m = 1) {
   const n = 120,
     len = LONG * d.s,
     span = SHEET.x1 - SHEET.x0,
-    h = (SHEET.h * len) / span,
-    P = dragonSpine(d, t, len / n, n + 1);
+    k = len / span,
+    h = SHEET.h * k,
+    P = dragonSpine(d, t, len / n, n + 1),
+    way = (i) => Math.atan2(P[i + 1][1] - P[i][1], P[i + 1][0] - P[i][0]);
   for (let i = 0; i < P.length - 1; i++) {
     const [x0, y0] = P[i],
-      [x1, y1] = P[i + 1];
+      [x1, y1] = P[i + 1],
+      a = way(i);
+    // on a turn a slice runs on under the next, by as much as the turn opens between them at the reach of
+    // its claws: else what stands out from the body fans open into a comb
+    let turn = i < P.length - 2 ? way(i + 1) - a : 0;
+    turn -= Math.round(turn / TAU) * TAU;
+    const more = Math.min(16 * d.s, Math.abs(turn) * h * 0.36),
+      sx = SHEET.x0 + (span * i) / n,
+      sw = Math.min(span / n + more / k + 1.5, SHEET.x1 + 40 - sx);
     c.save();
     c.translate(x0, y0);
-    c.rotate(Math.atan2(y1 - y0, x1 - x0));
-    c.drawImage(pic, (SHEET.x0 + (span * i) / n) * m, 0, (span / n + 1.5) * m, SHEET.h * m, -0.4, -h / 2, Math.hypot(x1 - x0, y1 - y0) + 1.2, h);
+    c.rotate(a);
+    c.drawImage(pic, sx * m, 0, sw * m, SHEET.h * m, -0.4, -h / 2, sw * k, h);
     c.restore();
   }
 }
