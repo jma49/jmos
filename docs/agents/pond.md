@@ -167,6 +167,11 @@ words did not reach, there only for whoever asks.
   stroke of the paddles (`paddle()`), each sending it on a second and a half; ten before it is
   across (`ROW`) and it is drummed in at the far bank, with the seal. With `?perf`,
   `window.__pond` has the koi's places, the pads and the bugs, for a tool to play them.
+  **The last leap** is the end of the pond's through-line (a koi's life: it is watched, it finds the
+  looks, it grows with each, it leaps, it goes down): once both volumes of looks are full, the first
+  leap of a visit is the visitor's own koi's, and its dragon does not leave over the top but winds
+  in to the middle of its circle and goes down there, narrowing to nothing (`lastLeap` in
+  `engine.js`, `makeDragon(…, dive)` in `dragon.js`). What lies under the pond is not built yet.
   And **the koi's circle** (太极), in ink only: the old cheat typed on the keys (up up down down left
   right left right B A) and for three quarters of a minute the visitor's koi and the gold one swim
   head to tail round one point, as the two fish of the taiji do, with the rest in a wide ring the
