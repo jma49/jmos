@@ -253,6 +253,19 @@ describe('taps', () => {
     expect(tapsLook(dabs.slice(0, 3))).toBe(null);
     expect(tapsLook(far.slice(0, 2))).toBe(null);
   });
+  it('four presses on one spot are food thrown there, not dabs: the koi can be fed fast', () => {
+    for (const jitter of [0, 2, 5])
+      expect(
+        tapsLook(
+          taps([
+            [600, 400],
+            [600 + jitter, 400],
+            [600, 400 + jitter],
+            [600 + jitter, 400 + jitter]
+          ])
+        )
+      ).toBe(null);
+  });
   it('five in a row are letters typed with a finger, and nothing else', () => {
     const row = (x: number, y: number, step: number): Pt[] => [0, 1, 2, 3, 4].map((i) => [x + i * step, y + (i % 2) * 8]);
     expect(tapsLook(taps(row(200, 500, 60)))).toBe('ascii');

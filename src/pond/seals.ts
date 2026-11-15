@@ -221,7 +221,7 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
     hints: {
       ink: 'Stillness leaves a mark.',
       ukiyo: 'A full turn raises a wave.',
-      monet: 'A painter dabs, and dabs again.',
+      monet: 'A painter lays four dabs side by side.',
       qinghua: 'Run a finger round the rim.',
       dunhuang: 'Brush the dust from the wall.',
       glow: 'The moon is nearer than it looks.',
@@ -285,7 +285,7 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
     hints: {
       ink: '停一停，会留下痕迹。',
       ukiyo: '转满一圈，起一道浪。',
-      monet: '画家总是点了又点。',
+      monet: '画家并排点下四笔。',
       qinghua: '沿着碗沿，走一圈。',
       dunhuang: '拂一拂墙上的尘。',
       glow: '月亮比看上去近。',
@@ -349,7 +349,7 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
     hints: {
       ink: 'じっとしていると、跡が残る。',
       ukiyo: 'ひとまわりで、波が立つ。',
-      monet: '画家は、何度も筆を置く。',
+      monet: '画家は、四つの筆あとを並べて置く。',
       qinghua: '器のふちを、ぐるりとなぞる。',
       dunhuang: '壁のほこりを、はらってみる。',
       glow: '月は、見た目より近い。',
@@ -425,8 +425,8 @@ export const TRACES: Record<string, string> = {
   ink: `<circle class="t hold" cx="30" cy="30" r="4" style="--d:0s"/><circle class="ring" cx="30" cy="30" r="16"/>`,
   // a full turn
   ukiyo: `<path pathLength="100" class="s" d="M30 12a18 18 0 1 1-.1 0"/>`,
-  // four dabs in one place
-  monet: dot(30, 30, 0) + dot(32, 28, 0.3) + dot(29, 32, 0.6) + dot(31, 31, 0.9),
+  // four dabs side by side
+  monet: dot(22, 27, 0) + dot(34, 24, 0.3) + dot(26, 37, 0.6) + dot(38, 34, 0.9),
   // round the rim, near the edges
   qinghua: `<path pathLength="100" class="s" d="M14 8h32a6 6 0 0 1 6 6v32a6 6 0 0 1-6 6H14a6 6 0 0 1-6-6V14a6 6 0 0 1 6-6z"/>`,
   // to and fro along one line

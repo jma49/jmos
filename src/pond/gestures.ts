@@ -13,7 +13,7 @@
 //   blueprint   one long straight line               lift      over 320 px, straight
 //   relief      a zigzag of three peaks or more      lift      five sharp corners, travelling one way, wider than a rub
 //   stars       three taps far apart, within 2.6 s   lift      each over 130 px from the others
-//   monet       four taps in one place, within 2.6 s lift      all within 50 px of their middle
+//   monet       four taps side by side, within 2.6 s lift      all within 50 px of their middle, and 16 px or more across
 //
 // A rub's patch is thin (under 50 px, or under 0.3 of its length) and a stir's is not, so they can't both hold; a rim loop is a stir that
 // spans the screen; a zigzag swings at least 50 px and never turns round, and its corners are sharp, so a
@@ -275,7 +275,7 @@ export function describe(pts: Pt[], W: number, H: number): string {
     `line ${ln && ln.chord > 320 ? 'YES' : 'no'}${ln ? `: ${n(ln.chord)} px (320 needed)` : ''}; loop ${loop(pts, W, H) || 'no'}`
   ].join('\n');
 }
-/** What the taps so far mean, the newest last: three far apart (a triangle of stars), four in one place (dabs of paint), or five in a row (letters, without keys). */
+/** What the taps so far mean, the newest last: three far apart (a triangle of stars), four side by side in one place (dabs of paint), or five in a row (letters, without keys). */
 export function tapsLook(taps: Tap[]): 'stars' | 'monet' | 'ascii' | null {
   const now = taps.length ? taps[taps.length - 1].t : 0,
     three = taps.slice(-3),
@@ -293,7 +293,9 @@ export function tapsLook(taps: Tap[]): 'stars' | 'monet' | 'ascii' | null {
   if (four.length === 4 && now - four[0].t <= 2.6) {
     const cx = four.reduce((s, q) => s + q.x, 0) / 4,
       cy = four.reduce((s, q) => s + q.y, 0) / 4;
-    if (four.every((q) => Math.hypot(q.x - cx, q.y - cy) <= 50)) return 'monet';
+    // (laid side by side, as dabs are: four presses on one spot are food thrown there, not paint)
+    const span = Math.max(...four.flatMap((a) => four.map((b) => Math.hypot(a.x - b.x, a.y - b.y))));
+    if (span >= 16 && four.every((q) => Math.hypot(q.x - cx, q.y - cy) <= 50)) return 'monet';
   }
   return null;
 }
