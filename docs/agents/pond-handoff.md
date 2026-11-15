@@ -23,13 +23,10 @@ what is left, and what was learnt. What is open now is section 0.
   sheets of seals, so every seal is cut; painted clues for Monet's pond, the bowl, ukiyo-e and the
   star chart; the midge the spider hunts. Each was looked at in the pond at 1280 × 800.
 - **Still asked:** nothing, until the next game's pictures are written into the brief.
-- **Asked again, where a picture can be bettered** (each is P2: what is there is in use and reads
-  well enough). The cloud thread writes these here and in the brief after seeing a picture in the
-  pond; a second version takes the first one's name, and the table says what changed.
-  - Ukiyo-e's dragon: at its true proportions (it was stretched 1.35 times across), with a print
-    dragon's fierce eyes under brows, the antlers clear of the mane, the legs a little larger.
-  - Monet's clue: the cobalt rim as one loaded stroke, about 6 pixels wide, broken only at the
-    notch. At the 160 px it is shown at, the dashes are faint.
+- **Asked again, where a picture can be bettered:** the cloud thread writes what to redo here and
+  in the brief after seeing a picture in the pond; a second version takes the first one's name, and
+  its table says what changed. Done so far, and in use: ukiyo-e's dragon (true proportions, fierce
+  eyes, antlers, larger legs) and Monet's clue (its rim one loaded stroke). Nothing is open now.
 - **Handing a picture back:** commit it under `public/pond/<look>/` with the name the brief gives;
   run `node scripts/check-public-sizes.mjs` (200 KB a file); add its line to that look's table of
   pictures in pond.md, with what came out and what is weak; pull with rebase, and push. Leave the

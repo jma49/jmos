@@ -708,14 +708,14 @@ flying thing seen from above (a crane or a butterfly for Dunhuang, a bee or a sw
 drawn in code, and what is still drawn in code that a picture would better is on this list too.
 
 1. **The dragon** of the Dragon Gate, on "The dragon sheet" below: all seven are delivered and in
-   use; what came out is in each look's table (the water's with its dragon boat). Delivered, to
-   look at in the pond: ukiyo-e's second version, under the first one's name, drawn at its true
+   use; what came out is in each look's table (the water's with its dragon boat). In use too:
+   ukiyo-e's second version, under the first one's name, drawn at its true
    proportions and not stretched, with a print dragon's fierce eyes under brows in place of round
    ones, its antlers clear of the mane and its legs a little larger.
 2. **Delivered and in use: a third sheet of seals**, `seals-3.webp` (item 10 under "Ink"): the four seals still in the
    brush, and the seals of the small games to come.
 3. **Delivered and in use: two more clues, painted** (item 9 under "Ink"): ukiyo-e's and the star chart's.
-   Delivered, to look at in the pond: Monet's second version, under the first
+   In use too: Monet's second version, under the first
    one's name, its cobalt rim as one loaded stroke about 6 pixels wide, broken only at the notch,
    so it reads at the 160 px it is shown at.
 4. **Delivered and in use: the bug the spider hunts**, `bug.webp` in the water's folder: 128 × 64, two cells of 64, a
