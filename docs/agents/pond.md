@@ -855,8 +855,10 @@ Which to make, in this order. The first opens the gate; each of the others gives
    (an indigo body, vermilion flames), scales in rows of cut arcs. In the hand of the look's koi.
 3. **P1** 青花's: cobalt on white, the dragon of a Ming jar without its clouds: drawn in dark cobalt
    line, washed in paler blue, no other colour. In the hand of the look's koi.
-4. **P1** Dunhuang's: a mural dragon in the wall's own pigments (malachite, azurite, cinnabar,
-   ochre), in a fine even line. In the hand of the look's koi.
+4. **P1, asked again:** `lilies.webp`, 1024 × 512, 4 × 2: three lily pads from above (large, medium,
+   small), two lotus flowers, a bud, a seed-pod and a withered pad for autumn, in the same hand: a
+   pad of a few pieces of deep green and grey-green glass with its veins in trace line; a flower in
+   white glass touched with ruby and silver stain. Quiet, as a border's foliage is.
 5. **P1** Monet's: oil in broken strokes, no outline: a long stroke of golds and oranges under the
    water. In the hand of `koi-v2`.
 6. **P2** the star chart's, `dragon-figure.webp`: the atlas's figure of Draco, straightened, in the
@@ -1045,33 +1047,51 @@ bokashi gradation, paper showing.
 6. Dove and spider: delivered and in use: the same as line drawings, one pose each, 512 × 512.
 Everything else is ruled in the shader. Nothing more wanted.
 
-**Stained glass** (asked for now; it takes the blueprint's place, which was the one look with no
-art of its own behind it). A new folder named stained under `public/pond/`. Judge it by: a
-Gothic rose window or a Tiffany pond panel with daylight behind it, seen at arm's length: jewel
-colours, every shape a piece of glass held in black lead, no modelling but the glass's own streaks
-and a little matt painted line. Make them in this order; the bed alone is enough to judge the look.
-1. **P0, delivered, to wire in:** the bed, `bed.webp`, 2048 × 1152, opaque to every edge, with `bed-tall.webp`, 1080 × 1920,
-   the same window composed again upright (not a crop). The pond as a leaded window seen from
-   above, with nothing in it: water in panes of deep blue, blue-green and a little violet and amber,
-   the panes long and curved like ripples and currents, 60 to 200 pixels across, each with the
-   streaks and seeds of hand-made glass; black lead lines 5 to 7 pixels wide between all of them,
-   with a solder dot where lines meet. No fish, no plants, no frame, no figures, no text. The left
-   third (the top third of the upright one) in darker, larger, quieter panes: the title's type stands
-   there. The shader lays the daylight and the moving water over it. Under 300 KB and 120 KB (a bed
-   may pass the budget, with its line in the size check).
-2. **P0, delivered again, to wire in** (the first version is far plainer than the bed and the dragon: four or five
-   flat pieces a fish, which reads as clip art; the line that asked for "three or four pieces" was
-   wrong). `koi.webp` and `koi-mask.webp`, to the common spec ("The koi sheet"): each koi as a
-   Tiffany window builds a fish, as richly as the bed is built: 40 pieces of glass or more to a
-   koi. The scales are rows of small pieces across the body, each row a little different in tone;
-   the head is several pieces (cheeks, brow, muzzle) with a painted eye; every fin and the tail is
-   fanned into six or more ribbed pieces; the glass is streaky and mottled, never one flat colour,
-   and the lead is as fine as the bed's. Row 1 ambers and golds with touches of orange, row 2
-   milk-white and pearl opal glass with one ruby piece on the head, rows 3 and 4 in greys with three
-   or four patches, each patch a group of scales, to tint (the mask is those). The rows of scales
-   run across the body, so the koi can bend. The dragon delivered is the measure of detail.
-3. **P0, delivered, to wire in:** `dragon.webp`, to "The dragon sheet": a dragon in glass and lead, amber and gold with ruby
-   for the crest, the mane and the tail's tuft, its scales as small leaded pieces in rows.
+**Stained glass: asked again, whole** (Jincheng, on seeing the first kit move in a demo: "底图太花
+不够优雅，换成哥特式的装饰玻璃窗那种感觉。龙做的也很丑…这个水平比起墨，敦煌差的太多了。把艺术水平和
+美感对齐统一"). The first kit is a bright Tiffany panel: every pane a strong colour, the whole busy.
+What is wanted is a Gothic church window, and it must stand beside ink and Dunhuang, which are the
+measure: quiet, old, made by one hand, most of the surface at rest. Everything below is redone to
+this; the first files stay only until the new ones replace them.
+
+How a Gothic window differs, and what to hold every picture to:
+- **Restraint.** Most of the glass is pale and quiet: grisaille (grey-white glass painted with fine
+  dark line), in small diamond or square quarries. Colour is rare and deep: the blue of Chartres,
+  ruby, a little green, and yellow only as silver stain. No turquoise, no violet, no amber fields.
+  Squint: it should read as pale stone-grey and deep blue with a few points of red.
+- **Geometry, not waves.** The lead follows an ordered design: quarries, borders, medallions,
+  foils. Nothing flows like leaves or ripples.
+- **Painted line.** A Gothic figure is drawn on the glass in dark matt paint (trace line and a
+  little stippled shadow) across few pieces; it is not built of hundreds of coloured scales.
+- **Age.** The glass is uneven, pitted and a little dimmed, the lead dull; never glossy or neon.
+- **One hand.** The bed, the koi, the dragon and the lilies must look cut from one window.
+
+It takes the blueprint's place. A new folder named stained under `public/pond/`. Judge it by: a
+thirteenth-century window (Chartres, Canterbury, the Five Sisters at York) with grey daylight
+behind it, seen from the nave. Make them in this order; the bed alone is enough to judge the look.
+1. **P0, asked again:** the bed, `bed.webp`, 2048 × 1152, opaque to every edge, with `bed-tall.webp`,
+   1080 × 1920, the same window composed again upright (not a crop). A grisaille window seen
+   straight on, with nothing in it: a field of small diamond quarries of grey-white and faintly
+   green glass, each painted with a fine dark trace-line motif (a leaf, a quatrefoil), set in a
+   regular lattice of thin lead; over the right two thirds, one large rose or a few linked
+   medallions and foils in deep blue with thin ruby fillets and pearled borders, their fields
+   empty (the koi swim there); a narrow border of blue and ruby with a running leaf round the whole.
+   The left third (the top third of the upright one) plain quarries only, a little darker: the
+   title's type stands there. No fish, no plants, no figures, no text. The shader lays the
+   daylight and the moving water over it. Under 300 KB and 120 KB.
+2. **P0, asked again:** `koi.webp` and `koi-mask.webp`, to the common spec ("The koi sheet"): each
+   koi as a Gothic glazier draws a fish: a few pieces of glass (head, body in two or three, each
+   fin, the tail), the scales, gills, fin rays and eye drawn on them in dark matt trace line with a
+   little stippled shading, the lead only where pieces meet and lying across the body so the koi can
+   bend. Row 1 silver-stain yellow on white glass, row 2 white glass with one ruby piece on the
+   head, rows 3 and 4 in grey-whites with three or four patches to tint (the mask is those). Deep,
+   quiet colour: they must sit on the grisaille as its figures, not shout over it.
+3. **P0, asked again:** `dragon.webp`, to "The dragon sheet": the first is a string of orange scales
+   with a cartoon head, and ugly. A dragon as a thirteenth-century window draws one, in the same
+   hand as the koi: white glass and silver-stain yellow with ruby for the crest, the mane and the
+   tail's tuft and a little blue; the body in long pieces with its scales, the ridge of its back
+   and its claws drawn in trace line; a fierce, finely drawn head (the measure is the delivered
+   ukiyo-e and 青花 dragons, which have that fineness).
 4. **P1, delivered again, to wire in** (the first version's pads are a disc cut into wedges). `lilies.webp`,
    1024 × 512, 4 × 2: three lily pads from above (large, medium, small), two lotus flowers, a bud,
    a seed-pod and a withered pad for autumn, each as a Tiffany window builds one: a pad of 15 pieces
