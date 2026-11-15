@@ -44,7 +44,7 @@ import { titleWords } from './words';
 import { describe, rub, strokeLifted, strokeMoving, tapsLook, thrown } from './gestures';
 import { crowdsPainting, underPainting } from './hang.js';
 import { paintingOf, seasonAmounts } from './seasons.js';
-import { dragonCopy, dragonHead, dragonSrc, drawDragon, drawDragonStars, makeDragon } from './dragon.js';
+import { dragonCopy, dragonHead, dragonSpine, dragonSrc, drawDragon, drawDragonStars, makeDragon } from './dragon.js';
 import {
   KOI_SHEETS,
   MONET,
@@ -2390,7 +2390,10 @@ function leapNow() {
   if (gather.n < 4 || T - gather.at > 8) return;
   const near = kois.filter((k) => k !== you && k.alpha > 0.5 && Math.hypot(k.x - gather.x, k.y - gather.y) < 170);
   if (near.length < 3) return;
-  const k = near.reduce((a, b) => (b.size > a.size ? b : a));
+  // The last leap: with every look found, the first leap of a visit is the visitor's own koi's, and it goes
+  // as a dragon that does not leave over the top but winds down into the middle of the pond.
+  const last = !lastLeap && you.alpha > 0.5 && dragonPic() && VOLS.slice(0, 2).every((v) => full(album, v)),
+    k = last ? you : near.reduce((a, b) => (b.size > a.size ? b : a));
   gather.n = 0;
   k.leap = T;
   k.burst = 1;
@@ -2400,6 +2403,10 @@ function leapNow() {
   // every third leap of a visit clears the Dragon Gate, where the look on show has a dragon: at the top of
   // it the koi does not turn back
   const gate = dragonPic();
+  if (last) {
+    lastLeap = true;
+    return void setTimeout(() => riseDragon(k, null, true), 550);
+  }
   if (++leaps % 3 === 0 && gate) return void setTimeout(() => riseDragon(k), 550);
   setTimeout(() => {
     drop(k.x, k.y, 5.5, 2.4);
@@ -2439,7 +2446,8 @@ addEventListener('keydown', (e) => {
 // the water, lighting it gold. The koi is back in the pond once the dragon has gone, and the visit has its
 // seal. Its picture is fetched at the first leap, so it has come by the third. (`pin` holds the dragon at one
 // moment and `src` is a picture to try, both for a tool: `window.__pond.dragon`.)
-let leaps = 0;
+let leaps = 0,
+  lastLeap = false;
 const dragon = { d: null, k: null, at: 0, pin: null, src: '', wake: 0, x: 0, y: 0, lit: 0 },
   dragonPics = new Map();
 function dragonPic() {
@@ -2458,10 +2466,10 @@ function dragonPic() {
   }
   return dragonPics.get(src);
 }
-function riseDragon(k, pin) {
+function riseDragon(k, pin, dive) {
   // (one dragon at a time: the koi of one still in the air is let back first)
   if (dragon.d) dragon.k.shown = true;
-  Object.assign(dragon, { d: makeDragon(k.x, k.y, W, H), k, at: performance.now() / 1000, pin: pin ?? null });
+  Object.assign(dragon, { d: makeDragon(k.x, k.y, W, H, dive), k, at: performance.now() / 1000, pin: pin ?? null });
   k.shown = false;
   drop(k.x, k.y, 7, 3);
   plip('dragon');
@@ -2476,6 +2484,8 @@ function dragonNow() {
   const t = dragon.pin ?? performance.now() / 1000 - dragon.at;
   // (gone over the top, or the look changed to one that has no dragon)
   if (t > d.time || !pic) {
+    // (where one went down, the water closes over it)
+    if (d.at && pic) drop(d.at[0], d.at[1], 8, 3.5);
     dragon.d = null;
     dragon.k.shown = true;
     reached('leap');
@@ -2484,7 +2494,10 @@ function dragonNow() {
   }
   [dragon.x, dragon.y] = dragonHead(d, t);
   dragon.lit = Math.min(1, t / 0.8, (d.time - t) / 1.5);
-  if (T > dragon.wake && dragon.y > 0) {
+  // (once its head has gone down it neither lights the water nor ripples it)
+  const under = d.hole >= 0 && dragonSpine(d, t, 1, 1).head > d.hole;
+  if (under) dragon.lit = 0;
+  if (T > dragon.wake && dragon.y > 0 && !under) {
     drop(dragon.x, dragon.y, 2.2, 0.45);
     dragon.wake = T + 0.1;
   }
@@ -3608,9 +3621,9 @@ if (PERF)
     bugs: () => bugs.length,
     // the dragon, now: held at `pin` seconds if given, and from the picture at `src` if given (one to try
     // before it is listed in DRAGONS); false until the picture has come
-    dragon: (pin, src) => {
+    dragon: (pin, src, dive) => {
       dragon.src = src || '';
-      return !!dragonPic() && (riseDragon(kois.find((k) => k !== you) || you, pin), true);
+      return !!dragonPic() && (riseDragon(kois.find((k) => k !== you) || you, pin, dive), true);
     },
     race: () => ({ fest: pv.fest, k: (performance.now() / 1000 - pv.boatAt) / 40, strokes: pv.strokes, won: pv.won }),
     pads: () => padSpots.map((q) => [Math.round(q.x), Math.round(q.y), Math.round(q.r)])

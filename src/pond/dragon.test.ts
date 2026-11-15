@@ -49,6 +49,25 @@ describe('the way the dragon goes', () => {
   });
 });
 
+describe('the dragon that dives', () => {
+  it('stays in the pond, comes to the middle of its circle and has gone down there, tail and all', () => {
+    for (const [W, H] of PONDS)
+      for (const [x, y] of starts(W, H)) {
+        const d = makeDragon(x, y, W, H, true);
+        expect(d.hole).toBeGreaterThan(0);
+        expect(d.time).toBeLessThan(18);
+        for (const [px, py] of d.path) {
+          expect(px).toBeGreaterThan(-60);
+          expect(px).toBeLessThan(W + 60);
+          expect(py).toBeGreaterThan(-60);
+          expect(py).toBeLessThan(H + 60);
+        }
+        // by the end the whole of it is past the place it went down at
+        expect(d.cum[d.cum.length - 1] - 720 * d.s).toBeGreaterThanOrEqual(d.hole);
+      }
+  });
+});
+
 describe('its spine', () => {
   const d = makeDragon(300, 560, 1280, 800);
   it('comes up out of the water a joint at a time, head first', () => {

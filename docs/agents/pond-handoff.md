@@ -22,11 +22,21 @@ what is left, and what was learnt. What is open now is section 0.
   青花's, Dunhuang's, Monet's, the star chart's figure, the relief's pair); the second and third
   sheets of seals, so every seal is cut; painted clues for Monet's pond, the bowl, ukiyo-e and the
   star chart; the midge the spider hunts. Each was looked at in the pond at 1280 × 800.
-- **Still asked:** nothing, until the next game's pictures are written into the brief.
+- **Still asked: a whole new look, stained glass.** Jincheng: the blueprint is plain beside the
+  others, and the pond should gather the main schools of art, so stained glass takes its place. Its
+  kit is "Stained glass" in the brief, eight lines in the order to make them: the bed first (it is
+  enough to judge the look by), then the koi sheet and the dragon, then the rest. The cloud thread
+  builds the look as the pictures come and keeps the blueprint on show until the bed and the koi
+  are in.
 - **Asked again, where a picture can be bettered:** the cloud thread writes what to redo here and
   in the brief after seeing a picture in the pond; a second version takes the first one's name, and
   its table says what changed. Done so far, and in use: ukiyo-e's dragon (true proportions, fierce
   eyes, antlers, larger legs) and Monet's clue (its rim one loaded stroke). Nothing is open now.
+  **Open now, for stained glass** (Jincheng: the detail is far apart, it does not look good): the
+  bed and the dragon are right and stay; the koi and the lilies are far plainer than they are and
+  are asked again in the kit (items 2 and 4), which says how rich they must be. The first brief
+  was at fault, not the pictures. The clue, what drifts, the dove and the spider wait until the
+  koi are right, and are redone to the same richness only if they then look plain beside them.
 - **Handing a picture back:** commit it under `public/pond/<look>/` with the name the brief gives;
   run `node scripts/check-public-sizes.mjs` (200 KB a file); add its line to that look's table of
   pictures in pond.md, with what came out and what is weak; pull with rebase, and push. Leave the

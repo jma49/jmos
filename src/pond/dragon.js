@@ -41,7 +41,7 @@ export const dragonScale = (W, H) => clamp(Math.min(W, H) / 800, 0.55, 1.15);
  * then turns up and climbs away, faster, until the last of its tail has left over the top. `time` is how
  * long that takes.
  */
-export function makeDragon(x0, y0, W, H) {
+export function makeDragon(x0, y0, W, H, dive = false) {
   const s = dragonScale(W, H),
     wide = W > 860,
     cx = wide ? W * 0.66 : W / 2,
@@ -57,16 +57,19 @@ export function makeDragon(x0, y0, W, H) {
     la = Math.atan2(y0 - cy, x0 - cx),
     swept = 0,
     out = -1,
-    far = 0;
+    far = 0,
+    hole = -1,
+    at = null;
   for (let i = 1; i < 60 * 18; i++) {
     const t = i * dt,
       rx = x - cx,
       ry = y - cy,
       r = Math.hypot(rx, ry) || 1;
     // the way it wants to go: round the circle and back on to it, or, once round, up and away, drawing in
-    // over the circle's middle as it climbs so it never leaves by a side
-    let wx = clamp((cx - x) / 200, -0.3, 0.3),
-      wy = -1;
+    // over the circle's middle as it climbs so it never leaves by a side; one that dives makes for the
+    // circle's middle instead, and goes down there
+    let wx = dive ? (cx - x) / r : clamp((cx - x) / 200, -0.3, 0.3),
+      wy = dive ? (cy - y) / r : -1;
     if (out < 0) {
       const pull = clamp((R - r) / R, -1, 1) * 1.5;
       wx = (-ry * dir + rx * pull) / r;
@@ -81,16 +84,23 @@ export function makeDragon(x0, y0, W, H) {
     turn -= Math.round(turn / TAU) * TAU;
     h += clamp(turn, -2.2 * dt, 2.2 * dt);
     // it comes up slowly and leaves fast; its heading swings from side to side as a snake's does
-    const v = 300 * s * (0.3 + 0.7 * ease(t / 1.2)) * (out < 0 ? 1 : 1 + 1.7 * ease((t - out) / 1.5)),
+    const v = 300 * s * (0.3 + 0.7 * ease(t / 1.2)) * (out < 0 ? 1 : dive ? clamp(r / (200 * s), 0.4, 1) : 1 + 1.7 * ease((t - out) / 1.5)),
       a = h + 0.4 * Math.sin((far / (230 * s)) * TAU);
     x += Math.cos(a) * v * dt;
     y += Math.sin(a) * v * dt;
     far += v * dt;
     path.push([x, y]);
     cum.push(far);
-    if (out >= 0 && y < -(LONG + 110) * s) break;
+    if (out >= 0 && !dive && y < -(LONG + 110) * s) break;
+    // (the place it goes down at, `at`, is where it first comes to the middle; its way runs on past it until
+    // the last of its tail has gone down too)
+    if (dive && out >= 0 && hole < 0 && r < 60 * s) {
+      hole = far;
+      at = [x, y];
+    }
+    if (hole >= 0 && far > hole + (LONG + 40) * s) break;
   }
-  return { path, cum, s, time: (path.length - 1) / 60 };
+  return { path, cum, s, hole, at, time: (path.length - 1) / 60 };
 }
 
 /** Its spine t seconds after it rose, head first, a joint every `ds` px: only as much of it as has come up. */
@@ -108,6 +118,7 @@ export function dragonSpine(d, t, ds, n) {
     const q = (at - cum[j]) / (cum[j + 1] - cum[j] || 1);
     P.push([path[j][0] + (path[j + 1][0] - path[j][0]) * q, path[j][1] + (path[j + 1][1] - path[j][1]) * q]);
   }
+  P.head = head;
   return P;
 }
 
@@ -139,13 +150,17 @@ export function drawDragon(c, d, t, pic, m = 1) {
     // its claws: else what stands out from the body fans open into a comb
     let turn = i < P.length - 2 ? way(i + 1) - a : 0;
     turn -= Math.round(turn / TAU) * TAU;
+    // (one that dives narrows to nothing as each part of it comes to the place it goes down at)
+    const deep = d.hole >= 0 ? clamp((d.hole - (P.head - (i * len) / n)) / (110 * d.s), 0, 1) : 1;
+    if (deep <= 0) continue;
     const more = Math.min(16 * d.s, Math.abs(turn) * h * 0.36),
       sx = SHEET.x0 + (span * i) / n,
       sw = Math.min(span / n + more / k + 1.5, SHEET.x1 + 40 - sx);
     c.save();
     c.translate(x0, y0);
     c.rotate(a);
-    c.drawImage(pic, sx * m, 0, sw * m, SHEET.h * m, -0.4, -h / 2, sw * k, h);
+    c.globalAlpha *= deep;
+    c.drawImage(pic, sx * m, 0, sw * m, SHEET.h * m, -0.4, (-h / 2) * deep, sw * k, h * deep);
     c.restore();
   }
 }

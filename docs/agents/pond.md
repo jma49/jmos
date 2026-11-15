@@ -167,6 +167,11 @@ words did not reach, there only for whoever asks.
   stroke of the paddles (`paddle()`), each sending it on a second and a half; ten before it is
   across (`ROW`) and it is drummed in at the far bank, with the seal. With `?perf`,
   `window.__pond` has the koi's places, the pads and the bugs, for a tool to play them.
+  **The last leap** is the end of the pond's through-line (a koi's life: it is watched, it finds the
+  looks, it grows with each, it leaps, it goes down): once both volumes of looks are full, the first
+  leap of a visit is the visitor's own koi's, and its dragon does not leave over the top but winds
+  in to the middle of its circle and goes down there, narrowing to nothing (`lastLeap` in
+  `engine.js`, `makeDragon(…, dive)` in `dragon.js`). What lies under the pond is not built yet.
   And **the koi's circle** (太极), in ink only: the old cheat typed on the keys (up up down down left
   right left right B A) and for three quarters of a minute the visitor's koi and the gold one swim
   head to tail round one point, as the two fish of the taiji do, with the rest in a wide ring the
@@ -466,7 +471,7 @@ its red), entering at the right edge and reaching left, the left third empty.
 | `stems.webp` | 42 KB | Withered lotus (残荷), 1024 × 1024 like the others and stored the same way (near-black, the tone in the alpha): three dry stems entering from the right edge and folding over, a seed-pod hanging at 538, 236 and a curled dead leaf below it; the paint is 538, 236, 486, 587, and the left half is empty. Sparse, as asked; the stems are thin, so it may want more strength than the reeds when multiplied in. |
 | `seals.webp` | 94 KB | 1024 × 768, cells of 256, 4 × 3, vermilion `#B8382A` with the tone in the alpha. Row 1: 墨 (square, white characters out of red), 浮世 (tall, red characters and border), 莲 (round, white), 青花 (tall, white). Row 2: 敦煌 (tall, red), 光 (round, red), 图 (square, white), 字 (square, red). Row 3: 星 (round, white), 刻 (square, white), 锦程 (tall, white, 锦 over 程), one cell empty. Square and round seals are 232 across, centred; tall ones 150 × 246. Small seal script from the Shuowen Jiezi face of Taiwan's CNS 11643 character set (an open-data font, not in the repository), cut as a seal carver writes them: 蓮, 圖 and 錦 in their full forms, 花 as 華 (the Shuowen has no 花), and 星 as three suns over 生. The edges, chips and pinholes are made in code, so every stone is worn alike; the characters are a dictionary's even line, not a carver's hand. |
 | `seals-2.webp` | 59 KB | 1024 × 512, cells of 256, 4 × 2, cut and coloured as `seals.webp` is (the same face, vermilion, the tone in the alpha, 232 across and centred). Row 1: 雨 (square, white characters out of red), 雪 (round, white), 月 (round, red characters and border), 节 (square, red). Row 2: 晨 (square, white), 舟 (round, white), 龙 (round, red, cut in its full form 龍), one cell empty. 节 is cut as 節; the face has no 雪, so it is built as the Shuowen has it, rain over a broom (雨 over 彗), and its lower half is finer than the rest. 月 and 舟 are the seal forms, which a reader of modern characters may take for each other. |
-| `seals-3.webp` | 58 KB | 1024 × 512, cells of 256, 4 × 2, cut and coloured as the first two are. Row 1: 漂 (round, red characters and border), 跃 (square, white characters out of red, cut as 躍), 捕 (square, red), 拓 (square, white). Row 2: 琴 (round, red), 太极 (tall, white, 太 over 極), 金鱼 (tall, red, 金 over 魚), one cell empty. The face has no 太: it is its 大 with a point set between the legs, as seal script writes it, and the point is rounder than a cut one. 躍 is a dense character and its strokes are fine at the size a seal is shown. |
+| `seals-3.webp` | 65 KB | 1024 × 512, cells of 256, 4 × 2, cut and coloured as the first two are. Row 1: 漂 (round, red characters and border), 跃 (square, white characters out of red, cut as 躍), 捕 (square, red), 拓 (square, white). Row 2: 琴 (round, red), 太极 (tall, white, 太 over 極), 金鱼 (tall, red, 金 over 魚), 琉璃 (tall, red, the stained glass look's). 琉 is cut as 珋, the form the Shuowen has for it; the face has no 璃, which is later than the Shuowen, so it is built as the later character is, the face's 玉 beside its 离, and its 玉 stands a little apart. The face has no 太: it is its 大 with a point set between the legs, as seal script writes it, and the point is rounder than a cut one. 躍 is a dense character and its strokes are fine at the size a seal is shown. |
 | `dove.webp`, `spider.webp` | 16 KB and 27 KB | 768 × 256 each, three poses in 256-pixel cells, from above, facing right, at one scale, stored as the others are. The dove left as bare paper inside a few dark strokes at wing tips and tail: sitting (115 × 54), wings half open (117 × 134), flying (117 × 234). The spider in wet grey and black: sitting (193 × 94), walking (189 × 144), jumping (234 × 170). The dove's body has no tone of its own, so on the paper only its edges and tips show. |
 
 
@@ -727,6 +732,9 @@ drawn in code, and what is still drawn in code that a picture would better is on
    midge seen from above, its wings out in the first cell and beaten back in the second; a dark
    body, pale wings you can see through. It is drawn about 12 pixels long, so it must be bold
    (`drawBugs()` in `engine.js`; nothing is drawn until the picture has come).
+5. **A new look, stained glass, in the blueprint's place**: its kit is "Stained glass" below, with
+   the order to make it in. All eight lines are delivered, to wire in; what came out is in the
+   table under the kit.
 
 **The round asked for before** (every line is already in a look's kit below, or is new there; make them
 in this order, commit each lot as it is done, and say in its table what came out):
@@ -1036,6 +1044,64 @@ bokashi gradation, paper showing.
    construction lines, line only, no fill, the line `#EAF3FF`.
 6. Dove and spider: delivered and in use: the same as line drawings, one pose each, 512 × 512.
 Everything else is ruled in the shader. Nothing more wanted.
+
+**Stained glass** (asked for now; it takes the blueprint's place, which was the one look with no
+art of its own behind it). A new folder named stained under `public/pond/`. Judge it by: a
+Gothic rose window or a Tiffany pond panel with daylight behind it, seen at arm's length: jewel
+colours, every shape a piece of glass held in black lead, no modelling but the glass's own streaks
+and a little matt painted line. Make them in this order; the bed alone is enough to judge the look.
+1. **P0, delivered, to wire in:** the bed, `bed.webp`, 2048 × 1152, opaque to every edge, with `bed-tall.webp`, 1080 × 1920,
+   the same window composed again upright (not a crop). The pond as a leaded window seen from
+   above, with nothing in it: water in panes of deep blue, blue-green and a little violet and amber,
+   the panes long and curved like ripples and currents, 60 to 200 pixels across, each with the
+   streaks and seeds of hand-made glass; black lead lines 5 to 7 pixels wide between all of them,
+   with a solder dot where lines meet. No fish, no plants, no frame, no figures, no text. The left
+   third (the top third of the upright one) in darker, larger, quieter panes: the title's type stands
+   there. The shader lays the daylight and the moving water over it. Under 300 KB and 120 KB (a bed
+   may pass the budget, with its line in the size check).
+2. **P0, asked again** (the first version is far plainer than the bed and the dragon: four or five
+   flat pieces a fish, which reads as clip art; the line that asked for "three or four pieces" was
+   wrong). `koi.webp` and `koi-mask.webp`, to the common spec ("The koi sheet"): each koi as a
+   Tiffany window builds a fish, as richly as the bed is built: 40 pieces of glass or more to a
+   koi. The scales are rows of small pieces across the body, each row a little different in tone;
+   the head is several pieces (cheeks, brow, muzzle) with a painted eye; every fin and the tail is
+   fanned into six or more ribbed pieces; the glass is streaky and mottled, never one flat colour,
+   and the lead is as fine as the bed's. Row 1 ambers and golds with touches of orange, row 2
+   milk-white and pearl opal glass with one ruby piece on the head, rows 3 and 4 in greys with three
+   or four patches, each patch a group of scales, to tint (the mask is those). The rows of scales
+   run across the body, so the koi can bend. The dragon delivered is the measure of detail.
+3. **P0, delivered, to wire in:** `dragon.webp`, to "The dragon sheet": a dragon in glass and lead, amber and gold with ruby
+   for the crest, the mane and the tail's tuft, its scales as small leaded pieces in rows.
+4. **P1, asked again** (the first version's pads are a disc cut into wedges). `lilies.webp`,
+   1024 × 512, 4 × 2: three lily pads from above (large, medium, small), two lotus flowers, a bud,
+   a seed-pod and a withered pad for autumn, each as a Tiffany window builds one: a pad of 15 pieces
+   or more, its veins branching as lead lines from the stalk and not as straight spokes, in three
+   or four streaky greens with a paler rim; a flower of two or three rings of petals, each petal two
+   pieces (a pale tip, a deeper base) in pink and white opal glass round an amber heart.
+5. **P1, delivered, to wire in:** `clue.webp`, 400 × 120 with alpha, shown 200 px across: a banderole as a window letters
+   one, a pale scroll of glass in lead with five small empty quarries in a row where its words would
+   be. It points to ASCII (five letters typed).
+6. **P1, delivered, to wire in:** its seal, 琉璃 (tall, 朱, 琉 over 璃), in the one empty cell of `seals-3.webp` (column 4,
+   row 2), cut as the others are.
+7. **P1, delivered, to wire in:** `afloat.webp`, 1024 × 512, 4 × 2, as every painted look has: two spring petals, two autumn
+   leaves, a snow crystal, a frost flower, a dragonfly and a butterfly, each a small piece or two of
+   glass in lead.
+8. **P2, delivered, to wire in:** `dove.webp` and `spider.webp`, 768 × 256, three poses each, as the other looks have them,
+   in glass and lead.
+
+What has come, in `public/pond/stained/`, all made by the image model and none yet seen in the pond:
+
+| File | Size | What is in it |
+| --- | --- | --- |
+| `bed.webp` | 2048 × 1152, 192 KB | The water as a leaded window, opaque to every edge: panes like long leaves lying along a current that runs from the lower left to the upper right, about 160 × 70 pixels each (from 100 to 220 across), in navy (`#001035`), cobalt (`#004ec0`) and blue-green (`#0093b8`) with a few in violet; five small amber panes, all in the right two thirds. Black lead about 6 pixels wide with small solder dots at the joints. The left third is in dark navy and dark green panes, a quarter as bright as the rest (a mean of 18 in 255 against 63 and 70). It was made at 1672 × 941 and enlarged, so it is a little soft; encoded at quality 52 to keep within the budget for a file, with no line in the size check. The glass's streaks stand a little in relief in places, more like rippled glass than flat. |
+| `bed-tall.webp` | 1080 × 1920, 161 KB | The same window composed upright: the same glass and palette, the dark quiet panes in the top third (22 against 68 and 72), six amber panes below it. Its lead is thinner than the wide one's (about 4.5 pixels) and its panes longer (about 230 × 90). Over the 120 KB asked for: the streaks of the glass cost that much, and at quality 30 the leads still hold; lower, the panes smear. |
+| `koi.webp` | 1024 × 1536, 140 KB | Four koi from straight above in rows of 384, heads to the left, each from the barbels at x 62 to the tail tip at x 962, the spine on its row's middle line, the paint from 34 to 347 down each row. Each is nine pieces of glass in black lead: a head, three bands of body divided by leads that cross it (none runs along it), two pairs of fins with painted rays, a forked tail; the eyes are painted dots. Row 1: an amber head and tail, a gold body and fins. Row 2: milk-white, with one round ruby piece leaded into the head. Rows 3 and 4: greys. All four are one cutting but for row 4's head, which has a shield-shaped piece inset. The pieces are few and plain and the streaks faint, so at full size it reads flatter than the bed, nearer a paper cut-out than glass; the spine wanders up to 5 pixels in rows 3 and 4. |
+| `koi-mask.webp` | 1024 × 1536, 8 KB | White over the pieces to tint, soft by 2 pixels, black elsewhere, cut from the same pictures as the koi (the pieces were painted magenta, then turned to a middle grey), so it lines up to the pixel. Row 3: the first band of the body, the two front fins and the tail (48% of the fish). Row 4: the inset piece on the head, the second band and the tail's stalk (22%). Whole pieces are tinted, lead to lead, which is more of the fish than the other looks' patches. |
+| `dragon.webp` | 2048 × 512, 125 KB | The Dragon Gate's dragon in glass and lead: head to the left, the spine on y 256, the snout's tip at x 64 and the tail's at x 1984, one straight picture scaled evenly to those two points. Amber and gold scales as small leaded pieces in rows of arcs, about four across the body, a chain of ruby pieces down the spine, a ruby mane and tail flame, a cream muzzle, antlers, whiskers and claws, painted eyes under brows. Paint from y 111 to 401; legs at x 446 and x 1021, the claws 145 pixels from the spine. The trunk is about 140 pixels across behind the shoulders, broader than the 100 asked for; the muzzle is short and scrolled; the outer lead is heavier than the inner ones, and the glass's streaks are dense, nearer marbled enamel in places. |
+| `lilies.webp` | 1024 × 512, 77 KB | Eight motifs in a 4 × 2 grid of 256-pixel cells, from above, at one scale, each at least 14 pixels clear of its cell. Top row: three pads with one notch each, in wedges of light and dark green whose leads are the veins (228, 180 and 130 pixels across), and an open lotus of two rings of petals, pink outside and white within, round a gold centre (212). Bottom row: a paler lotus of eight broad petals (204), a bud of three pink pieces (76 × 90), a seed-pod with seven dark holes (107), a withered pad in brown, amber and olive with a ragged edge (200 × 178). The pads' wedges are regular, more a wheel than a leaf, and the withered pad's curl is in its outline only. |
+| `afloat.webp` | 1024 × 512, 88 KB | Eight motifs in a 4 × 2 grid of 256-pixel cells, from above, each fitted to its cell with 16 pixels clear. Top row: a pink petal of two pieces with a cleft (it reads as a heart), a pale peach petal of one piece, a maple leaf in ruby and amber, a narrow leaf in amber and olive lying level. Bottom row: a snow crystal in pale blue, a frost flower of many small white pieces, a dragonfly with clear wings and a ruby body, a butterfly in ruby, amber and violet; the two flying things head to the right. The frost flower's pieces run together when small, and the butterfly's feelers are thin black lines that go on dark water. |
+| `clue.webp` | 400 × 120, 10 KB | A banderole lying level (370 × 90, centred): a scroll of straw-yellow glass with a curl and a forked end at each side, and in it five empty quarries of clear glass in a row, each in its own lead. No letter anywhere. |
+| `dove.webp`, `spider.webp` | 768 × 256, 13 KB and 18 KB | Three poses each in 256-pixel cells, from above, heads to the right, at one scale. The dove, in white and pale blue glass: sitting (99 × 50), wings half open (99 × 156, wider than the 130 asked for), flying (97 × 234); a wing is three or four pieces. The spider: an amber body with a ruby lozenge and a darker head, its eight legs lead itself with a joint each: sitting (137 × 121), walking (191 × 173), jumping (205 × 232). Its black legs go on the bed's dark third, as the dove's painted eye does at the size shown. |
 
 **ASCII.** Characters only. Nothing wanted.
 
