@@ -1080,45 +1080,63 @@ bokashi gradation, paper showing.
 6. Dove and spider: delivered and in use: the same as line drawings, one pose each, 512 × 512.
 Everything else is ruled in the shader. Nothing more wanted.
 
-**Stained glass: asked again, whole** (Jincheng, on seeing the first kit move in a demo: "底图太花
-不够优雅，换成哥特式的装饰玻璃窗那种感觉。龙做的也很丑…这个水平比起墨，敦煌差的太多了。把艺术水平和
-美感对齐统一"). The first kit is a bright Tiffany panel: every pane a strong colour, the whole busy.
-What is wanted is a Gothic church window, and it must stand beside ink and Dunhuang, which are the
-measure: quiet, old, made by one hand, most of the surface at rest. Everything below is redone to
-this; the first files stay only until the new ones replace them.
+**Stained glass: the bed asked a third time** (2026-11-15). Jincheng on the first kit: "底图太花
+不够优雅…龙做的也很丑…这个水平比起墨，敦煌差的太多了。把艺术水平和美感对齐统一". On the second, the
+grisaille window: "底图不够好看", and he gave a photograph to go by (he can paste it to you; ask
+him). The grisaille brief was the cloud thread's and was wrong: it asked for pale, quiet glass in
+grey daylight, and what came was dull and opaque, like a tiled floor. What he wants is the other
+thing a church window is: **colour burning in the dark.**
 
-How a Gothic window differs, and what to hold every picture to:
-- **Restraint.** Most of the glass is pale and quiet: grisaille (grey-white glass painted with fine
-  dark line), in small diamond or square quarries. Colour is rare and deep: the blue of Chartres,
-  ruby, a little green, and yellow only as silver stain. No turquoise, no violet, no amber fields.
-  Squint: it should read as pale stone-grey and deep blue with a few points of red.
-- **Geometry, not waves.** The lead follows an ordered design: quarries, borders, medallions,
-  foils. Nothing flows like leaves or ripples.
-- **Painted line.** A Gothic figure is drawn on the glass in dark matt paint (trace line and a
-  little stippled shadow) across few pieces; it is not built of hundreds of coloured scales.
-- **Age.** The glass is uneven, pitted and a little dimmed, the lead dull; never glossy or neon.
-- **One hand.** The bed, the koi, the dragon and the lilies must look cut from one window.
+His photograph: a two-light window seen from inside a dark church. Two tall lancets with pointed
+heads side by side, a round light above and between them, two small tracery lights at its
+shoulders; all of it set in stone that is black, so the glass is the only light there is. The
+round light is a gold sun, rays going out from a bright middle to orange at its rim. Each lancet
+has a figure in full robes of ruby, cobalt, green and purple on a ground of gold and blue diaper,
+inside a painted arch. The lead and the stone bars are thick and black; the folds are painted in
+dark line with a little shading; the glass is brightest in the middle of each piece.
 
-It takes the blueprint's place. A new folder named stained under `public/pond/`. Judge it by: a
-thirteenth-century window (Chartres, Canterbury, the Five Sisters at York) with grey daylight
-behind it, seen from the nave. Make them in this order; the bed alone is enough to judge the look.
-1. **P0, delivered again, to wire in and look at; the rest waits on it:** the bed, `bed.webp`, 2048 × 1152, opaque to every edge, with `bed-tall.webp`,
-   1080 × 1920, the same window composed again upright (not a crop). A grisaille window seen
-   straight on, with nothing in it: a field of small diamond quarries of grey-white and faintly
-   green glass, each painted with a fine dark trace-line motif (a leaf, a quatrefoil), set in a
-   regular lattice of thin lead; over the right two thirds, one large rose or a few linked
-   medallions and foils in deep blue with thin ruby fillets and pearled borders, their fields
-   empty (the koi swim there); a narrow border of blue and ruby with a running leaf round the whole.
-   The left third (the top third of the upright one) plain quarries only, a little darker: the
-   title's type stands there. No fish, no plants, no figures, no text. The shader lays the
-   daylight and the moving water over it. Under 300 KB and 120 KB.
-2. **P0, asked again:** `koi.webp` and `koi-mask.webp`, to the common spec ("The koi sheet"): each
-   koi as a Gothic glazier draws a fish: a few pieces of glass (head, body in two or three, each
-   fin, the tail), the scales, gills, fin rays and eye drawn on them in dark matt trace line with a
-   little stippled shading, the lead only where pieces meet and lying across the body so the koi can
-   bend. Row 1 silver-stain yellow on white glass, row 2 white glass with one ruby piece on the
-   head, rows 3 and 4 in grey-whites with three or four patches to tint (the mask is those). Deep,
-   quiet colour: they must sit on the grisaille as its figures, not shout over it.
+What to hold every picture to now:
+- **Light from behind.** Every piece of glass glows: brightest toward its middle, deeper at the
+  lead, uneven as blown glass is. It is never flat, grey, matt or opaque. Squint: jewels on black.
+- **Dark round it.** The window sits in black stone, and the stone is part of the picture: wide
+  dark margins, black mullions and tracery. The dark is what makes the glass burn and what keeps
+  it elegant; a third or more of the picture is dark.
+- **Few, deep colours.** Cobalt, ruby and gold lead; green and purple in small parts; white glass
+  only as accents. No pastel, no turquoise, no grey fields.
+- **Architecture.** Lancets, pointed heads, a rose or round light, small tracery lights: the
+  design is a real window's, not a pattern that fills a rectangle.
+- **Painted line and one hand.** Detail is dark trace line on the glass; the bed, the koi, the
+  dragon and the lilies must look cut from one window, and stand beside ink and Dunhuang.
+
+It takes the blueprint's place, in the folder named stained under `public/pond/`. Make the bed
+first and stop there for Jincheng's look; the rest follows only once the bed is right.
+1. **P0, asked a third time; the rest waits on it:** the bed, `bed.webp`, 2048 × 1152, opaque to
+   every edge, with `bed-tall.webp`, 1080 × 1920, composed again upright (not a crop). A window
+   seen from inside a dark church, straight on, with no figures in it: the pond's koi are its
+   figures.
+   - **Wide (`bed`):** the left third is the church's wall, near black stone with only the
+     faintest courses and a little coloured light fallen on it from the window: the page's title
+     stands there in pale type. The right two thirds is the window: three tall lancets with
+     pointed heads, side by side, between thick black mullions, running from near the top to
+     near the bottom; above and between them, where the height allows, small tracery lights
+     (trefoils or quatrefoils) in ruby and gold. Each lancet: a narrow border of ruby and gold
+     pieces, then a painted arch (a canopy) at its head in gold and white, and under it a field
+     of deep cobalt diaper (small quarries, each with a fine painted motif, the blue lighter at
+     the lancet's middle and deepening to its edges) left empty for the koi. At the foot of each
+     lancet a low band of green and gold, as the ground a figure would stand on.
+   - **Upright (`bed-tall`):** his photograph's own design: two lancets below, a round light
+     above and between them holding a gold sun with rays going out to orange, two small tracery
+     lights at its shoulders, black stone round all of it. The lancets as above, their cobalt
+     fields empty. The top fifth is dark stone under the arch's point, for the title.
+   - In both the rose or round light is a true circle. No fish, no plants, no figures, no text.
+     The shader lays the moving water and the time of day over it. Under 300 KB and 120 KB.
+2. **P0, asked again, after the bed is accepted:** `koi.webp` and `koi-mask.webp`, to the common
+   spec ("The koi sheet"): each koi as a Gothic glazier draws a fish: a few pieces of glass (head,
+   body in two or three, each fin, the tail), the scales, gills, fin rays and eye drawn on them in
+   dark trace line with a little stippled shading, the lead only where pieces meet and lying across
+   the body so the koi can bend. Row 1 gold glass, row 2 white glass with one ruby piece on the
+   head, rows 3 and 4 in whites with three or four patches to tint (the mask is those). They are
+   the window's figures: lit from behind as the bed is, and bright against its cobalt.
 3. **P0, asked again:** `dragon.webp`, to "The dragon sheet": the first is a string of orange scales
    with a cartoon head, and ugly. A dragon as a thirteenth-century window draws one, in the same
    hand as the koi: white glass and silver-stain yellow with ruby for the crest, the mane and the

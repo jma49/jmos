@@ -40,11 +40,13 @@ what is left, and what was learnt. What is open now is section 0.
   dragon and the lilies. Make the bed first and stop there for a look: the rest follows only once
   the bed is right. The clue, what drifts, the dove and the spider are redone last, in the same
   hand.
-  **The Gothic bed has come and is with Jincheng for his look (2026-11-15); hold the koi, the
-  dragon and the lilies until he answers.** One thing to mend meanwhile, whatever he says: in
-  `bed-tall` the rose is an ellipse (wider than it is tall, its foils with it). A rose is a true
-  circle: make the tall bed again with the rose round, about 900 pixels across, in the lower
-  half.
+  **Jincheng has seen the Gothic bed and it is not good enough ("底图不够好看"); the bed is asked a
+  third time (2026-11-15).** The fault was the brief's: it asked for pale grisaille in grey
+  daylight, and what came is dull and opaque. He gave a photograph to go by (ask him to paste it):
+  lancets and a gold sun in a round light, saturated ruby, cobalt, gold, green and purple, in
+  black stone, burning in the dark. "Stained glass" in the brief is rewritten to that: light from
+  behind, dark round it, few deep colours, a real window's architecture. Make `bed` and `bed-tall`
+  again to it and stop for his look; the koi, the dragon and the lilies wait on the bed.
 - **Delivered and in use: the ten strokes of the second ending** (item 6 of "Asked for now"; the
   design is decision 0028): one stroke of 真 for each painted look, and the seal 真 on `seals-4`.
   Stained glass's stroke is kept for when that look is built.
