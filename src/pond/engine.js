@@ -771,6 +771,7 @@ function drawKoi() {
   fctx.setTransform(1, 0, 0, 1, 0, 0);
   fctx.clearRect(0, 0, fishCv.width, fishCv.height);
   fctx.setTransform(s, 0, 0, s, 0, 0);
+  if (you?.grow) you.size += (you.grow - you.size) * 0.02;
   for (const k of kois) {
     // (one in a leap is drawn larger as it rises, about its own middle)
     const up = k.leap && T - k.leap < 1.1 ? Math.sin((Math.PI * (T - k.leap)) / 1.1) : 0;
@@ -5473,8 +5474,16 @@ function setAlbum(a) {
   if (sheetOpen() && sheetId === 'seals') openSheet('seals');
 }
 // the visitor's koi wears a seal once the first volume is full, and the gold one once every volume is
+// The visitor's koi grows with the looks it has found: a tenth of its way to full size for each of the ten,
+// from the small koi it came as to one nearly the gold koi's size (it eases there in drawKoi).
+const GROWN = 1.5;
 function koiSeals() {
-  if (you) you.seal = full(album, VOLS[0]);
+  if (you) {
+    you.seal = full(album, VOLS[0]);
+    you.size0 ??= you.size;
+    const looks = VOLS.slice(0, 2).flatMap((v) => v.seals);
+    you.grow = you.size0 * (1 + ((GROWN - 1) * looks.filter((q) => hasSeal(album, q.id)).length) / looks.length);
+  }
   if (host) host.seal = allFull(album, VOLS);
 }
 function sealsEntry() {
