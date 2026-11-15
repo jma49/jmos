@@ -728,7 +728,8 @@ drawn in code, and what is still drawn in code that a picture would better is on
    body, pale wings you can see through. It is drawn about 12 pixels long, so it must be bold
    (`drawBugs()` in `engine.js`; nothing is drawn until the picture has come).
 5. **A new look, stained glass, in the blueprint's place**: its kit is "Stained glass" below, with
-   the order to make it in. Nothing of it is delivered.
+   the order to make it in. The bed, the koi sheet and the dragon are delivered, to wire in; the
+   rest is to come.
 
 **The round asked for before** (every line is already in a look's kit below, or is new there; make them
 in this order, commit each lot as it is done, and say in its table what came out):
@@ -1044,7 +1045,7 @@ art of its own behind it). A new folder named stained under `public/pond/`. Judg
 Gothic rose window or a Tiffany pond panel with daylight behind it, seen at arm's length: jewel
 colours, every shape a piece of glass held in black lead, no modelling but the glass's own streaks
 and a little matt painted line. Make them in this order; the bed alone is enough to judge the look.
-1. **P0** the bed, `bed.webp`, 2048 × 1152, opaque to every edge, with `bed-tall.webp`, 1080 × 1920,
+1. **P0, delivered, to wire in:** the bed, `bed.webp`, 2048 × 1152, opaque to every edge, with `bed-tall.webp`, 1080 × 1920,
    the same window composed again upright (not a crop). The pond as a leaded window seen from
    above, with nothing in it: water in panes of deep blue, blue-green and a little violet and amber,
    the panes long and curved like ripples and currents, 60 to 200 pixels across, each with the
@@ -1053,13 +1054,13 @@ and a little matt painted line. Make them in this order; the bed alone is enough
    third (the top third of the upright one) in darker, larger, quieter panes: the title's type stands
    there. The shader lays the daylight and the moving water over it. Under 300 KB and 120 KB (a bed
    may pass the budget, with its line in the size check).
-2. **P0** `koi.webp` and `koi-mask.webp`, to the common spec ("The koi sheet"): each koi built of
+2. **P0, delivered, to wire in:** `koi.webp` and `koi-mask.webp`, to the common spec ("The koi sheet"): each koi built of
    pieces of glass in lead, as a window builds a fish: the body in three or four pieces along its
    length, fins and tail each a piece or two, the eye a painted dot. Row 1 amber and gold, row 2
    milk-white glass with one ruby piece on the head, rows 3 and 4 in greys with three or four
    pieces to tint (the mask is those pieces). The lead lines must lie across the body, not along
    it, so the koi can bend.
-3. **P0** `dragon.webp`, to "The dragon sheet": a dragon in glass and lead, amber and gold with ruby
+3. **P0, delivered, to wire in:** `dragon.webp`, to "The dragon sheet": a dragon in glass and lead, amber and gold with ruby
    for the crest, the mane and the tail's tuft, its scales as small leaded pieces in rows.
 4. **P1** `lilies.webp`, 1024 × 512, 4 × 2: three lily pads from above (large, medium, small), two
    lotus flowers, a bud, a seed-pod and a withered pad for autumn, each a few pieces of glass in
@@ -1074,6 +1075,16 @@ and a little matt painted line. Make them in this order; the bed alone is enough
    glass in lead.
 8. **P2** `dove.webp` and `spider.webp`, 768 × 256, three poses each, as the other looks have them,
    in glass and lead.
+
+What has come, in `public/pond/stained/`, all made by the image model and none yet seen in the pond:
+
+| File | Size | What is in it |
+| --- | --- | --- |
+| `bed.webp` | 2048 × 1152, 192 KB | The water as a leaded window, opaque to every edge: panes like long leaves lying along a current that runs from the lower left to the upper right, about 160 × 70 pixels each (from 100 to 220 across), in navy (`#001035`), cobalt (`#004ec0`) and blue-green (`#0093b8`) with a few in violet; five small amber panes, all in the right two thirds. Black lead about 6 pixels wide with small solder dots at the joints. The left third is in dark navy and dark green panes, a quarter as bright as the rest (a mean of 18 in 255 against 63 and 70). It was made at 1672 × 941 and enlarged, so it is a little soft; encoded at quality 52 to keep within the budget for a file, with no line in the size check. The glass's streaks stand a little in relief in places, more like rippled glass than flat. |
+| `bed-tall.webp` | 1080 × 1920, 161 KB | The same window composed upright: the same glass and palette, the dark quiet panes in the top third (22 against 68 and 72), six amber panes below it. Its lead is thinner than the wide one's (about 4.5 pixels) and its panes longer (about 230 × 90). Over the 120 KB asked for: the streaks of the glass cost that much, and at quality 30 the leads still hold; lower, the panes smear. |
+| `koi.webp` | 1024 × 1536, 140 KB | Four koi from straight above in rows of 384, heads to the left, each from the barbels at x 62 to the tail tip at x 962, the spine on its row's middle line, the paint from 34 to 347 down each row. Each is nine pieces of glass in black lead: a head, three bands of body divided by leads that cross it (none runs along it), two pairs of fins with painted rays, a forked tail; the eyes are painted dots. Row 1: an amber head and tail, a gold body and fins. Row 2: milk-white, with one round ruby piece leaded into the head. Rows 3 and 4: greys. All four are one cutting but for row 4's head, which has a shield-shaped piece inset. The pieces are few and plain and the streaks faint, so at full size it reads flatter than the bed, nearer a paper cut-out than glass; the spine wanders up to 5 pixels in rows 3 and 4. |
+| `koi-mask.webp` | 1024 × 1536, 8 KB | White over the pieces to tint, soft by 2 pixels, black elsewhere, cut from the same pictures as the koi (the pieces were painted magenta, then turned to a middle grey), so it lines up to the pixel. Row 3: the first band of the body, the two front fins and the tail (48% of the fish). Row 4: the inset piece on the head, the second band and the tail's stalk (22%). Whole pieces are tinted, lead to lead, which is more of the fish than the other looks' patches. |
+| `dragon.webp` | 2048 × 512, 125 KB | The Dragon Gate's dragon in glass and lead: head to the left, the spine on y 256, the snout's tip at x 64 and the tail's at x 1984, one straight picture scaled evenly to those two points. Amber and gold scales as small leaded pieces in rows of arcs, about four across the body, a chain of ruby pieces down the spine, a ruby mane and tail flame, a cream muzzle, antlers, whiskers and claws, painted eyes under brows. Paint from y 111 to 401; legs at x 446 and x 1021, the claws 145 pixels from the spine. The trunk is about 140 pixels across behind the shoulders, broader than the 100 asked for; the muzzle is short and scrolled; the outer lead is heavier than the inner ones, and the glass's streaks are dense, nearer marbled enamel in places. |
 
 **ASCII.** Characters only. Nothing wanted.
 
