@@ -32,6 +32,11 @@ what is left, and what was learnt. What is open now is section 0.
   in the brief after seeing a picture in the pond; a second version takes the first one's name, and
   its table says what changed. Done so far, and in use: ukiyo-e's dragon (true proportions, fierce
   eyes, antlers, larger legs) and Monet's clue (its rim one loaded stroke). Nothing is open now.
+  **Open now, for stained glass** (Jincheng: the detail is far apart, it does not look good): the
+  bed and the dragon are right and stay; the koi and the lilies are far plainer than they are and
+  are asked again in the kit (items 2 and 4), which says how rich they must be. The first brief
+  was at fault, not the pictures. The clue, what drifts, the dove and the spider wait until the
+  koi are right, and are redone to the same richness only if they then look plain beside them.
 - **Handing a picture back:** commit it under `public/pond/<look>/` with the name the brief gives;
   run `node scripts/check-public-sizes.mjs` (200 KB a file); add its line to that look's table of
   pictures in pond.md, with what came out and what is weak; pull with rebase, and push. Leave the

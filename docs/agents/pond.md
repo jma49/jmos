@@ -1054,17 +1054,25 @@ and a little matt painted line. Make them in this order; the bed alone is enough
    third (the top third of the upright one) in darker, larger, quieter panes: the title's type stands
    there. The shader lays the daylight and the moving water over it. Under 300 KB and 120 KB (a bed
    may pass the budget, with its line in the size check).
-2. **P0, delivered, to wire in:** `koi.webp` and `koi-mask.webp`, to the common spec ("The koi sheet"): each koi built of
-   pieces of glass in lead, as a window builds a fish: the body in three or four pieces along its
-   length, fins and tail each a piece or two, the eye a painted dot. Row 1 amber and gold, row 2
-   milk-white glass with one ruby piece on the head, rows 3 and 4 in greys with three or four
-   pieces to tint (the mask is those pieces). The lead lines must lie across the body, not along
-   it, so the koi can bend.
+2. **P0, asked again** (the first version is far plainer than the bed and the dragon: four or five
+   flat pieces a fish, which reads as clip art; the line that asked for "three or four pieces" was
+   wrong). `koi.webp` and `koi-mask.webp`, to the common spec ("The koi sheet"): each koi as a
+   Tiffany window builds a fish, as richly as the bed is built: 40 pieces of glass or more to a
+   koi. The scales are rows of small pieces across the body, each row a little different in tone;
+   the head is several pieces (cheeks, brow, muzzle) with a painted eye; every fin and the tail is
+   fanned into six or more ribbed pieces; the glass is streaky and mottled, never one flat colour,
+   and the lead is as fine as the bed's. Row 1 ambers and golds with touches of orange, row 2
+   milk-white and pearl opal glass with one ruby piece on the head, rows 3 and 4 in greys with three
+   or four patches, each patch a group of scales, to tint (the mask is those). The rows of scales
+   run across the body, so the koi can bend. The dragon delivered is the measure of detail.
 3. **P0, delivered, to wire in:** `dragon.webp`, to "The dragon sheet": a dragon in glass and lead, amber and gold with ruby
    for the crest, the mane and the tail's tuft, its scales as small leaded pieces in rows.
-4. **P1, delivered, to wire in:** `lilies.webp`, 1024 × 512, 4 × 2: three lily pads from above (large, medium, small), two
-   lotus flowers, a bud, a seed-pod and a withered pad for autumn, each a few pieces of glass in
-   lead: the pads in greens with their veins as lead lines, the flowers in pink and white opal glass.
+4. **P1, asked again** (the first version's pads are a disc cut into wedges). `lilies.webp`,
+   1024 × 512, 4 × 2: three lily pads from above (large, medium, small), two lotus flowers, a bud,
+   a seed-pod and a withered pad for autumn, each as a Tiffany window builds one: a pad of 15 pieces
+   or more, its veins branching as lead lines from the stalk and not as straight spokes, in three
+   or four streaky greens with a paler rim; a flower of two or three rings of petals, each petal two
+   pieces (a pale tip, a deeper base) in pink and white opal glass round an amber heart.
 5. **P1, delivered, to wire in:** `clue.webp`, 400 × 120 with alpha, shown 200 px across: a banderole as a window letters
    one, a pale scroll of glass in lead with five small empty quarries in a row where its words would
    be. It points to ASCII (five letters typed).
