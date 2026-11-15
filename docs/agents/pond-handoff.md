@@ -22,7 +22,12 @@ what is left, and what was learnt. What is open now is section 0.
   青花's, Dunhuang's, Monet's, the star chart's figure, the relief's pair); the second and third
   sheets of seals, so every seal is cut; painted clues for Monet's pond, the bowl, ukiyo-e and the
   star chart; the midge the spider hunts. Each was looked at in the pond at 1280 × 800.
-- **Still asked:** nothing, until the next game's pictures are written into the brief.
+- **Still asked: a whole new look, stained glass.** Jincheng: the blueprint is plain beside the
+  others, and the pond should gather the main schools of art, so stained glass takes its place. Its
+  kit is "Stained glass" in the brief, eight lines in the order to make them: the bed first (it is
+  enough to judge the look by), then the koi sheet and the dragon, then the rest. The cloud thread
+  builds the look as the pictures come and keeps the blueprint on show until the bed and the koi
+  are in.
 - **Asked again, where a picture can be bettered:** the cloud thread writes what to redo here and
   in the brief after seeing a picture in the pond; a second version takes the first one's name, and
   its table says what changed. Done so far, and in use: ukiyo-e's dragon (true proportions, fierce
