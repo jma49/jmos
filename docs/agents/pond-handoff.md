@@ -1,21 +1,55 @@
 # The pond's looks: handoff (2026-11-12)
 
-For whoever picks this work up next, with no memory of how it got here. It covers the branch
-`cloud/youthful-bardeen-mq3cpl`: five looks added as previews, a seal album, a second performance
-pass, and the move from drawing things in code to painted pictures. How the pond itself works is in
-[pond.md](pond.md); this page is the state of the work, what is left, and what was learnt.
+For whoever picks this work up next, with no memory of how it got here. It began as the handoff of
+the branch `cloud/youthful-bardeen-mq3cpl`: five looks added as previews, a seal album, a second
+performance pass, and the move from drawing things in code to painted pictures. All of that is on
+main now. How the pond itself works is in [pond.md](pond.md); this page is the state of the work,
+what is left, and what was learnt. What is open now is section 0.
+
+## 0. Open now: pictures for the small games
+
+- **Branch:** `cloud/modest-noether-l6tvpo`. Two threads work on it, as before: the thread in the
+  cloud writes the code and the briefs; the thread on Jincheng's own machine makes the pictures (it
+  can call the image model there) and commits them to this same branch. Always `git pull --rebase
+  origin cloud/modest-noether-l6tvpo` before a push. The cloud thread opens the pull requests and
+  merges them; after a merge it brings main back into the branch and does not rewrite it, so a
+  clone of the branch stays good.
+- **What the round is for:** the pond's small games, the first being the Dragon Gate (鲤鱼跃龙门: a
+  koi that leaps a third time in a visit goes as a dragon). What is wanted, in the order to make
+  it, is the list "Asked for now" in the art brief in [pond.md](pond.md); the rules every picture
+  keeps are under "For every picture" there.
+- **Delivered on this branch and in use:** the dragon for seven looks (the water's, ukiyo-e's,
+  青花's, Dunhuang's, Monet's, the star chart's figure, the relief's pair); the second and third
+  sheets of seals, so every seal is cut; painted clues for Monet's pond, the bowl, ukiyo-e and the
+  star chart; the midge the spider hunts. Each was looked at in the pond at 1280 × 800.
+- **Still asked:** nothing, until the next game's pictures are written into the brief.
+- **Asked again, where a picture can be bettered:** the cloud thread writes what to redo here and
+  in the brief after seeing a picture in the pond; a second version takes the first one's name, and
+  its table says what changed. Done so far, and in use: ukiyo-e's dragon (true proportions, fierce
+  eyes, antlers, larger legs) and Monet's clue (its rim one loaded stroke). Nothing is open now.
+- **Handing a picture back:** commit it under `public/pond/<look>/` with the name the brief gives;
+  run `node scripts/check-public-sizes.mjs` (200 KB a file); add its line to that look's table of
+  pictures in pond.md, with what came out and what is weak; pull with rebase, and push. Leave the
+  code alone and say in the commit message which pictures came: the cloud thread lists each and
+  looks at it in the pond.
+- **Seeing a dragon move before it is listed:** the last paragraph of "The dragon sheet".
+- **Jincheng's to decide:** whether the water's own koi, which are drawn in code and read well,
+  should be tried as a painted sheet too. Nothing is asked for it until he says.
+- **To come, not asked yet:** the goldfish-scooping game will want a paper scoop, a few goldfish
+  seen from above and a bowl. Its lines go into the brief when its design is settled; there is
+  nothing to make for it yet beyond its seal.
 
 ## 1. Where things are
 
-- **Branch and PR:** `cloud/youthful-bardeen-mq3cpl`, draft PR
-  [jma49/jmos#294](https://github.com/jma49/jmos/pull/294). It stays a draft and is not merged until
-  Jincheng approves. Push to no other branch.
-- **Two threads work on the branch.** An agent in the cloud writes the code; an agent on Jincheng's
+- **Branch and PR:** the looks were built on `cloud/youthful-bardeen-mq3cpl` (draft PR
+  [jma49/jmos#294](https://github.com/jma49/jmos/pull/294)); what it held is on main. The branch
+  open now is named in section 0. Push to no other branch.
+- **Two threads work on a branch.** An agent in the cloud writes the code; an agent on Jincheng's
   own machine makes the pictures (an image model and Blender are only reachable from there) and
   commits them to the same branch. They talk through the doc: the art brief and its wanted lists
-  under "Pictures for the looks" in [pond.md](pond.md). Always `git pull --rebase origin
-  cloud/youthful-bardeen-mq3cpl` before a push; the other thread pushes often. Don't edit the
-  delivered-pictures tables that thread writes; add what is wanted to the brief.
+  under "Pictures for the looks" in [pond.md](pond.md). Always pull with rebase before a push; the
+  other thread pushes often. Don't edit the delivered-pictures tables that thread writes; add what
+  is wanted to the brief.
 - **The demo** is one self-contained HTML file published as an artifact:
   <https://claude.ai/artifact/LT41KxtTa8V65mrLMpxjMJ>. To rebuild and republish it:
 
@@ -88,6 +122,9 @@ Jincheng's words that still stand:
 - Seasons by look: "不是所有的界面都要有荷叶蜻蜓，季节特点要符合艺术风格"; the star chart's rain is a
   meteor shower.
 - Pictures: "每一种风格尽可能的全部用自己独有的美术资产。能定制的就定制。"
+- Pictures, for anything new: "如果有新的美术资产需求…写一个文档交接给我开出来的本地线程。不要自己代码画，很明显比
+  其他美术资产差" (a new thing the pond shows is asked of the local thread through the brief; the
+  cloud thread builds the code to take the picture and does not draw it).
 
 ## 3. What ships when
 

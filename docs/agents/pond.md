@@ -167,6 +167,19 @@ words did not reach, there only for whoever asks.
   stroke of the paddles (`paddle()`), each sending it on a second and a half; ten before it is
   across (`ROW`) and it is drummed in at the far bank, with the seal. With `?perf`,
   `window.__pond` has the koi's places, the pads and the bugs, for a tool to play them.
+  And **the Dragon Gate** (鲤鱼跃龙门): at every third leap of a visit the koi does not come down. At
+  the top of its leap it goes as a dragon (`riseDragon()` in `engine.js`, `dragon.js`), which winds
+  on to a wide circle over the open water, goes once round and climbs away over the top; the water
+  ripples under it and, on the water, is lit gold about its head (`uDragon`). The koi is back in the
+  pond once it has gone, with the seal 龙. The dragon is a painted sheet laid in slices along the way
+  its head has gone, as a painted koi is laid along its spine, on the fish's layer: ink, glow, the
+  blueprint and ASCII restyle it as they do the pond's koi, and the star chart sets stars down its
+  back over the atlas's figure of it. Each painted look has its own dragon (`DRAGONS` in
+  `dragon.js`; the brief's "The dragon sheet" says what each is): the water's golden one also
+  serves ink, glow, the blueprint and ASCII, and the relief's is the serpent of the sun's boat, its
+  paint and height made into one picture as its koi's are (`carved()`). The picture is fetched at a
+  visit's first leap, never before. With `?perf`, `window.__pond.dragon(seconds, picture)` raises
+  one, held that far into its flight, from a picture to try if one is given.
 - **A chain of clues.** A look on show carries a small mark that points to the next look's gesture
   (`NEXT` and `clueFor()` in `seals.ts`, `CLUES` and `clueNow()` in `engine.js`, `.clue` in
   `pond.css`), laid in a few seconds after the look has come, until that next seal is found.
@@ -247,6 +260,7 @@ The flying figures (飞天) can't be drawn well in a shader, so they are picture
 | `lotus.webp` | 1024 × 512, 68 KB | Eight motifs in a 4 × 2 grid of 256-pixel cells, from above, at one scale, each at least 14 pixels clear of its cell's edge, flat colour in an iron-brown line. Top row: three leaves in malachite green, large (226 pixels across), medium with a notch (189) and small with a notch (141), then a flower of white and cinnabar rings round a yellow heart. Bottom row: a flower with the cinnabar outermost, a white one, a bud as a white disc with three cinnabar tips, a seed-pod in ochre with eight seeds. The fills carry a faint cloudiness, no plaster. |
 | `dove.webp`, `spider.webp` | 768 × 256, 17 KB and 32 KB | Three poses each in 256-pixel cells, from above, facing right, at one scale. The dove as a white bird of the murals, green and cinnabar on its wings and tail: sitting (114 × 50), wings half open (113 × 135), flying (115 × 234). The spider in ochre and dark brown, a cloud scroll on its abdomen: sitting (153 × 85), walking (175 × 155), jumping (213 × 234). The spider's front legs are drawn long, and the dove is more ornament than bird. |
 | `afloat.webp` | 1024 × 512, 94 KB | What drifts on the water through the year, in a 4 × 2 grid of 256-pixel cells, from above, each fitted to its cell (not at one scale) with 16 pixels clear. Top row: two spring petals, two autumn leaves. Bottom row: a snow crystal, a frost flower, two flying things, heads to the right. Here: two lotus petals in white tipped with cinnabar, a ginkgo leaf in ochre, a green vine leaf as a scroll; the crystal and a frost star in white; a crane flying, and a butterfly in blue, cinnabar and ochre, which is drawn from the side with its wings together. |
+| `dragon.webp` | 97 KB | The Dragon Gate's dragon as the wall paints one: 2048 × 512, head to the left, the spine on y 256, the snout's tip at x 64 and the tail's at x 1984, made by the image model as one straight picture (no joins) and scaled to those two points. Flat malachite, azurite and cinnabar scales in an even dark-brown line, an ochre head, a cinnabar mane and tail flame with cream tongues, cream claws. Paint from y 142 to 371; legs at x 469 and x 1098. The scales are large and regular, a tiled pattern more than a mural's hand, and the antlers are stubby. |
 
 - **How they are painted:** flat mineral colour inside a dark line, in the look's own palette (blue
   `#2B6385`, green `#4D856E`, cinnabar `#B34026`, white `#EDE0C2`, line `#2E1C12`, a little ochre
@@ -345,6 +359,8 @@ their dabs through the mask, a visitor's own or the pond's koi's own.
 | `dragonfly.webp` | 512 × 256, 21 KB | Two dragonflies in 256-pixel cells, from above, head to the right, each a blue-green body stroke and four pale lilac wing dabs (140 × 228). The two differ little, and the wings are broad for a dragonfly's. |
 | `dove.webp`, `spider.webp` | 768 × 256, 16 KB and 46 KB | Three poses each in 256-pixel cells, from above, facing right, at one scale. The dove in white with lilac and cream: sitting (113 × 54), wings half open (113 × 146), flying (116 × 234). The spider in umber with a touch of orange: sitting (185 × 127), walking (215 × 178), jumping (229 × 234). Both are painted more finely than a few dabs: closer to a small oil study than to the panel's own handling. |
 | `afloat.webp` | 1024 × 512, 100 KB | What drifts on the water through the year, in a 4 × 2 grid of 256-pixel cells, from above, each fitted to its cell (not at one scale) with 16 pixels clear. Top row: two spring petals, two autumn leaves. Bottom row: a snow crystal, a frost flower, two flying things, heads to the right. Here: a pink petal and a white one, a willow leaf in ochre, a poplar leaf in rust; the crystal and the frost flower in white and lilac; a dragonfly and a white butterfly. Painted more finely than a few dabs. |
+| `clue.webp` | 320 × 240, 18 KB | One lily pad from above in the painting's dabs and greens (257 × 206, centred, its notch at the bottom), its rim alone laid in the bowl's cobalt as one loaded stroke about 6 pixels wide, unbroken but at the notch; the edge feathers to nothing. Painted by the image model. The second version: the first one's rim was thin dashes. The cobalt is a little darker than the bowl's (about `#1a3c87`), a thin fringe of green shows inside the notch, and the dabs are more blended than the pond's pads. |
+| `dragon.webp` | 134 KB | The Dragon Gate's dragon in oil: 2048 × 512, head to the left, the spine on y 256, the snout's tip at x 64 and the tail's at x 1984, made by the image model as one straight picture (no joins) and scaled to those two points. Golds and oranges in loaded dabs with no outline, a vermilion crest in short strokes, a mane of orange flames, cream antlers and whiskers. Paint from y 82 to 419: the claws reach 174 pixels from the middle line, past the 150 asked, and will fan a little on a tight turn; legs at x 411 and x 1104. It is modelled more finely than `koi-v2`: a small oil study, not a few strokes. |
 
 #### 青花
 
@@ -363,6 +379,8 @@ visitor's colour laid into their patches through `koi-mask.webp` (`koiPicture()`
 | `medallion.webp` | 1024 × 1024, 172 KB | A double ring (944 pixels across, at 40, 45) and in it two koi circling head to tail, three lotus flowers, two leaves and sprays of water-weed, in cobalt line and wash on a transparent ground. The koi are drawn with patches and scales in full, so it is busy at full strength: it is meant large and pale. Its alpha is stored coarsely to keep it under the budget. |
 | `dove.webp`, `spider.webp` | 768 × 256, 20 KB and 47 KB | Three poses each in 256-pixel cells, from above, facing right, at one scale, in cobalt line and wash. The dove: sitting (101 × 50), wings half open (100 × 129), flying (100 × 234); its feathers are drawn densely. The spider, banded: sitting (141 × 111), walking (171 × 153), jumping (200 × 234); the walking one shows six legs clearly, not eight. |
 | `afloat.webp` | 1024 × 512, 130 KB | What drifts on the water through the year, in cobalt only, in a 4 × 2 grid of 256-pixel cells, from above, each fitted to its cell (not at one scale) with 16 pixels clear. Top row: two spring petals, two autumn leaves. Bottom row: a snow crystal, a frost flower, two flying things, heads to the right. Here: a plum petal and a peach petal, a maple leaf, a bamboo leaf; the crystal and a frost flower as fern-like needles (a little haze round them); a dragonfly, and a butterfly drawn from the side with its wings together. |
+| `clue.webp` | 240 × 240, 27 KB | A reign mark in cobalt as on the foot of a bowl: a double ring (about 185 across, centred) round the six characters 大明宣德年製 in two columns, read from the right. A film of ochre dust lies over its upper right third, with four strokes wiped through it; nothing under the mark, the edge feathered to nothing. Painted by the image model. The dust covers less than half, and the wiped strokes are evenly spaced, more a comb's than a finger's. |
+| `dragon.webp` | 100 KB | The Dragon Gate's dragon in cobalt on white: 2048 × 512, head to the left, the spine on y 256, the snout's tip at x 64 and the tail's at x 1984, made by the image model as one straight picture (no joins) and scaled to those two points. Dark cobalt line, a paler wash, the glaze left white inside the outline; scales in rows of arcs, a line of cobalt lozenges for the crest, a finned tail more a fish's than a flame. Paint from y 123 to 384; legs at x 473 and x 1081. It is paler than the look's koi: more white than wash. |
 
 #### Ukiyo-e
 
@@ -396,6 +414,8 @@ stir that brings it, never on the first screen.
 | `paper.webp` | 512 × 512, 12 KB | Washi grain, greyscale, opaque, light (mean 225 of 255, a spread of about 5), with fine pale fibres; it tiles on all four sides (the edges are crossfaded into each other, and the slow drift of tone is taken out). The grain is fine: meant to be multiplied in at its own size or larger. |
 | `lilies.webp` | 1024 × 512, 84 KB | Eight motifs in a 4 × 2 grid of 256-pixel cells, from above, at one scale, flat colour in a key line with a little paper grain in the fills. Top row: three lotus leaves with a notch (225, 179 and 140 pixels across), an open pink lotus. Bottom row: an open white lotus, a red maple leaf, an orange one, three cherry petals together in one cell. Each is at least 14 pixels clear of its cell's edge. |
 | `afloat.webp` | 1024 × 512, 110 KB | What drifts on the water through the year, as a print draws it, in a 4 × 2 grid of 256-pixel cells, from above, each fitted to its cell (not at one scale) with 16 pixels clear. Top row: two spring petals, two autumn leaves. Bottom row: a snow crystal, a frost flower, two flying things, heads to the right. Here: two cherry petals, a red maple leaf, a yellow ginkgo leaf; the crystal and a frost flower in white with a blue-grey line; a red dragonfly, and a red and yellow butterfly drawn from the side with its wings together. |
+| `dragon.webp` | 107 KB | The Dragon Gate's dragon as a woodblock print: 2048 × 512, head to the left, the spine on y 256, the snout's tip at x 64 and the tail's at x 1984, made by the image model as one straight picture (no joins) and scaled to those two points, evenly: nothing is stretched. A black key line, an indigo body in rows of cut arc scales with a vermilion crest of lozenges down the spine and a cream edge either side, a cream muzzle with curled nostrils, glaring eyes under heavy black brows, two cream branching antlers swept back clear of a vermilion mane, two whiskers trailing back to x 560, and a vermilion tail flame. Paint from y 106 to 406. The legs are indigo with cream claws, at x 424 and x 1010, reaching 150 pixels from the spine. The second version: the first was drawn as thin as a rod, stretched 1.35 times across, with round eyes, small legs and its antlers lost in the mane. The trunk with its cream edges is about 136 pixels across behind the shoulders, broader than the 100 asked for; the head with its mane is about 255 across; the pupils are still round under the brows, and the crest is one even chain the whole way, which a tight turn may show as beads. |
+| `clue.webp` | 240 × 240, 9 KB | Four flecks of spray close together (the cluster 184 × 178, centred): cream, each a hooked drop of a different size (one large, two middling, one small) in its own dark key line. Painted by the image model. The key line is brushed and uneven and the cream has a little shading: softer than a cut block. |
 
 #### Star chart
 
@@ -418,6 +438,8 @@ In `public/pond/stars/`, and in use. One colour, `#C9D4F0`, its strength in the 
 | `grid.webp` | 1024 × 1024, 51 KB | A grid that tiles on all four sides, made in code: eight meridians and eight parallels to a tile, each gently bowed (so it reads as a chart, not graph paper) and a little uneven in strength, every fourth one heavier and ticked. No frame, equator or ecliptic. Meridians that draw together, as on the plate, can't tile, so these stay evenly spaced: it is a quieter thing than the plate. |
 | `nebulae.webp` | 1024 × 512, 151 KB | Eight motifs in a 4 × 2 grid of 256-pixel cells, each fitted to its cell with 14 pixels clear, in the one pale line (`#C9D4F0`, the tone carried by the alpha). Top row: a ringed planet, hatched; a nebula as stippling, dense at its middle; a cluster of dots with three six-pointed stars; an armillary sphere of five rings. Bottom row: a comet, its head at the lower left; a spiral nebula in dotted arms; a wreath of sixteen six-pointed stars round an empty middle (made in code); a crescent moon, hatched, open to the right. They are bolder and plainer than an atlas's engraving, so that they read small. |
 | `dove.webp`, `spider.webp` | 512 × 512, 40 KB and 78 KB | One pose each, from above, facing right, in the same pale line: the dove with wings spread (315 × 468 at 98, 22), six stars on it joined by straight lines; the spider with legs spread (457 × 468 at 27, 22), its segments and hair drawn, five small stars on it. The dove's line is thin and its hatching sparse; the spider reads as a specimen plate more than a constellation figure. |
+| `dragon-figure.webp` | 121 KB | Draco straightened, in the plate's pale line on nothing: 2048 × 512, head to the left, the spine on y 256, the snout's tip at x 64 and the tail's at x 1984, made by the image model as one straight picture (no joins) and scaled to those two points. An outline with the body crossed by arcs, fins along both sides, the head's antlers and whiskers, four legs (x 476 and x 1028), a flame for the tail. Paint from y 128 to 384. The line is bolder and plainer than the koi figures', with no hatching: nearer a decal than an engraving. |
+| `clue.webp` | 920 × 280, 28 KB | One small constellation in pale gold: seven stars joined by a thin line as a zigzag of three peaks, low at both ends (the figure from x 56 to 863, y 29 to 227). The middle peak is the brightest, an eight-pointed star; the other two peaks are six-pointed, the low stars four-pointed, and one low star only a dot. Painted by the image model. The stars are modelled like small gilt ornaments, cleaner than the plate's engraving. |
 
 #### Ink
 
@@ -438,6 +460,8 @@ its red), entering at the right edge and reaching left, the left third empty.
 | `reeds.webp` | 75 KB | Reeds bending from the right, a goose flying in at the top and one standing among them: 364, 90, 660, 840. |
 | `stems.webp` | 42 KB | Withered lotus (残荷), 1024 × 1024 like the others and stored the same way (near-black, the tone in the alpha): three dry stems entering from the right edge and folding over, a seed-pod hanging at 538, 236 and a curled dead leaf below it; the paint is 538, 236, 486, 587, and the left half is empty. Sparse, as asked; the stems are thin, so it may want more strength than the reeds when multiplied in. |
 | `seals.webp` | 94 KB | 1024 × 768, cells of 256, 4 × 3, vermilion `#B8382A` with the tone in the alpha. Row 1: 墨 (square, white characters out of red), 浮世 (tall, red characters and border), 莲 (round, white), 青花 (tall, white). Row 2: 敦煌 (tall, red), 光 (round, red), 图 (square, white), 字 (square, red). Row 3: 星 (round, white), 刻 (square, white), 锦程 (tall, white, 锦 over 程), one cell empty. Square and round seals are 232 across, centred; tall ones 150 × 246. Small seal script from the Shuowen Jiezi face of Taiwan's CNS 11643 character set (an open-data font, not in the repository), cut as a seal carver writes them: 蓮, 圖 and 錦 in their full forms, 花 as 華 (the Shuowen has no 花), and 星 as three suns over 生. The edges, chips and pinholes are made in code, so every stone is worn alike; the characters are a dictionary's even line, not a carver's hand. |
+| `seals-2.webp` | 59 KB | 1024 × 512, cells of 256, 4 × 2, cut and coloured as `seals.webp` is (the same face, vermilion, the tone in the alpha, 232 across and centred). Row 1: 雨 (square, white characters out of red), 雪 (round, white), 月 (round, red characters and border), 节 (square, red). Row 2: 晨 (square, white), 舟 (round, white), 龙 (round, red, cut in its full form 龍), one cell empty. 节 is cut as 節; the face has no 雪, so it is built as the Shuowen has it, rain over a broom (雨 over 彗), and its lower half is finer than the rest. 月 and 舟 are the seal forms, which a reader of modern characters may take for each other. |
+| `seals-3.webp` | 58 KB | 1024 × 512, cells of 256, 4 × 2, cut and coloured as the first two are. Row 1: 漂 (round, red characters and border), 跃 (square, white characters out of red, cut as 躍), 捕 (square, red), 拓 (square, white). Row 2: 琴 (round, red), 太极 (tall, white, 太 over 極), 金鱼 (tall, red, 金 over 魚), one cell empty. The face has no 太: it is its 大 with a point set between the legs, as seal script writes it, and the point is rounder than a cut one. 躍 is a dense character and its strokes are fine at the size a seal is shown. |
 | `dove.webp`, `spider.webp` | 16 KB and 27 KB | 768 × 256 each, three poses in 256-pixel cells, from above, facing right, at one scale, stored as the others are. The dove left as bare paper inside a few dark strokes at wing tips and tail: sitting (115 × 54), wings half open (117 × 134), flying (117 × 234). The spider in wet grey and black: sitting (193 × 94), walking (189 × 144), jumping (234 × 170). The dove's body has no tone of its own, so on the paper only its edges and tips show. |
 
 
@@ -490,6 +514,7 @@ In `public/pond/relief/`, each picture as a pair that lines up to the pixel: `-c
 | `cartouche-c.webp`, `cartouche-h.webp` | 512 × 768, 36 KB and 14 KB | An empty cartouche, upright: a rope ring in yellow with its tied bar at the bottom, 89, 30 to 423, 738. Nothing inside it: bare stone at the face's height. |
 | `dove-c.webp`, `dove-h.webp`, `spider-c.webp`, `spider-h.webp` | 512 × 512, 32, 13, 58 and 22 KB | One pose each, from above, facing right. The dove with wings spread, its body bare stone and its wings and tail in bands of blue, yellow, green and red (105, 26 to 407, 486). The spider with legs spread, banded in all four colours, with large round eyes (26, 34 to 486, 477); it is busier and more of a cartoon than anything else on the wall. These are raised like the rest, not sunk: the height is made the same way for every picture. |
 | `afloat-c.webp`, `afloat-h.webp` | 1024 × 512, 94 KB and 33 KB | What drifts on the water through the year, in a 4 × 2 grid of 256-pixel cells, each fitted to its cell with 18 pixels clear. Top row: two blue lotus petals, a sycamore fig leaf in green, a willow leaf in yellow. Bottom row: a snow crystal and a frost flower in blue line, a bee, a swallow flying, heads to the right. The crystals are thin, so little of them is raised. |
+| `dragon-c.webp`, `dragon-h.webp` | 2048 × 512, 44 KB and 6 KB | The serpent that guards the sun's boat, as the relief's dragon: head to the left, the middle line on y 256, the head's tip at x 64 and the tail's point at x 1984, no legs. Bands of Egyptian blue and green in a black-brown outline, a red-ochre line down the back with a plaited crest behind the head, a yellow edge, two round eyes; the paint worn off over about a fifth. The height is made from the drawing as the other pairs are (raised 46 levels, the lines cut in). Paint from y 186 to 322. It is broader than asked (about 1 : 14) and the beard is missing: what was drawn as one lies on the neck as the crest's plait. |
 
 - **The paint** is flat colour in the look's palette inside a dark line, faded a little, with 28% of
   it worn away in patches and speckle, more at the edges; where it is gone the file is transparent.
@@ -607,6 +632,8 @@ a creature's files in order and the rows are the sheet's.
   191 pixels across (y 34 to 225 of its row), not 110, since paddles drawn shorter stopped reading
   as paddles; and in row 2 the paddlers' arms inside the hull still reach forward, which does not
   show at 240 pixels. The dragon's mouth is closed, seen from above.
+- **`dragon.webp`**, 2048 × 512, 119 KB: the Dragon Gate's golden dragon, head to the left, the spine on y 256, the snout's tip at x 64 and the tail's at x 1984, made by the image model as one straight picture (no joins) and scaled to those two points. Gold scales modelled softly, darker down the flanks; a vermilion mane, crest and tail tuft (about `#A81A0B` in the tuft, darker than a bright vermilion, red well above green and blue); antlers, whiskers and claws pale as bone. Paint from y 96 to 416: the claws reach 160 pixels from the middle line, a little past the 150 asked; the legs are at x 400 and x 1019. The muzzle is short and broad, nearer a crocodile's than a dragon's long one, and the crest is a row of red feathers as wide as a third of the body. It has not been tried in the pond.
+- **`bug.webp`**, 128 × 64, 4 KB: the midge the spider hunts, from above, head to the right, in two cells of 64: wings out to the sides, then beaten back along the body. A dark brown body about 34 pixels long in its cell (head, thorax, a long thin abdomen, stubs of legs), pale grey wings at about 60% so the water shows through. Painted by the image model and reduced. The body is the same in both cells but sits 5 pixels further right in the second.
 - **`lanterns.webp`**, 512 × 256, 22 KB: two cells of 256, from above, each about 228 pixels
   across: a river lantern (two rings of pink paper petals round a candle in a cup) and a red paper
   lantern (a red disc, ribs running out from a gold cap). No glow, no shadow.
@@ -643,8 +670,12 @@ light and refraction, the glass) stays in the shader.
 | Pebble bed (water look) | `BED` shader, drawn once | Good; it is what the refraction reads from, and the first thing seen | Keep for now | A Blender-rendered bed with a normal map would be the one thing to try, behind a flag, at no cost to the first visit's budget only if it fits in about 150 KB |
 | Ink: seasonal motif | `painting.js`, from pictures | Painted, and in use | Done | none |
 | Ink: far hills, mist | canvas washes, CSS | Good | Keep; hills later | `ink/hills` later |
-| Seals (ten looks and 锦程) | the brush face in CSS | A family, but running script, not seal script | Replace | `ink/seals` (asked) |
+| Seals | cut in seal script from three sheets (`ink/seals`, `seals-2`, `seals-3`) | A family | Done | in use |
+| Clues | pictures in ukiyo-e, Monet, 青花 and the star chart; ink's is brushed type, glow's a line of light, the blueprint's and ASCII's are characters | In keeping | Done | in use |
+| The bug the spider hunts | a picture (`water/bug`) | Small, and in keeping | Done | in use |
+| Food | two dots | A pellet is a dot | Keep | none |
 | Ink: inscription | the brush face | Good | Keep | none |
+| The Dragon Gate's dragon | a painted sheet laid along its way (`dragon.js`), one for each painted look; nothing in code but the star chart's stars | In keeping in every look | Done | in use (`dragon` in each painted look's folder, `stars/dragon-figure`, the relief's pair) |
 | Festival things (preview) | canvas paths | Lanterns pass; the dragon boat is crude | Replace the boat and the lanterns | asked: `water/dragon-boat`, `water/lanterns` |
 | Borders and frames | pictures (青花's rim, the Dunhuang band, the relief's frieze) | In keeping | Done | in use (`qinghua/rim`, `corner`; `dunhuang/border`; `relief/frieze`) |
 | Solar-term block, chapter headers, the album's paper | type and CSS | In keeping | Keep | per look only where asked below |
@@ -673,7 +704,26 @@ pair) a sheet `afloat.webp`, 1024 × 512,
 leaves, a snow crystal or a frost flower, and, where the manner has one, a dragonfly or another small
 flying thing seen from above (a crane or a butterfly for Dunhuang, a bee or a swallow for the relief).
 
-**The round asked for now** (every line is already in a look's kit below, or is new there; make them
+**Asked for now**, in this order. A thing the pond shows is asked for here and painted; it is not
+drawn in code, and what is still drawn in code that a picture would better is on this list too.
+
+1. **The dragon** of the Dragon Gate, on "The dragon sheet" below: all seven are delivered and in
+   use; what came out is in each look's table (the water's with its dragon boat). In use too:
+   ukiyo-e's second version, under the first one's name, drawn at its true
+   proportions and not stretched, with a print dragon's fierce eyes under brows in place of round
+   ones, its antlers clear of the mane and its legs a little larger.
+2. **Delivered and in use: a third sheet of seals**, `seals-3.webp` (item 10 under "Ink"): the four seals still in the
+   brush, and the seals of the small games to come.
+3. **Delivered and in use: two more clues, painted** (item 9 under "Ink"): ukiyo-e's and the star chart's.
+   In use too: Monet's second version, under the first
+   one's name, its cobalt rim as one loaded stroke about 6 pixels wide, broken only at the notch,
+   so it reads at the 160 px it is shown at.
+4. **Delivered and in use: the bug the spider hunts**, `bug.webp` in the water's folder: 128 × 64, two cells of 64, a
+   midge seen from above, its wings out in the first cell and beaten back in the second; a dark
+   body, pale wings you can see through. It is drawn about 12 pixels long, so it must be bold
+   (`drawBugs()` in `engine.js`; nothing is drawn until the picture has come).
+
+**The round asked for before** (every line is already in a look's kit below, or is new there; make them
 in this order, commit each lot as it is done, and say in its table what came out):
 
 All of it is delivered, and all of it is in use (how is under "Each look's own pictures in the
@@ -750,6 +800,67 @@ pads and flowers as these sets: spring (small young pads), summer (full pads, bu
 - How it is used: cut into 28 slices along its length, each laid along the swimming koi's spine, so
   keep the spine dead straight and paint nothing that only makes sense straight (no long straight
   highlight down the back). 青花's sheet is the model of a correct one.
+
+**The dragon sheet, the same for every look** (delivered and in use). It is for the Dragon
+Gate, under "Idle seals and the small games": a koi that leaps a third time goes as a dragon.
+
+- `dragon.webp`, 2048 × 512, in the look's folder: one Chinese dragon (龙) seen from straight above,
+  lying dead straight, head to the left. Its spine is the picture's middle line (y 256), from the tip
+  of the snout at x 64 to the tip of the tail's tuft at x 1984. Transparent ground.
+- Its build: long and slender, a dragon and not a lizard. The body is about 100 pixels across at its
+  widest, just behind the shoulders, and narrows evenly to the tail. The head is about 260 long and
+  150 across: a long muzzle, two antlers swept back, a mane behind them, and two long whiskers
+  trailing back beside the neck. Four legs are spread to the sides with the claws open: the front
+  pair about 330 pixels behind the snout's tip (x 390), the hind pair halfway along (x 1020). A
+  crest runs down the back, and the tail ends in a tuft like a flame. Left and right are alike, as
+  the koi's are: it is seen from above and turns both ways.
+- Nothing nearer the top or the bottom edge than 20 pixels, and nothing cut by an edge.
+- How it is used: cut into 120 slices along its length, each laid along the way the dragon's head
+  has gone, so it winds as a snake does (`drawDragon()` in `dragon.js`, as a painted koi is laid
+  along its spine). So keep the spine dead straight and on the middle line; paint nothing that only
+  makes sense straight (no long straight highlight down the back); and keep the legs, the antlers
+  and the whiskers within about 150 pixels of the middle line, since what stands far out fans open
+  on a tight turn.
+- How large it is seen: the whole dragon is 720 px long on a desktop, the picture at three eighths
+  of its size, and about 400 px on a phone. Paint the scales, the eyes and the claws to read at
+  that: a detail finer than 4 pixels is lost.
+- No shadow, no glow, no water, no splash: the pond adds its shadow on the bed, the ripples under
+  it and, on the water, a gold light about its head.
+- It may be painted in parts (the head, a length of body, the tail) and joined, so long as no join
+  shows and the whole is one straight dragon at the size above.
+
+Which to make, in this order. The first opens the gate; each of the others gives its look a dragon:
+
+1. **P0** the water's, in `public/pond/water/`: a golden dragon in the hand of the pond's own koi as
+   the water shows them, naturalistic and softly modelled, lit from above: gold scales, darker down
+   the flanks; the crest, the mane and the tail's tuft vermilion; antlers, claws and whiskers pale
+   as bone. It also serves ink, glow, the blueprint and ASCII, which redraw it from its shape as
+   they do the koi: ink washes it and keeps its reds as vermilion, the blueprint outlines and
+   hatches it, ASCII types it. So its outline must read on its own (the head, the antlers, four
+   legs, the tuft), and its reds must be a true vermilion, red well above green and blue.
+2. **P1** ukiyo-e's: a woodblock dragon as Kuniyoshi's prints cut them: key-block line, flat colour
+   (an indigo body, vermilion flames), scales in rows of cut arcs. In the hand of the look's koi.
+3. **P1** 青花's: cobalt on white, the dragon of a Ming jar without its clouds: drawn in dark cobalt
+   line, washed in paler blue, no other colour. In the hand of the look's koi.
+4. **P1** Dunhuang's: a mural dragon in the wall's own pigments (malachite, azurite, cinnabar,
+   ochre), in a fine even line. In the hand of the look's koi.
+5. **P1** Monet's: oil in broken strokes, no outline: a long stroke of golds and oranges under the
+   water. In the hand of `koi-v2`.
+6. **P2** the star chart's, `dragon-figure.webp`: the atlas's figure of Draco, straightened, in the
+   plate's pale engraved line on a transparent ground, as the koi's figures are. The pond draws it
+   faintly and sets stars down its back.
+7. **P2** the relief's, as a pair `dragon-c.webp` (the faded paint) and `dragon-h.webp` (the
+   height), made as its koi's pair is. Egypt has no dragon: its is the great serpent that guards
+   the sun's boat (Mehen), long and straight, with a beard and a crest and no legs.
+
+To see one in the pond before it is listed: build the site and serve it (`npm run build`, then
+`npm run preview`), open it with `?preview&perf` in the address, and in the console run
+`window.__pond.dragon(null, '/pond/water/dragon.webp')`, the picture's path being the one the site
+serves it at. A number in place of `null` holds the dragon that many seconds into its flight: 3.5
+is the middle of it. It answers `false` until the picture has loaded: run it again. Each look's is
+tried with that look on show (the panel's list of looks). Without a path it raises the look's
+listed dragon. A delivered picture is listed in `DRAGONS` in `dragon.js` by the thread that writes
+the code.
 
 **The dove and the spider: the second version is delivered and drawn**, as `dove-v2-1.webp` to `-3` and
 `spider-v2-1.webp` to `-3` in `public/pond/water/`: cells of 384, the rows in the order asked for,
@@ -853,9 +964,9 @@ is most of it.
    (round, 朱), 图 (square, 白), 字 (square, 朱), 星 (round, 白), 刻 (square, 白, for the relief),
    锦程 (tall, 白, 锦 over 程), one cell empty. Tall is 3 : 5. Used in the album, the stamp and
    under the solar term.
-9. **Asked of the local thread: two clues, painted.** A look on show carries a small mark that
+9. **Delivered and in use: two clues, painted** (`public/pond/monet/clue.webp`, `public/pond/qinghua/clue.webp`; Monet's is shown only in the seasons that have lily pads)**.** A look on show carries a small mark that
    points to the next look's gesture. Drawn in code over a painting two of them read as faults, so
-   those two looks carry none for now (`CLUES` in `engine.js` holds what each look shows):
+   those two are pictures (`CLUES` in `engine.js` holds what each look shows):
    - Monet's pond, pointing to the bowl (once round the rim): a file named clue.webp in the Monet
      folder under `public/pond/`, about 320 × 240 with alpha, one lily pad seen from above in the
      painting's own hand and palette, its rim alone picked out in the bowl's cobalt (`#1c3f9a`) as a
@@ -864,12 +975,32 @@ is most of it.
      about 240 × 240 with alpha, a reign mark in cobalt as on the foot of a bowl, half hidden under a
      film of ochre dust with a few strokes wiped through it, edges feathered to nothing.
 
-8. **Asked of the local thread: five more seals, for the volume of occasions** (`hours` in `VOLUMES`, `seals.ts`). A second sheet `seals-2.webp` in
+   **Delivered and in use: two more**, for the two looks whose clue was drawn in code:
+   - Ukiyo-e, pointing to Monet's pond (four dabs in one place): clue.webp in the ukiyo-e folder,
+     240 × 240 with alpha, shown 60 px across: four flecks of spray fallen close together, as a print
+     cuts them at the tips of a wave's claws: cream-white, each a different size, each with its key
+     line; nothing else.
+   - The star chart, pointing to the relief (a zigzag): clue.webp in the star chart's folder,
+     920 × 280 with alpha, shown 230 px across: one small constellation in the plate's engraved
+     manner, seven stars of differing magnitude joined by a thin line as a zigzag of three peaks,
+     pale gold (`#f0cf8a`); no letters, no frame.
+
+10. **Delivered and in use: a third sheet of seals**, `seals-3.webp` in `public/pond/ink/`, 1024 × 512,
+    cells of 256, 4 × 2, cut and coloured exactly as the first two are. Row 1, the four still in
+    the brush: 漂 (round, 朱, skipping stones), 跃 (square, 白, the leap), 捕 (square, 朱, the catch),
+    拓 (square, 白, the rubbing). Row 2, the small games to come: 琴 (round, 朱, the lotus zither),
+    太极 (tall, 白, 太 over 極, the koi's circle), 金鱼 (tall, 朱, 金 over 魚, goldfish scooping), then
+    one cell empty. Until it comes these are their characters in the brush.
+
+8. **Delivered and in use: seven more seals, for the volume of occasions and two of the idle seals** (`hours` and `idle` in `VOLUMES`, `seals.ts`). A second sheet `seals-2.webp` in
    `public/pond/ink/`, 1024 × 512, cells of 256, 4 × 2, cut and coloured exactly as `seals.webp` is
    (same face, same vermilion `#B8382A`, the tone in the alpha, square and round 232 across and
    centred): row 1 雨 (square, 白), 雪 (round, 白), 月 (round, 朱), 节 (square, 朱); row 2 晨
-   (square, 白), 舟 (round, 白, the race's idle seal), then two cells empty. Under the budget for a file in `public/`. Until it comes
-   these five are their characters in the brush (`CUT` in `seals.ts` lists what the sheets hold).
+   (square, 白), 舟 (round, 白, the race's idle seal), 龙 (round, 朱, the Dragon Gate's idle seal, cut
+   in its full form 龍), then one cell empty. Under the budget for a file in `public/`. It is asked
+   for with the first sheet, except where only Jincheng's own seal is wanted (ink's inscription), and
+   until it has come these are their characters in the brush (`CUT` in `seals.ts` lists what the
+   sheets hold; `sealsPic()` in `engine.js` fetches them).
 
 **Ukiyo-e.** Judge it by: a Hokusai or Hiroshige print at arm's length: flat colour, a key line,
 bokashi gradation, paper showing.

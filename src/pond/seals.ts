@@ -9,7 +9,7 @@ export interface Seal {
   chars: string;
   shape: 'square' | 'round' | 'tall';
   cut: 'white' | 'red';
-  /** Only in a preview build: a look visitors can't reach yet (none is, as it stands). */
+  /** Only in a preview build: one visitors can't earn yet (none is, as it stands). */
   preview?: boolean;
   /** A place kept in the album for a look that isn't chosen yet: shown as coming, never stamped. */
   soon?: boolean;
@@ -72,7 +72,8 @@ export const VOLUMES: Volume[] = [
       { id: 'skip', chars: '漂', shape: 'round', cut: 'red' },
       { id: 'leap', chars: '跃', shape: 'square', cut: 'white' },
       { id: 'catch', chars: '捕', shape: 'square', cut: 'red' },
-      { id: 'race', chars: '舟', shape: 'round', cut: 'white' }
+      { id: 'race', chars: '舟', shape: 'round', cut: 'white' },
+      { id: 'dragon', chars: '龙', shape: 'round', cut: 'red' }
     ]
   }
 ];
@@ -214,7 +215,8 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
       skip: 'Skipping stones',
       leap: 'The leap',
       catch: 'The catch',
-      race: 'The race'
+      race: 'The race',
+      dragon: 'The Dragon Gate'
     },
     hints: {
       ink: 'Stillness leaves a mark.',
@@ -236,7 +238,8 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
       skip: 'A flat stone, thrown low and fast. Five skips.',
       leap: 'Feed them in one place, and keep feeding until they all come.',
       catch: 'Tap a lily pad while the spider is about.',
-      race: 'At Dragon Boat a boat crosses, far off. Paddle with it: press the water beside it.'
+      race: 'At Dragon Boat a boat crosses, far off. Paddle with it: press the water beside it.',
+      dragon: 'A koi that leaps often enough may never come down.'
     },
     thanks: {
       painted: 'Every painted one. Thank you for looking so closely.',
@@ -276,7 +279,8 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
       skip: '打水漂',
       leap: '鱼跃',
       catch: '捕虫',
-      race: '竞渡'
+      race: '竞渡',
+      dragon: '龙门'
     },
     hints: {
       ink: '停一停，会留下痕迹。',
@@ -298,7 +302,8 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
       skip: '一块扁石头，低低地、快快地甩出去。跳五下。',
       leap: '在同一处一直喂，喂到鱼都来。',
       catch: '跳蛛在的时候，点一片荷叶。',
-      race: '端午那天，远处有龙舟划过。在船边点水，帮它划到对岸。'
+      race: '端午那天，远处有龙舟划过。在船边点水，帮它划到对岸。',
+      dragon: '鱼跃得够多，就不再落下。'
     },
     thanks: {
       painted: '画的这一册集齐了。谢谢你看得这么仔细。',
@@ -338,7 +343,8 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
       skip: '水切り',
       leap: '跳ねる',
       catch: '捕まえる',
-      race: '競渡'
+      race: '競渡',
+      dragon: '登竜門'
     },
     hints: {
       ink: 'じっとしていると、跡が残る。',
@@ -360,7 +366,8 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
       skip: '平たい石を、低く、速く。五回はねたら。',
       leap: '同じところで餌をやりつづけて、みんなが来るまで。',
       catch: '蜘蛛がいるとき、蓮の葉をたたく。',
-      race: '端午の日、遠くを竜舟が渡る。そばの水をたたいて、いっしょに漕ぐ。'
+      race: '端午の日、遠くを竜舟が渡る。そばの水をたたいて、いっしょに漕ぐ。',
+      dragon: '何度も跳ねた鯉は、もう落ちてこない。'
     },
     thanks: {
       painted: '絵の一冊がそろいました。じっくり見てくれて、ありがとう。',
@@ -380,20 +387,29 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
 
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c] as string);
 /**
- * Where a seal is cut in the sheet of seals in seal script (public/pond/ink/seals.webp: cells four
- * across, the looks' seals in order, then Jincheng's own), as [column, row].
+ * Where a seal is cut in the sheets of seals in seal script (public/pond/ink/, cells four across), as
+ * [column, row, sheet]: seals.webp has the looks' seals in order, then Jincheng's own; seals-2.webp the
+ * occasions', the race's and the Dragon Gate's; seals-3.webp the other idle seals', the rubbing's, and
+ * those of the small games to come (the lotus zither, the koi's circle, goldfish scooping).
  */
 export const OWN = 'own';
-const CUT = ['ink', 'ukiyo', 'monet', 'qinghua', 'dunhuang', 'glow', 'blueprint', 'ascii', 'stars', 'relief', OWN];
-/** A seal's cell in the sheet, or null for one the sheet doesn't have (it stays in the brush). */
-export function sealCell(id: string): [number, number] | null {
-  const i = CUT.indexOf(id);
-  return i < 0 ? null : [i % 4, Math.floor(i / 4)];
+const CUT = [
+  ['ink', 'ukiyo', 'monet', 'qinghua', 'dunhuang', 'glow', 'blueprint', 'ascii', 'stars', 'relief', OWN],
+  ['rain', 'snow', 'moon', 'fest', 'dawn', 'race', 'dragon'],
+  ['skip', 'leap', 'catch', 'rubbing', 'zither', 'taiji', 'goldfish']
+];
+/** A seal's cell and its sheet, or null for one no sheet has (it stays in the brush). */
+export function sealCell(id: string): [number, number, number] | null {
+  for (const [sheet, ids] of CUT.entries()) {
+    const i = ids.indexOf(id);
+    if (i >= 0) return [i % 4, Math.floor(i / 4), sheet];
+  }
+  return null;
 }
-// (data-p marks a seal the sheet has: the styles put the cut picture only on those)
+// (data-p marks a seal a sheet has, and says which: the styles put the cut picture only on those)
 const cellStyle = (id: string): string => {
   const at = sealCell(id);
-  return at ? `data-p style="--c:${at[0]};--r:${at[1]}"` : '';
+  return at ? `data-p="${at[2] + 1}" style="--c:${at[0]};--r:${at[1]}"` : '';
 };
 /** A seal's markup: its characters, each in its own cell (pond.css cuts and colours it). */
 export const sealMark = (s: Seal, cls = ''): string =>
@@ -432,7 +448,9 @@ export const TRACES: Record<string, string> = {
   // a lily pad pressed
   catch: `<circle class="moon" cx="30" cy="32" r="14"/>${dot(30, 32, 0.4)}`,
   // presses beside the boat
-  race: `<path class="moon" d="M8 22h44"/>${dot(20, 32, 0)}${dot(30, 32, 0.3)}${dot(40, 32, 0.6)}`
+  race: `<path class="moon" d="M8 22h44"/>${dot(20, 32, 0)}${dot(30, 32, 0.3)}${dot(40, 32, 0.6)}`,
+  // a leap, again and again, and up and away
+  dragon: `${dot(30, 50, 0)}${dot(30, 50, 0.3)}${dot(30, 50, 0.6)}<path pathLength="100" class="s" d="M30 46C48 40 46 24 30 24S14 10 34 6"/>`
 };
 /** An empty place: the seal's outline, and the seal in it faintly, as a stamp album prints the stamp it waits for. */
 export const sealBlank = (s: Seal): string => sealMark(s, 'blank');

@@ -18,6 +18,8 @@ import {
   markSealed,
   mayHint,
   readAlbum,
+  sealCell,
+  sealMark,
   stamp,
   volumes,
   writeAlbum
@@ -137,7 +139,7 @@ describe('the idle seals', () => {
     for (const v of all.filter((x) => !x.extra)) for (const x of v.seals) a = stamp(a, x.id, '2026-11-13', all).album;
     expect(allFull(a, all)).toBe(true);
     expect(stamp(a, 'skip', '2026-11-14', all).fresh).toBe(true);
-    expect(all.at(-1)?.seals.map((x) => x.id)).toEqual(['skip', 'leap', 'catch', 'race']);
+    expect(all.at(-1)?.seals.map((x) => x.id)).toEqual(['skip', 'leap', 'catch', 'race', 'dragon']);
   });
 });
 
@@ -160,6 +162,39 @@ describe('the occasions', () => {
     const leaves = albumHTML(a, all, 'en').split('<section class="vol"').slice(1),
       said = leaves.map((l) => l.includes(SEAL_WORDS.en.both));
     expect(said).toEqual([false, false, false, true, false]);
+  });
+});
+
+describe('the cut seals', () => {
+  const all = VOLUMES.flatMap((v) => v.seals);
+  it("are on three sheets: the looks', the occasions', and the idle seals' with the rubbing's", () => {
+    expect(sealCell('ink')).toEqual([0, 0, 0]);
+    expect(sealCell('relief')).toEqual([1, 2, 0]);
+    expect(sealCell('own')).toEqual([2, 2, 0]);
+    expect(['rain', 'snow', 'moon', 'fest', 'dawn', 'race', 'dragon'].map((id) => sealCell(id))).toEqual([
+      [0, 0, 1],
+      [1, 0, 1],
+      [2, 0, 1],
+      [3, 0, 1],
+      [0, 1, 1],
+      [1, 1, 1],
+      [2, 1, 1]
+    ]);
+    expect(['skip', 'leap', 'catch', 'rubbing'].map((id) => sealCell(id))).toEqual([
+      [0, 0, 2],
+      [1, 0, 2],
+      [2, 0, 2],
+      [3, 0, 2]
+    ]);
+    // every seal the album has is cut: none is left in the brush
+    for (const q of all) expect(sealCell(q.id), q.id).not.toBeNull();
+    expect(sealCell('a seal nobody cut')).toBeNull();
+  });
+  it('say in their markup which sheet they are on', () => {
+    const mark = (id: string) => sealMark(all.find((q) => q.id === id)!);
+    expect(mark('ink')).toContain('data-p="1" style="--c:0;--r:0"');
+    expect(mark('dragon')).toContain('data-p="2" style="--c:2;--r:1"');
+    expect(mark('rubbing')).toContain('data-p="3" style="--c:3;--r:0"');
   });
 });
 

@@ -44,6 +44,7 @@ import { titleWords } from './words';
 import { describe, rub, strokeLifted, strokeMoving, tapsLook, thrown } from './gestures';
 import { crowdsPainting, underPainting } from './hang.js';
 import { paintingOf, seasonAmounts } from './seasons.js';
+import { dragonCopy, dragonHead, dragonSrc, drawDragon, drawDragonStars, makeDragon } from './dragon.js';
 import {
   KOI_SHEETS,
   MONET,
@@ -784,6 +785,7 @@ function drawKoi() {
     k.draw(fctx);
     fctx.restore();
   }
+  dragonNow();
   drawShades(fctx);
 }
 
@@ -1328,7 +1330,7 @@ precision highp float; in vec2 vUv; out vec4 o;
 uniform sampler2D uBed,uH,uFish,uPads,uTop,uIceN,uMural; uniform float uPic;
 uniform vec2 uRes,uGrid,uMoonPos,uCss; uniform float uTime,uAmb,uCaI,uMoon,uSwell,uFocus,uIce,uSnow,uFog,uStars; uniform vec3 uMoonPh; uniform vec2 uCalm,uPtr;
 uniform vec3 uTint,uCaC,uSky,uSeason;
-uniform vec4 uBox[12]; uniform vec4 uBoxB[12]; uniform int uBoxN; uniform vec4 uCrack[6]; uniform float uBroke[6]; uniform vec4 uInk; uniform vec3 uBlot[10]; uniform int uStyle, uPrev; uniform sampler2D uSnap; uniform float uSnapOn; uniform float uGlint; uniform float uLookT,uLeave,uSprite,uDay; uniform vec2 uArt;
+uniform vec4 uBox[12]; uniform vec4 uBoxB[12]; uniform int uBoxN; uniform vec4 uCrack[6]; uniform float uBroke[6]; uniform vec4 uInk; uniform vec3 uBlot[10]; uniform int uStyle, uPrev; uniform sampler2D uSnap; uniform float uSnapOn; uniform float uGlint; uniform float uLookT,uLeave,uSprite,uDay; uniform vec2 uArt; uniform vec3 uDragon;
 float hash1(vec2 p){ return fract(sin(dot(p,vec2(41.3,289.1)))*43758.5453); }
 vec2 hash2(vec2 p){ p=vec2(dot(p,vec2(127.1,311.7)),dot(p,vec2(269.5,183.3))); return fract(sin(p)*43758.5453); }
 float noise(vec2 p){ vec2 i=floor(p),f=fract(p); f=f*f*(3.-2.*f);
@@ -1677,6 +1679,8 @@ void main(){
   col*=uTint*uSeason;
   vec4 f=textureLod(uFish,uv+ref*.55,lf);
   vec3 fc=f.rgb*(uAmb*.8+.2)*mix(vec3(1.),uTint*uSeason,.42)*(1.+uCaI*ca*.6+focus*.25)*(1.-.3*bs);
+  // (by night the dragon is its own light, and lights the koi near it)
+  if(uDragon.z>0.){ vec2 dd=P-uDragon.xy; fc*=1.+uDragon.z*2.4*max(0.,1.-uAmb)*exp(-dot(dd,dd)/220000.); }
   col=fc+col*(1.-f.a);
   // the canopy and the sky above, mirrored in the water: it comes forward as the focus rises
   float up=pow(clamp((.52-uFocus)/.52,0.,1.),1.3)*(1.-ice);
@@ -1692,6 +1696,8 @@ void main(){
   vec2 md=(uv-uMoonPos)*vec2(asp,1.)+g*2.4;
   // the sun's glint by day where the moon's light lies at night: pressed, the lights go out (glow)
   col+=uGlint*(1.-uMoon)*(1.-ice*.7)*(vec3(1.,.98,.92)*smoothstep(.022,.006,length(md))*.55+vec3(1.,.95,.85)*exp(-dot(md,md)*160.)*.22);
+  // the dragon lights the water gold about its head as it goes
+  if(uDragon.z>0.){ vec2 dd=P-uDragon.xy; col+=vec3(1.,.72,.3)*(exp(-dot(dd,dd)/60000.)*.3+exp(-dot(dd,dd)/6000.)*.12)*uDragon.z; }
   // the moon's phase (uMoonPh: how much is lit, and which side): the dark part of the disc is cut away
   float mlit=smoothstep(-.12,.12,uMoonPh.y*md.x/.034-(1.-2.*uMoonPh.x));
   col+=uMoon*(1.-ice*.7)*(vec3(.95,.97,1.)*smoothstep(.05,.018,length(md))*.6*mlit+vec3(.5,.62,.85)*exp(-dot(md,md)*60.)*.3*(.2+.8*uMoonPh.x));
@@ -1903,6 +1909,7 @@ const FS_U = [
   'uSwell',
   'uFocus',
   'uPtr',
+  'uDragon',
   'uIce',
   'uSnow',
   'uTint',
@@ -2383,6 +2390,10 @@ function leapNow() {
   drop(k.x, k.y, 4.5, -2.6);
   plip('drop', 1);
   invalidate();
+  // every third leap of a visit clears the Dragon Gate, where the look on show has a dragon: at the top of
+  // it the koi does not turn back
+  const gate = dragonPic();
+  if (++leaps % 3 === 0 && gate) return void setTimeout(() => riseDragon(k), 550);
   setTimeout(() => {
     drop(k.x, k.y, 5.5, 2.4);
     drop(k.x, k.y, 2.5, -1.2);
@@ -2390,6 +2401,67 @@ function leapNow() {
     invalidate();
     reached('leap');
   }, 1100);
+}
+// 鲤鱼跃龙门: the koi that cleared the gate goes as a dragon (dragon.js), rippling the water under it and, in
+// the water, lighting it gold. The koi is back in the pond once the dragon has gone, and the visit has its
+// seal. Its picture is fetched at the first leap, so it has come by the third. (`pin` holds the dragon at one
+// moment and `src` is a picture to try, both for a tool: `window.__pond.dragon`.)
+let leaps = 0;
+const dragon = { d: null, k: null, at: 0, pin: null, src: '', wake: 0, x: 0, y: 0, lit: 0 },
+  dragonPics = new Map();
+function dragonPic() {
+  const name = inkR > inkMax * 0.45 ? look : 'water',
+    d = dragon.src || dragonSrc(name, !!KOI_SHEETS[name] || name === 'stars');
+  if (!d) return null;
+  const src = d.src || d;
+  if (!dragonPics.has(src)) {
+    dragonPics.set(src, null);
+    const im = new Image();
+    // (the relief's comes as paint and height, made into one picture as its koi's are)
+    im.onload = () =>
+      d.height ? carved(im, { height: d.height, bare: KOI_SHEETS.relief.bare }).then((cv) => dragonPics.set(src, cv)) : dragonPics.set(src, im);
+    im.onerror = () => report(new Error(`no picture at ${src}`), 'pond pictures');
+    im.src = src;
+  }
+  return dragonPics.get(src);
+}
+function riseDragon(k, pin) {
+  // (one dragon at a time: the koi of one still in the air is let back first)
+  if (dragon.d) dragon.k.shown = true;
+  Object.assign(dragon, { d: makeDragon(k.x, k.y, W, H), k, at: performance.now() / 1000, pin: pin ?? null });
+  k.shown = false;
+  drop(k.x, k.y, 7, 3);
+  plip('dragon');
+  invalidate();
+}
+function dragonNow() {
+  const d = dragon.d,
+    pic = d && dragonPic();
+  dragon.lit = 0;
+  if (!d) return;
+  // (timed by the clock on the wall, not the pond's, which a look may slow)
+  const t = dragon.pin ?? performance.now() / 1000 - dragon.at;
+  // (gone over the top, or the look changed to one that has no dragon)
+  if (t > d.time || !pic) {
+    dragon.d = null;
+    dragon.k.shown = true;
+    reached('leap');
+    if (pic) reached('dragon');
+    return;
+  }
+  [dragon.x, dragon.y] = dragonHead(d, t);
+  dragon.lit = Math.min(1, t / 0.8, (d.time - t) / 1.5);
+  if (T > dragon.wake && dragon.y > 0) {
+    drop(dragon.x, dragon.y, 2.2, 0.45);
+    dragon.wake = T + 0.1;
+  }
+  const stars = look === 'stars' && inkR > inkMax * 0.45,
+    m = dragonCopy(d, fishCv.width / W);
+  fctx.save();
+  if (stars) fctx.globalAlpha = 0.4;
+  drawDragon(fctx, d, t, shrunk(pic, m), m);
+  fctx.restore();
+  if (stars) drawDragonStars(fctx, d, t);
 }
 // The race, at Dragon Boat: a press on the water beside the boat is a stroke of the paddles. Each sends
 // it on (a second and a half of its crossing) with a splash at the blade; ROW of them before it is across
@@ -2932,6 +3004,8 @@ function stepSpider(dt) {
         d = Math.hypot(dx, dy) || 1;
       b.x += (dx / d) * 330 * dt + Math.sin(T * 23 + b.r) * 1.6;
       b.y += (dy / d) * 330 * dt + Math.cos(T * 19 + b.r) * 1.6;
+      // (it flies head first, and sits as it came down)
+      b.a = Math.atan2(dy, dx);
       if (d < 8) {
         b.state = 'land';
         b.t = 0;
@@ -3079,23 +3153,16 @@ function stepSpider(dt) {
     }
   });
 }
+// The bug the spider hunts is a midge from a picture (two cells of 64, its head to the right: wings out,
+// wings beaten back), fetched when the first one comes down; it flies beating them and sits with them back.
 function drawBugs(c) {
+  const art = bugs.length ? artOf('bug', 'water') : null;
+  if (!art) return;
   for (const b of bugs) {
     c.save();
     c.translate(b.x, b.y);
-    c.rotate(b.r);
-    c.fillStyle = 'rgba(235,245,250,0.55)';
-    const beat = b.state === 'fly' ? 0.6 + 0.4 * Math.sin(T * 60) : 1;
-    c.beginPath();
-    c.ellipse(-0.5, -3.2 * beat, 2, 3.4, 0.5, 0, TAU);
-    c.fill();
-    c.beginPath();
-    c.ellipse(-0.5, 3.2 * beat, 2, 3.4, -0.5, 0, TAU);
-    c.fill();
-    c.fillStyle = '#14181a';
-    c.beginPath();
-    c.ellipse(0, 0, 3, 1.7, 0, 0, TAU);
-    c.fill();
+    c.rotate(b.a ?? b.r);
+    c.drawImage(art.pic, b.state === 'fly' && Math.floor(T * 24) % 2 === 0 ? 0 : 64, 0, 64, 64, -8, -8, 16, 16);
     c.restore();
   }
 }
@@ -3393,7 +3460,7 @@ function atlas() {
 function placeKuan() {
   const k = $('.kuan');
   if (!inkOn || !k) return;
-  sealsPic();
+  sealsPic(false);
   const a = $('.alm').getBoundingClientRect(),
     t = $('#termV').getBoundingClientRect(),
     // a brushed character's ink sits off the middle of its box: the axis is the ink's, for both columns
@@ -3505,6 +3572,12 @@ if (PERF)
     visitors: (list) => seeVisitors(list),
     koi: () => kois.map((k) => [k.id, Math.round(k.x), Math.round(k.y)]),
     bugs: () => bugs.length,
+    // the dragon, now: held at `pin` seconds if given, and from the picture at `src` if given (one to try
+    // before it is listed in DRAGONS); false until the picture has come
+    dragon: (pin, src) => {
+      dragon.src = src || '';
+      return !!dragonPic() && (riseDragon(kois.find((k) => k !== you) || you, pin), true);
+    },
     race: () => ({ fest: pv.fest, k: (performance.now() / 1000 - pv.boatAt) / 40, strokes: pv.strokes, won: pv.won }),
     pads: () => padSpots.map((q) => [Math.round(q.x), Math.round(q.y), Math.round(q.r)])
   };
@@ -4807,6 +4880,14 @@ function plip(kind, vol) {
     bubble(t, rnd(180, 220), v, 0.4);
     return;
   }
+  if (kind === 'dragon') {
+    // the gate cleared: a low drum, the rush of water, and a run up the scale as it climbs
+    const v = 0.06 * (vol || 1);
+    bubble(t, 62, v * 1.8, 0.6);
+    hiss(t, 1.6, 520, 0.5, v * 0.5);
+    [293.66, 349.23, 440, 587.33, 698.46, 880].forEach((f, i) => pluck(t + 0.3 + i * 0.17, f, v * 0.7));
+    return;
+  }
   if (kind === 'stamp') {
     // a seal pressed down: a soft low thud, and the paper's small breath under it
     const v = 0.09 * (vol || 1);
@@ -5402,31 +5483,36 @@ function sealsEntry() {
 }
 // the volumes whose large seal hasn't been seen yet: it stamps as the album opens, once
 const freshVols = () => VOLS.filter((v) => full(album, v) && !album.sealed.includes(v.id)).map((v) => v.id);
-// The seals cut in seal script are one picture, asked for the first time a seal is to be seen; until it
-// has come (and if it never does) a seal is its characters in the brush.
-function sealsPic() {
+// The seals cut in seal script are three pictures: the looks' seals and Jincheng's own; the occasions'; the
+// idle seals' and the rubbing's. The first is asked for the first time a seal is to be seen, the others with
+// it unless only Jincheng's own is wanted (ink's inscription); until a sheet has come (and if it never
+// does) its seals are their characters in the brush.
+function sealsPic(all = true) {
   // (kept on the function: the inscription may ask before this part of the file has run)
-  if (sealsPic.asked) return;
-  sealsPic.asked = true;
-  const im = new Image();
-  sealsPic.ready = new Promise((done) => {
-    im.onload = () => {
-      sealsPic.im = im;
-      pond.setAttribute('data-seals', '');
-      done();
-    };
-    im.onerror = done;
-  });
-  im.src = '/pond/ink/seals.webp';
+  sealsPic.ims ??= [];
+  sealsPic.ready ??= [];
+  for (const i of all ? [0, 1, 2] : [0]) {
+    if (sealsPic.ready[i]) continue;
+    const im = new Image();
+    sealsPic.ready[i] = new Promise((done) => {
+      im.onload = () => {
+        sealsPic.ims[i] = im;
+        pond.setAttribute(['data-seals', 'data-seals2', 'data-seals3'][i], '');
+        done();
+      };
+      im.onerror = done;
+    });
+    im.src = ['/pond/ink/seals.webp', '/pond/ink/seals-2.webp', '/pond/ink/seals-3.webp'][i];
+  }
 }
-// What a picture of the album draws with: the sheet of cut seals, and the brushed characters of the seals it
-// has no cut for (a canvas draws a character in the brush only once its part of the font has come). Asked
+// What a picture of the album draws with: the sheets of cut seals, and the brushed characters of the seals
+// they have no cut for (a canvas draws a character in the brush only once its part of the font has come). Asked
 // for when the album opens, so a picture saved from it is whole; waited for, a few seconds at most.
 function picReady() {
   sealsPic();
   const chars = [...new Set(VOLS.flatMap((v) => v.seals.map((q) => q.chars)).join('') + '锦程')].join('');
   picReady.p ??= Promise.all([
-    sealsPic.ready,
+    ...sealsPic.ready,
     document.fonts?.load(`400 40px 'Zhi Mang Xing'`, chars).catch(() => {}),
     document.fonts?.load(`400 40px 'Cormorant Garamond'`, 'Seals').catch(() => {})
   ]);
@@ -5438,7 +5524,8 @@ function drawSeal(c, q, x, y, s) {
   const at = sealCell(q.id),
     tall = q.shape === 'tall',
     w = tall ? (s * 150) / 246 : s;
-  if (at && sealsPic.im) {
+  const sheet = at && sealsPic.ims?.[at[2]];
+  if (sheet) {
     const one = document.createElement('canvas'),
       o = one.getContext('2d');
     one.width = Math.round(w);
@@ -5446,7 +5533,7 @@ function drawSeal(c, q, x, y, s) {
     o.fillStyle = RED;
     o.fillRect(0, 0, one.width, one.height);
     o.globalCompositeOperation = 'destination-in';
-    o.drawImage(sealsPic.im, at[0] * 256 + (tall ? 53 : 12), at[1] * 256 + (tall ? 5 : 12), tall ? 150 : 232, tall ? 246 : 232, 0, 0, one.width, one.height);
+    o.drawImage(sheet, at[0] * 256 + (tall ? 53 : 12), at[1] * 256 + (tall ? 5 : 12), tall ? 150 : 232, tall ? 246 : 232, 0, 0, one.width, one.height);
     c.drawImage(one, x - w / 2, y - s / 2);
     return;
   }
@@ -5684,14 +5771,13 @@ document.addEventListener('click', (e) => {
 const CLUES = {
   // ink: a line added to the inscription, "one turn makes a wave"
   ink: '<span lang="zh">一圈成浪</span>',
-  // the print: four flecks of spray fallen in one place
-  ukiyo:
-    '<svg viewBox="0 0 60 60" width="60" height="60"><g fill="#f6edd8" stroke="#0c1b27" stroke-width="1.2"><circle cx="27" cy="26" r="4"/><circle cx="35" cy="29" r="3.4"/><circle cx="29" cy="35" r="3.6"/><circle cx="34" cy="37" r="2.8"/></g></svg>',
-  // the lilies: none yet. A line drawn over the painting reads as a fault, not a clue: it waits for a
-  // painted one (asked for in the art brief).
-  monet: '',
-  // the bowl: none yet, for the same reason (a film of dust drawn in code sat on the type like a stain)
-  qinghua: '',
+  // the print: four flecks of spray fallen in one place, as a block cuts them
+  ukiyo: '<img src="/pond/ukiyo/clue.webp" alt="" width="60" height="60" decoding="async">',
+  // the lilies: one more lily pad, painted, its rim alone in the bowl's cobalt (a line drawn in code over
+  // the painting read as a fault). It is there only in the seasons that have lily pads.
+  monet: '<img src="/pond/monet/clue.webp" alt="" width="160" height="120" decoding="async">',
+  // the bowl: a reign mark, painted, under a film of dust with a few strokes wiped through it
+  qinghua: '<img src="/pond/qinghua/clue.webp" alt="" width="120" height="120" decoding="async">',
   // glow: one faint straight line by the light
   glow: '<i></i>',
   // the blueprint: five blanks waiting in the title block
@@ -5699,14 +5785,13 @@ const CLUES = {
   // the characters: three stars, far apart
   ascii: '<b style="left:17%;top:31%">✦</b><b style="left:79%;top:24%">✦</b><b style="left:56%;top:79%">✦</b>',
   // the sky: one figure whose stars are joined as a zigzag
-  stars:
-    '<svg viewBox="0 0 230 70" width="230" height="70"><polyline points="8,52 44,16 80,54 116,18 152,56 188,20 222,50" fill="none" stroke="#f0cf8a" stroke-width="0.8" stroke-opacity=".7"/><g fill="#f0cf8a"><circle cx="8" cy="52" r="2.2"/><circle cx="44" cy="16" r="2.6"/><circle cx="80" cy="54" r="2"/><circle cx="116" cy="18" r="2.8"/><circle cx="152" cy="56" r="2"/><circle cx="188" cy="20" r="2.4"/><circle cx="222" cy="50" r="2.2"/></g></svg>'
+  stars: '<img src="/pond/stars/clue.webp" alt="" width="230" height="70" decoding="async">'
 };
 function clueNow() {
   const el = $('#clue'),
     // (only for a look that has come in all the way and is not on its way out)
     next = look !== 'water' && base === look ? clueFor(look, album) : '',
-    want = next ? look : '';
+    want = next && (look !== 'monet' || padSpots.length) ? look : '';
   if ((el.dataset.for || '') === want) return;
   if (want) {
     el.innerHTML = CLUES[want] || '';
@@ -6766,6 +6851,7 @@ function tick1(raw) {
   gl.uniform1i(U.uSnap, 11);
   gl.uniform1f(U.uSnapOn, snapOn ? 1 : 0);
   gl.uniform1f(U.uGlint, (1 + gest.glint) * fx.glint);
+  gl.uniform3f(U.uDragon, dragon.x, dragon.y, dragon.lit);
   for (let i = 0; i < 10; i++) {
     const b = blots[i];
     blotU.set(b ? [b.x, b.y, wall() - b.at] : [0, 0, -1], i * 3);
