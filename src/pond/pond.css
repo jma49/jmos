@@ -2879,6 +2879,85 @@ button.more:hover {
     height: 96px;
   }
 }
+/* ---------- the signature (engine.js, signNow): the stroke a look carries once it is laid there, where the
+   look would be signed. A painted look's is its picture; glow's is light, the blueprint's a ruled line and
+   ASCII's a row of characters, which is what those looks are made of. ---------- */
+.sign {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+.sign[data-for] {
+  opacity: 1;
+  transition: opacity 2.4s ease 0.4s;
+}
+.sign > * {
+  position: absolute;
+  right: 9%;
+  bottom: 21%;
+}
+.sign img {
+  width: 150px;
+  height: 150px;
+}
+.sign[data-for='glow'] i {
+  width: 120px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(160, 255, 240, 0.85) 15% 85%, transparent);
+  box-shadow:
+    0 0 8px rgba(120, 255, 236, 0.7),
+    0 0 22px rgba(120, 255, 236, 0.35);
+}
+.sign[data-for='blueprint'] i {
+  width: 120px;
+  height: 0;
+  border-top: 1.5px solid rgba(234, 243, 255, 0.9);
+}
+.sign[data-for='ascii'] i::before {
+  content: '────────';
+  font: 500 16px / 1 var(--mono);
+  font-style: normal;
+  color: #f0a04b;
+}
+/* (in the album: the ten looks' seals small in the order of the strokes, each in vermilion once its stroke
+   is laid, and the seal's own place is pressed once all ten are) */
+.album .strokes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 14px 0 0;
+}
+.album .strokes i {
+  opacity: 0.22;
+  filter: grayscale(1);
+}
+.album .strokes i[data-laid] {
+  opacity: 1;
+  filter: none;
+}
+.album .strokes .seal-m {
+  --s: 26px;
+}
+.album .strokes em {
+  margin-left: 6px;
+  font: 400 13px / 1 var(--mono);
+  font-style: normal;
+  color: rgba(92, 58, 40, 0.7);
+}
+.album .strokes-say {
+  margin: 8px 0 0;
+  font-style: italic;
+  color: rgba(92, 58, 40, 0.75);
+}
+.album .strokes[data-n='10'] ~ .strokes-say {
+  color: #b8382a;
+}
+.album .vol[data-vol='own']:has(.strokes[data-n='10']) .seal-m {
+  cursor: pointer;
+}
 /* the long scroll, unrolled in the album: it is wider than the leaf and is drawn along by hand */
 .album .scroll-view {
   margin: 22px 0 0;

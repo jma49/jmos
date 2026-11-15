@@ -22,6 +22,9 @@ import {
   allFull,
   clearSeals,
   clueFor,
+  layStroke,
+  signed,
+  STROKES,
   count as sealCount,
   dayOf,
   dayText,
@@ -4424,6 +4427,7 @@ $('#veil').addEventListener('pointerdown', (e) => {
 $('#sheet').addEventListener('click', (e) => {
   const wipe = e.target.closest('#albumClear');
   if (e.target.closest('.x')) closeSheet();
+  else if (e.target.closest('.vol[data-vol="own"] .seal-m') && signed(album) && !hasSeal(album, 'true')) signedNow();
   else if (wipe) {
     // clearing the album asks once, in place: the words turn to a question, and only a second press within
     // a few seconds clears; left alone, the button reads as before
@@ -5821,6 +5825,50 @@ document.addEventListener('click', (e) => {
   }
   reached('rubbing');
 });
+// The signature (decision 0028): once every look is found, the gesture that found a look, made again in
+// that look, lays one stroke of 真 where the look would be signed, in its own hand. Each painted look's
+// stroke is a picture (none has come yet, so there only the line on the water says it is laid); in glow, the
+// blueprint and ASCII it is light, ruled line and characters, which the styles draw. With all ten laid the
+// seal's place in the album can be pressed: the gold koi comes round the visitor's, and the seal is theirs.
+const STROKE_PICS = {};
+function signNow(name) {
+  const r = layStroke(album, name, dayOf(new Date()));
+  if (!r.fresh) return;
+  album = r.album;
+  save('pond-seals', writeAlbum(album));
+  signShow();
+  plip('stamp', 0.6);
+  drop(W * (big ? 0.7 : 0.5), H * 0.5, 2.4, 0.5);
+  whisper(`真 · ${Object.keys(album.strokes).length} / ${STROKES.length}`);
+  if (sheetOpen() && sheetId === 'seals') openSheet('seals');
+  invalidate();
+}
+// (the stroke of the look on show, once laid and the look has come in all the way)
+function signShow() {
+  const el = $('#sign'),
+    on = look !== 'water' && base === look && look in album.strokes ? look : '';
+  if ((el.dataset.for || '') === on) return;
+  if (!on) return void delete el.dataset.for;
+  el.innerHTML = STROKE_PICS[on] ? `<img src="${STROKE_PICS[on]}" alt="" decoding="async">` : '<i></i>';
+  el.dataset.for = on;
+  el.dataset.n = String(STROKES.indexOf(on) + 1);
+}
+function signedNow() {
+  closeSheet();
+  greetVisitor();
+  setTimeout(() => reached('true'), 2500);
+}
+// one quiet line on the water, by the visitor's koi, for a few seconds
+function whisper(text) {
+  const el = $('#whisper');
+  el.textContent = text;
+  const half = Math.min(W - 40, el.offsetWidth) / 2;
+  el.style.left = `${Math.round(clamp(you.x, 20 + half, W - 20 - half))}px`;
+  el.style.top = `${Math.round(clamp(you.y + 54, 90, H - 130))}px`;
+  el.dataset.on = '';
+  clearTimeout(whisper.t);
+  whisper.t = setTimeout(() => delete el.dataset.on, 4500);
+}
 // A look on show carries a clue to the next look's gesture (seals.ts, NEXT) until that one is found: a
 // small mark in the look's own manner, laid in quietly once the look has come in all the way.
 const CLUES = {
@@ -5843,6 +5891,7 @@ const CLUES = {
   stars: '<img src="/pond/stars/clue.webp" alt="" width="230" height="70" decoding="async">'
 };
 function clueNow() {
+  signShow();
   const el = $('#clue'),
     // (only for a look that has come in all the way and is not on its way out)
     next = look !== 'water' && base === look ? clueFor(look, album) : '',
@@ -6238,6 +6287,7 @@ const toggleLook = (name, at) => {
   gest.pts = [];
   gest.carry = null;
   if (look !== name) setLook(name, at);
+  else if (base === name) signNow(name);
 };
 const glintAt = () => [W * (big ? 0.6 : 0.74), H * (big ? 0.1 : 0.12)];
 const HOLD = 1.2,
@@ -6379,7 +6429,7 @@ const HOLD = 1.2,
     drop(k.x, k.y, 1.6, -0.5);
     audio();
     plip('cue-ascii', 0.8);
-    if (look !== 'ascii' && gest.keys.length >= KEYS_TO_TYPE) {
+    if (gest.keys.length >= KEYS_TO_TYPE) {
       gest.keys = [];
       toggleLook('ascii', [x, y]);
     }

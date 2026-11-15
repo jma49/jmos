@@ -76,8 +76,29 @@ export const VOLUMES: Volume[] = [
       { id: 'dragon', chars: '龙', shape: 'round', cut: 'red' },
       { id: 'taiji', chars: '太极', shape: 'tall', cut: 'white' }
     ]
+  },
+  // The signature (decision 0028): the one seal that is not a master's. It has no gesture of its own: it is
+  // pressed in the album once the ten strokes of its character are laid, one in each look.
+  {
+    id: 'own',
+    extra: true,
+    seals: [{ id: 'true', chars: '真', shape: 'square', cut: 'red' }]
   }
 ];
+/**
+ * The looks in the order their strokes come in 真 as it is written: in a look, once all ten are found, the
+ * gesture that found it lays its stroke.
+ */
+export const STROKES = ['ink', 'ukiyo', 'monet', 'qinghua', 'dunhuang', 'glow', 'blueprint', 'ascii', 'stars', 'relief'];
+/** Whether every look is found, which is when strokes can be laid. */
+export const mayLay = (a: Album): boolean => STROKES.every((id) => id in a.found);
+/** The album with a look's stroke laid on a day, and whether it was laid just now. */
+export function layStroke(a: Album, look: string, day: string): { album: Album; fresh: boolean } {
+  if (!mayLay(a) || !STROKES.includes(look) || look in a.strokes) return { album: a, fresh: false };
+  return { album: { ...a, strokes: { ...a.strokes, [look]: day } }, fresh: true };
+}
+/** Whether the character is whole: every stroke laid. */
+export const signed = (a: Album): boolean => STROKES.every((id) => id in a.strokes);
 /** The way back through the album that opens the end: the looks' seals in the order the volumes keep them. */
 export const WAY: string[] = VOLUMES.slice(0, 2).flatMap((v) => v.seals.map((x) => x.id));
 /** The steps taken so far with one more seal pressed: the next on the way goes on, anything else starts again. */
@@ -117,8 +138,10 @@ export interface Album {
   hinted: string;
   /** how many times the pond has been opened */
   visits: number;
+  /** the strokes of the signature laid so far: the look each was laid in → the day */
+  strokes: Record<string, string>;
 }
-export const emptyAlbum = (): Album => ({ found: {}, sealed: [], hinted: '', visits: 0 });
+export const emptyAlbum = (): Album => ({ found: {}, sealed: [], hinted: '', visits: 0, strokes: {} });
 
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
 /** The album as stored, whatever is there: anything missing or mangled is left out. */
@@ -132,6 +155,8 @@ export function readAlbum(raw: string | null): Album {
     if (Array.isArray(o.sealed)) a.sealed = o.sealed.filter((x) => typeof x === 'string');
     if (typeof o.hinted === 'string' && DAY.test(o.hinted)) a.hinted = o.hinted;
     if (typeof o.visits === 'number' && o.visits > 0) a.visits = Math.floor(o.visits);
+    if (o.strokes && typeof o.strokes === 'object')
+      for (const [k, v] of Object.entries(o.strokes)) if (STROKES.includes(k) && typeof v === 'string' && DAY.test(v)) a.strokes[k] = v;
   } catch {
     /* not JSON: an empty album */
   }
@@ -159,7 +184,7 @@ export function stamp(a: Album, id: string, day: string, vols: Volume[]): { albu
   return { album, fresh: true, filled: full(album, vol) ? vol : null };
 }
 /** The seals cleared, to find them again; that the line on the water was once shown, and the visits, stay. */
-export const clearSeals = (a: Album): Album => ({ ...a, found: {}, sealed: [] });
+export const clearSeals = (a: Album): Album => ({ ...a, found: {}, sealed: [], strokes: {} });
 /** A volume's large seal has been shown. */
 export const markSealed = (a: Album, vol: string): Album => (a.sealed.includes(vol) ? a : { ...a, sealed: [...a.sealed, vol] });
 
@@ -185,6 +210,10 @@ export interface SealWords {
   thanks: Record<string, string>;
   koi: string;
   both: string;
+  /** the signature: the word for its strokes, the plainer line for whoever is stuck, and what to do once it is whole */
+  strokes: string;
+  signHow: string;
+  signPress: string;
   soon: string;
   line: string;
   /** The album's button that starts it again, and what it asks before it does. */
@@ -195,7 +224,7 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
   en: {
     title: 'Seals',
     lede: 'The pond can look more than one way. Each look has a seal, stamped the first time you find it. Stuck? Press an empty place.',
-    volumes: { painted: 'Painted', drawn: 'Drawn', hours: 'Occasions', end: 'The end', idle: 'Idle hours' },
+    volumes: { painted: 'Painted', drawn: 'Drawn', hours: 'Occasions', end: 'The end', idle: 'Idle hours', own: 'Its own' },
     names: {
       ink: 'Ink',
       ukiyo: 'Ukiyo-e',
@@ -218,7 +247,8 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
       catch: 'The catch',
       race: 'The race',
       dragon: 'The Dragon Gate',
-      taiji: 'The koi’s circle'
+      taiji: 'The koi’s circle',
+      true: 'The signature'
     },
     hints: {
       ink: 'Stillness leaves a mark.',
@@ -242,16 +272,21 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
       catch: 'Tap a lily pad while the spider is about.',
       race: 'At Dragon Boat a boat crosses, far off. Paddle with it: press the water beside it.',
       dragon: 'A koi that leaps often enough may never come down.',
-      taiji: 'Ink remembers an old code: ↑ ↑ ↓ ↓ ← → ← → B A.'
+      taiji: 'Ink remembers an old code: ↑ ↑ ↓ ↓ ← → ← → B A.',
+      true: 'A copy is never signed. Ten looks, ten strokes.'
     },
     thanks: {
       painted: 'Every painted one. Thank you for looking so closely.',
       drawn: 'Every drawn one. Thank you for trying things.',
       hours: 'Every occasion. Thank you for coming back.',
       end: 'That is all of it. Thank you for finding everything.',
-      idle: 'Time well wasted.'
+      idle: 'Time well wasted.',
+      own: 'This one is yours. Thank you for looking twice.'
     },
     koi: 'Your koi wears a seal from now on.',
+    strokes: 'strokes',
+    signHow: 'In each look, make again the gesture that found it.',
+    signPress: 'The character is whole. Press it.',
     both: 'The album is full. The gold koi wears one too, to match.',
     soon: 'Still to come.',
     line: 'The water answers more than a tap.',
@@ -261,7 +296,7 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
   zh: {
     title: '集印册',
     lede: '池塘不止一种样子。每一种都有一方印，第一次遇见时盖上。找不到时，点一下空着的位置。',
-    volumes: { painted: '画', drawn: '线', hours: '时', end: '终', idle: '闲' },
+    volumes: { painted: '画', drawn: '线', hours: '时', end: '终', idle: '闲', own: '真' },
     names: {
       ink: '水墨',
       ukiyo: '浮世绘',
@@ -284,7 +319,8 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
       catch: '捕虫',
       race: '竞渡',
       dragon: '龙门',
-      taiji: '太极'
+      taiji: '太极',
+      true: '落款'
     },
     hints: {
       ink: '停一停，会留下痕迹。',
@@ -308,16 +344,21 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
       catch: '跳蛛在的时候，点一片荷叶。',
       race: '端午那天，远处有龙舟划过。在船边点水，帮它划到对岸。',
       dragon: '鱼跃得够多，就不再落下。',
-      taiji: '墨里还认一句老口诀：↑ ↑ ↓ ↓ ← → ← → B A。'
+      taiji: '墨里还认一句老口诀：↑ ↑ ↓ ↓ ← → ← → B A。',
+      true: '临本不落款。十种样子，十笔。'
     },
     thanks: {
       painted: '画的这一册集齐了。谢谢你看得这么仔细。',
       drawn: '线的这一册集齐了。谢谢你什么都试一试。',
       hours: '时的这一册集齐了。谢谢你一次次回来。',
       end: '到这里就是全部了。谢谢你把它们都找到。',
-      idle: '偷得浮生半日闲。'
+      idle: '偷得浮生半日闲。',
+      own: '这一方是你自己的。谢谢你回头又看了一遍。'
     },
     koi: '你的锦鲤，从此带着一方印。',
+    strokes: '笔',
+    signHow: '在每一种样子里，把找到它的那个手势再做一次。',
+    signPress: '字写全了。按下去。',
     both: '册子集齐了。金色的那条也盖了一方，和你作伴。',
     soon: '还没画好。',
     line: '水面不只会回应点击。',
@@ -327,7 +368,7 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
   ja: {
     title: '集印帳',
     lede: '池の姿はひとつではありません。姿ごとに印がひとつあり、初めて出会ったときに押されます。迷ったら、空いている枠を押してみて。',
-    volumes: { painted: '絵', drawn: '線', hours: '時', end: '終', idle: '閑' },
+    volumes: { painted: '絵', drawn: '線', hours: '時', end: '終', idle: '閑', own: '真' },
     names: {
       ink: '水墨',
       ukiyo: '浮世絵',
@@ -350,7 +391,8 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
       catch: '捕まえる',
       race: '競渡',
       dragon: '登竜門',
-      taiji: '太極'
+      taiji: '太極',
+      true: '落款'
     },
     hints: {
       ink: 'じっとしていると、跡が残る。',
@@ -374,16 +416,21 @@ export const SEAL_WORDS: Record<Lang, SealWords> = {
       catch: '蜘蛛がいるとき、蓮の葉をたたく。',
       race: '端午の日、遠くを竜舟が渡る。そばの水をたたいて、いっしょに漕ぐ。',
       dragon: '何度も跳ねた鯉は、もう落ちてこない。',
-      taiji: '墨は古い合言葉を覚えている：↑ ↑ ↓ ↓ ← → ← → B A。'
+      taiji: '墨は古い合言葉を覚えている：↑ ↑ ↓ ↓ ← → ← → B A。',
+      true: '臨書に落款はない。十の姿に、十画。'
     },
     thanks: {
       painted: '絵の一冊がそろいました。じっくり見てくれて、ありがとう。',
       drawn: '線の一冊がそろいました。いろいろ試してくれて、ありがとう。',
       hours: '時の一冊がそろいました。何度も来てくれて、ありがとう。',
       end: 'これで全部です。すべて見つけてくれて、ありがとう。',
-      idle: 'よい暇つぶしでした。'
+      idle: 'よい暇つぶしでした。',
+      own: 'これはあなたの印です。もう一度見てくれて、ありがとう。'
     },
     koi: 'あなたの鯉に、印がひとつ付きました。',
+    strokes: '画',
+    signHow: 'それぞれの姿で、見つけたときの仕草をもう一度。',
+    signPress: '字がそろいました。押してください。',
     both: '印譜がそろいました。金の鯉にも、おそろいの印を。',
     soon: 'まだ準備中。',
     line: '水面は、タップのほかにも応えます。',
@@ -474,10 +521,23 @@ export function albumHTML(a: Album, vols: Volume[], lang: Lang, fresh: string[] 
     roman = ['I', 'II', 'III', 'IV', 'V', 'VI'];
   // the last volume the album proper counts: the word for a full album is said under it
   const last = vols.filter((x) => !x.extra).at(-1)?.id;
+  // the signature's leaf, once every look is found: the ten looks' seals small in the order of its strokes,
+  // each in vermilion once its stroke is laid; a plainer line from the third visit; and, with all ten laid,
+  // the seal's own place can be pressed
+  const looks = vols.slice(0, 2).flatMap((v) => v.seals),
+    sign =
+      mayLay(a) && !has(a, 'true')
+        ? `<p class="strokes" data-n="${Object.keys(a.strokes).length}">${STROKES.map((id) => {
+            const q = looks.find((x) => x.id === id);
+            return q ? `<i${id in a.strokes ? ' data-laid' : ''}>${sealMark(q)}</i>` : '';
+          }).join(
+            ''
+          )}<em>${Object.keys(a.strokes).length} / ${STROKES.length} ${esc(w.strokes)}</em></p><p class="strokes-say">${esc(signed(a) ? w.signPress : a.visits > 2 || Object.keys(a.strokes).length ? w.signHow : '')}</p>`
+        : '';
   const leaf = (v: Volume, i: number) => {
     const n = v.seals.filter((s) => has(a, s.id)).length,
       done = full(a, v);
-    return `<section class="vol"${done ? ' data-done' : ''}><header><i>${lang === 'en' ? roman[i] : `第${'一二三四五六'[i]}${lang === 'ja' ? '冊' : '册'}`}</i><b>${esc(w.volumes[v.id])}</b><em>${n} / ${v.seals.length}</em></header><div class="leaf"><ol class="slots">${v.seals
+    return `<section class="vol" data-vol="${v.id}"${done ? ' data-done' : ''}><header><i>${lang === 'en' ? roman[i] : `第${'一二三四五六'[i]}${lang === 'ja' ? '冊' : '册'}`}</i><b>${esc(w.volumes[v.id])}</b><em>${n} / ${v.seals.length}</em></header><div class="leaf"><ol class="slots">${v.seals
       .map((s) =>
         has(a, s.id)
           ? `<li data-found data-id="${s.id}">${sealMark(s)}<span class="nm">${esc(w.names[s.id])}</span><time datetime="${a.found[s.id]}">${dayText(a.found[s.id], lang)}</time></li>`
@@ -489,7 +549,7 @@ export function albumHTML(a: Album, vols: Volume[], lang: Lang, fresh: string[] 
       done
         ? `<p class="grand"${fresh.includes(v.id) ? ' data-fresh' : ''}><span>${esc(w.thanks[v.id])}${v.id === 'painted' ? `<br>${esc(w.koi)}` : ''}${allFull(a, vols) && v.id === last && vols.length > 1 ? `<br>${esc(w.both)}` : ''}</span><b class="seal-m own" data-shape="tall" data-cut="white" data-n="2" ${cellStyle(OWN)} lang="zh" aria-hidden="true"><span>锦</span><span>程</span></b></p>`
         : ''
-    }</div></section>`;
+    }${v.id === 'own' ? sign : ''}</div></section>`;
   };
   return `<h1>${esc(w.title)}</h1><p class="lede">${esc(w.lede)}</p>${vols.map(leaf).join('')}`;
 }

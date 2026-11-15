@@ -17,8 +17,12 @@ import {
   full,
   markSealed,
   mayHint,
+  layStroke,
+  mayLay,
   readAlbum,
   sealCell,
+  signed,
+  STROKES,
   sealMark,
   stamp,
   volumes,
@@ -34,7 +38,7 @@ const preview = volumes(false).slice(0, 2),
 describe('the volumes', () => {
   it('hold every look in a release build, five to a volume', () => {
     expect(volumes(false)).toEqual(volumes(true));
-    expect(volumes(false).map((v) => v.id)).toEqual(['painted', 'drawn', 'hours', 'end', 'idle']);
+    expect(volumes(false).map((v) => v.id)).toEqual(['painted', 'drawn', 'hours', 'end', 'idle', 'own']);
     expect(live.map((v) => v.seals.map((s) => s.id))).toEqual([
       ['ink', 'ukiyo'],
       ['glow', 'blueprint', 'ascii']
@@ -139,7 +143,7 @@ describe('the idle seals', () => {
     for (const v of all.filter((x) => !x.extra)) for (const x of v.seals) a = stamp(a, x.id, '2026-11-13', all).album;
     expect(allFull(a, all)).toBe(true);
     expect(stamp(a, 'skip', '2026-11-14', all).fresh).toBe(true);
-    expect(all.at(-1)?.seals.map((x) => x.id)).toEqual(['skip', 'leap', 'catch', 'race', 'dragon', 'taiji']);
+    expect(all.find((v) => v.id === 'idle')?.seals.map((x) => x.id)).toEqual(['skip', 'leap', 'catch', 'race', 'dragon', 'taiji']);
   });
 });
 
@@ -161,7 +165,33 @@ describe('the occasions', () => {
     for (const v of all.filter((x) => !x.extra)) for (const s of v.seals) a = stamp(a, s.id, '2026-11-13', all).album;
     const leaves = albumHTML(a, all, 'en').split('<section class="vol"').slice(1),
       said = leaves.map((l) => l.includes(SEAL_WORDS.en.both));
-    expect(said).toEqual([false, false, false, true, false]);
+    expect(said).toEqual([false, false, false, true, false, false]);
+  });
+});
+
+describe('the signature', () => {
+  const all = volumes(false),
+    day = '2026-11-15';
+  let found = emptyAlbum();
+  for (const id of STROKES) found = stamp(found, id, day, all).album;
+  it('takes a stroke in a look only once every look is found, and one stroke a look', () => {
+    expect(mayLay(emptyAlbum())).toBe(false);
+    expect(layStroke(stamp(emptyAlbum(), 'ink', day, all).album, 'ink', day).fresh).toBe(false);
+    expect(mayLay(found)).toBe(true);
+    const one = layStroke(found, 'ink', day);
+    expect(one.fresh).toBe(true);
+    expect(layStroke(one.album, 'ink', day).fresh).toBe(false);
+    expect(layStroke(found, 'water', day).fresh).toBe(false);
+  });
+  it('is whole with ten strokes, is kept with the album, and its leaf then says to press it', () => {
+    let a = found;
+    for (const id of STROKES) a = layStroke(a, id, day).album;
+    expect(signed(a)).toBe(true);
+    expect(signed(layStroke(found, 'ink', day).album)).toBe(false);
+    expect(readAlbum(writeAlbum(a)).strokes).toEqual(a.strokes);
+    expect(albumHTML(a, all, 'en')).toContain(SEAL_WORDS.en.signPress);
+    expect(albumHTML(found, all, 'en')).toContain('0 / 10');
+    expect(albumHTML(emptyAlbum(), all, 'en')).not.toContain('class="strokes"');
   });
 });
 
@@ -186,8 +216,8 @@ describe('the cut seals', () => {
       [2, 0, 2],
       [3, 0, 2]
     ]);
-    // every seal the album has is cut: none is left in the brush
-    for (const q of all) expect(sealCell(q.id), q.id).not.toBeNull();
+    // every seal the album has is cut but the signature's, which is in the brush until its cut comes
+    for (const q of all) if (q.id !== 'true') expect(sealCell(q.id), q.id).not.toBeNull();
     expect(sealCell('a seal nobody cut')).toBeNull();
   });
   it('say in their markup which sheet they are on', () => {
@@ -201,9 +231,9 @@ describe('the cut seals', () => {
 describe('the traces', () => {
   it('draw every gesture there is: each look and each small game, and nothing for what has no gesture', () => {
     const all = volumes(false),
-      gestures = all.filter((v) => v.id !== 'hours' && v.id !== 'end').flatMap((v) => v.seals.map((x) => x.id));
+      gestures = all.filter((v) => v.id !== 'hours' && v.id !== 'end' && v.id !== 'own').flatMap((v) => v.seals.map((x) => x.id));
     for (const id of gestures) expect(TRACES[id], id).toBeTruthy();
-    for (const id of ['rain', 'snow', 'moon', 'fest', 'dawn', 'rubbing']) expect(TRACES[id], id).toBeUndefined();
+    for (const id of ['rain', 'snow', 'moon', 'fest', 'dawn', 'rubbing', 'true']) expect(TRACES[id], id).toBeUndefined();
   });
 });
 

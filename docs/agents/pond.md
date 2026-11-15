@@ -190,6 +190,17 @@ words did not reach, there only for whoever asks.
   paint and height made into one picture as its koi's are (`carved()`). The picture is fetched at a
   visit's first leap, never before. With `?perf`, `window.__pond.dragon(seconds, picture)` raises
   one, held that far into its flight, from a picture to try if one is given.
+- **The signature** ([decision 0028](../decisions/0028-the-pond-has-three-endings.md)), the pond's
+  second ending. Once every look is found, the gesture that found a look, made again in that look
+  (where it otherwise does nothing), lays one stroke of 真 there (`signNow()` in `engine.js`;
+  `STROKES`, `layStroke()` and `signed()` in `seals.ts`; kept in the album as `strokes`). A line on
+  the water says which stroke it is. A sixth volume, `own`, holds the one seal 真: from the moment
+  every look is found its leaf shows the ten looks' seals small in the order of the strokes, each in
+  vermilion once laid, and a plainer line from the third visit; with all ten laid the seal's place
+  is pressed, the gold koi comes round the visitor's, and the seal is stamped. A look shows its
+  stroke once laid (`#sign`, `.sign` in `pond.css`): light in glow, a ruled line on the blueprint,
+  characters in ASCII; a painted look's is a picture listed in `STROKE_PICS`, of which none has come
+  yet, so there the line on the water is all that says it is laid.
 - **A chain of clues.** A look on show carries a small mark that points to the next look's gesture
   (`NEXT` and `clueFor()` in `seals.ts`, `CLUES` and `clueNow()` in `engine.js`, `.clue` in
   `pond.css`), laid in a few seconds after the look has come, until that next seal is found.
