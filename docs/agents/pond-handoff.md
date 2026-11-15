@@ -40,9 +40,9 @@ what is left, and what was learnt. What is open now is section 0.
   dragon and the lilies. Make the bed first and stop there for a look: the rest follows only once
   the bed is right. The clue, what drifts, the dove and the spider are redone last, in the same
   hand.
-- **Also asked: the ten strokes of the second ending** (item 6 of "Asked for now"; the design is
-  decision 0028). Seven small pictures, one stroke of 真 for each painted look, and the seal 真.
-  They are small and can be made between rounds of the stained glass.
+- **Delivered and in use: the ten strokes of the second ending** (item 6 of "Asked for now"; the
+  design is decision 0028): one stroke of 真 for each painted look, and the seal 真 on `seals-4`.
+  Stained glass's stroke is kept for when that look is built.
 - **Handing a picture back:** commit it under `public/pond/<look>/` with the name the brief gives;
   run `node scripts/check-public-sizes.mjs` (200 KB a file); add its line to that look's table of
   pictures in pond.md, with what came out and what is weak; pull with rebase, and push. Leave the

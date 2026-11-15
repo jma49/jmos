@@ -197,7 +197,7 @@ describe('the signature', () => {
 
 describe('the cut seals', () => {
   const all = VOLUMES.flatMap((v) => v.seals);
-  it("are on three sheets: the looks', the occasions', and the idle seals' with the rubbing's", () => {
+  it("are on four sheets: the looks', the occasions', the idle seals' with the rubbing's, the signature's", () => {
     expect(sealCell('ink')).toEqual([0, 0, 0]);
     expect(sealCell('relief')).toEqual([1, 2, 0]);
     expect(sealCell('own')).toEqual([2, 2, 0]);
@@ -216,8 +216,9 @@ describe('the cut seals', () => {
       [2, 0, 2],
       [3, 0, 2]
     ]);
-    // every seal the album has is cut but the signature's, which is in the brush until its cut comes
-    for (const q of all) if (q.id !== 'true') expect(sealCell(q.id), q.id).not.toBeNull();
+    expect(sealCell('true')).toEqual([0, 0, 3]);
+    // every seal the album has is cut
+    for (const q of all) expect(sealCell(q.id), q.id).not.toBeNull();
     expect(sealCell('a seal nobody cut')).toBeNull();
   });
   it('say in their markup which sheet they are on', () => {

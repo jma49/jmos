@@ -199,8 +199,8 @@ words did not reach, there only for whoever asks.
   vermilion once laid, and a plainer line from the third visit; with all ten laid the seal's place
   is pressed, the gold koi comes round the visitor's, and the seal is stamped. A look shows its
   stroke once laid (`#sign`, `.sign` in `pond.css`): light in glow, a ruled line on the blueprint,
-  characters in ASCII; a painted look's is a picture listed in `STROKE_PICS`, of which none has come
-  yet, so there the line on the water is all that says it is laid.
+  characters in ASCII; a painted look's is its picture (`STROKE_PICS`), and the relief's is its
+  pair made into one, the groove's height lit as the wall is and the paint laid in it (`groove()`).
 - **A chain of clues.** A look on show carries a small mark that points to the next look's gesture
   (`NEXT` and `clueFor()` in `seals.ts`, `CLUES` and `clueNow()` in `engine.js`, `.clue` in
   `pond.css`), laid in a few seconds after the look has come, until that next seal is found.
@@ -699,7 +699,7 @@ light and refraction, the glass) stays in the shader.
 | Pebble bed (water look) | `BED` shader, drawn once | Good; it is what the refraction reads from, and the first thing seen | Keep for now | A Blender-rendered bed with a normal map would be the one thing to try, behind a flag, at no cost to the first visit's budget only if it fits in about 150 KB |
 | Ink: seasonal motif | `painting.js`, from pictures | Painted, and in use | Done | none |
 | Ink: far hills, mist | canvas washes, CSS | Good | Keep; hills later | `ink/hills` later |
-| Seals | cut in seal script from three sheets (`ink/seals`, `seals-2`, `seals-3`) | A family | Done | in use |
+| Seals | cut in seal script from four sheets (`ink/seals`, `seals-2`, `seals-3`, `seals-4`) | A family | Done | in use |
 | Clues | pictures in ukiyo-e, Monet, 青花 and the star chart; ink's is brushed type, glow's a line of light, the blueprint's and ASCII's are characters | In keeping | Done | in use |
 | The bug the spider hunts | a picture (`water/bug`) | Small, and in keeping | Done | in use |
 | Food | two dots | A pellet is a dot | Keep | none |
@@ -751,7 +751,7 @@ drawn in code, and what is still drawn in code that a picture would better is on
    midge seen from above, its wings out in the first cell and beaten back in the second; a dark
    body, pale wings you can see through. It is drawn about 12 pixels long, so it must be bold
    (`drawBugs()` in `engine.js`; nothing is drawn until the picture has come).
-6. **Delivered, to wire in: the ten strokes of the second ending** ([decision 0028](../decisions/0028-the-pond-has-three-endings.md)):
+6. **Delivered and in use: the ten strokes of the second ending** ([decision 0028](../decisions/0028-the-pond-has-three-endings.md)):
    in each painted look, one stroke of the character 真, laid where that look would be signed. One
    file a look, `stroke.webp`, 512 × 512 with alpha, the stroke alone in the look's own hand, about
    360 pixels long, centred, with nothing round it. The strokes in the order 真 is written, and

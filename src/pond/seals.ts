@@ -444,13 +444,15 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
  * Where a seal is cut in the sheets of seals in seal script (public/pond/ink/, cells four across), as
  * [column, row, sheet]: seals.webp has the looks' seals in order, then Jincheng's own; seals-2.webp the
  * occasions', the race's and the Dragon Gate's; seals-3.webp the other idle seals', the rubbing's, and
- * those of the small games to come (the lotus zither, the koi's circle, goldfish scooping).
+ * those of the small games to come (the lotus zither, the koi's circle, goldfish scooping); seals-4.webp
+ * the signature's.
  */
 export const OWN = 'own';
 const CUT = [
   ['ink', 'ukiyo', 'monet', 'qinghua', 'dunhuang', 'glow', 'blueprint', 'ascii', 'stars', 'relief', OWN],
   ['rain', 'snow', 'moon', 'fest', 'dawn', 'race', 'dragon'],
-  ['skip', 'leap', 'catch', 'rubbing', 'zither', 'taiji', 'goldfish']
+  ['skip', 'leap', 'catch', 'rubbing', 'zither', 'taiji', 'goldfish'],
+  ['true']
 ];
 /** A seal's cell and its sheet, or null for one no sheet has (it stays in the brush). */
 export function sealCell(id: string): [number, number, number] | null {
