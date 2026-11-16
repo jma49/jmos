@@ -194,8 +194,10 @@ words did not reach, there only for whoever asks.
   input method does not break it) or an S drawn on the water (`sCurve()` in `gestures.ts`) calls
   it (`taijiNow()` in `engine.js`). For 45 seconds the visitor's koi and the gold one go round one
   point half the figure's width apart (`taijiSpot()`, timed in frames drawn), the rest in a ring
-  outside, and the taiji in ink wash (`#taiji`, the picture `taiji.webp` in ink's folder, asked
-  for and not yet come) shows under them, turned to the line between the two koi (`stepTaiji()`).
+  outside, and the taiji in ink wash (`#taiji`, the picture `taiji.webp` in ink's folder) shows
+  faintly under them, turned to the line between the two koi, with the eight trigrams (`#bagua`,
+  `bagua.webp`) in a ring round it turning slowly the other way (`stepTaiji()`). Both pictures are
+  in ink's folder (item 0 of "Asked for now" has what came).
   `window.__pond.taiji(t)` under `?perf` sets it up for a tool.
 - **The signature** ([decision 0028](../decisions/0028-the-pond-has-three-endings.md)), the pond's
   second ending. Once every look is found, the gesture that found a look, made again in that look
@@ -752,30 +754,49 @@ flying thing seen from above (a crane or a butterfly for Dunhuang, a bee or a sw
 **Asked for now**, in this order. A thing the pond shows is asked for here and painted; it is not
 drawn in code, and what is still drawn in code that a picture would better is on this list too.
 
-0. **Asked now, first: the taiji in ink wash**, `taiji.webp` in the ink folder, for the koi's circle
-   (Jincheng: "做出惊艳感"; today the koi only gather and turn, and no figure shows). 1024 × 1024
-   with alpha, black only, its strength in the alpha, as ink's other pictures are; under 120 KB.
-   One taiji (太极图) painted wet in 写意 ink on nothing, centred, 880 pixels across:
-   - The dark half (阴) is one loaded wash of ink, not flat: darkest in its round head, thinning
-     and breaking to dry streaks toward its tail, its edge soft and a little bled, as wet ink
-     spreads on raw paper. A mid wash, not black: nowhere over about 65% (the gold koi swims
-     in this half, drawn in ink itself, and must still show through it; a solid black stand-in
-     hid it). Its eye is bare paper, a clean round about 90 pixels across.
-   - The light half (阳) is bare paper: only the thinnest grey wash at its outer edge, enough to
-     close the circle, and its eye one round dot of dark ink about 90 pixels across.
-   - The outer circle is one brushed line, about 10 pixels, uneven, broken once or twice.
-   - Set as the usual figure stands: the S upright, the dark half's head at the top and to the
-     left holding its paper eye at (512, 292), the light half's head at the bottom and to the
-     right holding its ink dot at (512, 732); the figure's middle at (512, 512). The two eyes'
-     places matter: the visitor's koi and the gold koi swim there, and the picture is turned to
-     follow them.
-   - It must look painted in one breath by the hand that painted the plum branch, not a printed
-     symbol: no hard vector edge, no even grey, no texture of paper in it (the pond has its own).
-   It is laid over the water multiplied, and fades in as the two koi come round. The koi go
-     round clockwise as the page is seen, so each half's head must lead that way: the dark half's
-     tail trails from its head at the top round the left side to the bottom (the figure as it
-     is usually drawn with the dark head up and its tail down the left).
-
+0. **Delivered, to wire in: two pictures for the koi's circle in ink**, a taiji and the eight trigrams
+   round it (Jincheng: "太极鱼的时候要隐隐有一个水墨的转动的太极八卦图在宣纸上"; "做出惊艳感").
+   Both go in the ink folder, 1024 × 1024 with alpha, black only with its strength in the alpha,
+   as ink's other pictures are, under 120 KB each, on nothing (the pond has its own paper). The
+   pond lays them over the water multiplied and faint (about 60% and 45%), so paint them at full
+   strength: they are thinned in use. Both must look painted in one breath by the hand that
+   painted the plum branch, not printed: no hard vector edge, no even grey.
+   - **`taiji.webp`**: one taiji (太极图) in 写意 ink, centred, 880 pixels across, its middle at
+     (512, 512). The dark half (阴) is one loaded wash, not flat: darkest in its round head,
+     thinning and breaking to dry streaks toward its tail, its edge soft and a little bled. A mid
+     wash, nowhere over about 65% (the gold koi swims in this half and must show through it). Its
+     eye is bare paper, a clean round about 90 pixels across, at (512, 292). The light half (阳)
+     is bare paper with only the thinnest grey at its outer edge, and its eye is one round dot of
+     dark ink about 90 pixels across at (512, 732). The outer circle is one brushed line, about
+     10 pixels, uneven, broken once or twice. The S stands upright; the koi go round clockwise as
+     the page is seen, so each half's head must lead that way: the dark half's head is at the
+     top and its tail trails down the left side to the bottom. The two eyes' places matter: the
+     two koi swim there and the picture is turned to follow them.
+   - **`bagua.webp`**: the eight trigrams (八卦) alone, in a ring, with nothing in the middle: the
+     taiji turns there on its own picture. Each trigram is three brushed bars, whole (阳爻) or
+     broken in two (阴爻), each bar one stroke of a loaded brush with a pressed start and a dry
+     end, about 150 pixels long and 26 thick, the three bars of a trigram 14 pixels apart. The
+     eight stand evenly round the middle (512, 512), their bars lying across the radius (the
+     lowest bar nearest the middle), the middle of each trigram 380 pixels out, so the ring
+     runs from about 310 to 470 pixels out and its inner 300 pixels are empty. In the order of
+     先天八卦, clockwise from the top: 乾 ☰, 巽 ☴, 坎 ☵, 艮 ☶, 坤 ☷, 震 ☳, 离 ☲, 兑 ☱. A thin
+     brushed circle may run just outside them, broken in places; no other mark, no characters.
+     It turns slowly against the koi, so no trigram needs to be upright.
+   What came, both painted as ink strokes and set to these measures in code:
+   - `taiji.webp`, 102 KB: the dark half a mid wash capped at 65%, mottled, with dry streaks down
+     its tail on the left; its bare eye is clean paper 90 pixels across at (512, 292) and the
+     dark eye about 92 across at (512, 732), up to 95%. The brushed outline lies 440 pixels out,
+     broken along the right and lower sides, with two wet blots on it (at the top and at the
+     lower right) that reach about 455 out. Weak points: the outline is thin and pale (about 15%
+     to 30%), so at 60% it nearly goes; the wash is softened by about a pixel to fit the budget,
+     so its dry streaks are less crisp than a brush leaves them.
+   - `bagua.webp`, 105 KB: the eight trigrams in the order asked, clockwise from the top, each
+     bar 150 pixels long (a broken one two dabs of 66 with 18 between), 40 pixels from one bar
+     to the next, the middle bar 380 out; the ink lies from about 320 to 440 out and the inner
+     300 are empty. A thin brushed circle runs 478 out, broken in places, with wet blots
+     at the top, the lower left and the lower right. Weak points: each bar tapers from a pressed
+     head to a dry tail, so the bars are 26 thick only at the head; the short dabs of the broken
+     bars are fuzzier than the whole ones; heads point either way at random.
 1. **The dragon** of the Dragon Gate, on "The dragon sheet" below: all seven are delivered and in
    use; what came out is in each look's table (the water's with its dragon boat). In use too:
    ukiyo-e's second version, under the first one's name, drawn at its true

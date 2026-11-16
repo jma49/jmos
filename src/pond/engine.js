@@ -2428,16 +2428,26 @@ function leapNow() {
 // koi and the gold one are its two fish: they swim head to tail round one point, half the figure's width
 // apart, and under them the figure itself comes up in ink wash (a picture, ink/taiji), turned so that its
 // two eyes stay where the two koi are, and goes again before they part. The rest keep to a wide ring
-// round it, the other way about. It earns an idle seal.
+// round it, the other way about, and round them the eight trigrams turn slowly (ink/bagua). Both
+// pictures are faint, as if they showed through the paper. It earns an idle seal.
 const CHEAT = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
 const TAIJI_PIC = '/pond/ink/taiji.webp',
+  // the eight trigrams in a ring round it, on a picture of their own: they turn slowly the other way.
+  // The ring's outer edge is 940 of its 1024 across, and 1.6 times the taiji's radius from the middle,
+  // so the whole of it stands on the page.
+  BAGUA_PIC = '/pond/ink/bagua.webp',
+  BAGUA_FILL = 940 / 1024,
+  BAGUA_REACH = 1.6,
+  // both are faint: a figure showing through the paper, not printed on it
+  TAIJI_INK = 0.62,
+  BAGUA_INK = 0.46,
   // the picture's figure is 880 of its 1024 across; its light eye (the visitor's koi) is straight below its middle
   TAIJI_FILL = 880 / 1024,
   TAIJI_EYE = Math.PI / 2;
 const taiji = { until: 0, at: 0, t: 0, keys: [], k: 0, a: 0, x: 0, y: 0, pic: false };
 const taijiOn = () => performance.now() < taiji.until && look === 'ink';
 // the figure's middle and its radius
-const taijiAt = () => [W * (big ? 0.66 : 0.5), H * 0.5, Math.min(W, H) * (big ? 0.3 : 0.36)];
+const taijiAt = () => [W * (big ? 0.66 : 0.5), H * 0.5, Math.min(W, H) * 0.3];
 function taijiSpot(k) {
   if (!taijiOn()) return null;
   const [cx, cy, R] = taijiAt(),
@@ -2446,7 +2456,8 @@ function taijiSpot(k) {
     // (timed in frames drawn, as a look's arrival is: where frames come slowly the koi could not keep up
     // with a place that ran on by the clock)
     t = taiji.t,
-    r = inner ? R / 2 : R * 1.34,
+    // (the rest swim among the trigrams)
+    r = inner ? R / 2 : R * 1.3,
     // where it should be on its ring now, and a little further on, so it is always swimming round
     at = inner ? t * 0.55 + (k === host ? Math.PI : 0) : -t * 0.22 + (rest.indexOf(k) / Math.max(1, rest.length)) * TAU,
     lead = inner ? 0.55 : -0.4;
@@ -2460,6 +2471,7 @@ function taijiNow() {
   if (!taiji.pic) {
     taiji.pic = true;
     $('#taiji').style.backgroundImage = `url(${TAIJI_PIC})`;
+    $('#bagua').style.backgroundImage = `url(${BAGUA_PIC})`;
   }
   plip('ink', 1);
   invalidate();
@@ -2468,7 +2480,8 @@ function taijiNow() {
 // The figure under the two koi: it shows once they have come to their places across from each other, is
 // turned to the line between them, and fades before the circle ends. Written to the page only while it shows.
 function stepTaiji(raw) {
-  const el = $('#taiji');
+  const el = $('#taiji'),
+    ring = $('#bagua');
   if (!taiji.pic || (!taijiOn() && taiji.k <= 0)) return;
   taiji.t += Math.min(raw, 0.05);
   const [cx, cy, R] = taijiAt(),
@@ -2476,7 +2489,7 @@ function stepTaiji(raw) {
     left = (taiji.until - performance.now()) / 1000,
     there = taijiOn() && left > 4 && Math.abs(apart - R) < R * 0.45 && Math.hypot((you.x + host.x) / 2 - cx, (you.y + host.y) / 2 - cy) < R * 0.4;
   taiji.k = clamp(taiji.k + raw * (there ? 0.22 : -0.4), 0, 1);
-  if (taiji.k <= 0) return void (el.style.opacity = '0');
+  if (taiji.k <= 0) return void (el.style.opacity = ring.style.opacity = '0');
   // (turned by the shorter way toward the line from the gold koi to the visitor's, so it never spins back)
   let da = Math.atan2(you.y - host.y, you.x - host.x) - TAIJI_EYE - taiji.a;
   da -= Math.round(da / TAU) * TAU;
@@ -2487,10 +2500,15 @@ function stepTaiji(raw) {
   const side = (R * 2) / TAIJI_FILL,
     k = taiji.k * taiji.k * (3 - 2 * taiji.k);
   el.style.width = el.style.height = `${side.toFixed(1)}px`;
-  // (never quite full: the gold koi swims in the dark half, and must still show through it)
-  el.style.opacity = (k * 0.88).toFixed(3);
+  el.style.opacity = (k * TAIJI_INK).toFixed(3);
   // (it comes up a little small and opens out, as ink does into wet paper)
   el.style.transform = `translate(${(taiji.x - side / 2).toFixed(1)}px, ${(taiji.y - side / 2).toFixed(1)}px) rotate(${taiji.a.toFixed(4)}rad) scale(${(0.9 + 0.1 * k).toFixed(4)})`;
+  // the trigrams: about the same middle, a little after the taiji and a little fainter, turning the other way
+  const wide = (R * 2 * BAGUA_REACH) / BAGUA_FILL,
+    kr = clamp(taiji.k * 1.4 - 0.4, 0, 1);
+  ring.style.width = ring.style.height = `${wide.toFixed(1)}px`;
+  ring.style.opacity = (kr * kr * (3 - 2 * kr) * BAGUA_INK).toFixed(3);
+  ring.style.transform = `translate(${(taiji.x - wide / 2).toFixed(1)}px, ${(taiji.y - wide / 2).toFixed(1)}px) rotate(${(-taiji.t * 0.07).toFixed(4)}rad)`;
 }
 // The keys are read by where they are on the keyboard (`code`), not by what they type: with a Chinese or
 // Japanese input method on, B and A type nothing of their own. And they are read on the way down to
