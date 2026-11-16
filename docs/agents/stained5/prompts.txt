@@ -1,6 +1,6 @@
 Built-in image_gen was used. The owner's reference photograph was actually passed via referenced_image_paths on EVERY call.
 Reference: the owner-supplied two-light church-window photograph (kept out of git).
-The tool exposes no separate quality or size setting. Highest quality and requested aspect were specified in prompts; files are copied unchanged at native size.
+The tool exposes no separate quality or size setting. Highest quality and requested aspect were specified in prompts; original PNG files were saved unchanged at native size; the review copies here are quality-82 WebP at the same dimensions.
 
 wide-1.png
 Reference actually passed: YES
@@ -47,4 +47,6 @@ Each lancet has a narrow saturated jewel border and a traditional gold-painted a
 tall-3.png
 Reference actually passed: YES
 Exact prompt:
-undefined
+Use case: stylized-concept. Highest-quality native 9:16 PORTRAIT stained-glass church background, full-bleed perfectly front-on architectural elevation. Use input photograph as actual material/style reference: broad pointed lancets with gold-yellow ground and deep blue pieces, saturated ruby/cobalt/green/purple borders, thick black stone and lead, large painted glass with bold dark lines and gentle shading, transmitted light strongest within pane centers. No copying figures. NO people, saints, faces, hands, robes, birds, animals, fish, plants, text, lettering or symbols anywhere, including borders.
+Two BROAD pointed lancets, equal and symmetric, filling nearly all available width, heavy central black stone mullion, narrow outer black stone, low green foot band at y=95%. Painted GOLD architectural canopy arches at their heads y=43%, jewel borders. Lancet fields are EMPTY calm deep warm honey-gold and occasional deep cobalt-blue geometric diaper, a coarse sparse lattice only TWO diamonds across each lancet and five in height. No tiny decorative motifs, no flowers, no stars, no mottled lava or cloudy molten stone; subtle thin antique-glass waviness and controlled center glow. Muted rich amber-gold rather than lemon yellow, less saturated bright highlights than a glowing fantasy illustration.
+Above and between lancets is a TRUE CIRCLE round light centered x=50%, y=34%, diameter about 36% OF IMAGE WIDTH. It MUST have identical horizontal and vertical physical diameter on the image, no oval. Gold-to-orange radial sun rays ONLY, no bird or face. Two SMALL geometric shoulder tracery lights, one each side. Broad black outer pointed stone arch enclosing everything. Reserve y=0 through 22% COMPLETELY for dark quiet near-black stone underneath the outer pointed arch's apex: no luminous glass in this region, a title will be placed here later. Circle top must stay below y=23%. No perspective, all verticals parallel. Keep architectural authenticity and reference's graphic painted-glass hand, not sculpted 3D canopies.
