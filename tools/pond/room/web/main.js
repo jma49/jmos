@@ -8,23 +8,23 @@
 //
 // Query: ?view=laptop|arm|tree|keys (default hero, the seat), ?still (no drift),
 // ?bloom=0, ?exposure=0.3 (stops).
-import * as THREE from "three";
-import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
-import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
-import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
-import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
-import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
-import { ShaderPass } from "three/addons/postprocessing/ShaderPass.js";
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 
 const query = new URLSearchParams(location.search);
-const canvas = document.getElementById("room");
+const canvas = document.getElementById('room');
 // Blender's axes (z up, the seat looks toward -y) to three's (y up)
 const bl = (p) => new THREE.Vector3(p[0], p[2], -p[1]);
 
 const renderer = new THREE.WebGLRenderer({
   canvas,
   antialias: false,
-  powerPreference: "high-performance",
+  powerPreference: 'high-performance'
 });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.toneMapping = THREE.NoToneMapping; // the last pass does it, as Blender's AgX
@@ -65,21 +65,15 @@ function bakeLit(material, lo, stops) {
     // With multisampling a pixel's centre can lie outside a thin triangle that only touches it, and
     // the vertex colour is then extrapolated; decoded as a logarithm that makes white specks along
     // every bevel. Sampling at the centroid keeps it inside the triangle.
-    shader.vertexShader = shader.vertexShader.replace(
-      "#include <color_pars_vertex>",
-      CENTROID_COLOR.replace(/INOUT/g, "varying"),
-    );
+    shader.vertexShader = shader.vertexShader.replace('#include <color_pars_vertex>', CENTROID_COLOR.replace(/INOUT/g, 'varying'));
     shader.fragmentShader =
-      "uniform float bakeLo;\nuniform float bakeStops;\nuniform float bakeOcclusion;\n" +
+      'uniform float bakeLo;\nuniform float bakeStops;\nuniform float bakeOcclusion;\n' +
       DECODE +
       shader.fragmentShader
+        .replace('#include <color_pars_fragment>', CENTROID_COLOR.replace(/INOUT/g, 'varying'))
+        .replace('#include <color_fragment>', '') // the vertex colour is light, not paint
         .replace(
-          "#include <color_pars_fragment>",
-          CENTROID_COLOR.replace(/INOUT/g, "varying"),
-        )
-        .replace("#include <color_fragment>", "") // the vertex colour is light, not paint
-        .replace(
-          "#include <aomap_fragment>",
+          '#include <aomap_fragment>',
           /* glsl */ `
         #if defined( USE_LIGHTMAP )
           vec3 bakedLight = bakedDecode( texture2D( lightMap, vLightMapUv ).rgb, bakeLo, bakeStops );
@@ -105,7 +99,7 @@ function bakeLit(material, lo, stops) {
         #ifdef USE_CLEARCOAT
           clearcoatSpecularDirect = min( clearcoatSpecularDirect, vec3( 1.0 ) );
         #endif
-      `,
+      `
         );
   };
   material.customProgramCacheKey = () => `baked ${lo} ${stops}`;
@@ -126,7 +120,7 @@ const FinishShader = {
     curve: { value: null },
     curveSize: { value: 256 },
     log2Min: { value: -12.47393 },
-    log2Max: { value: 4.026069 },
+    log2Max: { value: 4.026069 }
   },
   vertexShader: /* glsl */ `
     varying vec2 vUv;
@@ -151,7 +145,7 @@ const FinishShader = {
       c = pow( clamp( c, 0.0, 1.0 ), vec3( 1.0 / 2.2 ) );
       c += ( hash( gl_FragCoord.xy ) - 0.5 ) / 255.0;
       gl_FragColor = vec4( c, 1.0 );
-    }`,
+    }`
 };
 
 // ---------------------------------------------------------------------------------------------
@@ -159,30 +153,20 @@ const FinishShader = {
 // ---------------------------------------------------------------------------------------------
 
 const textures = new THREE.TextureLoader();
-const loadTexture = (url) =>
-  new Promise((resolve, reject) =>
-    textures.load(url, resolve, undefined, reject),
-  );
+const loadTexture = (url) => new Promise((resolve, reject) => textures.load(url, resolve, undefined, reject));
 const gltfLoader = new GLTFLoader();
-gltfLoader.setDRACOLoader(
-  new DRACOLoader().setDecoderPath(
-    "./node_modules/three/examples/jsm/libs/draco/gltf/",
-  ),
-);
+gltfLoader.setDRACOLoader(new DRACOLoader().setDecoderPath('./node_modules/three/examples/jsm/libs/draco/gltf/'));
 
 /** The Samsung's picture: a canvas, so a map can be drawn on it later. For now the calm navy of the offline render. */
 function mapCanvas() {
-  const c = document.createElement("canvas");
+  const c = document.createElement('canvas');
   c.width = 1024;
   c.height = 576;
-  const g = c.getContext("2d");
-  const srgb = (v) =>
-    Math.round(
-      255 * (v <= 0.0031308 ? v * 12.92 : 1.055 * v ** (1 / 2.4) - 0.055),
-    );
+  const g = c.getContext('2d');
+  const srgb = (v) => Math.round(255 * (v <= 0.0031308 ? v * 12.92 : 1.055 * v ** (1 / 2.4) - 0.055));
   const stops = [
     [0, [0.02, 0.052, 0.165]],
-    [1, [0.006, 0.016, 0.06]],
+    [1, [0.006, 0.016, 0.06]]
   ];
   // scene.py's ramp runs over distance in the picture's own 0..1 square, out to 0.75; draw a
   // circle in that square and let the canvas stretch it
@@ -193,7 +177,7 @@ function mapCanvas() {
   for (let i = 0; i <= 8; i++) {
     const t = i / 8;
     const rgb = stops[0][1].map((a, k) => a + (stops[1][1][k] - a) * t);
-    grad.addColorStop(t, `rgb(${rgb.map(srgb).join(",")})`);
+    grad.addColorStop(t, `rgb(${rgb.map(srgb).join(',')})`);
   }
   g.fillStyle = grad;
   g.fillRect(0, 0, 1, 1);
@@ -202,16 +186,14 @@ function mapCanvas() {
 }
 
 async function load() {
-  const manifest = await (await fetch("./manifest.json")).json();
+  const manifest = await (await fetch('./manifest.json')).json();
   const lm = manifest.lightmaps;
   const [gltf, backdropTex, ...lightTex] = await Promise.all([
-    gltfLoader.loadAsync("./room.glb"),
-    loadTexture("./" + manifest.backdrop.file),
-    ...Object.values(lm.files).map((f) => loadTexture("./" + f)),
+    gltfLoader.loadAsync('./room.glb'),
+    loadTexture('./' + manifest.backdrop.file),
+    ...Object.values(lm.files).map((f) => loadTexture('./' + f))
   ]);
-  const lightMaps = Object.fromEntries(
-    Object.keys(lm.files).map((k, i) => [k, lightTex[i]]),
-  );
+  const lightMaps = Object.fromEntries(Object.keys(lm.files).map((k, i) => [k, lightTex[i]]));
   const maxAniso = renderer.capabilities.getMaxAnisotropy();
   for (const t of Object.values(lightMaps)) {
     t.flipY = false; // as the GLB's own textures
@@ -226,11 +208,7 @@ async function load() {
   const done = new Set();
   room.traverse((o) => {
     if (!o.isMesh) return;
-    const owner = lightMaps[o.name]
-      ? o.name
-      : o.parent && lightMaps[o.parent.name]
-        ? o.parent.name
-        : null;
+    const owner = lightMaps[o.name] ? o.name : o.parent && lightMaps[o.parent.name] ? o.parent.name : null;
     named[o.name] = o;
     const m = o.material;
     if (m.sheen) m.sheen = settings.sheen;
@@ -269,7 +247,7 @@ async function load() {
     transparent: true,
     blending: THREE.AdditiveBlending,
     depthWrite: false,
-    side: THREE.DoubleSide,
+    side: THREE.DoubleSide
   });
   glass.renderOrder = 2;
 
@@ -289,39 +267,23 @@ async function load() {
         lo: { value: b.lo },
         stops: { value: b.stops },
         tint: {
-          value: new THREE.Color().setRGB(
-            0.93 * 0.936,
-            0.97 * 0.936,
-            0.96 * 0.936,
-            THREE.LinearSRGBColorSpace,
-          ),
-        },
+          value: new THREE.Color().setRGB(0.93 * 0.936, 0.97 * 0.936, 0.96 * 0.936, THREE.LinearSRGBColorSpace)
+        }
       },
-      vertexShader:
-        "varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 ); }",
+      vertexShader: 'varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 ); }',
       fragmentShader:
         DECODE +
-        "uniform sampler2D map; uniform float lo, stops; uniform vec3 tint; varying vec2 vUv;" +
-        "void main() { gl_FragColor = vec4( bakedDecode( texture2D( map, vUv ).rgb, lo, stops ) * tint, 1.0 ); }",
-    }),
+        'uniform sampler2D map; uniform float lo, stops; uniform vec3 tint; varying vec2 vUv;' +
+        'void main() { gl_FragColor = vec4( bakedDecode( texture2D( map, vUv ).rgb, lo, stops ) * tint, 1.0 ); }'
+    })
   );
-  backdrop.name = "backdrop";
-  backdrop.position
-    .copy(seat)
-    .add(aim.clone().sub(seat).normalize().multiplyScalar(b.distance));
+  backdrop.name = 'backdrop';
+  backdrop.position.copy(seat).add(aim.clone().sub(seat).normalize().multiplyScalar(b.distance));
   backdrop.lookAt(seat);
   scene.add(backdrop);
 
   // the lamp: a warm point light. It only adds highlights; its pool on the desk is baked.
-  const lamp = new THREE.PointLight(
-    new THREE.Color().setRGB(
-      ...manifest.lamp.color,
-      THREE.LinearSRGBColorSpace,
-    ),
-    manifest.lamp.watts / (4 * Math.PI),
-    0,
-    2,
-  );
+  const lamp = new THREE.PointLight(new THREE.Color().setRGB(...manifest.lamp.color, THREE.LinearSRGBColorSpace), manifest.lamp.watts / (4 * Math.PI), 0, 2);
   lamp.position.copy(bl(manifest.lamp.position));
   // one shadow map, drawn once: the shade and whatever stands in the way keep the lamp's glints
   // off what it cannot see (the stem above the shade, the far side of the mug)
@@ -334,13 +296,7 @@ async function load() {
   lamp.shadow.needsUpdate = true;
   room.traverse((o) => {
     if (!o.isMesh) return;
-    const plain = ![
-      "lamp_bulb",
-      "window_glass",
-      "samsung_screen",
-      "dell_screen",
-      "macbook_screen",
-    ].includes(o.name);
+    const plain = !['lamp_bulb', 'window_glass', 'samsung_screen', 'dell_screen', 'macbook_screen'].includes(o.name);
     o.castShadow = plain;
     o.receiveShadow = plain;
   });
@@ -357,10 +313,10 @@ const view = {
   position: new THREE.Vector3(),
   aim: new THREE.Vector3(),
   lens: 25,
-  sensor: 36,
+  sensor: 36
 };
 const drift = { x: 0, y: 0, tx: 0, ty: 0, reach: [0.035, 0.02] }; // metres, sideways and up
-const still = query.has("still");
+const still = query.has('still');
 
 function setView(manifest, name) {
   const v = manifest.views[name] || manifest.views.hero;
@@ -373,9 +329,7 @@ function placeCamera() {
   const aspect = camera.aspect;
   // Blender fits the sensor's width to the longer side of the picture
   const half = view.sensor / 2 / view.lens;
-  camera.fov = THREE.MathUtils.radToDeg(
-    2 * Math.atan(aspect >= 1 ? half / aspect : half),
-  );
+  camera.fov = THREE.MathUtils.radToDeg(2 * Math.atan(aspect >= 1 ? half / aspect : half));
   camera.updateProjectionMatrix();
   const forward = view.aim.clone().sub(view.position).normalize();
   const right = forward.clone().cross(camera.up).normalize();
@@ -391,31 +345,23 @@ function placeCamera() {
 // Go.
 // ---------------------------------------------------------------------------------------------
 
-const composer = new EffectComposer(
-  renderer,
-  new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: 4 }),
-);
+const composer = new EffectComposer(renderer, new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: 4 }));
 composer.addPass(new RenderPass(scene, camera));
 // nothing brighter than this reaches the bloom: the inside of the lamp's shade is some hundred times the sky
 const ClampShader = {
   uniforms: { tDiffuse: { value: null }, limit: { value: 10 } },
   vertexShader: FinishShader.vertexShader,
   fragmentShader:
-    "uniform sampler2D tDiffuse; uniform float limit; varying vec2 vUv; void main() { gl_FragColor = vec4( clamp( texture2D( tDiffuse, vUv ).rgb, 0.0, limit ), 1.0 ); }",
+    'uniform sampler2D tDiffuse; uniform float limit; varying vec2 vUv; void main() { gl_FragColor = vec4( clamp( texture2D( tDiffuse, vUv ).rgb, 0.0, limit ), 1.0 ); }'
 };
 composer.addPass(new ShaderPass(ClampShader));
-const bloom = new UnrealBloomPass(
-  new THREE.Vector2(1, 1),
-  Number(query.get("bloom") ?? 0.05),
-  Number(query.get("radius") ?? 0.1),
-  1.2,
-);
+const bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), Number(query.get('bloom') ?? 0.05), Number(query.get('radius') ?? 0.1), 1.2);
 // Blender's bloom takes only what exceeds its threshold; the pass here would take a bright pixel
 // whole, and the sky would fog the tree. A wide knee comes to much the same as the excess.
 bloom.highPassUniforms.smoothWidth.value = 1.5;
 if (bloom.strength > 0) composer.addPass(bloom);
 const finish = new ShaderPass(FinishShader);
-finish.uniforms.exposure.value = 2 ** Number(query.get("exposure") ?? 0);
+finish.uniforms.exposure.value = 2 ** Number(query.get('exposure') ?? 0);
 composer.addPass(finish);
 
 let dirty = true;
@@ -428,8 +374,8 @@ function resize() {
   camera.aspect = w / h;
   dirty = true;
 }
-window.addEventListener("resize", resize);
-window.addEventListener("pointermove", (e) => {
+window.addEventListener('resize', resize);
+window.addEventListener('pointermove', (e) => {
   if (still) return;
   drift.tx = (e.clientX / window.innerWidth) * 2 - 1;
   drift.ty = -((e.clientY / window.innerHeight) * 2 - 1);
@@ -443,7 +389,7 @@ load()
       look.curve.length,
       1,
       THREE.RedFormat,
-      THREE.HalfFloatType,
+      THREE.HalfFloatType
     );
     curve.minFilter = curve.magFilter = THREE.LinearFilter;
     curve.needsUpdate = true;
@@ -451,9 +397,8 @@ load()
     finish.uniforms.curveSize.value = look.curve.length;
     finish.uniforms.log2Min.value = look.log2Min;
     finish.uniforms.log2Max.value = look.log2Max;
-    if (!query.has("exposure"))
-      finish.uniforms.exposure.value = 2 ** look.exposure;
-    setView(world.manifest, query.get("view") || "hero");
+    if (!query.has('exposure')) finish.uniforms.exposure.value = 2 ** look.exposure;
+    setView(world.manifest, query.get('view') || 'hero');
     resize();
     placeCamera();
 
@@ -463,22 +408,18 @@ load()
     const pmrem = new THREE.PMREMGenerator(renderer);
     world.glass.visible = false;
     const env = pmrem.fromScene(scene, 0, 0.01, 60, {
-      position: bl(PROBE.room),
+      position: bl(PROBE.room)
     });
     const envLaptop = pmrem.fromScene(scene, 0, 0.03, 60, {
-      position: bl(PROBE.laptop),
+      position: bl(PROBE.laptop)
     });
     world.glass.visible = true;
     scene.environment = env.texture;
     world.named.macbook_screen.parent.traverse((o) => {
-      if (o.name !== "macbook" && o.parent.name !== "macbook") return;
+      if (o.name !== 'macbook' && o.parent.name !== 'macbook') return;
       if (o.isMesh) {
         o.material = o.material.clone();
-        bakeLit(
-          o.material,
-          world.manifest.vertexLight.lo,
-          world.manifest.vertexLight.stops,
-        );
+        bakeLit(o.material, world.manifest.vertexLight.lo, world.manifest.vertexLight.stops);
         o.material.envMap = envLaptop.texture;
       }
     });
@@ -500,7 +441,7 @@ load()
         dirty = false;
         placeCamera();
         composer.render();
-        document.body.dataset.ready = "1";
+        document.body.dataset.ready = '1';
       }
       requestAnimationFrame(frame);
     }
@@ -525,11 +466,10 @@ load()
       },
       redraw: () => {
         dirty = true;
-      },
+      }
     };
   })
   .catch((e) => {
     console.error(e);
-    document.getElementById("note").textContent =
-      "the room did not load: " + e.message;
+    document.getElementById('note').textContent = 'the room did not load: ' + e.message;
   });
