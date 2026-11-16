@@ -35,32 +35,15 @@ what is left, and what was learnt. What is open now is section 0.
   青花's, Dunhuang's, Monet's, the star chart's figure, the relief's pair); the second and third
   sheets of seals, so every seal is cut; painted clues for Monet's pond, the bowl, ukiyo-e and the
   star chart; the midge the spider hunts. Each was looked at in the pond at 1280 × 800.
-- **Still asked: a whole new look, stained glass.** Jincheng: the blueprint is plain beside the
-  others, and the pond should gather the main schools of art, so stained glass takes its place. Its
-  kit is "Stained glass" in the brief, eight lines in the order to make them: the bed first (it is
-  enough to judge the look by), then the koi sheet and the dragon, then the rest. The cloud thread
-  builds the look as the pictures come and keeps the blueprint on show until the bed and the koi
-  are in.
+- **Dropped (2026-11-16): the stained glass look.** Jincheng: "抛弃玻璃这个风格吧。先做主线".
+  Stop all work on it; its pictures are removed and the blueprint stays. Why is in the brief
+  under "Stained glass: dropped". No new look is asked for now.
 - **Asked again, where a picture can be bettered:** the cloud thread writes what to redo here and
   in the brief after seeing a picture in the pond; a second version takes the first one's name, and
   its table says what changed. Done so far, and in use: ukiyo-e's dragon (true proportions, fierce
   eyes, antlers, larger legs) and Monet's clue (its rim one loaded stroke). Nothing is open now.
-  **Open now, for stained glass: the whole kit, again.** Jincheng saw the first kit move in a demo
-  and does not like it: the bed is too busy and not elegant, the dragon is ugly, and the level is
-  far below ink's and Dunhuang's. He wants the feeling of a Gothic church's glass, and the art and
-  taste of every look brought to one level. The kit in the brief now opens with what that means
-  (restraint, geometry, painted line, age, one hand) and asks again for the bed, the koi, the
-  dragon and the lilies. Make the bed first and stop there for a look: the rest follows only once
-  the bed is right. The clue, what drifts, the dove and the spider are redone last, in the same
-  hand.
-  **The bed is chosen (2026-11-16): Jincheng took wide-2 and tall-2 of the six candidates** (the
-  gold diaper ground, nearest his photograph). Next, in the brief under "Stained glass: the bed is
-  chosen": promote that pair to `bed` and `bed-tall` as they are (no new generation), remove the
-  review pictures, then make the koi in white, ruby and cobalt glass for a gold ground and stop
-  for a look; the dragon and the lilies after.
 - **Delivered and in use: the ten strokes of the second ending** (item 6 of "Asked for now"; the
   design is decision 0028): one stroke of 真 for each painted look, and the seal 真 on `seals-4`.
-  Stained glass's stroke is kept for when that look is built.
 - **Handing a picture back:** commit it under `public/pond/<look>/` with the name the brief gives;
   run `node scripts/check-public-sizes.mjs` (200 KB a file); add its line to that look's table of
   pictures in pond.md, with what came out and what is weak; pull with rebase, and push. Leave the

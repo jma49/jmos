@@ -58,16 +58,6 @@ export const EXCEPTIONS = new Map([
         '380 KB; lower, the impasto smears. It is fetched only when that one look is first chosen on a large ' +
         'window (a small one takes bed-1280.webp), never on a first visit.'
     }
-  ],
-  [
-    'pond/stained/bed.webp',
-    {
-      bytes: 300 * KB,
-      reason:
-        'The window under the pond’s stained glass look, which fills the page: 2048 × 1152. At quality 75 it is ' +
-        '271 KB; lower, the fine line painted on its gold quarries smears. It is fetched only when that one ' +
-        'look is chosen, never on a first visit.'
-    }
   ]
 ]);
 
