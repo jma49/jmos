@@ -18,6 +18,10 @@ import {
   markSealed,
   mayHint,
   layStroke,
+  fade,
+  left,
+  LEAVES,
+  nameless,
   mayLay,
   readAlbum,
   sealCell,
@@ -192,6 +196,38 @@ describe('the signature', () => {
     expect(albumHTML(a, all, 'en')).toContain(SEAL_WORDS.en.signPress);
     expect(albumHTML(found, all, 'en')).toContain('0 / 10');
     expect(albumHTML(emptyAlbum(), all, 'en')).not.toContain('class="strokes"');
+  });
+});
+
+describe('no name', () => {
+  const all = volumes(true),
+    day = '2026-11-15',
+    next = '2026-11-16';
+  let own = emptyAlbum();
+  for (const id of STROKES) own = stamp(own, id, day, all).album;
+  own = stamp(own, 'true', day, all).album;
+  it('begins the day after the seal: the gold koi leaves three looks, then six, then all ten, a solar term apart', () => {
+    expect(left(emptyAlbum(), next, 5)).toEqual([]);
+    expect(left(own, day, 0)).toEqual([]);
+    expect(left(own, next, 0)).toEqual(STROKES.slice(0, 3));
+    expect(left(own, next, 1)).toEqual(STROKES.slice(0, 6));
+    expect(left(own, next, 2)).toEqual(STROKES);
+    expect(left(own, next, 9)).toEqual(STROKES);
+    expect(LEAVES.at(-1)).toBe(STROKES.length);
+  });
+  it('fades a look once, only where the gold koi has left, and is kept and cleared with the album', () => {
+    expect(fade(own, 'ink', day, 0).fresh).toBe(false);
+    expect(fade(own, 'relief', next, 0).fresh).toBe(false);
+    const one = fade(own, 'ink', next, 0);
+    expect(one.fresh).toBe(true);
+    expect(fade(one.album, 'ink', next, 0).fresh).toBe(false);
+    expect(readAlbum(writeAlbum(one.album)).faded).toEqual({ ink: next });
+    expect(albumHTML(one.album, all, 'en')).toContain('data-found data-faded data-id="ink"');
+    expect(clearSeals(one.album).faded).toEqual({});
+    let a = own;
+    for (const id of STROKES) a = fade(a, id, next, 2).album;
+    expect(nameless(a)).toBe(true);
+    expect(nameless(one.album)).toBe(false);
   });
 });
 

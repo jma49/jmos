@@ -39,7 +39,10 @@ import {
   volumes,
   walked,
   WAY,
-  writeAlbum
+  writeAlbum,
+  fade,
+  left,
+  nameless
 } from './seals';
 import { FPS, IDLE_AFTER, due, learnBeat, simSteps } from './clock.js';
 import { PERF, add, count, frameDone, span } from './perf.js';
@@ -3580,16 +3583,19 @@ function stepInk(raw) {
       clueNow();
     }
   } else if (inkR > 0) {
-    inkR = Math.max(0, inkR - raw * inkMax * (0.4 + k * 1.3));
+    // (a look that fades, in the third ending, draws in slowly)
+    inkR = Math.max(0, inkR - raw * inkMax * (fading ? 0.07 : 0.4 + k * 1.3));
     if (inkR <= 0) {
       top = 'water';
       base = 'water';
+      if (fading) fadedNow();
       if (lookNext) setLook(...lookNext);
     }
   }
   // (ink's slow time picks up for the koi's circle, so they gather in seconds and not minutes)
   const goal = inkOn ? (k < 0.5 ? 0.06 : performance.now() < taiji.until ? 0.9 : 0.32) : look === 'glow' ? 0.7 : top === 'ink' && inkR > 0 ? 0.25 : 1;
-  timeScale += (goal - timeScale) * Math.min(1, raw * (inkOn && k < 0.5 ? 9 : 1.6));
+  // (a look left alone after the gold koi has gone slows as the wait goes on)
+  timeScale += (goal * (1 - 0.7 * stillK) - timeScale) * Math.min(1, raw * (inkOn && k < 0.5 ? 9 : 1.6));
 }
 let calmNow = 1,
   calmEdge = 1,
@@ -3629,7 +3635,11 @@ if (PERF)
       return !!dragonPic() && (riseDragon(kois.find((k) => k !== you) || you, pin, dive), true);
     },
     race: () => ({ fest: pv.fest, k: (performance.now() / 1000 - pv.boatAt) / 40, strokes: pv.strokes, won: pv.won }),
-    pads: () => padSpots.map((q) => [Math.round(q.x), Math.round(q.y), Math.round(q.r)])
+    pads: () => padSpots.map((q) => [Math.round(q.x), Math.round(q.y), Math.round(q.r)]),
+    // the third ending, for a tool: the looks the gold koi has left, how far the wait has gone, and the
+    // wait set as if the pond had been left alone for `sec` seconds
+    gone: () => ({ gone, stillK, fading, faded: Object.keys(album.faded), host: [host.shown, +host.alpha.toFixed(2), !!host.plain] }),
+    still: (sec) => (stillAt = performance.now() - sec * 1000)
   };
 function callDove() {
   if (!life || dove.state !== 'away') return;
@@ -5894,6 +5904,73 @@ function signedNow() {
   greetVisitor();
   setTimeout(() => reached('true'), 2500);
 }
+// No name (decision 0029), the third ending. After the seal 真 the gold koi leaves the looks, a few each
+// solar term (left() in seals.ts): in a look it has left it is not there. Such a look, left alone for
+// `STILL` seconds (no press, no pointer moved, no key), fades: the pond slows as the wait goes on, then
+// the look draws in slowly to the visitor's koi and the water is under it. Nothing says so. With all ten
+// faded the gold koi comes back, and it is no longer gold.
+const STILL = 45;
+// how many solar terms have begun up to a day: a count that only ever goes up, a year to the next
+function termNo(d) {
+  const i = Math.floor(yearToday(d));
+  // (the year's last two terms run into January and the start of February)
+  return (d.getFullYear() - (i >= 22 && d.getMonth() < 2 ? 1 : 0)) * 24 + i;
+}
+const termsSince = (day) => termNo(new Date()) - termNo(new Date(`${day}T12:00:00`));
+let gone = [],
+  stillAt = performance.now(),
+  stillK = 0,
+  fading = false;
+goneNow.due = 0;
+function goneNow() {
+  gone = 'true' in album.found ? left(album, dayOf(new Date()), termsSince(album.found.true)) : [];
+  if (nameless(album)) plainHost();
+}
+// the gold koi with no gold on it: the pale body every koi has under its colours
+function plainHost() {
+  if (!host || host.plain) return;
+  Object.assign(host, { plain: true, base: '#e9ece6', fin: 'rgba(228,234,230,0.55)', dot: '#e9ece6', patches: [], jit: [] });
+}
+for (const ev of ['pointerdown', 'pointermove', 'keydown', 'wheel', 'touchstart'])
+  addEventListener(ev, () => (stillAt = performance.now()), { capture: true, passive: true });
+function stepStill() {
+  const now = performance.now();
+  // (which looks it has left is worked out again now and then: a seal is stamped, a day or a term turns)
+  if (now > goneNow.due) {
+    goneNow();
+    goneNow.due = now + 20000;
+  }
+  const can =
+    look !== 'water' &&
+    base === look &&
+    gone.includes(look) &&
+    !(look in album.faded) &&
+    !fading &&
+    !document.hidden &&
+    !sheetOpen() &&
+    !dragon.d &&
+    now > taiji.until;
+  if (!can) stillAt = now;
+  const sec = (now - stillAt) / 1000;
+  // (the pond begins to slow a few seconds in, so the wait can be felt before it is over)
+  stillK = can ? clamp((sec - 6) / (STILL - 6), 0, 1) : 0;
+  // (it stays away while a look it has left is still drawing in)
+  if (host) host.shown = !gone.includes(look) && !(inkR > 0 && gone.includes(top)) && !(dragon.d && dragon.k === host);
+  if (!can || sec < STILL) return;
+  const r = fade(album, look, dayOf(new Date()), termsSince(album.found.true));
+  if (!r.fresh) return;
+  album = r.album;
+  save('pond-seals', writeAlbum(album));
+  fading = true;
+  setLook('water', [you.x, you.y]);
+}
+// (once the look has drawn in: the last of them brings the gold koi back, plain)
+function fadedNow() {
+  fading = false;
+  if (!nameless(album)) return;
+  plainHost();
+  greetVisitor();
+}
 // one quiet line on the water, by the visitor's koi, for a few seconds
 function whisper(text) {
   const el = $('#whisper');
@@ -6836,6 +6913,7 @@ function frame(now) {
   }
 }
 function tick1(raw) {
+  stepStill();
   stepInk(raw);
   // in ink, time runs slow: everything that moves is stepped by dt
   const dt = raw * timeScale;
