@@ -35,6 +35,10 @@ what is left, and what was learnt. What is open now is section 0.
   青花's, Dunhuang's, Monet's, the star chart's figure, the relief's pair); the second and third
   sheets of seals, so every seal is cut; painted clues for Monet's pond, the bowl, ukiyo-e and the
   star chart; the midge the spider hunts. Each was looked at in the pond at 1280 × 800.
+- **Asked now (2026-11-16): one picture, the taiji in ink wash** (`taiji.webp` in the ink folder;
+  item 0 of "Asked for now" in the brief). The koi's circle in ink is being made again so that the
+  two koi turn a real taiji; the cloud thread builds it meanwhile and tries it with a stand-in that
+  is never committed. Where the two eyes sit in the picture matters: keep to the places given.
 - **Dropped (2026-11-16): the stained glass look.** Jincheng: "抛弃玻璃这个风格吧。先做主线".
   Stop all work on it; its pictures are removed and the blueprint stays. Why is in the brief
   under "Stained glass: dropped". No new look is asked for now.

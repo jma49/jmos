@@ -745,6 +745,25 @@ flying thing seen from above (a crane or a butterfly for Dunhuang, a bee or a sw
 **Asked for now**, in this order. A thing the pond shows is asked for here and painted; it is not
 drawn in code, and what is still drawn in code that a picture would better is on this list too.
 
+0. **Asked now, first: the taiji in ink wash**, `taiji.webp` in the ink folder, for the koi's circle
+   (Jincheng: "做出惊艳感"; today the koi only gather and turn, and no figure shows). 1024 × 1024
+   with alpha, black only, its strength in the alpha, as ink's other pictures are; under 120 KB.
+   One taiji (太极图) painted wet in 写意 ink on nothing, centred, 880 pixels across:
+   - The dark half (阴) is one loaded wash of ink, not flat: darkest in its round head, thinning
+     and breaking to dry streaks toward its tail, its edge soft and a little bled, as wet ink
+     spreads on raw paper. Its eye is bare paper, a clean round about 90 pixels across.
+   - The light half (阳) is bare paper: only the thinnest grey wash at its outer edge, enough to
+     close the circle, and its eye one round dot of dark ink about 90 pixels across.
+   - The outer circle is one brushed line, about 10 pixels, uneven, broken once or twice.
+   - Set as the usual figure stands: the S upright, the dark half's head at the top and to the
+     left holding its paper eye at (512, 292), the light half's head at the bottom and to the
+     right holding its ink dot at (512, 732); the figure's middle at (512, 512). The two eyes'
+     places matter: the visitor's koi and the gold koi swim there, and the picture is turned to
+     follow them.
+   - It must look painted in one breath by the hand that painted the plum branch, not a printed
+     symbol: no hard vector edge, no even grey, no texture of paper in it (the pond has its own).
+   It is laid over the water multiplied, and fades in as the two koi come round.
+
 1. **The dragon** of the Dragon Gate, on "The dragon sheet" below: all seven are delivered and in
    use; what came out is in each look's table (the water's with its dragon boat). In use too:
    ukiyo-e's second version, under the first one's name, drawn at its true
