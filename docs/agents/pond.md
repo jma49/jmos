@@ -834,30 +834,50 @@ drawn in code, and what is still drawn in code that a picture would better is on
    pictures the site loads: put them in a new folder "tex" beside that script, as PNG (8 bit, sRGB
    for colour, linear for the rest), and the general rules below on alpha, margins and the 200 KB
    budget do not apply to them. Photographic, not painted: they must pass for the real material in
-   a dusk-lit render. No light or shadow baked in, evenly lit, no logo or text. The names, in the
+   a dusk-lit render. No light or shadow baked in, evenly lit, no logo or text (but the mug's own
+   lettering). The names, in the
    order they matter:
    - "desk-top" as three maps (albedo, roughness, normal), 4096 × 1638: the whole top of a desk
-     2.0 m by 0.8 m in oiled walnut, glued from staves about 9 cm wide running the long way, no
-     stave's figure repeated, a satin finish with faint wear where forearms rest along the front
-     edge. And "desk-end", 1024 × 256, albedo only: the end grain of the same staves.
-   - "floor-oak" (albedo, roughness, normal), 2048 × 2048, tiling on all four edges: oak planks
-     about 14 cm wide, matt, lengths staggered.
-   - "leaf-atlas" (albedo, alpha, and a translucency map), 1024 × 1024, a grid of 2 × 3: six
-     single leaves of one broad-leaved garden tree in late summer, seen flat, each a little
-     different, stalk at the bottom of its cell.
-   - "bark" (albedo, normal), 1024 × 2048, tiling: the furrowed bark of the same tree, grain
-     running up.
+     2.0 m by 0.8 m in a pale, warm oak with a fine straight grain, as an oak laminate has, in
+     planks about 25 cm wide running the long way, no plank's figure repeated, a satin finish
+     with faint wear where forearms rest along the front edge. And "desk-end", 1024 × 256,
+     albedo only: the edge band of the same top.
+   - "carpet" (albedo, normal), 2048 × 2048, tiling on all four edges: short-pile beige carpet,
+     its pile leaning a little this way and that. (The floor is carpet, not oak planks: the
+     "floor-oak" asked for before is no longer wanted.)
+   - "leaf-atlas" (albedo, alpha, and a translucency map), 2048 × 2048, a grid of 4 × 4, each
+     piece seen flat with its stalk at the bottom of its cell. Rows one to three: single
+     leaflets of a walnut's pinnate leaf (lance-oval, 6 to 9 cm, finely toothed), four a row,
+     each a little different, in spring (small, fresh yellow-green), summer (mid green) and
+     autumn (clear yellow, one or two going brown at the edge). Row four: two tufts of a
+     juniper's scale foliage (dense, cord-like, bright yellow-green at the tips and dark at the
+     foot), and two hanging sprays of a pepper tree's leaf (a thin stalk with twenty or so
+     narrow leaflets), one of them with a bunch of small pink-red berries.
+   - "bark-walnut", "bark-pepper" and "bark-juniper" (albedo, normal), each 1024 × 2048,
+     tiling, grain running up: a walnut's dark furrowed bark; a pepper tree's rough, gnarled
+     grey-brown bark; a juniper's reddish-brown bark peeling in strips.
+   - "lap-siding" (albedo, roughness, normal), 2048 × 1024, tiling along its length: painted
+     beige fibre-cement lap siding, seven boards lying level, each with a faint embossed
+     grain, weathered a little. And "turf" (albedo, normal), 1024 × 1024, tiling: dark green
+     artificial turf seen from above, short blades.
+   - "mug-wrap" (albedo with alpha), 2048 × 512, the print that goes round a cobalt-blue mug,
+     white on nothing: a large brush-script line "ON THE ROAD" and under it, small, "HAPPY
+     ANNIVERSARY", in the middle third of the picture. (The scene sets these words in a marker
+     font for now.)
+   - "plush-face" and "plush-pineapple" (albedo), each 1024 × 1024: for a black cat plush, the
+     embroidered face seen from the front (very large round white eyes with black pupils, a
+     small brown nose, on black), and the body's cloth, tiling: yellow with an orange
+     criss-cross and a dot in every diamond, as a pineapple. (The scene makes both from
+     geometry for now.)
    - "smudges", 2048 × 2048, one grey roughness map, tiling: fingerprints, wipe marks and a little
      dust as they sit on a glass screen and a trackpad; mostly clean, never an even pattern.
    - "mat" (normal), 1024 × 1024, tiling: the grain of a dark wool-felt desk mat. "linen"
      (normal), the same size, tiling: a plain linen weave for curtains.
-   - "outside", 8192 × 2048, opaque, a backdrop and not a surface: a back garden at dusk seen
-     from a ground-floor room, a lawn, a clipped hedge across it, the roofs of two or three
-     ordinary houses and more trees beyond, under a clear sky going from pale peach at the
-     horizon to grey-blue. No tree in the near ground (the scene has its own), no people, no
-     cars, nothing that places it in a particular town.
-     Not asked for: any maker's logo, and what the screens show (those are made here, from the
-     site's own map and windows).
+     Not asked for: any maker's logo, what the screens show (those are made here, from the
+     site's own map and windows), and a picture of the outside: the view through the window is
+     modelled in Blender (a balcony, junipers, a walnut, a pepper tree, a neighbour's roof) and
+     rendered once for each season, so the "outside" backdrop asked for before is no longer
+     wanted.
 
 **The round asked for before** (every line is already in a look's kit below, or is new there; make them
 in this order, commit each lot as it is done, and say in its table what came out):

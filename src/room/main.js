@@ -1,9 +1,10 @@
 // The room in the browser, for the page at /room (src/pages/room.astro; boot.ts starts it once it
 // knows there is WebGL). export.py (tools/pond/room) wrote everything this fetches, into
 // public/room/: room.glb (the indoor part), lm/*.webp (baked light for the big surfaces),
-// backdrop.webp (the garden behind the glass) and manifest.json (the seat camera, the lamp, how
-// light is encoded). The map's shapes and places are bundled with the code (us-map.json, which
-// tools/pond/room/web/build-map.mjs writes, and places.json).
+// backdrop-<season>.webp (what is outside the glass, one picture for each season) and
+// manifest.json (the seat camera, the lamp, how light is encoded, the seasons). The map's shapes
+// and places are bundled with the code (us-map.json, which tools/pond/room/web/build-map.mjs
+// writes, and places.json).
 //
 // All diffuse light is baked: light maps on the big surfaces, vertex colours on everything
 // else. What is live: reflections (an environment captured from the scene itself, and the
@@ -12,8 +13,14 @@
 // A press on the left screen brings the camera up to it (focusScreen); a press beside it, Escape
 // or the "back" control takes it to the seat again (unfocus). The map is only pressed from close.
 //
-// Query: ?view=laptop|arm|tree|keys (default hero, the seat), ?still (no drift),
-// ?bloom=0, ?exposure=0.3 (stops).
+// The window shows the season of the visitor's own date (season.ts); a press on the view outside,
+// from the seat, moves to the next one: the backdrops cross-fade, the room's baked light is
+// tinted to sit with the new dusk, and what moves outside changes with it (a few leaflets
+// drifting down in autumn, light rain in winter; nothing in spring and summer). Only the
+// season shown is fetched; another's backdrop comes when it is first asked for.
+//
+// Query: ?view=laptop|arm|tree|keys (default hero, the seat), ?season=spring|summer|autumn|winter,
+// ?still (no drift), ?bloom=0, ?exposure=0.3 (stops).
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
@@ -23,6 +30,7 @@ import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { createMapScreen } from './map.js';
 import { focusDistance, verticalFov } from './optics';
+import { nextSeason, parseSeason, seasonOf } from './season';
 import places from './places.json';
 import usMap from './us-map.json';
 
@@ -72,6 +80,9 @@ vec3 bakedDecode( vec3 v, float lo, float stops ) { return exp2( v * stops + lo 
   // weight for weight; `sheen` scales it back to where the cloth, the mat and the book covers sit
   // in the offline render.
   const settings = { occlusion: 0.02, envIntensity: 1.0, sheen: 0.25 };
+  // What the season does to the room's baked light (it was baked in summer's dusk): one colour
+  // that every baked surface is multiplied by, shared so that changing it changes them all.
+  const grade = { value: new THREE.Color(1, 1, 1) };
   const PROBE = { room: [0.2, 0.62, 0.765], laptop: [0, 0.69, 0.79] }; // where the reflections are captured from (Blender axes)
 
   function bakeLit(material, lo, stops) {
@@ -79,12 +90,13 @@ vec3 bakedDecode( vec3 v, float lo, float stops ) { return exp2( v * stops + lo 
       shader.uniforms.bakeLo = { value: lo };
       shader.uniforms.bakeStops = { value: stops };
       shader.uniforms.bakeOcclusion = { value: settings.occlusion };
+      shader.uniforms.bakeGrade = grade;
       // With multisampling a pixel's centre can lie outside a thin triangle that only touches it, and
       // the vertex colour is then extrapolated; decoded as a logarithm that makes white specks along
       // every bevel. Sampling at the centroid keeps it inside the triangle.
       shader.vertexShader = shader.vertexShader.replace('#include <color_pars_vertex>', CENTROID_COLOR.replace(/INOUT/g, 'varying'));
       shader.fragmentShader =
-        'uniform float bakeLo;\nuniform float bakeStops;\nuniform float bakeOcclusion;\n' +
+        'uniform float bakeLo;\nuniform float bakeStops;\nuniform float bakeOcclusion;\nuniform vec3 bakeGrade;\n' +
         DECODE +
         shader.fragmentShader
           .replace('#include <color_pars_fragment>', CENTROID_COLOR.replace(/INOUT/g, 'varying'))
@@ -101,7 +113,7 @@ vec3 bakedDecode( vec3 v, float lo, float stops ) { return exp2( v * stops + lo 
           #define BAKED_NONE
         #endif
         reflectedLight.directDiffuse = vec3( 0.0 );
-        reflectedLight.indirectDiffuse = bakedLight * material.diffuseContribution;
+        reflectedLight.indirectDiffuse = bakedLight * bakeGrade * material.diffuseContribution;
         #ifndef BAKED_NONE
           float bakedOpen = smoothstep( 0.0, bakeOcclusion, dot( bakedLight, vec3( 0.3333 ) ) );
           reflectedLight.indirectSpecular *= bakedOpen;
@@ -183,14 +195,42 @@ vec3 bakedDecode( vec3 v, float lo, float stops ) { return exp2( v * stops + lo 
   const gltfLoader = new GLTFLoader();
   gltfLoader.setMeshoptDecoder(MeshoptDecoder); // room.glb is Meshopt-compressed (export.py)
 
+  // What falls outside in a season: how many points, and how bright they are beside the dusk
+  // (what a pale thing out there would show). Spring and summer have nothing moving.
+  const WEATHER = { autumn: { count: 46, rain: 0, light: 0.55 }, winter: { count: 320, rain: 1, light: 0.5 }, rain: { count: 320 } };
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const SEASON_SECONDS = 1.2; // the cross-fade from one season to the next; a cut under reduced motion
+
+  /** A season's picture of the outside, fetched the first time it is wanted and kept. */
+  const backdrops = new Map();
+  function loadBackdrop(manifest, season) {
+    if (!backdrops.has(season))
+      backdrops.set(
+        season,
+        loadTexture(ASSETS + manifest.backdrop.seasons[season].file).then(
+          (texture) => {
+            texture.colorSpace = THREE.NoColorSpace;
+            texture.anisotropy = 4;
+            return texture;
+          },
+          (error) => {
+            backdrops.delete(season); // so that another press asks again
+            throw error;
+          }
+        )
+      );
+    return backdrops.get(season);
+  }
+
   async function load() {
     const answer = await fetch(ASSETS + 'manifest.json');
     if (!answer.ok) throw new Error(`manifest.json: ${answer.status}`);
     const manifest = await answer.json();
     const lm = manifest.lightmaps;
+    const season = parseSeason(query.get('season')) ?? seasonOf(new Date());
     const [gltf, backdropTex, ...lightTex] = await Promise.all([
       gltfLoader.loadAsync(ASSETS + 'room.glb'),
-      loadTexture(ASSETS + manifest.backdrop.file),
+      loadBackdrop(manifest, season),
       ...Object.values(lm.files).map((f) => loadTexture(ASSETS + f))
     ]);
     const lightMaps = Object.fromEntries(Object.keys(lm.files).map((k, i) => [k, lightTex[i]]));
@@ -244,7 +284,7 @@ vec3 bakedDecode( vec3 v, float lo, float stops ) { return exp2( v * stops + lo 
     samsung.material.emissive.set(0xffffff);
     samsung.material.emissiveIntensity = manifest.glow.map;
 
-    // the glass: the garden is already dimmed by it (below); here only its faint mirror of the room
+    // the glass: what is outside is already dimmed by it (below); here only its faint mirror of the room
     const glass = named.window_glass;
     // (scene.py's glass mirrors 1.6 times what plain glass would; so does this)
     glass.material = new THREE.MeshPhysicalMaterial({
@@ -260,19 +300,20 @@ vec3 bakedDecode( vec3 v, float lo, float stops ) { return exp2( v * stops + lo 
     });
     glass.renderOrder = 2;
 
-    // the garden: a picture on a plane square to the seat's line of sight, out where the tree stands
+    // the outside: a picture on a plane square to the seat's line of sight, out among the nearest
+    // trees. It holds two seasons at once, the one shown and the one coming, and `fade` between them.
     const seat = bl(manifest.camera.position),
       aim = bl(manifest.camera.aim);
     const b = manifest.backdrop;
     const h = (2 * b.distance * (b.sensor / 2 / b.lens)) / b.aspect,
       w = h * b.aspect;
-    backdropTex.colorSpace = THREE.NoColorSpace;
-    backdropTex.anisotropy = 4;
     const backdrop = new THREE.Mesh(
       new THREE.PlaneGeometry(w, h),
       new THREE.ShaderMaterial({
         uniforms: {
           map: { value: backdropTex },
+          next: { value: backdropTex },
+          fade: { value: 0 },
           lo: { value: b.lo },
           stops: { value: b.stops },
           tint: {
@@ -282,14 +323,93 @@ vec3 bakedDecode( vec3 v, float lo, float stops ) { return exp2( v * stops + lo 
         vertexShader: 'varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 ); }',
         fragmentShader:
           DECODE +
-          'uniform sampler2D map; uniform float lo, stops; uniform vec3 tint; varying vec2 vUv;' +
-          'void main() { gl_FragColor = vec4( bakedDecode( texture2D( map, vUv ).rgb, lo, stops ) * tint, 1.0 ); }'
+          'uniform sampler2D map, next; uniform float lo, stops, fade; uniform vec3 tint; varying vec2 vUv;' +
+          // the two seasons are mixed as light, not as the logarithms the pictures hold
+          'void main() { vec3 a = bakedDecode( texture2D( map, vUv ).rgb, lo, stops ); vec3 b = bakedDecode( texture2D( next, vUv ).rgb, lo, stops );' +
+          ' gl_FragColor = vec4( mix( a, b, fade ) * tint, 1.0 ); }'
       })
     );
     backdrop.name = 'backdrop';
     backdrop.position.copy(seat).add(aim.clone().sub(seat).normalize().multiplyScalar(b.distance));
     backdrop.lookAt(seat);
     scene.add(backdrop);
+
+    // What moves outside, between the glass and the picture: points over the balcony, each drawn
+    // by the shader as a leaflet turning as it drifts down (autumn) or a thin streak of rain
+    // (winter). They are placed by the shader from the time alone, so nothing is sent each frame.
+    const count = WEATHER.rain.count;
+    const seeds = new Float32Array(count * 4).map(() => Math.random());
+    const drops = new THREE.BufferGeometry();
+    drops.setAttribute('position', new THREE.BufferAttribute(new Float32Array(count * 3), 3));
+    drops.setAttribute('seed', new THREE.BufferAttribute(seeds, 4));
+    const weather = new THREE.Points(
+      drops,
+      new THREE.ShaderMaterial({
+        uniforms: {
+          time: { value: 0 },
+          rain: { value: 0 }, // 0 leaflets, 1 rain
+          amount: { value: 0 },
+          scale: { value: 1000 }, // pixels a metre takes, a metre from the camera
+          // the space they fall through, in three's axes: the balcony's width, from its floor to
+          // above the window's head, from just outside the glass to a little past the parapet
+          boxMin: { value: new THREE.Vector3(-2.6, -0.1, 0.2) },
+          boxSize: { value: new THREE.Vector3(5.2, 3.0, 1.5) },
+          light: { value: new THREE.Color() }
+        },
+        vertexShader: /* glsl */ `
+        attribute vec4 seed;
+        uniform float time, rain, scale;
+        uniform vec3 boxMin, boxSize;
+        varying float vSize, vTurn, vFlat, vSeed;
+        void main() {
+          vec3 p = seed.xyz;
+          // how many times a second it falls the height of the box
+          float fall = mix( 0.09 + 0.07 * seed.w, 2.0 + 0.6 * seed.w, rain );
+          p.y = fract( p.y - time * fall );
+          float sway = 1.0 - rain;
+          p.x += sway * 0.05 * sin( time * ( 0.7 + seed.w ) + seed.w * 40.0 ) + rain * 0.02 * ( 1.0 - p.y );
+          p.z += sway * 0.04 * sin( time * 0.9 + seed.w * 17.0 );
+          vec4 mv = viewMatrix * vec4( boxMin + p * boxSize, 1.0 );
+          gl_Position = projectionMatrix * mv;
+          float metres = mix( 0.05 + 0.03 * seed.w, 0.17, rain );
+          vSize = max( metres * scale / - mv.z, 2.0 );
+          gl_PointSize = vSize;
+          vTurn = time * ( 0.8 + 1.4 * seed.w ) + seed.w * 60.0;
+          vFlat = abs( cos( time * ( 1.1 + seed.z ) + seed.x * 30.0 ) );
+          vSeed = seed.w;
+        }`,
+        fragmentShader: /* glsl */ `
+        uniform float rain, amount;
+        uniform vec3 light;
+        varying float vSize, vTurn, vFlat, vSeed;
+        void main() {
+          vec2 q = gl_PointCoord - 0.5;
+          float a;
+          vec3 c;
+          if ( rain > 0.5 ) {
+            // a streak down the middle of the point, a little aslant, a pixel wide, fading at its ends
+            float off = abs( q.x + q.y * 0.07 ) * vSize;
+            a = ( 1.0 - smoothstep( 0.25, 1.0, off ) ) * ( 1.0 - smoothstep( 0.25, 0.5, abs( q.y ) ) ) * 0.34;
+            c = light * vec3( 0.8, 0.86, 1.0 );
+          } else {
+            // a leaflet: an oval turned at some angle, narrowed as it tumbles edge-on
+            float s = sin( vTurn ), k = cos( vTurn );
+            vec2 r = vec2( k * q.x + s * q.y, ( k * q.y - s * q.x ) / ( 0.12 + 0.34 * vFlat ) );
+            a = 1.0 - smoothstep( 0.4, 0.5, length( r ) );
+            c = light * mix( vec3( 0.50, 0.42, 0.06 ), vec3( 0.42, 0.22, 0.05 ), vSeed ) * ( 0.6 + 0.4 * vFlat );
+          }
+          if ( a * amount < 0.004 ) discard;
+          gl_FragColor = vec4( c, a * amount );
+        }`,
+        transparent: true,
+        depthWrite: false
+      })
+    );
+    weather.name = 'weather';
+    weather.frustumCulled = false; // the points are placed in the shader: their box here says nothing
+    weather.renderOrder = 1; // after the picture behind them, before the glass in front
+    weather.visible = false;
+    scene.add(weather);
 
     // the lamp: a warm point light. It only adds highlights; its pool on the desk is baked.
     const lamp = new THREE.PointLight(new THREE.Color().setRGB(...manifest.lamp.color, THREE.LinearSRGBColorSpace), manifest.lamp.watts / (4 * Math.PI), 0, 2);
@@ -311,7 +431,8 @@ vec3 bakedDecode( vec3 v, float lo, float stops ) { return exp2( v * stops + lo 
     });
     scene.add(lamp);
 
-    return { manifest, named, samsung, map, mapTexture, mapTextures, backdrop, glass, lamp };
+    grade.value.setRGB(...manifest.backdrop.seasons[season].grade, THREE.LinearSRGBColorSpace);
+    return { manifest, room, named, samsung, map, mapTexture, mapTextures, backdrop, glass, lamp, weather, season };
   }
 
   // ---------------------------------------------------------------------------------------------
@@ -329,7 +450,7 @@ vec3 bakedDecode( vec3 v, float lo, float stops ) { return exp2( v * stops + lo 
   // The other place the camera can be: square in front of the left screen. `f` runs from 0 (the
   // seat) to 1 (the screen); `on` is where it is headed. `screen` is the glass in the world.
   const focus = { on: false, f: 0, from: 0, started: 0, moving: false, screen: null };
-  const FOCUS_SECONDS = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0.01 : 0.9;
+  const FOCUS_SECONDS = reducedMotion ? 0.01 : 0.9;
   const FOCUS_FILL = 0.88; // of the picture's width or height, whichever the screen meets first
   const FOCUS_DRIFT = 0.12; // how much of the drift is left in front of the screen
   const FOCUS_SHADE = 0.6; // how much of the light around the screen is taken away there
@@ -454,25 +575,87 @@ vec3 bakedDecode( vec3 v, float lo, float stops ) { return exp2( v * stops + lo 
       // Reflections: the scene's own surroundings, captured once. One capture stands for the whole
       // room; the laptop gets its own from just above its trackpad, since what its deck mirrors (its
       // own screen) is a hand's width away and looks nothing like the room from anywhere else.
+      // Both are captured again when the season has changed, since the dusk they mirror has.
       const pmrem = new THREE.PMREMGenerator(renderer);
-      world.glass.visible = false;
-      const env = pmrem.fromScene(scene, 0, 0.01, 60, {
-        position: bl(PROBE.room)
-      });
-      const envLaptop = pmrem.fromScene(scene, 0, 0.03, 60, {
-        position: bl(PROBE.laptop)
-      });
-      world.glass.visible = true;
-      scene.environment = env.texture;
+      const laptopMaterials = [];
       world.named.macbook_screen.parent.traverse((o) => {
         if (o.name !== 'macbook' && o.parent.name !== 'macbook') return;
         if (o.isMesh) {
           o.material = o.material.clone();
           bakeLit(o.material, world.manifest.vertexLight.lo, world.manifest.vertexLight.stops);
-          o.material.envMap = envLaptop.texture;
+          laptopMaterials.push(o.material);
         }
       });
-      pmrem.dispose();
+      let captured = [];
+      function captureSurroundings() {
+        const shown = world.weather.visible;
+        world.glass.visible = world.weather.visible = false;
+        scene.environment = null;
+        const env = pmrem.fromScene(scene, 0, 0.01, 60, { position: bl(PROBE.room) });
+        const envLaptop = pmrem.fromScene(scene, 0, 0.03, 60, { position: bl(PROBE.laptop) });
+        world.glass.visible = true;
+        world.weather.visible = shown;
+        scene.environment = env.texture;
+        for (const m of laptopMaterials) m.envMap = envLaptop.texture;
+        for (const old of captured) old.dispose();
+        captured = [env, envLaptop];
+      }
+
+      // The seasons. `turn` is a change under way: the picture and the room's tint go from what
+      // they were to the new season's over SEASON_SECONDS, and what falls outside changes over at
+      // the middle of it.
+      const seasons = world.manifest.backdrop.seasons;
+      const backdropUniforms = world.backdrop.material.uniforms;
+      const weatherUniforms = world.weather.material.uniforms;
+      let season = world.season;
+      let turn = null;
+      let asked = 0;
+      const gradeOf = (name) => new THREE.Color().setRGB(...seasons[name].grade, THREE.LinearSRGBColorSpace);
+      /** Set what falls outside to a season's (or to nothing), `amount` of the way in. */
+      function setWeather(name, amount) {
+        const kind = reducedMotion ? null : WEATHER[name];
+        world.weather.visible = Boolean(kind) && amount > 0;
+        if (!kind) return;
+        world.weather.geometry.setDrawRange(0, kind.count);
+        weatherUniforms.rain.value = kind.rain;
+        weatherUniforms.amount.value = amount;
+        // lit by the season's own dusk: its backdrop's mean light
+        const light = seasons[name].light ?? [0.3, 0.3, 0.3];
+        weatherUniforms.light.value.setRGB(light[0] * kind.light, light[1] * kind.light, light[2] * kind.light, THREE.LinearSRGBColorSpace);
+      }
+      /** The season is `name` and nothing is changing. */
+      function settle(name, texture) {
+        season = name;
+        turn = null;
+        backdropUniforms.map.value = backdropUniforms.next.value = texture;
+        backdropUniforms.fade.value = 0;
+        grade.value.copy(gradeOf(name));
+        setWeather(name, 1);
+        document.body.dataset.season = name;
+        captureSurroundings();
+        dirty = true;
+      }
+      /**
+       * Change the season shown. The new backdrop is fetched if it has not been; the answer says
+       * whether the change began (false for a name that is no season, or when a later call overtook this one).
+       */
+      async function setSeason(name) {
+        if (!seasons[name]) return false;
+        const mine = ++asked;
+        const texture = await loadBackdrop(world.manifest, name);
+        if (mine !== asked) return false;
+        if (turn) settle(turn.to, turn.texture); // one already under way: finish it at once
+        if (name === season) return true;
+        if (reducedMotion) {
+          settle(name, texture);
+          return true;
+        }
+        backdropUniforms.next.value = texture;
+        turn = { from: season, to: name, texture, started: performance.now(), gradeFrom: grade.value.clone(), gradeTo: gradeOf(name) };
+        document.body.dataset.season = name;
+        return true;
+      }
+      settle(season, backdropUniforms.map.value);
 
       // The map on the left screen. A ray from the pointer meets the screen's glass; where it meets
       // it, the glass's own texture coordinate says which pixel of the map's canvas is under it.
@@ -487,6 +670,17 @@ vec3 bakedDecode( vec3 v, float lo, float stops ) { return exp2( v * stops + lo 
         const at = raycaster.intersectObject(samsung, false)[0];
         // the texture is not flipped (flipY = false), so v runs down the canvas as y does
         return at && at.uv ? [at.uv.x * map.width, at.uv.y * map.height] : null;
+      }
+      /**
+       * Whether a point of the page (client pixels) is on the view outside: the pointer's ray reaches
+       * the window's glass with nothing of the room in its way (a frame, a curtain, a monitor, the lamp).
+       */
+      function onOutside(x, y) {
+        ndc.set((x / window.innerWidth) * 2 - 1, -((y / window.innerHeight) * 2 - 1));
+        camera.updateMatrixWorld();
+        raycaster.setFromCamera(ndc, camera);
+        if (!raycaster.intersectObject(world.glass, false).length) return false;
+        return raycaster.intersectObject(world.room, true)[0]?.object === world.glass;
       }
       /** What of the map is under a point of the page (client pixels), with the camera as it stands. */
       function pick(x, y) {
@@ -531,12 +725,14 @@ vec3 bakedDecode( vec3 v, float lo, float stops ) { return exp2( v * stops + lo 
       back.addEventListener('click', unfocus);
 
       // From the seat the screen is one thing to press (a hand anywhere on it); the map's own states
-      // answer only once the camera has arrived in front of it.
+      // answer only once the camera has arrived in front of it. From the seat the view outside is
+      // another thing to press: it turns the season.
       function hover() {
         const at = pointer.known ? onScreen(pointer.x, pointer.y) : null;
         const near = focus.on && !focus.moving;
         const hand = map.point(near && at ? map.hit(at[0], at[1]) : null);
-        canvas.style.cursor = focus.on ? (hand ? 'pointer' : at || !pointer.known ? '' : 'zoom-out') : at ? 'pointer' : '';
+        const outside = !focus.on && !at && pointer.known && onOutside(pointer.x, pointer.y);
+        canvas.style.cursor = focus.on ? (hand ? 'pointer' : at || !pointer.known ? '' : 'zoom-out') : at || outside ? 'pointer' : '';
       }
       // a press counts where the pointer goes down and comes up in one place (a tap, a click), not a drag
       window.addEventListener('pointerdown', (e) => {
@@ -548,7 +744,12 @@ vec3 bakedDecode( vec3 v, float lo, float stops ) { return exp2( v * stops + lo 
         if (!down || down.id !== e.pointerId || Math.hypot(e.clientX - down.x, e.clientY - down.y) > (e.pointerType === 'mouse' ? 6 : 14)) return;
         const at = onScreen(e.clientX, e.clientY);
         if (!focus.on) {
-          if (at) focusScreen(); // and nothing else: this press does not reach the map
+          if (at)
+            focusScreen(); // and nothing else: this press does not reach the map
+          else if (onOutside(e.clientX, e.clientY))
+            setSeason(nextSeason(turn ? turn.to : season)).catch((error) => {
+              console.error(error); // the next backdrop did not come: the season stays as it is
+            });
         } else if (!at) unfocus();
         else if (!focus.moving) map.press(map.hit(at[0], at[1]));
         // a finger leaves nothing hovering behind it
@@ -565,6 +766,7 @@ vec3 bakedDecode( vec3 v, float lo, float stops ) { return exp2( v * stops + lo 
       });
 
       let last = performance.now();
+      let drawn = 0; // when the picture was last drawn for the sake of what falls outside
       function frame(now) {
         const dt = Math.min((now - last) / 1000, 0.1);
         last = now;
@@ -589,6 +791,23 @@ vec3 bakedDecode( vec3 v, float lo, float stops ) { return exp2( v * stops + lo 
           drift.y = drift.ty;
           moved = true;
         }
+        if (turn) {
+          const t = Math.min((now - turn.started) / (SEASON_SECONDS * 1000), 1);
+          const f = smooth(t);
+          backdropUniforms.fade.value = f;
+          grade.value.lerpColors(turn.gradeFrom, turn.gradeTo, f);
+          // what fell in the old season thins out over the first half, the new season's comes in over the second
+          if (f < 0.5) setWeather(turn.from, 1 - 2 * f);
+          else setWeather(turn.to, 2 * f - 1);
+          if (t >= 1) settle(turn.to, turn.texture);
+          moved = true;
+        }
+        // What falls outside moves on its own: the picture is drawn again for it some thirty times
+        // a second, and not at all while the tab is hidden (no frames come then, and no time passes).
+        if (world.weather.visible && !document.hidden) {
+          weatherUniforms.time.value += dt;
+          if (now - drawn > 30) moved = true;
+        }
         if (moved) placeCamera();
         // the camera has moved under the pointer, or the pointer over the picture
         if (moved || pointer.moved || !map.settled) {
@@ -604,6 +823,8 @@ vec3 bakedDecode( vec3 v, float lo, float stops ) { return exp2( v * stops + lo 
         }
         if (moved) {
           dirty = false;
+          drawn = now;
+          weatherUniforms.scale.value = renderer.domElement.height / (2 * Math.tan((camera.fov * Math.PI) / 360));
           composer.render();
           document.body.dataset.ready = '1';
         }
@@ -650,6 +871,12 @@ vec3 bakedDecode( vec3 v, float lo, float stops ) { return exp2( v * stops + lo 
         focus,
         focusScreen,
         unfocus,
+        onOutside,
+        setSeason,
+        /** The season at the window, or the one it is turning to. */
+        get season() {
+          return turn ? turn.to : season;
+        },
         /** True when the camera is at the screen or on its way there. */
         get focused() {
           return focus.on;

@@ -71,17 +71,19 @@ export const EXCEPTIONS = new Map([
         'is linked. Only the page at /room fetches it, which nothing links to; no other page does.'
     }
   ],
-  [
-    'room/backdrop.webp',
+  ...['spring', 'summer', 'autumn', 'winter'].map((season) => [
+    `room/backdrop-${season}.webp`,
     {
       bytes: 400 * KB,
       reason:
-        'The garden behind the room’s glass, wider than the window since the camera drifts: 3072 × 1728. It holds ' +
-        'the logarithm of the light, not a finished picture, so what WebP loses is stretched again when the page ' +
-        'decodes it; at quality 90 (tools/pond/room/export.py) it is 316 KB, and a lower quality has not been ' +
-        'tried yet. Only the page at /room fetches it.'
+        'What is outside the room’s glass in one season (a balcony, trees, a neighbour’s roof), wider than the ' +
+        'window since the camera drifts: 3072 × 1728. It holds the logarithm of the light, not a finished ' +
+        'picture, so what WebP loses is stretched again when the page decodes it; at quality 90 ' +
+        '(tools/pond/room/export.py) the four are between SIZES, and a lower quality has not been tried yet. ' +
+        'Only the page at /room fetches them, one for the season shown and another only when the visitor turns ' +
+        'the season.'
     }
-  ]
+  ])
 ]);
 
 /** Every file in public/ over its budget, as { path, size, budget, what }. */

@@ -22,8 +22,31 @@ light), and of a quality no lower than that site's.
   seat, on a dual arm clamped to the desk's back edge: a
   Samsung Odyssey OLED G8 (G80SD, 32 in) on the left and a Dell 27 on the
   right. Both are the MacBook's extended displays. Behind the desk the
-  room's wall is glass from floor to ceiling, and outside it, close, one
-  big tree.
+  room's wall is glass from floor to ceiling. The desk top is a pale
+  oak and the floor a beige carpet, as his are, and three keepsakes of
+  his stand on the desk: a blue anniversary mug, a small figurine and a
+  black cat plush.
+- **The view.** Outside the glass is what is outside his own window,
+  in general terms and modelled, not photographed: the room is on an
+  upper floor, with a narrow balcony (artificial turf edged with white
+  pebbles, a parapet of lap siding under a white cap), beyond it at
+  eye level a row of twisted junipers, behind them a taller tree with
+  pinnate leaves (taken for a walnut) and a weeping pepper tree, and
+  lower on one side a neighbour's steep roof. Each kind of tree is a
+  species of its own in `scene.py` (how it grows, and its state in
+  each season), so one can be changed for another.
+- **The seasons.** The window shows the season of the visitor's own
+  date, by the northern meteorological seasons (spring from March,
+  summer from June, autumn from September, winter from December), each
+  at the same dusk hour so the room's baked light fits them all; a
+  press on the view outside turns to the next. The climate is a mild
+  one where it does not snow, so the seasons are told quietly: the
+  junipers and the pepper tree keep their leaves, the walnut comes
+  into small leaf with catkins in spring, is full in summer, yellows
+  and drops from the top in autumn and is bare in winter; autumn
+  leaves dry leaflets on the balcony and a few drifting down; winter
+  is the rainy season, grey and wet, with light rain falling. Snow was
+  built first and taken out: it would have been untrue.
 - **The map.** The Samsung shows a map of the United States with the
   states Jincheng has been to marked: Texas, Florida (Tampa), Ohio,
   Illinois (Chicago), Indiana, Wisconsin (Milwaukee), California,
@@ -32,8 +55,10 @@ light), and of a quality no lower than that site's.
 - **How it is made.** Modelled and lit in Blender from scripts kept in
   `tools/pond/room/` (`scene.py` builds it, `export.py` bakes the light
   and writes what the browser loads into `public/room/`: the model,
-  Meshopt-compressed, the light maps, the garden as a picture and a
-  manifest). The page's code is `src/room/`, drawn with three.js, which
+  Meshopt-compressed, the light maps, the outside as a picture for
+  each season and a manifest). The room's light is baked once, in
+  summer's dusk; the manifest carries for each season a small tint
+  that sits the room with that season's sky. The page's code is `src/room/`, drawn with three.js, which
   the site bundles for that page alone; `tools/pond/room/web/` keeps only
   the helpers that make the map's outlines and take the page's picture.
   It is fetched only when a visitor goes down to it, never on a first
@@ -45,7 +70,9 @@ light), and of a quality no lower than that site's.
   three.js needs added: WebAssembly (the model's decoder) and reading
   `blob:` (the model's own pictures).
 - **Where his home is** is not written anywhere in the repository: the
-  scene says a bedroom, glass and a tree, and no more.
+  scene says a bedroom, glass, a balcony and trees, and no more. The
+  photographs he showed of the view and of his things were looked at
+  and are not kept.
 
 ## Open
 
@@ -58,5 +85,8 @@ light), and of a quality no lower than that site's.
 
 - The site gains a 3D library and a scene of some megabytes, held to a
   budget and loaded on demand.
-- The pictures the scene needs (wood, metal, cloth, the tree) are asked
-  of the art thread; models are built here.
+- The pictures the scene needs (wood, metal, cloth, the trees' leaves
+  and bark, the keepsakes' printed faces) are asked of the art thread;
+  models are built here.
+- Four backdrops are kept where one was. A visit fetches one, and
+  another only when the season is turned.
