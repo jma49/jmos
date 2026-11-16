@@ -73,6 +73,45 @@
    ],
    "lens": 60
   },
+  "keepsakes": {
+   "position": [
+    0.48,
+    1.03,
+    0.9
+   ],
+   "aim": [
+    0.475,
+    0.52,
+    0.815
+   ],
+   "lens": 55
+  },
+  "plush": {
+   "position": [
+    0.4,
+    0.98,
+    0.93
+   ],
+   "aim": [
+    0.485,
+    0.52,
+    0.8
+   ],
+   "lens": 62
+  },
+  "mug": {
+   "position": [
+    -0.4,
+    1.02,
+    0.93
+   ],
+   "aim": [
+    -0.57,
+    0.64,
+    0.79
+   ],
+   "lens": 75
+  },
   "tree": {
    "position": [
     0.75,
@@ -107,13 +146,54 @@
   "bulb": 2.5
  },
  "backdrop": {
-  "file": "backdrop.webp",
   "lens": 18.0,
   "sensor": 36,
   "aspect": 1.7777777777777777,
   "distance": 5.05,
   "lo": -8.0,
-  "stops": 11.0
+  "stops": 11.0,
+  "seasons": {
+   "spring": {
+    "file": "backdrop-spring.webp",
+    "light": null,
+    "grade": [
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "summer": {
+    "file": "backdrop-summer.webp",
+    "light": [
+     0.2529,
+     0.1727,
+     0.1754
+    ],
+    "grade": [
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "autumn": {
+    "file": "backdrop-autumn.webp",
+    "light": null,
+    "grade": [
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "winter": {
+    "file": "backdrop-winter.webp",
+    "light": null,
+    "grade": [
+     1.0,
+     1.0,
+     1.0
+    ]
+   }
+  }
  },
  "lightmaps": {
   "lo": -8.0,
@@ -122,7 +202,6 @@
    "desk_top": "lm/desk_top.webp",
    "desk_mat": "lm/desk_mat.webp",
    "floor": "lm/floor.webp",
-   "rug": "lm/rug.webp",
    "ceiling": "lm/ceiling.webp",
    "wall_right": "lm/wall_right.webp",
    "wall_left": "lm/wall_left.webp",
@@ -146,7 +225,6 @@
   "samsung_screen": 2,
   "dell_screen": 2,
   "lamp_bulb": 528,
-  "rug": 276,
   "room": 8460,
   "desk": 1772,
   "macbook": 26208,
@@ -155,7 +233,9 @@
   "monitor_arm": 17964,
   "usb_c_cables": 5880,
   "desk_lamp": 4640,
-  "mug": 3392,
+  "mug": 32468,
+  "figurine": 3050,
+  "plush": 9232,
   "books": 3252,
   "notebook": 1256,
   "phone": 2732,

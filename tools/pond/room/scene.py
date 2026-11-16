@@ -1929,8 +1929,8 @@ def mug():
     z = 0.005
     h = 0.095
     # the outside, as (height, radius): foot ring, the flare of the base, the waist, the swell, the rim
-    shape = [(0.0, 0.0285), (0.003, 0.0295), (0.0055, 0.0335), (0.009, 0.0352), (0.014, 0.0338), (0.020, 0.0318), (0.027, 0.0322), (0.036, 0.0340),
-             (0.048, 0.0356), (0.060, 0.0358), (0.072, 0.0350), (0.084, 0.0334), (0.092, 0.0320), (h, 0.0315)]
+    shape = [(0.0, 0.030), (0.003, 0.031), (0.0055, 0.0352), (0.009, 0.0370), (0.014, 0.0356), (0.020, 0.0336), (0.027, 0.0340), (0.036, 0.0358),
+             (0.048, 0.0374), (0.060, 0.0376), (0.072, 0.0368), (0.084, 0.0352), (0.092, 0.0338), (h, 0.0333)]
 
     def wall(zz):
         """The outside radius at a height."""
@@ -1942,12 +1942,12 @@ def mug():
         return shape[-1][1]
 
     outer = [(wall(h * i / 40), h * i / 40) for i in range(41)]
-    lathe('mug body', [(0, 0.003), (0.024, 0.003), (0.026, 0.0)] + outer
-          + [(wall(h) - 0.0012, h + 0.0013), (wall(h) - 0.0028, h + 0.0002)] + [(wall(zz) - 0.0042, zz) for zz in (0.085, 0.06, 0.04, 0.022)] + [(0.027, 0.011), (0, 0.010)],
+    lathe('mug body', [(0, 0.003), (0.0255, 0.003), (0.0275, 0.0)] + outer
+          + [(wall(h) - 0.0012, h + 0.0013), (wall(h) - 0.0028, h + 0.0002)] + [(wall(zz) - 0.0042, zz) for zz in (0.085, 0.06, 0.04, 0.022)] + [(0.0285, 0.011), (0, 0.010)],
           blue, at=(0, 0, z), parent=root, seg=56)
     lathe('coffee', [(0, 0.076), (wall(0.076) - 0.0043, 0.076)], M['coffee'], at=(0, 0, z), parent=root, seg=48)
     # the handle: one bar bent at a point, from under the rim out and back in to the waist
-    pts = [Vector((wall(0.075) - 0.004, 0, 0.075 + z)), Vector((0.0495, 0, 0.050 + z)), Vector((wall(0.024) - 0.004, 0, 0.024 + z))]
+    pts = [Vector((wall(0.075) - 0.004, 0, 0.075 + z)), Vector((0.0515, 0, 0.050 + z)), Vector((wall(0.024) - 0.004, 0, 0.024 + z))]
     for a, b in zip(pts, pts[1:]):
         beam('mug handle', a, b, (0.016, 0.0085), blue, parent=root, bevel=0.0026)
     cyl('mug handle', 0.0043, 0.016, pts[1], blue, rot=(rad(90), 0, 0), parent=root, bevel=0.0012, seg=16)  # the point, eased
@@ -1957,6 +1957,7 @@ def mug():
     for words, size, across, up, climb in (('ON THE ROAD', 0.027, 0.0, 0.0580, rad(3.5)), ('HAPPY ANNIVERSARY', 0.0076, -0.0095, 0.0425, rad(2.0))):
         cu = bpy.data.curves.new('t', 'FONT')
         cu.body, cu.size, cu.align_x, cu.align_y, cu.shear = words, size, 'CENTER', 'CENTER', 0.24
+        cu.resolution_u = 2  # few points to a curve: the letters are a few millimetres tall
         if font:
             cu.font = font
         o = bpy.data.objects.new('t', cu)
@@ -1969,15 +1970,15 @@ def mug():
         bpy.data.objects.remove(o)
         bpy.data.curves.remove(cu)
     bmesh.ops.triangulate(bm, faces=bm.faces)
-    for _ in range(2):  # short edges, so the letters follow the curve of the wall
-        bmesh.ops.subdivide_edges(bm, edges=[e for e in bm.edges if e.calc_length() > 0.005], cuts=1)
-        bmesh.ops.triangulate(bm, faces=bm.faces)
+    # short edges, so the letters follow the curve of the wall
+    bmesh.ops.subdivide_edges(bm, edges=[e for e in bm.edges if e.calc_length() > 0.006], cuts=1)
+    bmesh.ops.triangulate(bm, faces=bm.faces)
     for v in bm.verts:
         x, zz = v.co.x, v.co.y
         r = wall(zz) + 0.00025
         a = rad(64) + x / r  # the lines begin close to the handle
         v.co = Vector((r * math.cos(a), r * math.sin(a), zz + z))
-    obj_from_bm('mug lettering', bm, pbr('mug lettering', (0.80, 0.80, 0.78), 0.3), parent=root, smooth=False)
+    obj_from_bm('mug lettering', bm, pbr('mug lettering', (0.80, 0.80, 0.78), 0.3), parent=root, sharp=180)
     return root
 
 
@@ -2155,10 +2156,10 @@ def plush():
         g = empty('plush sunglass', p + n * 0.0015, facing(n), root)
         g.rotation_euler.rotate_axis('Z', rad(180) + sx * rad(5))
         flat_shape('plush frame', rim(0.050, 0.031), 0.0016, red, parent=g)
-        # the point at the frame's upper outer corner (the piece is turned half round: its outer side is at -x for the cat's left)
-        flat_shape('plush frame point', [(sx * 0.019, 0.010), (sx * 0.0285, 0.0165), (sx * 0.0235, 0.004)] if sx < 0 else [(sx * 0.019, 0.010), (sx * 0.0235, 0.004), (sx * 0.0285, 0.0165)],
+        # the point at the frame's upper outer corner (the piece is turned half round, so its outer side is at -sx)
+        flat_shape('plush frame point', [(-sx * 0.019, 0.010), (-sx * 0.0285, 0.0165), (-sx * 0.0235, 0.004)] if sx > 0 else [(-sx * 0.019, 0.010), (-sx * 0.0235, 0.004), (-sx * 0.0285, 0.0165)],
                    0.0016, red, at=(0, 0, 0), parent=g)
-        flat_shape('plush lens', rim(0.041, 0.023), 0.0005, dark, at=(0, -0.0006, 0.0014), parent=g)
+        flat_shape('plush lens', rim(0.0435, 0.0250), 0.0005, dark, at=(0, -0.0004, 0.0014), parent=g)
         tube('plush glint', [(sx * 0.011, 0.0035, 0.0021), (sx * 0.003, 0.0058, 0.0021), (-sx * 0.006, 0.0052, 0.0021), (-sx * 0.0095, 0.0010, 0.0021)], 0.00035, thread, parent=g, res=5)
     p, n = on_head(0, 0.0275)
     flat_shape('plush bridge', [(-0.005, -0.0025), (0.005, -0.0025), (0.004, 0.003), (-0.004, 0.003)], 0.0016, red, at=p + n * 0.0035, rot=facing(n), parent=root)
