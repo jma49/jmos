@@ -192,15 +192,15 @@ words did not reach, there only for whoever asks.
   one, held that far into its flight, from a picture to try if one is given.
 - **The koi's circle (太极)**, in ink only: the old code on the keys (read by key position, so an
   input method does not break it) or an S drawn on the water (`sCurve()` in `gestures.ts`) calls
-  it (`taijiNow()` in `engine.js`). For 45 seconds the visitor's koi and the gold one keep to the
-  figure's two eyes, the white on the ink dot and the gold on the round of paper, held there head
-  to tail and carried round as it turns (`taijiSpot()`, `Koi.carried()`), the rest in a ring
-  outside, and the taiji in ink wash (`#taiji`, the picture `taiji.webp` in ink's folder) shows
-  faintly under them with the eight trigrams (`#bagua`, `bagua.webp`) in a ring round it. The
-  figure comes up slowly, stands still and only turns, slowly, as one (`stepTaiji()`); the koi do
-  the moving (Jincheng: "鱼动，阵图不动，只缓慢的转动"). Both pictures are
-  in ink's folder (item 0 of "Asked for now" has what came).
-  `window.__pond.taiji(t)` under `?perf` sets it up for a tool.
+  it (`taijiNow()` in `engine.js`). It runs in four parts over 50 seconds (`stepTaiji()`,
+  `taijiSpot()`): the eight trigrams (`#bagua`, `bagua.webp` in ink's folder) land one by one, each
+  with a ring on the water; the visitor's koi and the gold one swim once round the middle and the
+  taiji (`#taiji`, `taiji.webp`) shows only where they have passed (what they have painted is
+  kept on a small canvas and the picture drawn through it); each then rests on one of the
+  figure's eyes, held head to tail and carried round as the whole figure turns slowly
+  (`Koi.carried()`), the rest swimming among the trigrams; and at the close the two swim in, the
+  figure draws in to one drop and the seal is stamped. Both pictures are laid in faint.
+  `window.__pond.taiji(t)` under `?perf` sets it `t` seconds in for a tool.
 - **The signature** ([decision 0028](../decisions/0028-the-pond-has-three-endings.md)), the pond's
   second ending. Once every look is found, the gesture that found a look, made again in that look
   (where it otherwise does nothing), lays one stroke of 真 there (`signNow()` in `engine.js`;
