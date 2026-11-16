@@ -20,6 +20,8 @@
       "!src/pond/brush.css",
       "!src/pond/brush-first.css",
       "!src/pond/kana.css",
+      // Written by tools/pond/room/export.py.
+      "!public/room/manifest.json",
       // Biome reads only an Astro file's frontmatter, not its markup.
       "!**/*.astro",
       // Prose and workflows are written by hand: Biome 2.6 began formatting

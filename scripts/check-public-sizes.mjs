@@ -58,6 +58,29 @@ export const EXCEPTIONS = new Map([
         '380 KB; lower, the impasto smears. It is fetched only when that one look is first chosen on a large ' +
         'window (a small one takes bed-1280.webp), never on a first visit.'
     }
+  ],
+  [
+    'room/room.glb',
+    {
+      bytes: 1500 * KB,
+      reason:
+        'The room under the pond as one model (docs/decisions/0030): 106,000 triangles with their baked light in ' +
+        'vertex colours, the desk’s and the floor’s wood (about 260 KB of WebP inside it) and two screens’ ' +
+        'pictures. Meshopt-compressed it is 1.31 MB. It is a preview: making it smaller (fewer triangles on what ' +
+        'the seat never sees closely, coarser quantization) has not been tried yet and should be before the room ' +
+        'is linked. Only the page at /room fetches it, which nothing links to; no other page does.'
+    }
+  ],
+  [
+    'room/backdrop.webp',
+    {
+      bytes: 400 * KB,
+      reason:
+        'The garden behind the room’s glass, wider than the window since the camera drifts: 3072 × 1728. It holds ' +
+        'the logarithm of the light, not a finished picture, so what WebP loses is stretched again when the page ' +
+        'decodes it; at quality 90 (tools/pond/room/export.py) it is 316 KB, and a lower quality has not been ' +
+        'tried yet. Only the page at /room fetches it.'
+    }
   ]
 ]);
 

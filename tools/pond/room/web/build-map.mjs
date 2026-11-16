@@ -1,9 +1,11 @@
-// Makes us-map.json, the state outlines the left screen draws: node build-map.mjs
+// Makes src/room/us-map.json, the state outlines the room's left screen draws:
+//   node tools/pond/room/web/build-map.mjs   (after `npm install` in this folder)
+// and then `npm run format`, which lays the file out as the repository keeps it.
 //
 // The shapes come from us-atlas's states-albers-10m.json, which is already projected (Albers USA
 // on a 975 x 610 sheet). They are simplified as a topology, so neighbours keep sharing one border,
 // and written as one SVG path per state (relative moves, tenths of a unit). The city dots of
-// places.json go through the same projection us-atlas used, so they land where the shapes say.
+// src/room/places.json go through the same projection us-atlas used, so they land where the shapes say.
 import { readFileSync, writeFileSync } from 'node:fs';
 import { feature } from 'topojson-client';
 import { presimplify, simplify } from 'topojson-simplify';
@@ -65,6 +67,7 @@ const POSTAL = {
 };
 
 const here = (name) => new URL(name, import.meta.url);
+const site = (name) => new URL(`../../../../src/room/${name}`, import.meta.url); // the page's own folder
 const atlas = JSON.parse(readFileSync(here('./node_modules/us-atlas/states-albers-10m.json')));
 const topology = simplify(presimplify(atlas), AREA);
 const r = (v) => Math.round(v * 10) / 10;
@@ -126,11 +129,11 @@ for (const f of feature(topology, topology.objects.states).features) {
 // what us-atlas projected with
 const projection = geoAlbersUsa().scale(1300).translate([487.5, 305]);
 const cities = {};
-for (const place of JSON.parse(readFileSync(here('./places.json'))).places) {
+for (const place of JSON.parse(readFileSync(site('places.json'))).places) {
   if (!states[place.state]) throw new Error(`places.json: no state ${place.state}`);
   if (place.city && place.lonLat) cities[place.state] = projection(place.lonLat).map(r);
 }
 
 const out = JSON.stringify({ width: 975, height: 610, states, cities });
-writeFileSync(here('./us-map.json'), out + '\n');
+writeFileSync(site('us-map.json'), out + '\n');
 console.log('us-map.json', out.length, 'bytes,', Object.keys(states).length, 'states, cities', JSON.stringify(cities));

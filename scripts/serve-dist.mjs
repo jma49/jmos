@@ -3,8 +3,9 @@
 // and for `npm run serve`. Unlike `astro preview`, it runs in this process
 // and stops with it. With `api`, the functions in api/ answer too, run
 // from source in this process (serve.mjs sets that up). Every file comes
-// with the headers vercel.json gives every path, the Content Security
-// Policy among them, so what runs here meets the same rules as the site.
+// with the headers vercel.json gives its path, the Content Security
+// Policy among them (the room's page has its own), so what runs here
+// meets the same rules as the site.
 
 import { createServer } from 'node:http';
 import { readFileSync } from 'node:fs';
@@ -14,12 +15,20 @@ import { extname, join, normalize } from 'node:path';
 const ROOT = new URL('..', import.meta.url).pathname;
 const DIST = join(ROOT, 'dist');
 
-/** The headers vercel.json sets on every path ("/(.*)"). */
-const HEADERS = Object.fromEntries(
-  JSON.parse(readFileSync(join(ROOT, 'vercel.json'), 'utf8'))
-    .headers.filter((rule) => rule.source === '/(.*)')
-    .flatMap((rule) => rule.headers.map(({ key, value }) => [key, value]))
-);
+/**
+ * vercel.json's header rules. Each source there is a slash and one
+ * regular expression in brackets ("/(.*)", "/(room/?)"), so it is read
+ * as that expression over the whole path; a source written any other way
+ * (a named segment, say) would need Vercel's own matcher, and throws here.
+ */
+const RULES = JSON.parse(readFileSync(join(ROOT, 'vercel.json'), 'utf8')).headers.map(({ source, headers }) => {
+  if (!/^\/\(.*\)$/.test(source)) throw new Error(`vercel.json: serve-dist.mjs cannot read the header source ${source}`);
+  return { path: new RegExp(`^${source}$`), headers };
+});
+
+/** The headers vercel.json sets on a path: those of every rule that matches it. */
+export const headersFor = (pathname) =>
+  Object.fromEntries(RULES.filter(({ path }) => path.test(pathname)).flatMap(({ headers }) => headers.map(({ key, value }) => [key, value])));
 
 const TYPES = {
   '.html': 'text/html; charset=utf-8',
@@ -34,7 +43,8 @@ const TYPES = {
   '.ico': 'image/x-icon',
   '.woff2': 'font/woff2',
   '.txt': 'text/plain; charset=utf-8',
-  '.xml': 'application/xml'
+  '.xml': 'application/xml',
+  '.glb': 'model/gltf-binary'
 };
 
 /**
@@ -60,7 +70,7 @@ export function serveDist({ port = 0, host = '127.0.0.1', api = false, dir = DIS
       let file = join(dir, normalize(decodeURIComponent(url.pathname)));
       if ((await stat(file)).isDirectory()) file = join(file, 'index.html');
       const body = await readFile(file);
-      res.writeHead(200, { ...HEADERS, 'Content-Type': TYPES[extname(file)] ?? 'application/octet-stream' });
+      res.writeHead(200, { ...headersFor(url.pathname), 'Content-Type': TYPES[extname(file)] ?? 'application/octet-stream' });
       res.end(body);
     } catch (e) {
       if (api && url.pathname.startsWith('/api/')) console.error(url.pathname, e.message);
