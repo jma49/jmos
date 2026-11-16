@@ -6,6 +6,9 @@
 // else. What is live: reflections (an environment captured from the scene itself, and the
 // lamp as a point light, both specular only), the screens' glow, bloom and the tone curve.
 //
+// A press on the left screen brings the camera up to it (focusScreen); a press beside it, Escape
+// or the "back" control takes it to the seat again (unfocus). The map is only pressed from close.
+//
 // Query: ?view=laptop|arm|tree|keys (default hero, the seat), ?still (no drift),
 // ?bloom=0, ?exposure=0.3 (stops).
 import * as THREE from 'three';
@@ -121,7 +124,12 @@ const FinishShader = {
     curve: { value: null },
     curveSize: { value: 256 },
     log2Min: { value: -12.47393 },
-    log2Max: { value: 4.026069 }
+    log2Max: { value: 4.026069 },
+    // in front of the left screen: where the glass is in the picture (its middle and half its
+    // size, 0..1), the picture's shape, and how far what lies around the glass is turned down
+    spot: { value: new THREE.Vector4(0.5, 0.5, 0.5, 0.5) },
+    aspect: { value: 1 },
+    shade: { value: 0 }
   },
   vertexShader: /* glsl */ `
     varying vec2 vUv;
@@ -129,7 +137,8 @@ const FinishShader = {
   fragmentShader: /* glsl */ `
     uniform sampler2D tDiffuse;
     uniform sampler2D curve;
-    uniform float exposure, curveSize, log2Min, log2Max;
+    uniform float exposure, curveSize, log2Min, log2Max, aspect, shade;
+    uniform vec4 spot;
     varying vec2 vUv;
     const mat3 SRGB_TO_REC2020 = mat3( vec3( 0.6274, 0.0691, 0.0164 ), vec3( 0.3293, 0.9195, 0.0880 ), vec3( 0.0433, 0.0113, 0.8956 ) );
     const mat3 REC2020_TO_SRGB = mat3( vec3( 1.6605, - 0.1246, - 0.0182 ), vec3( - 0.5876, 1.1329, - 0.1006 ), vec3( - 0.0728, - 0.0083, 1.1187 ) );
@@ -139,6 +148,9 @@ const FinishShader = {
     float hash( vec2 p ) { return fract( sin( dot( p, vec2( 12.9898, 78.233 ) ) ) * 43758.5453 ); }
     void main() {
       vec3 c = max( texture2D( tDiffuse, vUv ).rgb, 0.0 ) * exposure;
+      // the room steps back behind the screen being read: darker with the distance from the glass
+      float beside = length( max( abs( vUv - spot.xy ) - spot.zw, 0.0 ) * vec2( aspect, 1.0 ) );
+      c *= 1.0 - shade * smoothstep( 0.012, 0.12, beside );
       c = INSET * ( SRGB_TO_REC2020 * c );
       c = clamp( ( log2( max( c, 1e-10 ) ) - log2Min ) / ( log2Max - log2Min ), 0.0, 1.0 );
       c = OUTSET * vec3( toned( c.r ), toned( c.g ), toned( c.b ) );
@@ -202,10 +214,18 @@ async function load() {
   // the Samsung (the left screen): its own mesh and material, lit by a canvas (map.js draws it)
   const samsung = named.samsung_screen;
   const map = createMapScreen(usMap, places);
-  const mapTexture = new THREE.CanvasTexture(map.canvas);
-  mapTexture.colorSpace = THREE.SRGBColorSpace;
-  mapTexture.flipY = false;
-  mapTexture.anisotropy = maxAniso;
+  // two sheets, one texture each: the full one for the picture at rest, a quarter of its pixels
+  // for the frames of the panel's slide, so those do not each send 2560 x 1440 to the card
+  const mapTextures = new Map(
+    [map.canvas, map.motion].map((sheet) => {
+      const t = new THREE.CanvasTexture(sheet);
+      t.colorSpace = THREE.SRGBColorSpace;
+      t.flipY = false;
+      t.anisotropy = maxAniso;
+      return [sheet, t];
+    })
+  );
+  const mapTexture = mapTextures.get(map.canvas);
   samsung.material.emissiveMap = mapTexture;
   samsung.material.emissive.set(0xffffff);
   samsung.material.emissiveIntensity = manifest.glow.map;
@@ -277,7 +297,7 @@ async function load() {
   });
   scene.add(lamp);
 
-  return { manifest, named, samsung, map, mapTexture, backdrop, glass, lamp };
+  return { manifest, named, samsung, map, mapTexture, mapTextures, backdrop, glass, lamp };
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -292,6 +312,14 @@ const view = {
 };
 const drift = { x: 0, y: 0, tx: 0, ty: 0, reach: [0.035, 0.02] }; // metres, sideways and up
 const still = query.has('still');
+// The other place the camera can be: square in front of the left screen. `f` runs from 0 (the
+// seat) to 1 (the screen); `on` is where it is headed. `screen` is the glass in the world.
+const focus = { on: false, f: 0, from: 0, started: 0, moving: false, screen: null };
+const FOCUS_SECONDS = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0.01 : 0.9;
+const FOCUS_FILL = 0.88; // of the picture's width or height, whichever the screen meets first
+const FOCUS_DRIFT = 0.12; // how much of the drift is left in front of the screen
+const FOCUS_SHADE = 0.6; // how much of the light around the screen is taken away there
+const smooth = (t) => t * t * t * (t * (t * 6 - 15) + 10); // no speed and no push at either end
 
 function setView(manifest, name) {
   const v = manifest.views[name] || manifest.views.hero;
@@ -306,14 +334,41 @@ function placeCamera() {
   const half = view.sensor / 2 / view.lens;
   camera.fov = THREE.MathUtils.radToDeg(2 * Math.atan(aspect >= 1 ? half / aspect : half));
   camera.updateProjectionMatrix();
-  const forward = view.aim.clone().sub(view.position).normalize();
+  const position = view.position.clone(),
+    aim = view.aim.clone();
+  let reach = 1;
+  if (focus.f > 0 && focus.screen) {
+    // as far back along the glass's normal as puts the screen FOCUS_FILL across the picture's
+    // tighter side: its height in a wide picture, its width in a tall one
+    const s = focus.screen;
+    const tanV = aspect >= 1 ? half / aspect : half,
+      tanH = tanV * aspect;
+    const distance = Math.max(s.height / 2 / tanV, s.width / 2 / tanH) / FOCUS_FILL;
+    position.lerp(s.centre.clone().addScaledVector(s.normal, distance), focus.f);
+    aim.lerp(s.centre, focus.f);
+    reach = THREE.MathUtils.lerp(1, FOCUS_DRIFT, focus.f);
+  }
+  const forward = aim.clone().sub(position).normalize();
   const right = forward.clone().cross(camera.up).normalize();
   const up = right.clone().cross(forward);
   camera.position
-    .copy(view.position)
-    .addScaledVector(right, drift.x * drift.reach[0])
-    .addScaledVector(up, drift.y * drift.reach[1]);
-  camera.lookAt(view.aim);
+    .copy(position)
+    .addScaledVector(right, drift.x * drift.reach[0] * reach)
+    .addScaledVector(up, drift.y * drift.reach[1] * reach);
+  camera.lookAt(aim); // the camera's up stays the room's: no roll on the way
+  const u = finish.uniforms;
+  u.shade.value = 0;
+  if (focus.f > 0 && focus.screen) {
+    camera.updateMatrixWorld();
+    const box = new THREE.Box2();
+    for (const p of focus.screen.corners) {
+      const v = p.clone().project(camera);
+      box.expandByPoint(new THREE.Vector2(v.x * 0.5 + 0.5, v.y * 0.5 + 0.5));
+    }
+    u.spot.value.set((box.min.x + box.max.x) / 2, (box.min.y + box.max.y) / 2, (box.max.x - box.min.x) / 2, (box.max.y - box.min.y) / 2);
+    u.aspect.value = aspect;
+    u.shade.value = FOCUS_SHADE * focus.f;
+  }
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -412,21 +467,67 @@ load()
 
     // The map on the left screen. A ray from the pointer meets the screen's glass; where it meets
     // it, the glass's own texture coordinate says which pixel of the map's canvas is under it.
-    const { map, samsung, mapTexture } = world;
+    const { map, samsung, mapTextures } = world;
     const raycaster = new THREE.Raycaster();
     const ndc = new THREE.Vector2();
-    /** What of the map is under a point of the page (client pixels), with the camera as it stands. */
-    function pick(x, y) {
+    /** Where on the left screen's glass a point of the page (client pixels) is, as canvas pixels, or null beside it. */
+    function onScreen(x, y) {
       ndc.set((x / window.innerWidth) * 2 - 1, -((y / window.innerHeight) * 2 - 1));
       camera.updateMatrixWorld();
       raycaster.setFromCamera(ndc, camera);
       const at = raycaster.intersectObject(samsung, false)[0];
       // the texture is not flipped (flipY = false), so v runs down the canvas as y does
-      return at && at.uv ? map.hit(at.uv.x * map.width, at.uv.y * map.height) : null;
+      return at && at.uv ? [at.uv.x * map.width, at.uv.y * map.height] : null;
     }
+    /** What of the map is under a point of the page (client pixels), with the camera as it stands. */
+    function pick(x, y) {
+      const at = onScreen(x, y);
+      return at ? map.hit(at[0], at[1]) : null;
+    }
+
+    // The glass in the world: a flat rectangle, its corners found by their texture coordinates.
+    const corner = (u, v) => {
+      const p = samsung.geometry.attributes.position,
+        t = samsung.geometry.attributes.uv;
+      let best = 0;
+      for (let i = 1; i < p.count; i++) if (Math.hypot(t.getX(i) - u, t.getY(i) - v) < Math.hypot(t.getX(best) - u, t.getY(best) - v)) best = i;
+      return new THREE.Vector3().fromBufferAttribute(p, best);
+    };
+    const corners = [corner(0, 0), corner(1, 0), corner(0, 1), corner(1, 1)]; // in the mesh's own space
+    {
+      scene.updateMatrixWorld(true);
+      const [a, b, c, d] = corners.map((p) => samsung.localToWorld(p.clone()));
+      const across = b.clone().sub(a),
+        down = c.clone().sub(a);
+      const centre = a.clone().add(b).add(c).add(d).multiplyScalar(0.25);
+      const normal = across.clone().cross(down).normalize();
+      if (normal.dot(view.position.clone().sub(centre)) < 0) normal.negate(); // the side the seat is on
+      focus.screen = { centre, normal, width: across.length(), height: down.length(), corners: [a, b, c, d] };
+    }
+
+    const back = document.getElementById('back');
+    function setFocus(on) {
+      if (focus.on === on) return false;
+      Object.assign(focus, { on, from: focus.f, started: performance.now(), moving: true });
+      document.body.toggleAttribute('data-focused', on);
+      back.tabIndex = on ? 0 : -1;
+      if (!on) back.blur();
+      pointer.moved = true;
+      return true;
+    }
+    const focusScreen = () => setFocus(true);
+    const unfocus = () => setFocus(false);
+    // the control is on the page, above the canvas: what is pressed there is not a press on the room
+    for (const type of ['pointerdown', 'pointerup']) back.addEventListener(type, (e) => e.stopPropagation());
+    back.addEventListener('click', unfocus);
+
+    // From the seat the screen is one thing to press (a hand anywhere on it); the map's own states
+    // answer only once the camera has arrived in front of it.
     function hover() {
-      const hand = pointer.known && map.point(pick(pointer.x, pointer.y));
-      canvas.style.cursor = hand ? 'pointer' : '';
+      const at = pointer.known ? onScreen(pointer.x, pointer.y) : null;
+      const near = focus.on && !focus.moving;
+      const hand = map.point(near && at ? map.hit(at[0], at[1]) : null);
+      canvas.style.cursor = focus.on ? (hand ? 'pointer' : at || !pointer.known ? '' : 'zoom-out') : at ? 'pointer' : '';
     }
     // a press counts where the pointer goes down and comes up in one place (a tap, a click), not a drag
     window.addEventListener('pointerdown', (e) => {
@@ -436,7 +537,11 @@ load()
       const down = pointer.down;
       pointer.down = null;
       if (!down || down.id !== e.pointerId || Math.hypot(e.clientX - down.x, e.clientY - down.y) > (e.pointerType === 'mouse' ? 6 : 14)) return;
-      map.press(pick(e.clientX, e.clientY));
+      const at = onScreen(e.clientX, e.clientY);
+      if (!focus.on) {
+        if (at) focusScreen(); // and nothing else: this press does not reach the map
+      } else if (!at) unfocus();
+      else if (!focus.moving) map.press(map.hit(at[0], at[1]));
       // a finger leaves nothing hovering behind it
       if (e.pointerType !== 'mouse') pointer.known = false;
       pointer.moved = true;
@@ -444,8 +549,10 @@ load()
     window.addEventListener('pointercancel', () => {
       pointer.down = null;
     });
+    // Escape undoes the last thing: an open panel first, then the push-in
     window.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && map.close()) pointer.moved = true;
+      if (e.key !== 'Escape') return;
+      if (map.close() || unfocus()) pointer.moved = true;
     });
 
     let last = performance.now();
@@ -456,9 +563,21 @@ load()
       const dx = drift.tx - drift.x,
         dy = drift.ty - drift.y;
       let moved = dirty;
+      if (focus.moving) {
+        const t = Math.min((now - focus.started) / (FOCUS_SECONDS * 1000), 1);
+        focus.f = THREE.MathUtils.lerp(focus.from, focus.on ? 1 : 0, smooth(t));
+        if (t >= 1) focus.moving = false;
+        pointer.moved = true; // what the pointer is over changes with the camera, and once more on arriving
+        moved = true;
+      }
       if (Math.abs(dx) + Math.abs(dy) > 1e-4) {
         drift.x += dx * k;
         drift.y += dy * k;
+        moved = true;
+      } else if (dx || dy) {
+        // the last of the way in one step, so the camera rests in the same place however it got there
+        drift.x = drift.tx;
+        drift.y = drift.ty;
         moved = true;
       }
       if (moved) placeCamera();
@@ -467,8 +586,11 @@ load()
         pointer.moved = false;
         hover();
       }
-      if (map.update(now)) {
-        mapTexture.needsUpdate = true;
+      const sheet = map.update(now);
+      if (sheet) {
+        const texture = mapTextures.get(sheet);
+        samsung.material.emissiveMap = texture;
+        texture.needsUpdate = true;
         moved = true;
       }
       if (moved) {
@@ -484,23 +606,15 @@ load()
     function statePoint(id) {
       const uv = map.where(id);
       if (!uv) return null;
-      const p = samsung.geometry.attributes.position,
-        t = samsung.geometry.attributes.uv,
-        n = p.count;
-      // the glass is a flat rectangle: find its corners by their texture coordinates and blend them
-      const corner = (u, v) => {
-        let best = 0;
-        for (let i = 1; i < n; i++) if (Math.hypot(t.getX(i) - u, t.getY(i) - v) < Math.hypot(t.getX(best) - u, t.getY(best) - v)) best = i;
-        return new THREE.Vector3().fromBufferAttribute(p, best);
-      };
-      const top = corner(0, 0).lerp(corner(1, 0), uv[0]),
-        bottom = corner(0, 1).lerp(corner(1, 1), uv[0]);
+      const top = corners[0].clone().lerp(corners[1], uv[0]),
+        bottom = corners[2].clone().lerp(corners[3], uv[0]);
       const v = samsung.localToWorld(top.lerp(bottom, uv[1])).project(camera);
       return [((v.x + 1) / 2) * window.innerWidth, ((1 - v.y) / 2) * window.innerHeight];
     }
 
     // for the console and the tests
     window.room = {
+      ...world,
       THREE,
       scene,
       camera,
@@ -512,7 +626,6 @@ load()
       view,
       drift,
       pointer,
-      ...world,
       setView: (name) => {
         setView(world.manifest, name);
         dirty = true;
@@ -523,7 +636,15 @@ load()
       openState: (id) => map.open(id),
       closeState: () => map.close(),
       pick,
-      statePoint
+      onScreen,
+      statePoint,
+      focus,
+      focusScreen,
+      unfocus,
+      /** True when the camera is at the screen or on its way there. */
+      get focused() {
+        return focus.on;
+      }
     };
   })
   .catch((e) => {

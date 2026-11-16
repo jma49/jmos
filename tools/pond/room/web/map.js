@@ -3,20 +3,26 @@
 // amber and can be pressed; a pressed state brings in a panel for its photographs.
 //
 // The canvas is drawn again only when something changes (hover, opening, closing, a photo
-// arriving); main.js asks update() once a frame and uploads the texture when it says so.
+// arriving); main.js asks update() once a frame and uploads the sheet it hands back.
 // Everything is laid out in canvas pixels on a 2560 x 1440 sheet, with type sized to stay
 // readable when the whole screen is some 500 pixels wide in the seat view.
+//
+// There are two sheets. What stands still is drawn on the full one. While the panel slides
+// (0.4 s) each frame goes to a second sheet of half the size, a quarter of the pixels to fill
+// and to send to the graphics card; the last frame is drawn on the full sheet again. What never
+// changes (wallpaper, window, title bar) is drawn once per sheet and copied under each frame.
 
 const W = 2560,
   H = 1440;
 const FONT = 'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
 const MENU = 46; // the desktop's own strip along the top, as on the screen beside this one
+const RIM = [22, 18, 24]; // the wallpaper left showing beside, above and below the window
 const WIN = {
-  x: 60,
-  y: MENU + 44,
-  w: W - 120,
-  h: H - MENU - 44 - 56,
-  r: 30,
+  x: RIM[0],
+  y: MENU + RIM[1],
+  w: W - RIM[0] * 2,
+  h: H - MENU - RIM[1] - RIM[2],
+  r: 26,
   bar: 104
 };
 const SIDE = 690; // the list of places, on the window's right
@@ -27,27 +33,44 @@ const FOCUS_AREA = { x: BODY.x, y: BODY.y, w: BODY.w - PANEL, h: BODY.h };
 const CLOSE = { x: WIN.x + WIN.w - 124, y: BODY.y + 112, r: 50 };
 const ROW = { x: WIN.x + WIN.w - SIDE, y: BODY.y + 190, h: 100 };
 const OPEN_SECONDS = 0.42;
+const MOTION_SCALE = 0.5; // the size of the sheet the slide is drawn on
+const MAP_DROP = 26; // the map sits a little low in its area, for the label above the north-west
+const INSETS = ['AK', 'HI']; // drawn below the south-west, not where they are
 
 const COLOR = {
   window: '#10141b',
   bar: '#1b202a',
   hairline: 'rgba(255, 255, 255, 0.10)',
-  land: '#222a37',
+  land: '#232b39',
   border: '#3d4859',
+  // the land and its borders beside an open state: lifted a little, so the neighbours stay a map
+  landQuiet: '#2b3546',
+  borderQuiet: '#56637a',
   visited: '#c98443',
-  hover: '#f0ae62',
-  visitedBorder: '#f3cf9d',
+  // The screen glows and the page's tone curve (AgX) pulls bright colours toward white, so a
+  // lighter amber comes out cream. The hover is brighter mostly in red and keeps its blue low:
+  // more saturated on the canvas than it should look, and amber once it is through the curve.
+  hover: '#ff8206',
+  visitedBorder: '#ffca7a',
   text: '#e9e4da',
   muted: '#8f97a6',
   faint: '#5b6474',
   panel: '#161b24',
   slot: '#1d232e',
   dot: '#fff3df',
-  tag: 'rgba(12, 15, 20, 0.88)'
+  tag: 'rgba(12, 15, 20, 0.9)',
+  tagEdge: 'rgba(255, 255, 255, 0.16)'
 };
 
 const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
 const mix = (a, b, t) => a + (b - a) * t;
+const rgb = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+/** A colour between two '#rrggbb' ones. */
+const blend = (a, b, t) => {
+  const x = rgb(a),
+    y = rgb(b);
+  return `rgb(${x.map((v, i) => Math.round(mix(v, y[i], t))).join(',')})`;
+};
 
 function roundRect(g, x, y, w, h, r) {
   g.beginPath();
@@ -68,7 +91,8 @@ function wallpaper(g) {
   ];
   g.save();
   g.scale(W, H);
-  const grad = g.createRadialGradient(0.5, 0.5, 0, 0.5, 0.5, 0.75);
+  // brightest behind the window, where it is hidden: only the dim outer part shows around it
+  const grad = g.createRadialGradient(0.5, 0.45, 0, 0.5, 0.45, 0.62);
   // the ramp is linear in light, so place a few stops for the sRGB canvas to follow it
   for (let i = 0; i <= 8; i++) {
     const rgb = stops[0].map((a, k) => a + (stops[1][k] - a) * (i / 8));
@@ -84,10 +108,19 @@ function wallpaper(g) {
  * Returns the canvas and what main.js needs to drive it.
  */
 export function createMapScreen(map, places) {
-  const canvas = document.createElement('canvas');
-  canvas.width = W;
-  canvas.height = H;
-  const g = canvas.getContext('2d');
+  // a sheet: a canvas of the layout's W x H at some scale, and what never changes on it
+  const sheet = (k) => {
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.round(W * k);
+    canvas.height = Math.round(H * k);
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(k, 0, 0, k, 0, 0);
+    return { canvas, g: ctx, still: null };
+  };
+  const full = sheet(1),
+    motion = sheet(MOTION_SCALE);
+  const canvas = full.canvas;
+  let g = full.g; // the sheet being drawn on
   const probe = document.createElement('canvas').getContext('2d'); // for hit tests, never transformed
 
   const states = Object.entries(map.states).map(([id, s]) => ({
@@ -102,12 +135,13 @@ export function createMapScreen(map, places) {
     const s = byId[place.state];
     if (!s) continue;
     s.place = place;
+    // label: how far from the dot the name's pill starts, in sheet pixels with the map at rest
     s.city =
       place.city && map.cities[s.id]
         ? {
             name: place.city,
             at: map.cities[s.id],
-            side: place.label || 'right'
+            offset: Array.isArray(place.label) ? place.label : [30, 0]
           }
         : null;
     visited.push(s);
@@ -118,7 +152,7 @@ export function createMapScreen(map, places) {
   const home = {
     s: fit,
     x: MAP_AREA.x + (MAP_AREA.w - map.width * fit) / 2,
-    y: MAP_AREA.y + (MAP_AREA.h - map.height * fit) / 2
+    y: MAP_AREA.y + (MAP_AREA.h - map.height * fit) / 2 + MAP_DROP
   };
 
   /** Where the map sits when a state is open: that state, large, in what the panel leaves free. */
@@ -145,7 +179,8 @@ export function createMapScreen(map, places) {
     stale: true
   };
   const images = new Map(); // photo url -> Image, once asked for
-  let draws = 0; // how often the canvas was drawn, for the console and the tests
+  let draws = 0, // how often a sheet was drawn, for the console and the tests
+    motionDraws = 0;
 
   function photo(entry) {
     const src = typeof entry === 'string' ? entry : entry.src;
@@ -166,18 +201,69 @@ export function createMapScreen(map, places) {
   // Drawing.
   // -------------------------------------------------------------------------------------------
 
-  function tag(text, x, y, side, size = 46) {
-    g.font = `600 ${size}px ${FONT}`;
-    const w = g.measureText(text).width + size * 0.9,
-      h = size * 1.5;
-    const left = side === 'left' ? x - w - 26 : side === 'centre' ? x - w / 2 : x + 26;
-    roundRect(g, left, y - h / 2, w, h, h / 2);
+  const TAG = 46; // the size of a label's type
+
+  /** A name in a dark pill. `side` says which part of the pill (x, y) is: its left or right end, its top or bottom middle, or its centre. */
+  function tag(text, x, y, side) {
+    g.font = `600 ${TAG}px ${FONT}`;
+    const w = g.measureText(text).width + TAG * 0.9,
+      h = TAG * 1.5;
+    const left = side === 'left' ? x : side === 'right' ? x - w : x - w / 2;
+    const top = side === 'top' ? y : side === 'bottom' ? y - h : y - h / 2;
+    roundRect(g, left, top, w, h, h / 2);
     g.fillStyle = COLOR.tag;
     g.fill();
+    g.strokeStyle = COLOR.tagEdge;
+    g.lineWidth = 2;
+    g.stroke();
     g.fillStyle = COLOR.text;
     g.textAlign = 'center';
     g.textBaseline = 'middle';
-    g.fillText(text, left + w / 2, y + size * 0.04);
+    g.fillText(text, left + w / 2, top + h / 2 + TAG * 0.04);
+  }
+
+  /**
+   * A city: its dot where the city is, and its name off to one side at the end of a thin line, so
+   * the name covers neither its own state nor another label. With the state open and large the
+   * line shortens to a stub, and the name changes sides rather than run under the panel.
+   */
+  function drawCity(city, x, y, t) {
+    let [dx, dy] = city.offset;
+    const beside = Math.abs(dx) >= Math.abs(dy);
+    if (t > 0) {
+      const len = Math.hypot(dx, dy),
+        short = Math.min(len, 44);
+      dx = mix(dx, (dx / len) * short, t);
+      dy = mix(dy, (dy / len) * short, t);
+      g.font = `600 ${TAG}px ${FONT}`;
+      const w = g.measureText(city.name).width + TAG * 0.9;
+      const edge = mix(BODY.x + BODY.w - SIDE, FOCUS_AREA.x + FOCUS_AREA.w, t) - 40;
+      if (beside && dx > 0 && x + dx + w > edge) dx = -dx;
+    }
+    const ax = x + dx,
+      ay = y + dy;
+    g.lineCap = 'round';
+    for (const [width, colour] of [
+      [9, COLOR.window],
+      [3.5, COLOR.dot]
+    ]) {
+      g.beginPath();
+      g.moveTo(x, y);
+      g.lineTo(ax, ay);
+      g.lineWidth = width;
+      g.strokeStyle = colour;
+      g.stroke();
+    }
+    g.lineCap = 'butt';
+    g.beginPath();
+    g.arc(x, y, 15, 0, Math.PI * 2);
+    g.fillStyle = COLOR.window;
+    g.fill();
+    g.beginPath();
+    g.arc(x, y, 10, 0, Math.PI * 2);
+    g.fillStyle = COLOR.dot;
+    g.fill();
+    tag(city.name, ax, ay, beside ? (dx > 0 ? 'left' : 'right') : dy > 0 ? 'top' : 'bottom');
   }
 
   function drawMap(t) {
@@ -187,6 +273,11 @@ export function createMapScreen(map, places) {
       x: mix(home.x, focus.x, t),
       y: mix(home.y, focus.y, t)
     };
+    // How much of a state is left with another one open. The two insets are not where their
+    // states are, so they go rather than slide into the open state's view; and with an inset
+    // open, everything else goes.
+    const inset = (s) => INSETS.includes(s.id);
+    const left = (s) => (!ui.shown || s === ui.shown ? 1 : inset(s) || inset(ui.shown) ? 1 - t : 1);
     g.save();
     g.beginPath();
     g.rect(BODY.x, BODY.y, BODY.w, BODY.h);
@@ -196,23 +287,33 @@ export function createMapScreen(map, places) {
     g.scale(at.s, at.s);
     g.lineJoin = 'round';
     g.lineWidth = 2.5 / at.s;
-    g.fillStyle = COLOR.land;
-    g.strokeStyle = COLOR.border;
+    const land = blend(COLOR.land, COLOR.landQuiet, t);
+    g.fillStyle = land;
+    g.strokeStyle = blend(COLOR.border, COLOR.borderQuiet, t);
     for (const s of states) {
       if (s.place) continue;
+      g.globalAlpha = left(s);
       g.fill(s.path);
       g.stroke(s.path);
     }
     for (const s of visited) {
       const lit = s === ui.hover && !ui.open;
-      g.globalAlpha = ui.shown && s !== ui.shown ? 1 - 0.6 * t : 1;
+      const quiet = ui.shown && s !== ui.shown ? t : 0;
+      g.globalAlpha = left(s);
+      if (quiet) {
+        // the other visited states keep a trace of their amber on the land's own colour
+        g.fillStyle = land;
+        g.fill(s.path);
+        g.globalAlpha *= 1 - 0.62 * quiet;
+      }
       g.fillStyle = lit ? COLOR.hover : COLOR.visited;
       g.fill(s.path);
-      g.globalAlpha = 1;
+      g.globalAlpha = left(s);
       g.strokeStyle = COLOR.window;
       g.lineWidth = 3 / at.s;
       g.stroke(s.path);
     }
+    g.globalAlpha = 1;
     if (ui.hover && !ui.open) {
       g.strokeStyle = COLOR.visitedBorder;
       g.lineWidth = 5 / at.s;
@@ -227,15 +328,7 @@ export function createMapScreen(map, places) {
       if (alpha <= 0.01) continue;
       g.globalAlpha = alpha;
       const [x, y] = px(s.city.at);
-      g.beginPath();
-      g.arc(x, y, 15, 0, Math.PI * 2);
-      g.fillStyle = COLOR.window;
-      g.fill();
-      g.beginPath();
-      g.arc(x, y, 10, 0, Math.PI * 2);
-      g.fillStyle = COLOR.dot;
-      g.fill();
-      tag(s.city.name, x, y, s.city.side);
+      drawCity(s.city, x, y, s === ui.shown ? t : 0);
       g.globalAlpha = 1;
     }
     // a state without a city says its name while the pointer is on it
@@ -418,9 +511,8 @@ export function createMapScreen(map, places) {
     g.restore();
   }
 
-  function draw() {
-    draws++;
-    const t = ease(ui.t);
+  /** What never changes: the wallpaper, the menu strip, the window and its title bar. */
+  function drawStill() {
     wallpaper(g);
     g.fillStyle = 'rgba(6, 8, 14, 0.55)';
     g.fillRect(0, 0, W, MENU);
@@ -441,9 +533,9 @@ export function createMapScreen(map, places) {
     });
     // the window, with a soft shadow on the wallpaper
     g.save();
-    g.shadowColor = 'rgba(0, 0, 0, 0.55)';
-    g.shadowBlur = 50;
-    g.shadowOffsetY = 14;
+    g.shadowColor = 'rgba(0, 0, 0, 0.6)';
+    g.shadowBlur = 28;
+    g.shadowOffsetY = 8;
     roundRect(g, WIN.x, WIN.y, WIN.w, WIN.h, WIN.r);
     g.fillStyle = COLOR.window;
     g.fill();
@@ -464,17 +556,40 @@ export function createMapScreen(map, places) {
     g.textAlign = 'center';
     g.textBaseline = 'middle';
     g.fillText('Places', WIN.x + WIN.w / 2, WIN.y + WIN.bar / 2 + 2);
+    g.fillStyle = COLOR.hairline;
+    g.fillRect(WIN.x, WIN.y + WIN.bar - 3, WIN.w, 3);
+    g.restore();
+  }
 
+  function draw(on = full) {
+    draws++;
+    if (on === motion) motionDraws++;
+    g = on.g;
+    if (!on.still) {
+      // once per sheet, at the sheet's own size
+      on.still = document.createElement('canvas');
+      on.still.width = on.canvas.width;
+      on.still.height = on.canvas.height;
+      const keep = g;
+      g = on.still.getContext('2d');
+      g.setTransform(keep.getTransform());
+      drawStill();
+      g = keep;
+    }
+    g.drawImage(on.still, 0, 0, W, H);
+    const t = ease(ui.t);
+    g.save();
+    roundRect(g, WIN.x, WIN.y, WIN.w, WIN.h, WIN.r);
+    g.clip();
     if (t < 1) drawList();
     drawMap(t);
     if (t > 0 && ui.shown) drawPanel(t);
-    g.fillStyle = COLOR.hairline;
-    g.fillRect(WIN.x, WIN.y + WIN.bar - 3, WIN.w, 3);
     g.restore();
     roundRect(g, WIN.x + 1.5, WIN.y + 1.5, WIN.w - 3, WIN.h - 3, WIN.r);
     g.strokeStyle = 'rgba(255, 255, 255, 0.13)';
     g.lineWidth = 3;
     g.stroke();
+    return on.canvas;
   }
 
   // -------------------------------------------------------------------------------------------
@@ -547,7 +662,10 @@ export function createMapScreen(map, places) {
     return false;
   }
 
-  /** Once a frame. Draws if anything changed and says whether it did. */
+  /**
+   * Once a frame. Draws if anything changed and hands back the sheet it drew on (the full canvas,
+   * or `motion` for a frame of the slide), or null when nothing changed.
+   */
   function update(now) {
     if (ui.moving) {
       const k = Math.min((now - ui.started) / (OPEN_SECONDS * 1000), 1);
@@ -559,10 +677,9 @@ export function createMapScreen(map, places) {
       }
       ui.stale = true;
     }
-    if (!ui.stale) return false;
+    if (!ui.stale) return null;
     ui.stale = false;
-    draw();
-    return true;
+    return draw(ui.moving ? motion : full); // the slide's last frame is already at rest: in full
   }
 
   /** Where a state's middle is on the canvas with the map at rest, as 0..1 across and down. */
@@ -575,6 +692,7 @@ export function createMapScreen(map, places) {
   ui.stale = false;
   return {
     canvas,
+    motion: motion.canvas,
     width: W,
     height: H,
     hit,
@@ -595,6 +713,10 @@ export function createMapScreen(map, places) {
     },
     get draws() {
       return draws;
+    },
+    /** How many of those went to the small sheet. */
+    get motionDraws() {
+      return motionDraws;
     }
   };
 }
