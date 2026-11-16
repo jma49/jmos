@@ -195,8 +195,9 @@ words did not reach, there only for whoever asks.
   it (`taijiNow()` in `engine.js`). For 45 seconds the visitor's koi and the gold one go round one
   point half the figure's width apart (`taijiSpot()`, timed in frames drawn), the rest in a ring
   outside, and the taiji in ink wash (`#taiji`, the picture `taiji.webp` in ink's folder) shows
-  faintly under them, turned to the line between the two koi, with the eight trigrams (`#bagua`,
-  `bagua.webp`) in a ring round it turning slowly the other way (`stepTaiji()`). Both pictures are
+  faintly under them with the eight trigrams (`#bagua`, `bagua.webp`) in a ring round it. The
+  figure comes up slowly, stands still and only turns, slowly, as one (`stepTaiji()`); the koi do
+  the moving (Jincheng: "鱼动，阵图不动，只缓慢的转动"). Both pictures are
   in ink's folder (item 0 of "Asked for now" has what came).
   `window.__pond.taiji(t)` under `?perf` sets it up for a tool.
 - **The signature** ([decision 0028](../decisions/0028-the-pond-has-three-endings.md)), the pond's
