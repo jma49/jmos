@@ -43,3 +43,8 @@ coverage/
 .claude/worktrees/
 CLAUDE.local.md
 .cursor/
+
+# the room: what an export keeps for itself (tools/pond/room/export.py)
+tools/pond/room/.work/
+# pictures the room's shot scripts take
+tools/pond/room/web/*.png

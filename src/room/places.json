@@ -1,5 +1,5 @@
 {
-  "note": "Visited places for the map on the left screen. Add photo URLs (or { \"src\", \"alt\" } objects) to a place's photos to fill its panel. lonLat places the city dot; after changing it run: node build-map.mjs. label is [right, down] in pixels of the 2560 x 1440 sheet: from the dot to where the name's pill starts, at the end of a thin line (sideways if the first number is the larger, else above or below). Choose it so the pill lies outside the state and off other labels.",
+  "note": "Visited places for the map on the left screen. Add photo URLs (or { \"src\", \"alt\" } objects) to a place's photos to fill its panel. lonLat places the city dot; after changing it run: node tools/pond/room/web/build-map.mjs. label is [right, down] in pixels of the 2560 x 1440 sheet: from the dot to where the name's pill starts, at the end of a thin line (sideways if the first number is the larger, else above or below). Choose it so the pill lies outside the state and off other labels.",
   "places": [
     {
       "state": "TX",

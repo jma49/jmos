@@ -1,5 +1,7 @@
 // Tries the left screen with a real pointer in headless Chromium, checks what it does and takes
-// its pictures: node shot-map.cjs [port]. Exits 1 if a check fails.
+// its pictures, from a built site being served (npm run build, then npm run serve, which listens
+// on 4321): node tools/pond/room/web/shot-map.cjs [port]. Exits 1 if a check fails. The pictures
+// go to the folder it is run from.
 //
 // Software WebGL draws about a frame a second, and the camera's drift after the pointer takes a
 // dozen frames to settle. So only the first page has the drift on (the pictures, and the way in
@@ -12,8 +14,8 @@
 const { chromium } = require('playwright');
 
 (async () => {
-  const port = process.argv[2] || '8765';
-  const url = `http://localhost:${port}/index.html`;
+  const port = process.argv[2] || '4321';
+  const url = `http://localhost:${port}/room`;
   const browser = await chromium.launch();
   const VISITED = ['TX', 'FL', 'OH', 'IL', 'IN', 'WI', 'CA', 'WA', 'GA'];
   const OTHERS = ['CO', 'OK', 'MI', 'NY', 'NV', 'AK'];

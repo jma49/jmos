@@ -131,6 +131,7 @@ Function secrets:
 ```
 src/os/            the desktop, one React island (its folders: docs/agents/desktop.md)
 src/pond/          the pond, the home page: the water, the koi, its chapters (docs/agents/pond.md)
+src/room/          the room under the pond, in 3D with three.js: a preview at /room that nothing links to (docs/decisions/0030)
 src/lib/           what the pages, the desktop and api/ share: the media library's shape, photos, projects
 src/config/        where the site lives (site.ts): its domain and addresses, for astro.config.mjs, the desktop and api/
 src/pages/         the home page, the pond, project pages, robots.txt, llms.txt
@@ -142,6 +143,7 @@ supabase/          migrations, the schema generated from them, Edge Functions (d
 scripts/           preview capture, photo refresh, favicon and portrait builders, bot setup
 public/os/         icons, fonts and desktop pictures (from ryOS, see NOTICE)
 public/pond/       the pond's pictures, a folder for each look
+public/room/       the room's model, baked light and backdrop, written by tools/pond/room/export.py
 docs/agents/       guidance for coding agents, by part (AGENTS.md is the entry point)
 docs/decisions/    decision records: what was chosen, what was turned down and why
 ```

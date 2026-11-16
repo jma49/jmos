@@ -1,8 +1,10 @@
-# The room for the browser: builds the scene exactly as scene.py does, then writes what a
-# three.js page needs into ROOM_WEB (default /home/user/room/web):
+# The room for the browser: builds the scene exactly as scene.py does, then writes what the
+# page at /room (src/room/main.js) loads into ROOM_WEB (default public/room/, which the site
+# serves as /room/):
 #   backdrop.webp   the garden as the seat sees it through the glass (the room hidden from the camera)
-#   room.glb        the indoor part, Draco-compressed (by glTF Transform, from ROOM_WEB's node_modules),
-#                   with flat materials, the woods' colour maps and the light in vertex colours
+#   room.glb        the indoor part, Meshopt-compressed (by glTF Transform, from ROOM_TOOLS's
+#                   node_modules: `npm install` in tools/pond/room/web puts it there), with flat
+#                   materials, the woods' colour maps and the light in vertex colours
 #   lm/*.webp       the diffuse light on the big surfaces (desk top, mat, floor, rug, walls, ceiling)
 #   manifest.json   the seat camera, the lamp, and how the baked pictures are encoded
 # Run with Blender's Python module:
@@ -11,7 +13,9 @@
 # manifest.json; "look" alone does only that, and so refreshes the tone curve. A GLB written
 # without "vertices" in the same run has no light on the small things; one written without
 # "maps" reuses the woods' colour maps from the last run that baked them. "quick" is a
-# low-quality pass to test the pipeline (it overwrites the real output).
+# low-quality pass to test the pipeline (it overwrites the real output). What a run keeps for
+# itself (EXR renders, the bakes as arrays, the uncompressed GLB) goes to ROOM_WORK (default
+# tools/pond/room/.work/, which git ignores): never under public/, where it would be served.
 #
 # What is baked and what is not: all diffuse light is baked, with Cycles, and none of it is
 # computed in the browser. The big surfaces get a light map (and the two woods a colour map);
@@ -26,13 +30,15 @@ import sys
 import time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-WEB = os.environ.get('ROOM_WEB', '/home/user/room/web')
+REPO = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
+WEB = os.environ.get('ROOM_WEB', os.path.join(REPO, 'public', 'room'))
+TOOLS = os.environ.get('ROOM_TOOLS', os.path.join(HERE, 'web'))
 ARGS = sys.argv[1:]
 QUICK = 'quick' in ARGS
 STAGES = [a for a in ARGS if a in ('backdrop', 'maps', 'vertices', 'glb', 'look')] or ['backdrop', 'maps', 'vertices', 'glb']
 if 'bake' in ARGS:
     STAGES += ['maps', 'vertices']
-WORK = os.path.join(WEB, '.work')
+WORK = os.environ.get('ROOM_WORK', os.path.join(HERE, '.work'))
 
 # scene.py builds and renders as soon as it is loaded, and reads its options from the command
 # line. Load everything above its last lines (the call to build and the render) instead.
@@ -522,11 +528,11 @@ def export_glb(special, props, albedo):
         export_normals=True, export_tangents=False, export_texcoords=True, export_materials='EXPORT',
         export_vertex_color='ACTIVE', export_all_vertex_colors=False, export_active_vertex_color_when_no_material=True,
         export_image_format='WEBP', export_image_quality=82)
-    # Blender's Python module comes without the exporter's Draco bridge, so compress afterwards
-    # with glTF Transform (npm install in ROOM_WEB puts it there)
+    # Compress afterwards with glTF Transform. Meshopt rather than Draco: its decoder is a few
+    # kilobytes inside three.js's own bundle, where Draco's is a separate download run in a worker.
     try:
-        subprocess.run(['npx', '--no-install', 'gltf-transform', 'draco', raw, path, '--quantize-position', '14',
-                        '--quantize-normal', '10', '--quantize-color', '12', '--quantize-texcoord', '14'], cwd=WEB, check=True)
+        subprocess.run(['npx', '--no-install', 'gltf-transform', 'meshopt', raw, path, '--level', 'high', '--quantize-position', '14',
+                        '--quantize-normal', '10', '--quantize-color', '12', '--quantize-texcoord', '14'], cwd=TOOLS, check=True)
     except (OSError, subprocess.CalledProcessError) as e:
         log('glb: left uncompressed, glTF Transform did not run:', e)
         shutil.copyfile(raw, path)

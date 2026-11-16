@@ -694,17 +694,18 @@ def macbook():
 
 # ---------------------------------------------------------------------------------------------
 # The monitors, each built in its own frame (screen toward -y, the back toward +y) and then
-# turned to face the seat, toed in a little. Each returns where its arm must reach.
+# turned to face the seat: the two stand side by side in one plane, square to the desk. Each
+# returns where its arm must reach.
 # ---------------------------------------------------------------------------------------------
 
 UP = (rad(-90), 0, 0)
 LIFT = 0.198  # the monitors' lower edges above the desk: on the laptop lid's upper edge, seen from the seat
 
 
-def monitor_root(name, x, yaw):
+def monitor_root(name, x):
     at = Vector((x, 0.26, TOP))
-    root = empty(name, at, (0, 0, math.pi + yaw))
-    return root, Matrix.Translation(at) @ Matrix.Rotation(math.pi + yaw, 4, 'Z')
+    root = empty(name, at, (0, 0, math.pi))
+    return root, Matrix.Translation(at) @ Matrix.Rotation(math.pi, 4, 'Z')
 
 
 def vesa_head(root, yb, zc):
@@ -727,7 +728,7 @@ def samsung():
     """Samsung Odyssey OLED G8 (G80SD), 32 in, 714 by 412 mm: a very thin silver slab with the
     electronics in a shallow hump behind, a ring round the mount, a matt screen to the edge."""
     w, h = 0.714, 0.412
-    root, mw = monitor_root('samsung g80sd', 0.37, rad(7))
+    root, mw = monitor_root('samsung g80sd', 0.37)
     zc = LIFT + h / 2
     slab('samsung shell', w, h, 0.0058, 0.004, M['silver'], at=(0, 0, zc), rot=UP, parent=root, rb=0.0006, rt=0.0022)
     slab('samsung glass', w - 0.002, h - 0.002, 0.0004, 0.0032, M['oled glass'], at=(0, -0.0004, zc), rot=UP, parent=root)
@@ -743,7 +744,7 @@ def samsung():
 def dell():
     """Dell 27 (612 by 356 mm): a plain dark office monitor, thicker, with a plastic chin."""
     w, h = 0.612, 0.356
-    root, mw = monitor_root('dell 27', -0.335, rad(-7))
+    root, mw = monitor_root('dell 27', -0.335)
     zc = LIFT + h / 2
     slab('dell frame', w, h, 0.012, 0.003, M['dell bezel'], at=(0, 0, zc), rot=UP, parent=root, rb=0.0008, rt=0.003)
     slab('dell glass', w - 0.003, h - 0.0155, 0.0004, 0.002, M['matte glass'], at=(0, -0.0004, zc + 0.0063), rot=UP, parent=root)

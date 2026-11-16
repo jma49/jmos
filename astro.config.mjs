@@ -8,7 +8,8 @@ export default defineConfig({
   site: SITE_URL,
   // The dev toolbar sits where the JM/OS Dock is. It never ships to production.
   devToolbar: { enabled: false },
-  integrations: [react(), sitemap()],
+  // The room (src/pages/room.astro) is a preview nothing links to: it stays out of the sitemap too.
+  integrations: [react(), sitemap({ filter: (page) => new URL(page).pathname.replace(/\/$/, '') !== '/room' })],
   vite: {
     // NEXT_PUBLIC_ too: the Supabase integration for Vercel names its
     // variables for Next.js (see src/os/social/social.ts).

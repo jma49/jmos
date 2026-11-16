@@ -63,6 +63,24 @@ describe('the site config', () => {
     }
   });
 
+  it('gives the room’s page the site’s policy and only what three.js needs more', () => {
+    // vercel.json holds the policy twice, the room's rule coming after the site's and replacing it there: a change to the
+    // site's has to be made in the room's too.
+    const [site, room] = policies().map(({ directives }) => directives);
+    const added: Record<string, string[]> = { 'script-src': ["'wasm-unsafe-eval'"], 'connect-src': ['blob:'] };
+    expect(Object.keys(room)).toEqual(Object.keys(site));
+    for (const [name, sources] of Object.entries(room)) {
+      expect(
+        sources.filter((source) => !site[name].includes(source)),
+        name
+      ).toEqual(added[name] ?? []);
+      expect(
+        site[name].filter((source) => !sources.includes(source)),
+        name
+      ).toEqual([]);
+    }
+  });
+
   it('is where the Browser’s home is', () => {
     // BROWSER_HOME is a project page: renaming the project moves the home with it.
     expect(existsSync(new URL(`../../src/content/projects/${BROWSER_HOME.split('/').filter(Boolean).at(-1)}.md`, import.meta.url))).toBe(true);
