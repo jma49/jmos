@@ -99,6 +99,27 @@ export function layStroke(a: Album, look: string, day: string): { album: Album; 
 }
 /** Whether the character is whole: every stroke laid. */
 export const signed = (a: Album): boolean => STROKES.every((id) => id in a.strokes);
+/**
+ * No name (decision 0029), the third ending, for whoever goes back after the signature. The gold koi
+ * leaves the looks, in the order of the strokes: three from the day after the seal 真 is stamped, three
+ * more once the solar term has turned, the last four once it has turned again. `terms` is how many
+ * solar terms have begun since the day of the seal.
+ */
+export const LEAVES = [3, 6, 10];
+export function left(a: Album, today: string, terms: number): string[] {
+  if (!has(a, 'true') || a.found.true >= today) return [];
+  return STROKES.slice(0, LEAVES[Math.min(Math.max(Math.floor(terms), 0), LEAVES.length - 1)]);
+}
+/**
+ * A look the gold koi has left, kept still long enough, fades to the water under it: the album with that
+ * kept, and whether it is new.
+ */
+export function fade(a: Album, look: string, today: string, terms: number): { album: Album; fresh: boolean } {
+  if (!left(a, today, terms).includes(look) || look in a.faded) return { album: a, fresh: false };
+  return { album: { ...a, faded: { ...a.faded, [look]: today } }, fresh: true };
+}
+/** Whether every look has faded: the pond has no name left on it. */
+export const nameless = (a: Album): boolean => STROKES.every((id) => id in a.faded);
 /** The way back through the album that opens the end: the looks' seals in the order the volumes keep them. */
 export const WAY: string[] = VOLUMES.slice(0, 2).flatMap((v) => v.seals.map((x) => x.id));
 /** The steps taken so far with one more seal pressed: the next on the way goes on, anything else starts again. */
@@ -140,8 +161,10 @@ export interface Album {
   visits: number;
   /** the strokes of the signature laid so far: the look each was laid in → the day */
   strokes: Record<string, string>;
+  /** the looks that have faded to the water under them, after the signature: the look → the day */
+  faded: Record<string, string>;
 }
-export const emptyAlbum = (): Album => ({ found: {}, sealed: [], hinted: '', visits: 0, strokes: {} });
+export const emptyAlbum = (): Album => ({ found: {}, sealed: [], hinted: '', visits: 0, strokes: {}, faded: {} });
 
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
 /** The album as stored, whatever is there: anything missing or mangled is left out. */
@@ -157,6 +180,8 @@ export function readAlbum(raw: string | null): Album {
     if (typeof o.visits === 'number' && o.visits > 0) a.visits = Math.floor(o.visits);
     if (o.strokes && typeof o.strokes === 'object')
       for (const [k, v] of Object.entries(o.strokes)) if (STROKES.includes(k) && typeof v === 'string' && DAY.test(v)) a.strokes[k] = v;
+    if (o.faded && typeof o.faded === 'object')
+      for (const [k, v] of Object.entries(o.faded)) if (STROKES.includes(k) && typeof v === 'string' && DAY.test(v)) a.faded[k] = v;
   } catch {
     /* not JSON: an empty album */
   }
@@ -184,7 +209,7 @@ export function stamp(a: Album, id: string, day: string, vols: Volume[]): { albu
   return { album, fresh: true, filled: full(album, vol) ? vol : null };
 }
 /** The seals cleared, to find them again; that the line on the water was once shown, and the visits, stay. */
-export const clearSeals = (a: Album): Album => ({ ...a, found: {}, sealed: [], strokes: {} });
+export const clearSeals = (a: Album): Album => ({ ...a, found: {}, sealed: [], strokes: {}, faded: {} });
 /** A volume's large seal has been shown. */
 export const markSealed = (a: Album, vol: string): Album => (a.sealed.includes(vol) ? a : { ...a, sealed: [...a.sealed, vol] });
 
@@ -542,7 +567,7 @@ export function albumHTML(a: Album, vols: Volume[], lang: Lang, fresh: string[] 
     return `<section class="vol" data-vol="${v.id}"${done ? ' data-done' : ''}><header><i>${lang === 'en' ? roman[i] : `第${'一二三四五六'[i]}${lang === 'ja' ? '冊' : '册'}`}</i><b>${esc(w.volumes[v.id])}</b><em>${n} / ${v.seals.length}</em></header><div class="leaf"><ol class="slots">${v.seals
       .map((s) =>
         has(a, s.id)
-          ? `<li data-found data-id="${s.id}">${sealMark(s)}<span class="nm">${esc(w.names[s.id])}</span><time datetime="${a.found[s.id]}">${dayText(a.found[s.id], lang)}</time></li>`
+          ? `<li data-found${s.id in a.faded ? ' data-faded' : ''} data-id="${s.id}">${sealMark(s)}<span class="nm">${esc(w.names[s.id])}</span><time datetime="${a.found[s.id]}">${dayText(a.found[s.id], lang)}</time></li>`
           : `<li${TRACES[s.id] ? ` data-trace="${s.id}"` : ''}>${sealBlank(s)}${TRACES[s.id] ? `<svg class="trace" viewBox="0 0 60 60" aria-hidden="true">${TRACES[s.id]}</svg>` : ''}<span class="hint">${esc(w.hints[s.id])}</span></li>`
       )
       .join(

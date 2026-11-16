@@ -201,6 +201,13 @@ words did not reach, there only for whoever asks.
   stroke once laid (`#sign`, `.sign` in `pond.css`): light in glow, a ruled line on the blueprint,
   characters in ASCII; a painted look's is its picture (`STROKE_PICS`), and the relief's is its
   pair made into one, the groove's height lit as the wall is and the paint laid in it (`groove()`).
+- **No name** ([decision 0029](../decisions/0029-no-name-the-third-ending.md)), the third ending.
+  After the seal 真 the gold koi leaves the looks, three, then six, then all ten, a solar term
+  apart (`left()` in `seals.ts`; `goneNow()` and `termNo()` in `engine.js`). A look it has left,
+  with no input for `STILL` seconds, slows and then draws in slowly to the visitor's koi
+  (`stepStill()`), and is kept in the album as `faded`; its seal there is pale. With all ten faded
+  the gold koi comes back plain (`plainHost()`). Nothing on the page says any of this. What lies
+  under the pond, and the pond ageing for everyone, are not built.
 - **A chain of clues.** A look on show carries a small mark that points to the next look's gesture
   (`NEXT` and `clueFor()` in `seals.ts`, `CLUES` and `clueNow()` in `engine.js`, `.clue` in
   `pond.css`), laid in a few seconds after the look has come, until that next seal is found.

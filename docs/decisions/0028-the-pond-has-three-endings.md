@@ -1,7 +1,7 @@
 # 0028. The pond has three endings
 
 - Date: 2026-11-15
-- Status: accepted (the second ending is being built; the third is designed only)
+- Status: accepted (the first two are built; the third is [0029](0029-no-name-the-third-ending.md))
 
 ## Context
 
@@ -33,7 +33,7 @@ ending that stands by itself; nobody chooses a difficulty.
    ten laid, the character stands whole in the album and can be pressed:
    the gold koi swims over and round the visitor's, and the visitor has the
    seal 真, the first in the album that is not a master's.
-3. **No name (无名).** Designed, not built: for whoever goes back after the
+3. **No name (无名).** In [0029](0029-no-name-the-third-ending.md): for whoever goes back after the
    second ending and finds the gold koi leaving the looks one by one.
 
 How the second ending is kept fair:
