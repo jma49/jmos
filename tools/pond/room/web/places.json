@@ -1,0 +1,44 @@
+{
+  "note": "Visited places for the map on the left screen. Add photo URLs (or { \"src\", \"alt\" } objects) to a place's photos to fill its panel. lonLat places the city dot; after changing it run: node build-map.mjs",
+  "places": [
+    { "state": "TX", "city": null, "photos": [] },
+    {
+      "state": "FL",
+      "city": "Tampa",
+      "lonLat": [-82.4572, 27.9506],
+      "label": "left",
+      "photos": []
+    },
+    { "state": "OH", "city": null, "photos": [] },
+    {
+      "state": "IL",
+      "city": "Chicago",
+      "lonLat": [-87.6298, 41.8781],
+      "label": "left",
+      "photos": []
+    },
+    { "state": "IN", "city": null, "photos": [] },
+    {
+      "state": "WI",
+      "city": "Milwaukee",
+      "lonLat": [-87.9065, 43.0389],
+      "label": "right",
+      "photos": []
+    },
+    { "state": "CA", "city": null, "photos": [] },
+    {
+      "state": "WA",
+      "city": "Seattle",
+      "lonLat": [-122.3321, 47.6062],
+      "label": "right",
+      "photos": []
+    },
+    {
+      "state": "GA",
+      "city": "Atlanta",
+      "lonLat": [-84.388, 33.749],
+      "label": "right",
+      "photos": []
+    }
+  ]
+}
