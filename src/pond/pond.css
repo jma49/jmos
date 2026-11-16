@@ -2921,15 +2921,15 @@ button.more:hover {
     height: 96px;
   }
 }
-/* ---------- the koi's circle (engine.js, stepTaiji): the taiji in ink wash under the two koi, laid into the
-   paper as ink is. The engine places, turns and fades it; nothing is fetched until the circle is called. ---------- */
+/* ---------- the koi's circle (engine.js, stepTaiji): the taiji in ink wash under the two koi and the
+   trigrams round it, each a canvas laid into the paper as ink is. The engine draws, places and turns
+   them; nothing is fetched until the circle is called. ---------- */
 .taiji {
   position: absolute;
   left: 0;
   top: 0;
   pointer-events: none;
   opacity: 0;
-  background: center / contain no-repeat;
   mix-blend-mode: multiply;
   will-change: transform, opacity;
 }
