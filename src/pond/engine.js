@@ -2440,15 +2440,23 @@ function taijiSpot(k) {
     lead = inner ? 0.7 : -0.5;
   return [cx + Math.cos(at + lead) * R, cy + Math.sin(at + lead) * R];
 }
-addEventListener('keydown', (e) => {
-  taiji.keys = [...taiji.keys, e.key.length === 1 ? e.key.toLowerCase() : e.key].slice(-CHEAT.length);
-  if (look !== 'ink' || base !== 'ink' || sheetOpen() || taiji.keys.join() !== CHEAT.join()) return;
-  taiji.keys = [];
-  taiji.until = performance.now() + 45000;
-  plip('ink', 1);
-  invalidate();
-  setTimeout(() => look === 'ink' && reached('taiji'), 14000);
-});
+// The keys are read by where they are on the keyboard (`code`), not by what they type: with a Chinese or
+// Japanese input method on, B and A type nothing of their own. And they are read on the way down to
+// whatever has the focus (capture): the depth gauge keeps the arrow keys it is given to itself.
+addEventListener(
+  'keydown',
+  (e) => {
+    taiji.keys = [...taiji.keys, /^Key[A-Z]$/.test(e.code) ? e.code.slice(3).toLowerCase() : e.code].slice(-CHEAT.length);
+    // (ink need only be most of the way in: the code is often typed as it arrives)
+    if (look !== 'ink' || inkR < inkMax * 0.45 || sheetOpen() || taiji.keys.join() !== CHEAT.join()) return;
+    taiji.keys = [];
+    taiji.until = performance.now() + 45000;
+    plip('ink', 1);
+    invalidate();
+    setTimeout(() => look === 'ink' && reached('taiji'), 14000);
+  },
+  true
+);
 // 鲤鱼跃龙门: the koi that cleared the gate goes as a dragon (dragon.js), rippling the water under it and, in
 // the water, lighting it gold. The koi is back in the pond once the dragon has gone, and the visit has its
 // seal. Its picture is fetched at the first leap, so it has come by the third. (`pin` holds the dragon at one
