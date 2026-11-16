@@ -15,6 +15,7 @@ import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+import { createMapScreen } from './map.js';
 
 const query = new URLSearchParams(location.search);
 const canvas = document.getElementById('room');
@@ -157,36 +158,9 @@ const loadTexture = (url) => new Promise((resolve, reject) => textures.load(url,
 const gltfLoader = new GLTFLoader();
 gltfLoader.setDRACOLoader(new DRACOLoader().setDecoderPath('./node_modules/three/examples/jsm/libs/draco/gltf/'));
 
-/** The Samsung's picture: a canvas, so a map can be drawn on it later. For now the calm navy of the offline render. */
-function mapCanvas() {
-  const c = document.createElement('canvas');
-  c.width = 1024;
-  c.height = 576;
-  const g = c.getContext('2d');
-  const srgb = (v) => Math.round(255 * (v <= 0.0031308 ? v * 12.92 : 1.055 * v ** (1 / 2.4) - 0.055));
-  const stops = [
-    [0, [0.02, 0.052, 0.165]],
-    [1, [0.006, 0.016, 0.06]]
-  ];
-  // scene.py's ramp runs over distance in the picture's own 0..1 square, out to 0.75; draw a
-  // circle in that square and let the canvas stretch it
-  g.save();
-  g.scale(c.width, c.height);
-  const grad = g.createRadialGradient(0.5, 0.5, 0, 0.5, 0.5, 0.75);
-  // the ramp is linear in light, so place a few stops for the sRGB canvas to follow it
-  for (let i = 0; i <= 8; i++) {
-    const t = i / 8;
-    const rgb = stops[0][1].map((a, k) => a + (stops[1][1][k] - a) * t);
-    grad.addColorStop(t, `rgb(${rgb.map(srgb).join(',')})`);
-  }
-  g.fillStyle = grad;
-  g.fillRect(0, 0, 1, 1);
-  g.restore();
-  return c;
-}
-
 async function load() {
-  const manifest = await (await fetch('./manifest.json')).json();
+  const json = async (url) => (await fetch(url)).json();
+  const [manifest, usMap, places] = await Promise.all([json('./manifest.json'), json('./us-map.json'), json('./places.json')]);
   const lm = manifest.lightmaps;
   const [gltf, backdropTex, ...lightTex] = await Promise.all([
     gltfLoader.loadAsync('./room.glb'),
@@ -225,9 +199,10 @@ async function load() {
     o.material.envMapIntensity = settings.envIntensity;
   });
 
-  // the Samsung (the left screen): its own mesh and material, lit by a canvas
+  // the Samsung (the left screen): its own mesh and material, lit by a canvas (map.js draws it)
   const samsung = named.samsung_screen;
-  const mapTexture = new THREE.CanvasTexture(mapCanvas());
+  const map = createMapScreen(usMap, places);
+  const mapTexture = new THREE.CanvasTexture(map.canvas);
   mapTexture.colorSpace = THREE.SRGBColorSpace;
   mapTexture.flipY = false;
   mapTexture.anisotropy = maxAniso;
@@ -302,7 +277,7 @@ async function load() {
   });
   scene.add(lamp);
 
-  return { manifest, named, samsung, mapTexture, backdrop, glass, lamp };
+  return { manifest, named, samsung, map, mapTexture, backdrop, glass, lamp };
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -375,7 +350,17 @@ function resize() {
   dirty = true;
 }
 window.addEventListener('resize', resize);
+// The pointer: it pulls the camera a little (the drift) and it points at the left screen's map.
+// What it points at is worked out in the frame loop, against the camera as last drawn, so the
+// drift cannot put the hit somewhere other than where the picture shows it.
+const pointer = { x: 0, y: 0, known: false, moved: true, down: null };
 window.addEventListener('pointermove', (e) => {
+  Object.assign(pointer, {
+    x: e.clientX,
+    y: e.clientY,
+    known: true,
+    moved: true
+  });
   if (still) return;
   drift.tx = (e.clientX / window.innerWidth) * 2 - 1;
   drift.ty = -((e.clientY / window.innerHeight) * 2 - 1);
@@ -425,6 +410,44 @@ load()
     });
     pmrem.dispose();
 
+    // The map on the left screen. A ray from the pointer meets the screen's glass; where it meets
+    // it, the glass's own texture coordinate says which pixel of the map's canvas is under it.
+    const { map, samsung, mapTexture } = world;
+    const raycaster = new THREE.Raycaster();
+    const ndc = new THREE.Vector2();
+    /** What of the map is under a point of the page (client pixels), with the camera as it stands. */
+    function pick(x, y) {
+      ndc.set((x / window.innerWidth) * 2 - 1, -((y / window.innerHeight) * 2 - 1));
+      camera.updateMatrixWorld();
+      raycaster.setFromCamera(ndc, camera);
+      const at = raycaster.intersectObject(samsung, false)[0];
+      // the texture is not flipped (flipY = false), so v runs down the canvas as y does
+      return at && at.uv ? map.hit(at.uv.x * map.width, at.uv.y * map.height) : null;
+    }
+    function hover() {
+      const hand = pointer.known && map.point(pick(pointer.x, pointer.y));
+      canvas.style.cursor = hand ? 'pointer' : '';
+    }
+    // a press counts where the pointer goes down and comes up in one place (a tap, a click), not a drag
+    window.addEventListener('pointerdown', (e) => {
+      if (e.button === 0) pointer.down = { x: e.clientX, y: e.clientY, id: e.pointerId };
+    });
+    window.addEventListener('pointerup', (e) => {
+      const down = pointer.down;
+      pointer.down = null;
+      if (!down || down.id !== e.pointerId || Math.hypot(e.clientX - down.x, e.clientY - down.y) > (e.pointerType === 'mouse' ? 6 : 14)) return;
+      map.press(pick(e.clientX, e.clientY));
+      // a finger leaves nothing hovering behind it
+      if (e.pointerType !== 'mouse') pointer.known = false;
+      pointer.moved = true;
+    });
+    window.addEventListener('pointercancel', () => {
+      pointer.down = null;
+    });
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && map.close()) pointer.moved = true;
+    });
+
     let last = performance.now();
     function frame(now) {
       const dt = Math.min((now - last) / 1000, 0.1);
@@ -432,14 +455,24 @@ load()
       const k = 1 - Math.exp(-dt * 3.5);
       const dx = drift.tx - drift.x,
         dy = drift.ty - drift.y;
+      let moved = dirty;
       if (Math.abs(dx) + Math.abs(dy) > 1e-4) {
         drift.x += dx * k;
         drift.y += dy * k;
-        dirty = true;
+        moved = true;
       }
-      if (dirty) {
+      if (moved) placeCamera();
+      // the camera has moved under the pointer, or the pointer over the picture
+      if (moved || pointer.moved || !map.settled) {
+        pointer.moved = false;
+        hover();
+      }
+      if (map.update(now)) {
+        mapTexture.needsUpdate = true;
+        moved = true;
+      }
+      if (moved) {
         dirty = false;
-        placeCamera();
         composer.render();
         document.body.dataset.ready = '1';
       }
@@ -447,7 +480,26 @@ load()
     }
     requestAnimationFrame(frame);
 
-    // for the console and for what comes next (a map on the Samsung: draw on mapTexture.image, then mapTexture.needsUpdate = true)
+    /** Where a state's middle is on the page right now (client pixels), for tests that press it. */
+    function statePoint(id) {
+      const uv = map.where(id);
+      if (!uv) return null;
+      const p = samsung.geometry.attributes.position,
+        t = samsung.geometry.attributes.uv,
+        n = p.count;
+      // the glass is a flat rectangle: find its corners by their texture coordinates and blend them
+      const corner = (u, v) => {
+        let best = 0;
+        for (let i = 1; i < n; i++) if (Math.hypot(t.getX(i) - u, t.getY(i) - v) < Math.hypot(t.getX(best) - u, t.getY(best) - v)) best = i;
+        return new THREE.Vector3().fromBufferAttribute(p, best);
+      };
+      const top = corner(0, 0).lerp(corner(1, 0), uv[0]),
+        bottom = corner(0, 1).lerp(corner(1, 1), uv[0]);
+      const v = samsung.localToWorld(top.lerp(bottom, uv[1])).project(camera);
+      return [((v.x + 1) / 2) * window.innerWidth, ((1 - v.y) / 2) * window.innerHeight];
+    }
+
+    // for the console and the tests
     window.room = {
       THREE,
       scene,
@@ -459,6 +511,7 @@ load()
       settings,
       view,
       drift,
+      pointer,
       ...world,
       setView: (name) => {
         setView(world.manifest, name);
@@ -466,7 +519,11 @@ load()
       },
       redraw: () => {
         dirty = true;
-      }
+      },
+      openState: (id) => map.open(id),
+      closeState: () => map.close(),
+      pick,
+      statePoint
     };
   })
   .catch((e) => {
