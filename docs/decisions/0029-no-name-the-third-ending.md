@@ -44,8 +44,8 @@ third ending asks for the one thing it never has: to leave it alone.
 ## Not built yet
 
 - **What is under the pond.** The end is a door: `nameless()` in
-  `src/pond/seals.ts` says a visitor has reached it. Jincheng decides what
-  it opens on.
+  `src/pond/seals.ts` says a visitor has reached it. It opens on his room
+  ([0030](0030-a-room-under-the-pond.md)), which is being built.
 
 ## Consequences
 

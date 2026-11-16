@@ -42,3 +42,4 @@ replaces; don't delete the old one.
 | [0027](0027-the-pond-ignores-reduced-motion.md) | The pond ignores reduced motion | 2026-11-14 |
 | [0028](0028-the-pond-has-three-endings.md) | The pond has three endings | 2026-11-15 |
 | [0029](0029-no-name-the-third-ending.md) | No name: the pond's third ending | 2026-11-16 |
+| [0030](0030-a-room-under-the-pond.md) | A room under the pond | 2026-11-16 |
