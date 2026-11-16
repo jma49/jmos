@@ -244,6 +244,11 @@ class Koi {
     const dx = this.tx - this.x,
       dy = this.ty - this.y,
       d = Math.hypot(dx, dy);
+    // In the koi's circle the two koi at the figure's eyes are held there once they have swum up: carried
+    // with the eye as the figure turns, head on it and facing the way it goes, the body lying back along
+    // the circle the eyes go round, so the two lie head to tail as the two fish of a taiji do.
+    this.held = !!ring && ring.length > 2 && (this.held || d < this.size * 0.45);
+    if (this.held) return void this.carried(ring, dt);
     let da = Math.atan2(dy, dx) - this.a;
     da = Math.atan2(Math.sin(da), Math.cos(da));
     // The tightest arc is about half a body length, tighter when startled or closing on food; how fast it
@@ -282,6 +287,32 @@ class Koi {
     if (this.sp > 70 && T > this.wake && this.alpha > 0.5) {
       drop(s[N - 1].x, s[N - 1].y, 1.2, 0.05 + this.burst * 0.25);
       this.wake = T + 0.22;
+    }
+  }
+  // Held at an eye of the taiji ([its place, the middle and radius of the eyes' circle]): eased on to it
+  // and round to its heading, its tail still beating, each joint of its spine eased back along the circle.
+  carried([ex, ey, cx, cy, r], dt) {
+    const e = Math.min(1, dt * 2.5),
+      seg = this.size * 0.1,
+      s = this.spine;
+    this.x += (ex - this.x) * e;
+    this.y += (ey - this.y) * e;
+    const at = Math.atan2(this.y - cy, this.x - cx);
+    let da = at + Math.PI / 2 - this.a;
+    da = Math.atan2(Math.sin(da), Math.cos(da));
+    this.a += da * e;
+    this.w = 0;
+    this.sp += (16 - this.sp) * Math.min(1, dt * 2.4);
+    this.burst = 0;
+    this.ph += dt * (2.4 + (this.sp / this.size) * 5.2);
+    this.alpha = Math.min(1, this.alpha + dt * (this.shown ? 0.9 : -3));
+    if (this.alpha < 0) this.alpha = 0;
+    s[0].x = this.x;
+    s[0].y = this.y;
+    for (let i = 1; i < N; i++) {
+      const b = at - (i * seg) / r;
+      s[i].x += (cx + Math.cos(b) * r - s[i].x) * e;
+      s[i].y += (cy + Math.sin(b) * r - s[i].y) * e;
     }
   }
   // In the star chart a koi is a constellation: a few stars along its back and at its fins, joined by thin
@@ -2425,9 +2456,9 @@ function leapNow() {
 }
 // The koi's circle (太极), in ink only: an old cheat typed on the keys (up up down down left right left right
 // B A), or an S drawn on the water, and for three quarters of a minute the pond is a taiji. The visitor's
-// koi and the gold one are its two fish: they swim head to tail round one point, half the figure's width
-// apart, and under them the figure itself comes up slowly in ink wash (a picture, ink/taiji) as the
-// two koi swim it, and goes again before they part. The rest keep to a wide ring round it, the other
+// koi and the gold one are its two fish: each keeps to one of the figure's two eyes, half its width
+// apart, head to tail, and is carried round as it turns. The figure itself comes up slowly under them
+// in ink wash (a picture, ink/taiji), and goes again before they part. The rest keep to a wide ring round it, the other
 // way about, among the eight trigrams (ink/bagua). The figure stands still and only turns, slowly; both
 // pictures are faint, as if they showed through the paper. It earns an idle seal.
 const CHEAT = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
@@ -2451,17 +2482,19 @@ const taijiAt = () => [W * (big ? 0.66 : 0.5), H * 0.5, Math.min(W, H) * 0.3];
 function taijiSpot(k) {
   if (!taijiOn()) return null;
   const [cx, cy, R] = taijiAt(),
-    inner = k === you || k === host,
-    rest = kois.filter((q) => q !== you && q !== host),
-    // (timed in frames drawn, as a look's arrival is: where frames come slowly the koi could not keep up
-    // with a place that ran on by the clock)
-    t = taiji.t,
-    // (the rest swim among the trigrams)
-    r = inner ? R / 2 : R * 1.3,
-    // where it should be on its ring now, and a little further on, so it is always swimming round
-    at = inner ? t * 0.55 + (k === host ? Math.PI : 0) : -t * 0.22 + (rest.indexOf(k) / Math.max(1, rest.length)) * TAU,
-    lead = inner ? 0.55 : -0.4;
-  return [cx + Math.cos(at + lead) * r, cy + Math.sin(at + lead) * r];
+    rest = kois.filter((q) => q !== you && q !== host);
+  // The two koi keep to the figure's two eyes and are carried round with them as it turns: the visitor's
+  // (the white one) on the dot of ink in the light half, the gold one on the round of paper in the dark.
+  // (its place, then the middle and the radius of the circle the eyes go round)
+  if (k === you || k === host) {
+    const at = taiji.a + taiji.t * TAIJI_TURN + TAIJI_EYE + (k === host ? Math.PI : 0);
+    return [cx + (Math.cos(at) * R) / 2, cy + (Math.sin(at) * R) / 2, cx, cy, R / 2];
+  }
+  // the rest swim among the trigrams, the other way about: where each should be on the ring now, and a
+  // little further on, so it is always swimming round (timed in frames drawn, as a look's arrival is:
+  // where frames come slowly the koi could not keep up with a place that ran on by the clock)
+  const at = -taiji.t * 0.22 + (rest.indexOf(k) / Math.max(1, rest.length)) * TAU - 0.4;
+  return [cx + Math.cos(at) * R * 1.3, cy + Math.sin(at) * R * 1.3];
 }
 function taijiNow() {
   if (look !== 'ink' || inkR < inkMax * 0.45 || sheetOpen() || taijiOn()) return;
@@ -3712,16 +3745,12 @@ if (PERF)
     // the figure fully shown
     taiji: (t = 0) => {
       taijiNow();
-      const [cx, cy, R] = taijiAt();
       taiji.t = t;
-      for (const [k, off] of [
-        [you, 0],
-        [host, Math.PI]
-      ]) {
-        const a = t * 0.55 + off;
-        Object.assign(k, { x: cx + (Math.cos(a) * R) / 2, y: cy + (Math.sin(a) * R) / 2, a: a + Math.PI / 2 });
-      }
       taiji.k = 1;
+      for (const k of [you, host]) {
+        const [x, y, cx, cy] = taijiSpot(k);
+        Object.assign(k, { x, y, a: Math.atan2(y - cy, x - cx) + Math.PI / 2, held: true });
+      }
     }
   };
 function callDove() {

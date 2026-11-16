@@ -192,8 +192,9 @@ words did not reach, there only for whoever asks.
   one, held that far into its flight, from a picture to try if one is given.
 - **The koi's circle (太极)**, in ink only: the old code on the keys (read by key position, so an
   input method does not break it) or an S drawn on the water (`sCurve()` in `gestures.ts`) calls
-  it (`taijiNow()` in `engine.js`). For 45 seconds the visitor's koi and the gold one go round one
-  point half the figure's width apart (`taijiSpot()`, timed in frames drawn), the rest in a ring
+  it (`taijiNow()` in `engine.js`). For 45 seconds the visitor's koi and the gold one keep to the
+  figure's two eyes, the white on the ink dot and the gold on the round of paper, held there head
+  to tail and carried round as it turns (`taijiSpot()`, `Koi.carried()`), the rest in a ring
   outside, and the taiji in ink wash (`#taiji`, the picture `taiji.webp` in ink's folder) shows
   faintly under them with the eight trigrams (`#bagua`, `bagua.webp`) in a ring round it. The
   figure comes up slowly, stands still and only turns, slowly, as one (`stepTaiji()`); the koi do
