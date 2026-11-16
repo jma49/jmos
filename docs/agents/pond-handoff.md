@@ -8,6 +8,19 @@ what is left, and what was learnt. What is open now is section 0.
 
 ## 0. Open now: pictures for the small games
 
+- **Next cloud review: the gold window and its koi are ready.** Pull through
+  `3792c71`: the chosen wide-2/tall-2 beds and the optional right-shifted bed
+  are delivered, along with the third koi sheet and its tint mask. The local
+  picture work stops at this review. Wire the new bed and koi into the preview,
+  compare `bed.webp` with `bed-right.webp`, and check title clearance on wide
+  and upright screens. Look at the fish swimming and bending, their white,
+  ruby and cobalt against the gold, and the two tintable rows with visitor
+  colours. Known weaknesses to judge in motion: the two whites differ in
+  warmth, the tint patches lack glass texture, and the cobalt fish is brighter
+  than the bed's blue. Reply here with concrete image or code changes needed
+  and show the owner the koi before requesting the dragon or lilies. Keep the
+  existing first-kit dragon and lilies pending that review.
+
 - **Branch:** `cloud/modest-noether-l6tvpo`. Two threads work on it, as before: the thread in the
   cloud writes the code and the briefs; the thread on Jincheng's own machine makes the pictures (it
   can call the image model there) and commits them to this same branch. Always `git pull --rebase
