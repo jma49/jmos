@@ -35,11 +35,10 @@ what is left, and what was learnt. What is open now is section 0.
   青花's, Dunhuang's, Monet's, the star chart's figure, the relief's pair); the second and third
   sheets of seals, so every seal is cut; painted clues for Monet's pond, the bowl, ukiyo-e and the
   star chart; the midge the spider hunts. Each was looked at in the pond at 1280 × 800.
-- **Asked now (2026-11-16): two pictures for the koi's circle in ink**, `taiji.webp` and
-  `bagua.webp` in the ink folder (item 0 of "Asked for now" in the brief). Jincheng wants a taiji
-  and the eight trigrams showing faintly through the paper and turning while the koi circle. The
-  code is live and waits only on these two; where the taiji's two eyes sit, which way its halves
-  lead, and the trigrams' ring are given in pixels and matter.
+- **Delivered and in use (2026-11-16): the taiji and the eight trigrams in ink** for the koi's
+  circle (`taiji.webp`, `bagua.webp`). Seen in the pond at 1280 × 760 and 390 × 780: both sit
+  right, the trigrams in the 先天 order, the gold koi showing through the dark half. Nothing is
+  open now.
 - **Dropped (2026-11-16): the stained glass look.** Jincheng: "抛弃玻璃这个风格吧。先做主线".
   Stop all work on it; its pictures are removed and the blueprint stays. Why is in the brief
   under "Stained glass: dropped". No new look is asked for now.

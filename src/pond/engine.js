@@ -2433,10 +2433,11 @@ function leapNow() {
 const CHEAT = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
 const TAIJI_PIC = '/pond/ink/taiji.webp',
   // the eight trigrams in a ring round it, on a picture of their own: they turn slowly the other way.
-  // The ring's outer edge is 940 of its 1024 across, and 1.8 times the taiji's radius from the middle.
+  // The ring's outer edge is 940 of its 1024 across, and 1.6 times the taiji's radius from the middle,
+  // so the whole of it stands on the page.
   BAGUA_PIC = '/pond/ink/bagua.webp',
   BAGUA_FILL = 940 / 1024,
-  BAGUA_REACH = 1.8,
+  BAGUA_REACH = 1.6,
   // both are faint: a figure showing through the paper, not printed on it
   TAIJI_INK = 0.62,
   BAGUA_INK = 0.46,
@@ -2446,7 +2447,7 @@ const TAIJI_PIC = '/pond/ink/taiji.webp',
 const taiji = { until: 0, at: 0, t: 0, keys: [], k: 0, a: 0, x: 0, y: 0, pic: false };
 const taijiOn = () => performance.now() < taiji.until && look === 'ink';
 // the figure's middle and its radius
-const taijiAt = () => [W * (big ? 0.66 : 0.5), H * 0.5, Math.min(W, H) * (big ? 0.3 : 0.36)];
+const taijiAt = () => [W * (big ? 0.66 : 0.5), H * 0.5, Math.min(W, H) * 0.3];
 function taijiSpot(k) {
   if (!taijiOn()) return null;
   const [cx, cy, R] = taijiAt(),
@@ -2455,7 +2456,8 @@ function taijiSpot(k) {
     // (timed in frames drawn, as a look's arrival is: where frames come slowly the koi could not keep up
     // with a place that ran on by the clock)
     t = taiji.t,
-    r = inner ? R / 2 : R * 1.34,
+    // (the rest swim among the trigrams)
+    r = inner ? R / 2 : R * 1.3,
     // where it should be on its ring now, and a little further on, so it is always swimming round
     at = inner ? t * 0.55 + (k === host ? Math.PI : 0) : -t * 0.22 + (rest.indexOf(k) / Math.max(1, rest.length)) * TAU,
     lead = inner ? 0.55 : -0.4;
