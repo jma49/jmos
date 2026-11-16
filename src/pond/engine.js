@@ -2426,13 +2426,13 @@ function leapNow() {
 // The koi's circle (太极), in ink only: an old cheat typed on the keys (up up down down left right left right
 // B A), or an S drawn on the water, and for three quarters of a minute the pond is a taiji. The visitor's
 // koi and the gold one are its two fish: they swim head to tail round one point, half the figure's width
-// apart, and under them the figure itself comes up in ink wash (a picture, ink/taiji), turned so that its
-// two eyes stay where the two koi are, and goes again before they part. The rest keep to a wide ring
-// round it, the other way about, and round them the eight trigrams turn slowly (ink/bagua). Both
+// apart, and under them the figure itself comes up slowly in ink wash (a picture, ink/taiji) as the
+// two koi swim it, and goes again before they part. The rest keep to a wide ring round it, the other
+// way about, among the eight trigrams (ink/bagua). The figure stands still and only turns, slowly; both
 // pictures are faint, as if they showed through the paper. It earns an idle seal.
 const CHEAT = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
 const TAIJI_PIC = '/pond/ink/taiji.webp',
-  // the eight trigrams in a ring round it, on a picture of their own: they turn slowly the other way.
+  // the eight trigrams in a ring round it, on a picture of their own.
   // The ring's outer edge is 940 of its 1024 across, and 1.6 times the taiji's radius from the middle,
   // so the whole of it stands on the page.
   BAGUA_PIC = '/pond/ink/bagua.webp',
@@ -2444,7 +2444,7 @@ const TAIJI_PIC = '/pond/ink/taiji.webp',
   // the picture's figure is 880 of its 1024 across; its light eye (the visitor's koi) is straight below its middle
   TAIJI_FILL = 880 / 1024,
   TAIJI_EYE = Math.PI / 2;
-const taiji = { until: 0, at: 0, t: 0, keys: [], k: 0, a: 0, x: 0, y: 0, pic: false };
+const taiji = { until: 0, at: 0, t: 0, keys: [], k: 0, a: 0, pic: false };
 const taijiOn = () => performance.now() < taiji.until && look === 'ink';
 // the figure's middle and its radius
 const taijiAt = () => [W * (big ? 0.66 : 0.5), H * 0.5, Math.min(W, H) * 0.3];
@@ -2466,7 +2466,8 @@ function taijiSpot(k) {
 function taijiNow() {
   if (look !== 'ink' || inkR < inkMax * 0.45 || sheetOpen() || taijiOn()) return;
   const now = performance.now();
-  Object.assign(taiji, { at: now, until: now + 45000, t: 0, keys: [], k: 0 });
+  // (it starts with its light eye where the visitor's koi's place starts)
+  Object.assign(taiji, { at: now, until: now + 45000, t: 0, keys: [], k: 0, a: -TAIJI_EYE });
   // (the picture is asked for the first time the circle is called)
   if (!taiji.pic) {
     taiji.pic = true;
@@ -2477,38 +2478,32 @@ function taijiNow() {
   invalidate();
   setTimeout(() => look === 'ink' && reached('taiji'), 14000);
 }
-// The figure under the two koi: it shows once they have come to their places across from each other, is
-// turned to the line between them, and fades before the circle ends. Written to the page only while it shows.
+// The figure under the koi (the owner: it comes slowly, the koi move, the figure does not, it only turns
+// slowly): the taiji and the trigrams stand still about one middle and turn together as one figure, a
+// turn in two minutes or so, whatever the koi do. It comes up over some ten seconds from the moment the
+// circle is called and goes in the last five. Written to the page only while it shows.
+const TAIJI_TURN = 0.05;
 function stepTaiji(raw) {
   const el = $('#taiji'),
     ring = $('#bagua');
   if (!taiji.pic || (!taijiOn() && taiji.k <= 0)) return;
   taiji.t += Math.min(raw, 0.05);
   const [cx, cy, R] = taijiAt(),
-    apart = Math.hypot(you.x - host.x, you.y - host.y),
-    left = (taiji.until - performance.now()) / 1000,
-    there = taijiOn() && left > 4 && Math.abs(apart - R) < R * 0.45 && Math.hypot((you.x + host.x) / 2 - cx, (you.y + host.y) / 2 - cy) < R * 0.4;
-  taiji.k = clamp(taiji.k + raw * (there ? 0.22 : -0.4), 0, 1);
+    left = (taiji.until - performance.now()) / 1000;
+  taiji.k = clamp(taiji.k + raw * (taijiOn() && left > 5 ? 0.1 : -0.22), 0, 1);
   if (taiji.k <= 0) return void (el.style.opacity = ring.style.opacity = '0');
-  // (turned by the shorter way toward the line from the gold koi to the visitor's, so it never spins back)
-  let da = Math.atan2(you.y - host.y, you.x - host.x) - TAIJI_EYE - taiji.a;
-  da -= Math.round(da / TAU) * TAU;
-  taiji.a += da * Math.min(1, raw * 4);
-  taiji.x += ((you.x + host.x) / 2 - taiji.x) * Math.min(1, raw * 2);
-  taiji.y += ((you.y + host.y) / 2 - taiji.y) * Math.min(1, raw * 2);
-  if (taiji.k < 0.05) [taiji.x, taiji.y] = [cx, cy];
   const side = (R * 2) / TAIJI_FILL,
-    k = taiji.k * taiji.k * (3 - 2 * taiji.k);
+    wide = (R * 2 * BAGUA_REACH) / BAGUA_FILL,
+    k = taiji.k * taiji.k * (3 - 2 * taiji.k),
+    // (the trigrams a little after the taiji)
+    kr = clamp(taiji.k * 1.3 - 0.3, 0, 1),
+    turn = `rotate(${(taiji.a + taiji.t * TAIJI_TURN).toFixed(4)}rad)`;
   el.style.width = el.style.height = `${side.toFixed(1)}px`;
   el.style.opacity = (k * TAIJI_INK).toFixed(3);
-  // (it comes up a little small and opens out, as ink does into wet paper)
-  el.style.transform = `translate(${(taiji.x - side / 2).toFixed(1)}px, ${(taiji.y - side / 2).toFixed(1)}px) rotate(${taiji.a.toFixed(4)}rad) scale(${(0.9 + 0.1 * k).toFixed(4)})`;
-  // the trigrams: about the same middle, a little after the taiji and a little fainter, turning the other way
-  const wide = (R * 2 * BAGUA_REACH) / BAGUA_FILL,
-    kr = clamp(taiji.k * 1.4 - 0.4, 0, 1);
+  el.style.transform = `translate(${(cx - side / 2).toFixed(1)}px, ${(cy - side / 2).toFixed(1)}px) ${turn}`;
   ring.style.width = ring.style.height = `${wide.toFixed(1)}px`;
   ring.style.opacity = (kr * kr * (3 - 2 * kr) * BAGUA_INK).toFixed(3);
-  ring.style.transform = `translate(${(taiji.x - wide / 2).toFixed(1)}px, ${(taiji.y - wide / 2).toFixed(1)}px) rotate(${(-taiji.t * 0.07).toFixed(4)}rad)`;
+  ring.style.transform = `translate(${(cx - wide / 2).toFixed(1)}px, ${(cy - wide / 2).toFixed(1)}px) ${turn}`;
 }
 // The keys are read by where they are on the keyboard (`code`), not by what they type: with a Chinese or
 // Japanese input method on, B and A type nothing of their own. And they are read on the way down to
@@ -3726,7 +3721,7 @@ if (PERF)
         const a = t * 0.55 + off;
         Object.assign(k, { x: cx + (Math.cos(a) * R) / 2, y: cy + (Math.sin(a) * R) / 2, a: a + Math.PI / 2 });
       }
-      Object.assign(taiji, { k: 1, x: cx, y: cy });
+      taiji.k = 1;
     }
   };
 function callDove() {
