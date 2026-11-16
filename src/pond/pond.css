@@ -2921,6 +2921,18 @@ button.more:hover {
     height: 96px;
   }
 }
+/* ---------- the koi's circle (engine.js, stepTaiji): the taiji in ink wash under the two koi, laid into the
+   paper as ink is. The engine places, turns and fades it; nothing is fetched until the circle is called. ---------- */
+.taiji {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+  opacity: 0;
+  background: center / contain no-repeat;
+  mix-blend-mode: multiply;
+  will-change: transform, opacity;
+}
 /* ---------- the signature (engine.js, signNow): the stroke a look carries once it is laid there, where the
    look would be signed. A painted look's is its picture; glow's is light, the blueprint's a ruled line and
    ASCII's a row of characters, which is what those looks are made of. ---------- */

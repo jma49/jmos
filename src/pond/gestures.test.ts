@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { thrown, type Pt, type Tap, loop, rub, straight, strokeLifted, strokeMoving, tapsLook, zigzag } from './gestures';
+import { thrown, type Pt, type Tap, loop, rub, straight, strokeLifted, strokeMoving, tapsLook, zigzag, sCurve } from './gestures';
 
 const W = 1280,
   H = 800;
@@ -305,5 +305,41 @@ describe('taps', () => {
   });
   it('dabs after far taps, and far taps after dabs, are each read alone', () => {
     expect(tapsLook([...far.slice(0, 2), ...dabs.map((q) => ({ ...q, t: q.t + 1 }))])).toBe('monet');
+  });
+});
+
+describe("an S, which calls the koi's circle in ink", () => {
+  // two half circles, the second bending the other way, as the line down the middle of a taiji
+  const ess = (cx: number, cy: number, r: number, flip = 1, n = 30): Pt[] => [
+    ...Array.from({ length: n + 1 }, (_, i) => {
+      const a = -Math.PI / 2 - (i / n) * Math.PI * flip;
+      return [cx + Math.cos(a) * r + wob(i), cy - r + Math.sin(a) * r + wob(i + 2)] as Pt;
+    }),
+    ...Array.from({ length: n }, (_, i) => {
+      const a = -Math.PI / 2 + ((i + 1) / n) * Math.PI * flip;
+      return [cx + Math.cos(a) * r + wob(i + 5), cy + r + Math.sin(a) * r + wob(i + 1)] as Pt;
+    })
+  ];
+  it('is two wide bends, one each way, either way round and at any size a hand draws', () => {
+    expect(sCurve(ess(600, 400, 90))).toBe(true);
+    expect(sCurve(ess(600, 400, 90, -1))).toBe(true);
+    expect(sCurve(ess(300, 300, 45))).toBe(true);
+    expect(sCurve(ess(600, 400, 150))).toBe(true);
+    expect(sCurve([...ess(600, 400, 90)].reverse())).toBe(true);
+  });
+  it('is not a line, one bend, a circle, a zigzag or a small mark', () => {
+    expect(sCurve(line([200, 300], [700, 320]))).toBe(false);
+    expect(sCurve(circle(600, 400, 120, 0.5))).toBe(false);
+    expect(sCurve(circle(600, 400, 120))).toBe(false);
+    expect(sCurve(circle(600, 400, 120, 2))).toBe(false);
+    expect(
+      sCurve([
+        ...line([200, 400], [300, 300], 12),
+        ...line([300, 300], [400, 400], 12),
+        ...line([400, 400], [500, 300], 12),
+        ...line([500, 300], [600, 400], 12)
+      ])
+    ).toBe(false);
+    expect(sCurve(ess(600, 400, 14))).toBe(false);
   });
 });
