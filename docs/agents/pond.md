@@ -1080,6 +1080,11 @@ bokashi gradation, paper showing.
 6. Dove and spider: delivered and in use: the same as line drawings, one pose each, 512 × 512.
 Everything else is ruled in the shader. Nothing more wanted.
 
+**Stained glass review candidates:** six reference-guided beds are in
+[stained5/report.md](stained5/report.md), with exact prompts and the tradeoffs of each.
+The recommended pair is wide-3 and tall-3; the cloud branch should compare all six
+before choosing. These review assets do not replace the current beds.
+
 **Stained glass: the bed asked a third time** (2026-11-15). Jincheng on the first kit: "底图太花
 不够优雅…龙做的也很丑…这个水平比起墨，敦煌差的太多了。把艺术水平和美感对齐统一". On the second, the
 grisaille window: "底图不够好看", and he gave a photograph to go by (he can paste it to you; ask
