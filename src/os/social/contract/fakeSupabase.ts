@@ -20,6 +20,8 @@ export interface Call {
 
 export interface Answer {
   data?: unknown;
+  /** How many rows there are, for a select that asks for the count. */
+  count?: number;
   error?: { code: string; message: string } | null;
 }
 
@@ -76,11 +78,13 @@ export function fakeSupabase() {
       limit: () => builder,
       single: () => ((one = true), builder),
       maybeSingle: () => ((one = true), builder),
-      then<T>(resolve: (value: { data: unknown; error: Answer['error'] }) => T, reject?: (reason: unknown) => T) {
+      then<T>(resolve: (value: { data: unknown; count: number | null; error: Answer['error'] }) => T, reject?: (reason: unknown) => T) {
         calls.push(call);
         const answer = take(`${target}.${call.op}`) ?? {};
         const empty = one || call.op !== 'select' ? null : [];
-        return Promise.resolve({ data: answer.data === undefined ? empty : answer.data, error: answer.error ?? null }).then(resolve, reject);
+        // An empty database counts no rows; a refusal counts nothing.
+        const count = answer.error ? null : (answer.count ?? 0);
+        return Promise.resolve({ data: answer.data === undefined ? empty : answer.data, count, error: answer.error ?? null }).then(resolve, reject);
       }
     };
     return builder;

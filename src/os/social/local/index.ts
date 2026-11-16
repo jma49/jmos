@@ -1,7 +1,8 @@
 // A stand-in for the Supabase backend during `astro dev`, so accounts,
 // Stickies, reactions, chat, presence, DVD Player's shelf, the iPod's
 // ratings and playlists, the home folder, a member's own stickies and
-// calendar, and Job Hunt can be tried without a project.
+// calendar, Job Hunt and the count of the pond's endings can be tried
+// without a project.
 // Everything lives in this browser's localStorage, and chat and presence go
 // between its tabs over BroadcastChannels. It keeps the same rules as the
 // database (three notes a day, one reaction per visitor unless signed in),
@@ -22,6 +23,7 @@ import { localJobs } from './jobs';
 import { localLimits } from './limits';
 import { localMusic } from './music';
 import { localNotes } from './notes';
+import { localPond } from './pond';
 import { localSoapbox } from './soapbox';
 import { localStickies } from './stickies';
 import { localVisitors } from './visitors';
@@ -40,6 +42,7 @@ export function localSocial(): Social {
     ...localStickies(ctx),
     ...localCalendar(ctx),
     ...localJobs(ctx),
-    ...localLimits()
+    ...localLimits(),
+    ...localPond()
   };
 }

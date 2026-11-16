@@ -18,6 +18,7 @@ import { supabaseJobs } from './jobs';
 import { supabaseLimits } from './limits';
 import { supabaseMusic } from './music';
 import { supabaseNotes } from './notes';
+import { supabasePond } from './pond';
 import { supabaseSoapbox } from './soapbox';
 import { supabaseStickies } from './stickies';
 import { supabaseVisitors } from './visitors';
@@ -46,6 +47,7 @@ export function socialOver(client: Client): Social {
     ...supabaseStickies(ctx),
     ...supabaseCalendar(ctx),
     ...supabaseJobs(ctx),
-    ...supabaseLimits(ctx)
+    ...supabaseLimits(ctx),
+    ...supabasePond(ctx)
   };
 }

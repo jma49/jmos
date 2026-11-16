@@ -42,12 +42,13 @@ import {
   writeAlbum,
   fade,
   left,
-  nameless
+  nameless,
+  aged
 } from './seals';
 import { FPS, IDLE_AFTER, due, learnBeat, simSteps } from './clock.js';
 import { PERF, add, count, frameDone, span } from './perf.js';
 import { titleWords } from './words';
-import { describe, rub, strokeLifted, strokeMoving, tapsLook, thrown } from './gestures';
+import { describe, rub, sCurve, strokeLifted, strokeMoving, tapsLook, thrown } from './gestures';
 import { crowdsPainting, underPainting } from './hang.js';
 import { paintingOf, seasonAmounts } from './seasons.js';
 import { dragonCopy, dragonHead, dragonSpine, dragonSrc, drawDragon, drawDragonStars, makeDragon } from './dragon.js';
@@ -2423,31 +2424,85 @@ function leapNow() {
   }, 1100);
 }
 // The koi's circle (太极), in ink only: an old cheat typed on the keys (up up down down left right left right
-// B A) and for three quarters of a minute the visitor's koi and the gold one swim head to tail round one point, as the
-// two fish of the taiji do, with the rest in a wide ring the other way about. It earns an idle seal.
+// B A), or an S drawn on the water, and for three quarters of a minute the pond is a taiji. The visitor's
+// koi and the gold one are its two fish: they swim head to tail round one point, half the figure's width
+// apart, and under them the figure itself comes up in ink wash (a picture, ink/taiji), turned so that its
+// two eyes stay where the two koi are, and goes again before they part. The rest keep to a wide ring
+// round it, the other way about. It earns an idle seal.
 const CHEAT = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
-const taiji = { until: 0, keys: [] };
+const TAIJI_PIC = '/pond/ink/taiji.webp',
+  // the picture's figure is 880 of its 1024 across; its light eye (the visitor's koi) is straight below its middle
+  TAIJI_FILL = 880 / 1024,
+  TAIJI_EYE = Math.PI / 2;
+const taiji = { until: 0, at: 0, t: 0, keys: [], k: 0, a: 0, x: 0, y: 0, pic: false };
+const taijiOn = () => performance.now() < taiji.until && look === 'ink';
+// the figure's middle and its radius
+const taijiAt = () => [W * (big ? 0.66 : 0.5), H * 0.5, Math.min(W, H) * (big ? 0.3 : 0.36)];
 function taijiSpot(k) {
-  if (performance.now() > taiji.until || look !== 'ink') return null;
-  const cx = W * (big ? 0.66 : 0.5),
-    cy = H * 0.5,
+  if (!taijiOn()) return null;
+  const [cx, cy, R] = taijiAt(),
     inner = k === you || k === host,
     rest = kois.filter((q) => q !== you && q !== host),
-    R = inner ? Math.min(W, H) * 0.09 : Math.min(W, H) * 0.3,
-    // (where it should be on its ring now, and a little further on, so it is always swimming round)
-    at = inner ? T * 1.5 + (k === host ? Math.PI : 0) : -T * 0.5 + (rest.indexOf(k) / Math.max(1, rest.length)) * TAU,
-    lead = inner ? 0.7 : -0.5;
-  return [cx + Math.cos(at + lead) * R, cy + Math.sin(at + lead) * R];
+    // (timed in frames drawn, as a look's arrival is: where frames come slowly the koi could not keep up
+    // with a place that ran on by the clock)
+    t = taiji.t,
+    r = inner ? R / 2 : R * 1.34,
+    // where it should be on its ring now, and a little further on, so it is always swimming round
+    at = inner ? t * 0.55 + (k === host ? Math.PI : 0) : -t * 0.22 + (rest.indexOf(k) / Math.max(1, rest.length)) * TAU,
+    lead = inner ? 0.55 : -0.4;
+  return [cx + Math.cos(at + lead) * r, cy + Math.sin(at + lead) * r];
 }
-addEventListener('keydown', (e) => {
-  taiji.keys = [...taiji.keys, e.key.length === 1 ? e.key.toLowerCase() : e.key].slice(-CHEAT.length);
-  if (look !== 'ink' || base !== 'ink' || sheetOpen() || taiji.keys.join() !== CHEAT.join()) return;
-  taiji.keys = [];
-  taiji.until = performance.now() + 45000;
+function taijiNow() {
+  if (look !== 'ink' || inkR < inkMax * 0.45 || sheetOpen() || taijiOn()) return;
+  const now = performance.now();
+  Object.assign(taiji, { at: now, until: now + 45000, t: 0, keys: [], k: 0 });
+  // (the picture is asked for the first time the circle is called)
+  if (!taiji.pic) {
+    taiji.pic = true;
+    $('#taiji').style.backgroundImage = `url(${TAIJI_PIC})`;
+  }
   plip('ink', 1);
   invalidate();
   setTimeout(() => look === 'ink' && reached('taiji'), 14000);
-});
+}
+// The figure under the two koi: it shows once they have come to their places across from each other, is
+// turned to the line between them, and fades before the circle ends. Written to the page only while it shows.
+function stepTaiji(raw) {
+  const el = $('#taiji');
+  if (!taiji.pic || (!taijiOn() && taiji.k <= 0)) return;
+  taiji.t += Math.min(raw, 0.05);
+  const [cx, cy, R] = taijiAt(),
+    apart = Math.hypot(you.x - host.x, you.y - host.y),
+    left = (taiji.until - performance.now()) / 1000,
+    there = taijiOn() && left > 4 && Math.abs(apart - R) < R * 0.45 && Math.hypot((you.x + host.x) / 2 - cx, (you.y + host.y) / 2 - cy) < R * 0.4;
+  taiji.k = clamp(taiji.k + raw * (there ? 0.22 : -0.4), 0, 1);
+  if (taiji.k <= 0) return void (el.style.opacity = '0');
+  // (turned by the shorter way toward the line from the gold koi to the visitor's, so it never spins back)
+  let da = Math.atan2(you.y - host.y, you.x - host.x) - TAIJI_EYE - taiji.a;
+  da -= Math.round(da / TAU) * TAU;
+  taiji.a += da * Math.min(1, raw * 4);
+  taiji.x += ((you.x + host.x) / 2 - taiji.x) * Math.min(1, raw * 2);
+  taiji.y += ((you.y + host.y) / 2 - taiji.y) * Math.min(1, raw * 2);
+  if (taiji.k < 0.05) [taiji.x, taiji.y] = [cx, cy];
+  const side = (R * 2) / TAIJI_FILL,
+    k = taiji.k * taiji.k * (3 - 2 * taiji.k);
+  el.style.width = el.style.height = `${side.toFixed(1)}px`;
+  // (never quite full: the gold koi swims in the dark half, and must still show through it)
+  el.style.opacity = (k * 0.88).toFixed(3);
+  // (it comes up a little small and opens out, as ink does into wet paper)
+  el.style.transform = `translate(${(taiji.x - side / 2).toFixed(1)}px, ${(taiji.y - side / 2).toFixed(1)}px) rotate(${taiji.a.toFixed(4)}rad) scale(${(0.9 + 0.1 * k).toFixed(4)})`;
+}
+// The keys are read by where they are on the keyboard (`code`), not by what they type: with a Chinese or
+// Japanese input method on, B and A type nothing of their own. And they are read on the way down to
+// whatever has the focus (capture): the depth gauge keeps the arrow keys it is given to itself.
+addEventListener(
+  'keydown',
+  (e) => {
+    taiji.keys = [...taiji.keys, /^Key[A-Z]$/.test(e.code) ? e.code.slice(3).toLowerCase() : e.code].slice(-CHEAT.length);
+    if (taiji.keys.join() === CHEAT.join()) taijiNow();
+  },
+  true
+);
 // 鲤鱼跃龙门: the koi that cleared the gate goes as a dragon (dragon.js), rippling the water under it and, in
 // the water, lighting it gold. The koi is back in the pond once the dragon has gone, and the visit has its
 // seal. Its picture is fetched at the first leap, so it has come by the third. (`pin` holds the dragon at one
@@ -3593,7 +3648,7 @@ function stepInk(raw) {
     }
   }
   // (ink's slow time picks up for the koi's circle, so they gather in seconds and not minutes)
-  const goal = inkOn ? (k < 0.5 ? 0.06 : performance.now() < taiji.until ? 0.9 : 0.32) : look === 'glow' ? 0.7 : top === 'ink' && inkR > 0 ? 0.25 : 1;
+  const goal = inkOn ? (k < 0.5 ? 0.06 : taijiOn() ? 0.9 : 0.32) : look === 'glow' ? 0.7 : top === 'ink' && inkR > 0 ? 0.25 : 1;
   // (a look left alone after the gold koi has gone slows as the wait goes on)
   timeScale += (goal * (1 - 0.7 * stillK) - timeScale) * Math.min(1, raw * (inkOn && k < 0.5 ? 9 : 1.6));
 }
@@ -3639,7 +3694,22 @@ if (PERF)
     // the third ending, for a tool: the looks the gold koi has left, how far the wait has gone, and the
     // wait set as if the pond had been left alone for `sec` seconds
     gone: () => ({ gone, stillK, fading, faded: Object.keys(album.faded), host: [host.shown, +host.alpha.toFixed(2), !!host.plain] }),
-    still: (sec) => (stillAt = performance.now() - sec * 1000)
+    still: (sec) => (stillAt = performance.now() - sec * 1000),
+    // the koi's circle, for a tool: called, with the two koi set down in their places `t` seconds in and
+    // the figure fully shown
+    taiji: (t = 0) => {
+      taijiNow();
+      const [cx, cy, R] = taijiAt();
+      taiji.t = t;
+      for (const [k, off] of [
+        [you, 0],
+        [host, Math.PI]
+      ]) {
+        const a = t * 0.55 + off;
+        Object.assign(k, { x: cx + (Math.cos(a) * R) / 2, y: cy + (Math.sin(a) * R) / 2, a: a + Math.PI / 2 });
+      }
+      Object.assign(taiji, { k: 1, x: cx, y: cy });
+    }
   };
 function callDove() {
   if (!life || dove.state !== 'away') return;
@@ -5954,6 +6024,7 @@ function stepStill() {
   const sec = (now - stillAt) / 1000;
   // (the pond begins to slow a few seconds in, so the wait can be felt before it is over)
   stillK = can ? clamp((sec - 6) / (STILL - 6), 0, 1) : 0;
+  showAge();
   // (it stays away while a look it has left is still drawing in)
   if (host) host.shown = !gone.includes(look) && !(inkR > 0 && gone.includes(top)) && !(dragon.d && dragon.k === host);
   if (!can || sec < STILL) return;
@@ -5970,6 +6041,22 @@ function fadedNow() {
   if (!nameless(album)) return;
   plainHost();
   greetVisitor();
+  ageNow();
+}
+// The pond ages: every visitor who has reached that end fades the looks a little for everyone (aged() in
+// seals.ts), as a loss of colour on the water's canvas while a look is on show. One who has just reached
+// it is counted first, once (asked again on a later visit if it couldn't be done). The count is read from
+// the database, so only once the pond has settled, as everything from there is.
+let age = 0,
+  ageSet = '';
+async function ageNow() {
+  if (nameless(album) && load('pond-ended') !== '1' && (await people.reachEnding())) save('pond-ended', '1');
+  age = aged(await people.endings());
+}
+function showAge() {
+  // (below a fiftieth it could not be seen, and a filter is not free)
+  const f = age > 0.02 && look !== 'water' && glc ? `saturate(${(1 - 0.75 * age).toFixed(3)})` : '';
+  if (f !== ageSet) glc.style.filter = ageSet = f;
 }
 // one quiet line on the water, by the visitor's koi, for a few seconds
 function whisper(text) {
@@ -6504,6 +6591,8 @@ const HOLD = 1.2,
         }
       }
     } else if (thrown(drawn, dt, W, H)) return void skipStone(drawn, thrown(drawn, dt, W, H));
+    // (an S on ink's water calls the koi's circle; elsewhere it is whatever else it reads as)
+    else if (look === 'ink' && sCurve(drawn)) taijiNow();
     else if (strokeLifted(drawn) === 'relief') toggleLook('relief', [x, y]);
     else if (GEST && drawn.length > 1) gestSay(`${describe(drawn, W, H)}\n→ nothing (lifted after ${dt.toFixed(1)} s)`);
     // a stroke that meant nothing by itself is kept a moment, in case it is one of several brushed over a spot
@@ -6913,6 +7002,7 @@ function frame(now) {
   }
 }
 function tick1(raw) {
+  stepTaiji(raw);
   stepStill();
   stepInk(raw);
   // in ink, time runs slow: everything that moves is stepped by dt
@@ -7382,6 +7472,7 @@ if (PANEL)
     })
   );
 setInterval(() => document.hidden || loadWeather().then(weatherIn), 30 * 60_000);
+settled.then(ageNow);
 people.startPeople(
   {
     onAccount: (a) => {

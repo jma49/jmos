@@ -254,6 +254,45 @@ export function thrown(pts: Pt[], dt: number, W: number, H: number): Throw | nul
   }
   return { speed, skips };
 }
+/**
+ * An S: the stroke bends one way through a wide arc and then the other way through another, as the line
+ * down the middle of a taiji does. In ink it calls the koi's circle. A circle, a single bend, a straight
+ * line and a zigzag (which turns sharply, many times) are not one.
+ */
+export function sCurve(all: Pt[]): boolean {
+  const len = lengthOf(all);
+  if (len < 200) return false;
+  // read at steps of a thirtieth of its length or so: a hand's tremor says nothing of the heading
+  const gap = Math.max(6, len / 32),
+    pts: Pt[] = [];
+  for (const p of all) if (!pts.length || Math.hypot(p[0] - pts[pts.length - 1][0], p[1] - pts[pts.length - 1][1]) >= gap) pts.push(p);
+  if (pts.length < 8) return false;
+  // how far the heading has turned by each point, and how far along the stroke that point is
+  const turn = [0, 0],
+    far = [0, Math.hypot(pts[1][0] - pts[0][0], pts[1][1] - pts[0][1])];
+  let sharp = 0;
+  for (let i = 2; i < pts.length; i++) {
+    let da = Math.atan2(pts[i][1] - pts[i - 1][1], pts[i][0] - pts[i - 1][0]) - Math.atan2(pts[i - 1][1] - pts[i - 2][1], pts[i - 1][0] - pts[i - 2][0]);
+    da = ((da + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
+    if (Math.abs(da) > 1.3) sharp++;
+    turn.push(turn[i - 1] + da);
+    far.push(far[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
+  }
+  // (a corner is a zigzag's, not a curve's)
+  if (sharp > 1) return false;
+  let at = 0;
+  for (let i = 1; i < turn.length; i++) if (Math.abs(turn[i]) > Math.abs(turn[at])) at = i;
+  const way = Math.sign(turn[at]),
+    first = Math.abs(turn[at]),
+    second = Math.abs(turn[at] - turn[turn.length - 1]),
+    where = far[at] / far[far.length - 1];
+  // each bend between a little over a quarter turn and three quarters of one, the first ending near the middle
+  if (first < 1.75 || first > 4.6 || second < 1.75 || second > 4.6 || where < 0.25 || where > 0.75) return false;
+  // and nothing but those two: no bend the other way before the first, none back again after the second
+  const before = Math.min(...turn.slice(0, at + 1).map((t) => t * way)),
+    after = Math.min(...turn.slice(at).map((t) => t * way));
+  return before > -0.6 && turn[turn.length - 1] * way - after < 0.6;
+}
 /** What a stroke means while it is still being drawn. */
 export const strokeMoving = (pts: Pt[], W: number, H: number): 'dunhuang' | 'ukiyo' | 'qinghua' | null => (rub(pts) ? 'dunhuang' : loop(pts, W, H));
 /** What a stroke means once the finger lifts. */

@@ -723,6 +723,43 @@ $$;
 ALTER FUNCTION public.playlists_within_limit() OWNER TO postgres;
 
 --
+-- Name: pond_ending_visitor(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.pond_ending_visitor() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+declare
+  headers json := nullif(current_setting('request.headers', true), '')::json;
+  address text := coalesce(
+    headers ->> 'cf-connecting-ip',
+    headers ->> 'x-real-ip',
+    trim(split_part(headers ->> 'x-forwarded-for', ',', 1))
+  );
+  salt text := (select value from private.secrets where name = 'visitor_salt');
+begin
+  if address is null or address = '' then
+    raise exception 'Can''t tell who reached the end.';
+  end if;
+  new.visitor := encode(sha256(convert_to(salt || address, 'UTF8')), 'hex');
+  new.reached_at := now();
+  -- One lock for the table: the limit is site-wide, and the same
+  -- visitor asking twice at once must find their first row.
+  perform pg_advisory_xact_lock(hashtextextended('pond_endings', 0));
+  if exists (select 1 from public.pond_endings where visitor = new.visitor) then
+    return null;
+  end if;
+  if (select count(*) from public.pond_endings where reached_at > now() - interval '1 hour') >= 6 then
+    raise exception using errcode = 'P0429', message = 'The pond is very busy right now. Try again in an hour.';
+  end if;
+  return new;
+end;
+$$;
+
+ALTER FUNCTION public.pond_ending_visitor() OWNER TO postgres;
+
+--
 -- Name: rate_song(text, integer); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -1400,6 +1437,17 @@ ALTER TABLE public.playlists ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
 );
 
 --
+-- Name: pond_endings; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.pond_endings (
+    visitor text NOT NULL,
+    reached_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+ALTER TABLE public.pond_endings OWNER TO postgres;
+
+--
 -- Name: profiles; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -1692,6 +1740,13 @@ ALTER TABLE ONLY public.playlist_songs
 
 ALTER TABLE ONLY public.playlists
     ADD CONSTRAINT playlists_pkey PRIMARY KEY (id);
+
+--
+-- Name: pond_endings pond_endings_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.pond_endings
+    ADD CONSTRAINT pond_endings_pkey PRIMARY KEY (visitor);
 
 --
 -- Name: profiles profiles_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
@@ -1993,6 +2048,12 @@ CREATE TRIGGER notes_flood_guard BEFORE INSERT ON public.notes FOR EACH ROW EXEC
 CREATE TRIGGER playlists_within_limit BEFORE INSERT ON public.playlists FOR EACH ROW EXECUTE FUNCTION public.playlists_within_limit();
 
 --
+-- Name: pond_endings pond_ending_visitor; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE TRIGGER pond_ending_visitor BEFORE INSERT ON public.pond_endings FOR EACH ROW EXECUTE FUNCTION public.pond_ending_visitor();
+
+--
 -- Name: soapbox_reactions soapbox_reaction_visitor; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
@@ -2174,6 +2235,12 @@ CREATE POLICY "A member's stickies are theirs alone" ON public.stickies TO authe
 --
 
 CREATE POLICY "A member's to-dos are theirs alone" ON public.todos TO authenticated USING ((user_id = ( SELECT auth.uid() AS uid))) WITH CHECK ((user_id = ( SELECT auth.uid() AS uid)));
+
+--
+-- Name: pond_endings Anyone can reach the end; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY "Anyone can reach the end" ON public.pond_endings FOR INSERT TO anon, authenticated WITH CHECK ((visitor ~ '^[0-9a-f]{64}$'::text));
 
 --
 -- Name: soapbox_reactions Anyone can react; Type: POLICY; Schema: public; Owner: postgres
@@ -2358,6 +2425,12 @@ CREATE POLICY "Rooms are public" ON public.chat_rooms FOR SELECT TO anon, authen
 CREATE POLICY "Rooms are public, conversations private" ON public.chat_messages FOR SELECT TO anon, authenticated USING (((NOT hidden) AND public.chat_can_read(room)));
 
 --
+-- Name: pond_endings The count of endings is public; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY "The count of endings is public" ON public.pond_endings FOR SELECT TO anon, authenticated USING (true);
+
+--
 -- Name: albums The library is public; Type: POLICY; Schema: public; Owner: postgres
 --
 
@@ -2476,6 +2549,12 @@ ALTER TABLE public.playlist_songs ENABLE ROW LEVEL SECURITY;
 --
 
 ALTER TABLE public.playlists ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: pond_endings; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
+
+ALTER TABLE public.pond_endings ENABLE ROW LEVEL SECURITY;
 
 --
 -- Name: profiles; Type: ROW SECURITY; Schema: public; Owner: postgres
@@ -2786,6 +2865,13 @@ GRANT ALL ON FUNCTION public.now_playing_position() TO service_role;
 
 REVOKE ALL ON FUNCTION public.playlists_within_limit() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.playlists_within_limit() TO service_role;
+
+--
+-- Name: FUNCTION pond_ending_visitor(); Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON FUNCTION public.pond_ending_visitor() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.pond_ending_visitor() TO service_role;
 
 --
 -- Name: FUNCTION rate_song(p_song text, p_rating integer); Type: ACL; Schema: public; Owner: postgres
@@ -3512,6 +3598,26 @@ GRANT SELECT(created_at) ON TABLE public.playlists TO authenticated;
 GRANT ALL ON SEQUENCE public.playlists_id_seq TO anon;
 GRANT ALL ON SEQUENCE public.playlists_id_seq TO authenticated;
 GRANT ALL ON SEQUENCE public.playlists_id_seq TO service_role;
+
+--
+-- Name: TABLE pond_endings; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON TABLE public.pond_endings TO service_role;
+
+--
+-- Name: COLUMN pond_endings.visitor; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT INSERT(visitor) ON TABLE public.pond_endings TO anon;
+GRANT INSERT(visitor) ON TABLE public.pond_endings TO authenticated;
+
+--
+-- Name: COLUMN pond_endings.reached_at; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT SELECT(reached_at) ON TABLE public.pond_endings TO anon;
+GRANT SELECT(reached_at) ON TABLE public.pond_endings TO authenticated;
 
 --
 -- Name: TABLE profiles; Type: ACL; Schema: public; Owner: postgres

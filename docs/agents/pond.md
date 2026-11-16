@@ -190,6 +190,13 @@ words did not reach, there only for whoever asks.
   paint and height made into one picture as its koi's are (`carved()`). The picture is fetched at a
   visit's first leap, never before. With `?perf`, `window.__pond.dragon(seconds, picture)` raises
   one, held that far into its flight, from a picture to try if one is given.
+- **The koi's circle (太极)**, in ink only: the old code on the keys (read by key position, so an
+  input method does not break it) or an S drawn on the water (`sCurve()` in `gestures.ts`) calls
+  it (`taijiNow()` in `engine.js`). For 45 seconds the visitor's koi and the gold one go round one
+  point half the figure's width apart (`taijiSpot()`, timed in frames drawn), the rest in a ring
+  outside, and the taiji in ink wash (`#taiji`, the picture `taiji.webp` in ink's folder, asked
+  for and not yet come) shows under them, turned to the line between the two koi (`stepTaiji()`).
+  `window.__pond.taiji(t)` under `?perf` sets it up for a tool.
 - **The signature** ([decision 0028](../decisions/0028-the-pond-has-three-endings.md)), the pond's
   second ending. Once every look is found, the gesture that found a look, made again in that look
   (where it otherwise does nothing), lays one stroke of 真 there (`signNow()` in `engine.js`;
@@ -206,8 +213,10 @@ words did not reach, there only for whoever asks.
   apart (`left()` in `seals.ts`; `goneNow()` and `termNo()` in `engine.js`). A look it has left,
   with no input for `STILL` seconds, slows and then draws in slowly to the visitor's koi
   (`stepStill()`), and is kept in the album as `faded`; its seal there is pale. With all ten faded
-  the gold koi comes back plain (`plainHost()`). Nothing on the page says any of this. What lies
-  under the pond, and the pond ageing for everyone, are not built.
+  the gold koi comes back plain (`plainHost()`). Nothing on the page says any of this. The pond
+  ages with everyone who reaches that end: they are counted once in the database (`endings()` and
+  `reachEnding()` in `people.ts`, the table `pond_endings`), and the count takes a little colour
+  from every look (`aged()`, `showAge()`). What lies under the pond is not built.
 - **A chain of clues.** A look on show carries a small mark that points to the next look's gesture
   (`NEXT` and `clueFor()` in `seals.ts`, `CLUES` and `clueNow()` in `engine.js`, `.clue` in
   `pond.css`), laid in a few seconds after the look has come, until that next seal is found.
@@ -742,6 +751,30 @@ flying thing seen from above (a crane or a butterfly for Dunhuang, a bee or a sw
 
 **Asked for now**, in this order. A thing the pond shows is asked for here and painted; it is not
 drawn in code, and what is still drawn in code that a picture would better is on this list too.
+
+0. **Asked now, first: the taiji in ink wash**, `taiji.webp` in the ink folder, for the koi's circle
+   (Jincheng: "做出惊艳感"; today the koi only gather and turn, and no figure shows). 1024 × 1024
+   with alpha, black only, its strength in the alpha, as ink's other pictures are; under 120 KB.
+   One taiji (太极图) painted wet in 写意 ink on nothing, centred, 880 pixels across:
+   - The dark half (阴) is one loaded wash of ink, not flat: darkest in its round head, thinning
+     and breaking to dry streaks toward its tail, its edge soft and a little bled, as wet ink
+     spreads on raw paper. A mid wash, not black: nowhere over about 65% (the gold koi swims
+     in this half, drawn in ink itself, and must still show through it; a solid black stand-in
+     hid it). Its eye is bare paper, a clean round about 90 pixels across.
+   - The light half (阳) is bare paper: only the thinnest grey wash at its outer edge, enough to
+     close the circle, and its eye one round dot of dark ink about 90 pixels across.
+   - The outer circle is one brushed line, about 10 pixels, uneven, broken once or twice.
+   - Set as the usual figure stands: the S upright, the dark half's head at the top and to the
+     left holding its paper eye at (512, 292), the light half's head at the bottom and to the
+     right holding its ink dot at (512, 732); the figure's middle at (512, 512). The two eyes'
+     places matter: the visitor's koi and the gold koi swim there, and the picture is turned to
+     follow them.
+   - It must look painted in one breath by the hand that painted the plum branch, not a printed
+     symbol: no hard vector edge, no even grey, no texture of paper in it (the pond has its own).
+   It is laid over the water multiplied, and fades in as the two koi come round. The koi go
+     round clockwise as the page is seen, so each half's head must lead that way: the dark half's
+     tail trails from its head at the top round the left side to the bottom (the figure as it
+     is usually drawn with the dark head up and its tail down the left).
 
 1. **The dragon** of the Dragon Gate, on "The dragon sheet" below: all seven are delivered and in
    use; what came out is in each look's table (the water's with its dragon boat). In use too:

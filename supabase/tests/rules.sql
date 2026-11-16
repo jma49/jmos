@@ -374,6 +374,73 @@ select pg_temp.check(pg_temp.refused($$insert into public.soapbox_reactions (pos
 reset role;
 select set_config('request.headers', '', false);
 
+-- The pond's third ending -------------------------------------------------
+
+-- A visitor who reaches the end is counted once, by a salted address;
+-- what they send is thrown away.
+select set_config('request.headers', '{"x-real-ip":"203.0.113.9"}', false);
+select pg_temp.act_as('anon');
+insert into public.pond_endings (visitor) values ('');
+insert into public.pond_endings (visitor) values ('someone else');
+reset role;
+select pg_temp.check((select count(*) from public.pond_endings) = 1
+  and (select visitor ~ '^[0-9a-f]{64}$' and reached_at > now() - interval '1 minute' from public.pond_endings),
+  'a visitor who reaches the pond''s end is counted once, known by a salted address');
+select pg_temp.act_as('authenticated', '22222222-2222-2222-2222-222222222222');
+insert into public.pond_endings (visitor) values ('');
+reset role;
+select pg_temp.check((select count(*) from public.pond_endings) = 1, 'a member is counted by address too, so signing in doesn''t count the same browser twice');
+select set_config('request.headers', '{"x-forwarded-for":"198.51.100.7, 10.0.0.1"}', false);
+select pg_temp.act_as('authenticated', '22222222-2222-2222-2222-222222222222');
+insert into public.pond_endings (visitor) values ('');
+reset role;
+select pg_temp.check((select count(*) from public.pond_endings where visitor ~ '^[0-9a-f]{64}$') = 2, 'another address is another visitor');
+select set_config('request.headers', '', false);
+select pg_temp.act_as('anon');
+select pg_temp.check(pg_temp.refused($$insert into public.pond_endings (visitor) values ('')$$), 'no address, no ending counted');
+
+-- Everyone reads how many there are, and no more; no one changes them.
+select pg_temp.check((select count(*) from public.pond_endings) = 2 and (select count(reached_at) from public.pond_endings) = 2, 'visitors read how many have reached the end');
+select pg_temp.check(pg_temp.refused($$select visitor from public.pond_endings$$) and pg_temp.refused($$select * from public.pond_endings$$), 'visitors can''t read who reached the end');
+select pg_temp.check(pg_temp.refused($$insert into public.pond_endings (visitor, reached_at) values ('', '2000-01-01')$$), 'visitors can''t say when they reached the end');
+select pg_temp.check(pg_temp.refused($$update public.pond_endings set reached_at = now()$$)
+  and pg_temp.refused($$delete from public.pond_endings$$)
+  and pg_temp.refused($$truncate public.pond_endings$$), 'visitors can''t change or remove an ending');
+reset role;
+select pg_temp.act_as('authenticated', '22222222-2222-2222-2222-222222222222');
+select pg_temp.check(pg_temp.refused($$select visitor from public.pond_endings$$)
+  and pg_temp.refused($$update public.pond_endings set reached_at = now()$$)
+  and pg_temp.refused($$delete from public.pond_endings$$), 'members can''t read who, change or remove one either');
+reset role;
+select pg_temp.check(not has_function_privilege('anon', 'public.pond_ending_visitor()', 'execute')
+  and not has_function_privilege('authenticated', 'public.pond_ending_visitor()', 'execute'), 'no one calls the pond''s trigger function');
+
+-- Six new visitors in any one hour, site-wide: the seventh is refused,
+-- one counted already is still answered, and the hour passes.
+select pg_temp.act_as('anon');
+select set_config('request.headers', '{"x-real-ip":"192.0.2.3"}', false);
+insert into public.pond_endings (visitor) values ('');
+select set_config('request.headers', '{"x-real-ip":"192.0.2.4"}', false);
+insert into public.pond_endings (visitor) values ('');
+select set_config('request.headers', '{"x-real-ip":"192.0.2.5"}', false);
+insert into public.pond_endings (visitor) values ('');
+select set_config('request.headers', '{"x-real-ip":"192.0.2.6"}', false);
+insert into public.pond_endings (visitor) values ('');
+select set_config('request.headers', '{"x-real-ip":"192.0.2.7"}', false);
+select pg_temp.check((select count(*) from public.pond_endings) = 6
+  and pg_temp.refused($$insert into public.pond_endings (visitor) values ('')$$), 'a seventh new visitor in an hour is refused');
+select set_config('request.headers', '{"x-real-ip":"203.0.113.9"}', false);
+select pg_temp.check(not pg_temp.refused($$insert into public.pond_endings (visitor) values ('')$$)
+  and (select count(*) from public.pond_endings) = 6, 'a visitor counted already is answered without a row, even then');
+reset role;
+update public.pond_endings set reached_at = now() - interval '61 minutes' where true;
+select set_config('request.headers', '{"x-real-ip":"192.0.2.7"}', false);
+select pg_temp.act_as('anon');
+insert into public.pond_endings (visitor) values ('');
+select pg_temp.check((select count(*) from public.pond_endings) = 7, 'an hour later the pond counts new visitors again');
+reset role;
+select set_config('request.headers', '', false);
+
 -- The music library ------------------------------------------------------
 
 select pg_temp.check((select count(*) from public.songs) = 33 and (select count(*) from public.albums) = 1, 'the library starts as songs.json had it');
