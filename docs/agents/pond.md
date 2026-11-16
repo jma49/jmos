@@ -1099,6 +1099,13 @@ yellow is flat. What to do now, in this order:
    parts; a gold koi would vanish on it. The same thick dark lead, the same painted trace line
    and fine motifs as the bed's quarries, the same glass lit from behind and uneven. The koi
    first, and stop there for a look.
+**Ready for cloud integration and review:** the chosen beds and the third koi sheet/mask are
+delivered through `3792c71`. The local art process is paused at the koi checkpoint. Please wire
+them into the preview and return concrete feedback on fish contrast, tint texture, bending and
+wide/upright title clearance; compare the original wide bed with the right-shifted candidate.
+The review request is detailed in [pond-handoff.md](pond-handoff.md). Dragon and lily work waits
+for this review.
+
 The paragraphs under "the bed asked a third time" below describe a cobalt ground: where they say
 cobalt field, read this gold one.
 
