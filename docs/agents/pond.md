@@ -1080,10 +1080,27 @@ bokashi gradation, paper showing.
 6. Dove and spider: delivered and in use: the same as line drawings, one pose each, 512 × 512.
 Everything else is ruled in the shader. Nothing more wanted.
 
-**Stained glass review candidates:** six reference-guided beds are in
-[stained5/report.md](stained5/report.md), with exact prompts and the tradeoffs of each.
-The recommended pair is wide-3 and tall-3; the cloud branch should compare all six
-before choosing. These review assets do not replace the current beds.
+**Stained glass: the bed is chosen** (2026-11-16). Of the six candidates in
+[stained5/report.md](stained5/report.md), Jincheng took **wide-2 and tall-2**: the gold diaper
+ground with fine painted motifs, a few cobalt quarries, jewel borders and gold canopies. They are
+the best painted of the six and nearest his photograph; wide-3 and tall-3 are cleaner but their
+yellow is flat. What to do now, in this order:
+1. Promote the pair as they are: wide-2 becomes `bed.webp` (2048 × 1152) and tall-2 `bed-tall.webp`
+   (1080 × 1920) in the stained folder, enlarged from the lossless originals, not from the review
+   copies, within 300 KB and 120 KB. Do not generate them again: these two are the ones chosen. In
+   the bed's table say where the glass lies (the lancets' fields, the round light) in pixels.
+   Then remove the six review pictures; keep the report and the prompts.
+2. Only if it can be done without losing this glass, offer beside it (as a candidate, not in its
+   place) a wide bed whose window starts at 36% of the width or later and stands a little clear
+   of the top: in wide-2 it starts at 29% and its heads touch the top edge. If not, say so; the
+   cloud thread can set the picture a little to the right in code.
+3. Then the koi, the dragon and the lilies (items 2 to 4 below), cut from this window: the ground
+   is now **gold**, so the figures are white glass, ruby and cobalt, with gold only as small
+   parts; a gold koi would vanish on it. The same thick dark lead, the same painted trace line
+   and fine motifs as the bed's quarries, the same glass lit from behind and uneven. The koi
+   first, and stop there for a look.
+The paragraphs under "the bed asked a third time" below describe a cobalt ground: where they say
+cobalt field, read this gold one.
 
 **Stained glass: the bed asked a third time** (2026-11-15). Jincheng on the first kit: "底图太花
 不够优雅…龙做的也很丑…这个水平比起墨，敦煌差的太多了。把艺术水平和美感对齐统一". On the second, the
@@ -1139,9 +1156,9 @@ first and stop there for Jincheng's look; the rest follows only once the bed is 
    spec ("The koi sheet"): each koi as a Gothic glazier draws a fish: a few pieces of glass (head,
    body in two or three, each fin, the tail), the scales, gills, fin rays and eye drawn on them in
    dark trace line with a little stippled shading, the lead only where pieces meet and lying across
-   the body so the koi can bend. Row 1 gold glass, row 2 white glass with one ruby piece on the
-   head, rows 3 and 4 in whites with three or four patches to tint (the mask is those). They are
-   the window's figures: lit from behind as the bed is, and bright against its cobalt.
+   the body so the koi can bend. Row 1 white glass with ruby patches, row 2 cobalt glass with a white
+   belly and fins, rows 3 and 4 in whites with three or four patches to tint (the mask is those).
+   They are the window's figures: lit from behind as the bed is, and clear against its gold.
 3. **P0, asked again:** `dragon.webp`, to "The dragon sheet": the first is a string of orange scales
    with a cartoon head, and ugly. A dragon as a thirteenth-century window draws one, in the same
    hand as the koi: white glass and silver-stain yellow with ruby for the crest, the mane and the
