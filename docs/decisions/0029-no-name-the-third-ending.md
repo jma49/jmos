@@ -35,15 +35,17 @@ third ending asks for the one thing it never has: to leave it alone.
   ending has no name.
 - **No hints.** The second ending is told slowly; this one is not told.
 - **It is kept with the seals,** in this browser, and cleared with them.
+- **The pond ages.** Every visitor who reaches the end is counted once by
+  the database (`pond_endings`, by a salted hash of their address), and
+  the count fades the looks a little for everyone: a loss of colour while
+  a look is on show, `1 - exp(-n / 150)` of the way. One visitor cannot
+  be seen; it is meant to take years.
 
 ## Not built yet
 
 - **What is under the pond.** The end is a door: `nameless()` in
   `src/pond/seals.ts` says a visitor has reached it. Jincheng decides what
   it opens on.
-- **The pond that ages.** Every visitor who reaches the end fades the
-  looks a little for everyone. It needs a count the database keeps, and is
-  its own change.
 
 ## Consequences
 

@@ -20,6 +20,7 @@ advisory lock (Security, below).
 | `soapbox_posts` | everyone, visible posts | the bot | |
 | `soapbox_reactions` | everyone | anyone; members can change or take back theirs | one per post per visitor (members by account, others by salted IP hash) |
 | `soapbox_settings` | the bot only | the bot | |
+| `pond_endings` (visitors who reached the pond's third ending) | everyone, the count only (`reached_at`) | anyone, once: a trigger writes the row, by salted IP hash | 6 new visitors in any one hour, site-wide |
 | `songs`, `albums` | everyone | the bot | `music_settings.song_limit` songs (200) |
 | `music_settings` | the bot; visitors only through `song_limit()` and `member_limits()` | Jincheng, in the Table editor | |
 | `now_playing` | everyone, while the song plays | the bot, through `music_play()` and `music_stop()` | one song |
@@ -58,7 +59,7 @@ without settings, the stand-in. Both are made of one slice per domain:
   guestbook), `visitors.ts` (presence), `soapbox.ts`, `chat.ts`,
   `music.ts`, `discs.ts`, `documents.ts` (Jincheng's home folder),
   `stickies.ts` (a member's own), `calendar.ts` (iCal), `jobs.ts` (Job
-  Hunt). `errors.ts` is the `SocialError` every slice throws, and
+  Hunt), `pond.ts` (the count of the pond's endings). `errors.ts` is the `SocialError` every slice throws, and
   `types.ts` re-exports them all and joins the interfaces into `Social`.
 - `social/supabase/<domain>.ts` is the domain's slice over Supabase, and
   `social/supabase/context.ts` what the slices share: the one client,
@@ -189,6 +190,21 @@ since it plays the database.
   `SUPABASE_PROJECT_REF` or the linked project, and stops without one.
 - **Soapbox reactions**: members react as themselves and can change or take
   back a reaction; everyone else gets one per post, by salted IP hash.
+- **The pond's endings** (`public.pond_endings`; migration
+  `20261116063425_pond_endings.sql`): a row to each visitor who has
+  reached the pond's third ending
+  ([decision 0029](../decisions/0029-no-name-the-third-ending.md)), so
+  the pond can age as they do. A visitor is the salted hash of their
+  address, as for a reaction, signed in or not; everyone reads
+  `reached_at` alone, which is enough to count the rows
+  (`pondEndings()`), and never the hash. An insert (`reachPondEnding()`)
+  sends nothing that's kept: a trigger writes the row, adds none for a
+  visitor counted already (it returns null, so asking twice is no
+  error), and refuses a seventh new visitor in any one hour, counted
+  under one advisory lock for the table (`race.sh`: ten addresses at
+  once, six counted; one address from four tabs at once, one row).
+  Neither call throws: a count that can't be read is 0, and an ending
+  that couldn't be recorded answers false, to be tried again.
 - **The music library** (`public.songs`, `public.albums`; migration
   `20260927030802_music_library.sql`): the iPod's and Karaoke's songs,
   read by everyone and written only by the Telegram bot (service role).

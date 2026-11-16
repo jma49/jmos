@@ -18,6 +18,7 @@ import {
   markSealed,
   mayHint,
   layStroke,
+  aged,
   fade,
   left,
   LEAVES,
@@ -228,6 +229,14 @@ describe('no name', () => {
     for (const id of STROKES) a = fade(a, id, next, 2).album;
     expect(nameless(a)).toBe(true);
     expect(nameless(one.album)).toBe(false);
+  });
+  it('ages the pond a little with each visitor who reaches the end, and never all the way', () => {
+    expect(aged(0)).toBe(0);
+    expect(aged(-3)).toBe(0);
+    expect(aged(1)).toBeLessThan(0.01);
+    expect(aged(150)).toBeCloseTo(0.632, 3);
+    expect(aged(200)).toBeGreaterThan(aged(100));
+    expect(aged(1e6)).toBeLessThanOrEqual(1);
   });
 });
 

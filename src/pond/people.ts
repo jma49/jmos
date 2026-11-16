@@ -98,6 +98,18 @@ export async function signOut() {
   await (await backend())?.signOut();
 }
 
+/** How many visitors have reached the pond's third ending: the pond ages with them (decision 0029). */
+export async function endings(): Promise<number> {
+  const s = await backend();
+  return s ? s.pondEndings() : 0;
+}
+
+/** Counts this visitor among them, once; false when it couldn't be done now, to ask again another day. */
+export async function reachEnding(): Promise<boolean> {
+  const s = await backend();
+  return s ? s.reachPondEnding() : false;
+}
+
 export async function notesLeft(): Promise<number> {
   const s = await backend();
   return s && account ? s.notesLeft() : 0;

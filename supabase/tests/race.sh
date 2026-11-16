@@ -168,3 +168,39 @@ saved=$(psql -tA -d "$DB" -c "select version || ' ' || (title ~ '^save [1-4]\$')
 [ "$saved" = "2 true" ] || { echo "FAILED: four saves of an event from one copy at once gave (version, saved) $saved, not 2 true"; exit 1; }
 echo "ok: four saves of an event from one copy at once, one lands"
 
+# The pond's endings: ten new addresses reaching the end at once, six are
+# counted (the hourly cap); and one address from four tabs at once is one
+# row, with no session refused.
+psql -q -v ON_ERROR_STOP=1 -d "$DB" -c "delete from public.pond_endings where true" >/dev/null
+for i in $(seq 1 10); do
+  psql -q -d "$DB" >/dev/null 2>&1 <<SQL &
+begin;
+set local role anon;
+select set_config('request.headers', '{"x-real-ip":"198.51.100.$i"}', true);
+insert into public.pond_endings (visitor) values ('');
+select pg_sleep(0.3);
+commit;
+SQL
+done
+wait
+endings=$(psql -tA -d "$DB" -c "select count(*) from public.pond_endings")
+[ "$endings" = 6 ] || { echo "FAILED: ten visitors reaching the pond's end at once counted $endings, not 6"; exit 1; }
+echo "ok: ten visitors reach the pond's end at once, six are counted"
+psql -q -v ON_ERROR_STOP=1 -d "$DB" -c "delete from public.pond_endings where true" >/dev/null
+SAME=$(mktemp -d)
+for i in 1 2 3 4; do
+  psql -q -v ON_ERROR_STOP=1 -d "$DB" >/dev/null 2>"$SAME/$i" <<SQL &
+begin;
+set local role anon;
+select set_config('request.headers', '{"x-real-ip":"198.51.100.99"}', true);
+insert into public.pond_endings (visitor) values ('');
+select pg_sleep(0.3);
+commit;
+SQL
+done
+wait
+endings=$(psql -tA -d "$DB" -c "select count(*) from public.pond_endings")
+errors=$(cat "$SAME"/*)
+rm -rf "$SAME"
+[ "$endings" = 1 ] && [ -z "$errors" ] || { echo "FAILED: one visitor reaching the pond's end from four tabs at once gave $endings rows, not 1, or an error: $errors"; exit 1; }
+echo "ok: one visitor reaches the pond's end from four tabs at once, one row and no error"

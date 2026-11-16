@@ -206,8 +206,10 @@ words did not reach, there only for whoever asks.
   apart (`left()` in `seals.ts`; `goneNow()` and `termNo()` in `engine.js`). A look it has left,
   with no input for `STILL` seconds, slows and then draws in slowly to the visitor's koi
   (`stepStill()`), and is kept in the album as `faded`; its seal there is pale. With all ten faded
-  the gold koi comes back plain (`plainHost()`). Nothing on the page says any of this. What lies
-  under the pond, and the pond ageing for everyone, are not built.
+  the gold koi comes back plain (`plainHost()`). Nothing on the page says any of this. The pond
+  ages with everyone who reaches that end: they are counted once in the database (`endings()` and
+  `reachEnding()` in `people.ts`, the table `pond_endings`), and the count takes a little colour
+  from every look (`aged()`, `showAge()`). What lies under the pond is not built.
 - **A chain of clues.** A look on show carries a small mark that points to the next look's gesture
   (`NEXT` and `clueFor()` in `seals.ts`, `CLUES` and `clueNow()` in `engine.js`, `.clue` in
   `pond.css`), laid in a few seconds after the look has come, until that next seal is found.

@@ -120,6 +120,11 @@ export function fade(a: Album, look: string, today: string, terms: number): { al
 }
 /** Whether every look has faded: the pond has no name left on it. */
 export const nameless = (a: Album): boolean => STROKES.every((id) => id in a.faded);
+/**
+ * How far the pond has aged, 0 to 1, with `n` visitors having reached that end: each fades the looks a
+ * little for everyone, less with each who comes after, so it is years before it shows and it never ends.
+ */
+export const aged = (n: number): number => (n > 0 ? 1 - Math.exp(-n / 150) : 0);
 /** The way back through the album that opens the end: the looks' seals in the order the volumes keep them. */
 export const WAY: string[] = VOLUMES.slice(0, 2).flatMap((v) => v.seals.map((x) => x.id));
 /** The steps taken so far with one more seal pressed: the next on the way goes on, anything else starts again. */

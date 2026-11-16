@@ -42,7 +42,8 @@ import {
   writeAlbum,
   fade,
   left,
-  nameless
+  nameless,
+  aged
 } from './seals';
 import { FPS, IDLE_AFTER, due, learnBeat, simSteps } from './clock.js';
 import { PERF, add, count, frameDone, span } from './perf.js';
@@ -5954,6 +5955,7 @@ function stepStill() {
   const sec = (now - stillAt) / 1000;
   // (the pond begins to slow a few seconds in, so the wait can be felt before it is over)
   stillK = can ? clamp((sec - 6) / (STILL - 6), 0, 1) : 0;
+  showAge();
   // (it stays away while a look it has left is still drawing in)
   if (host) host.shown = !gone.includes(look) && !(inkR > 0 && gone.includes(top)) && !(dragon.d && dragon.k === host);
   if (!can || sec < STILL) return;
@@ -5970,6 +5972,22 @@ function fadedNow() {
   if (!nameless(album)) return;
   plainHost();
   greetVisitor();
+  ageNow();
+}
+// The pond ages: every visitor who has reached that end fades the looks a little for everyone (aged() in
+// seals.ts), as a loss of colour on the water's canvas while a look is on show. One who has just reached
+// it is counted first, once (asked again on a later visit if it couldn't be done). The count is read from
+// the database, so only once the pond has settled, as everything from there is.
+let age = 0,
+  ageSet = '';
+async function ageNow() {
+  if (nameless(album) && load('pond-ended') !== '1' && (await people.reachEnding())) save('pond-ended', '1');
+  age = aged(await people.endings());
+}
+function showAge() {
+  // (below a fiftieth it could not be seen, and a filter is not free)
+  const f = age > 0.02 && look !== 'water' && glc ? `saturate(${(1 - 0.75 * age).toFixed(3)})` : '';
+  if (f !== ageSet) glc.style.filter = ageSet = f;
 }
 // one quiet line on the water, by the visitor's koi, for a few seconds
 function whisper(text) {
@@ -7382,6 +7400,7 @@ if (PANEL)
     })
   );
 setInterval(() => document.hidden || loadWeather().then(weatherIn), 30 * 60_000);
+settled.then(ageNow);
 people.startPeople(
   {
     onAccount: (a) => {

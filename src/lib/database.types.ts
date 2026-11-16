@@ -464,6 +464,21 @@ export type Database = {
         };
         Relationships: [];
       };
+      pond_endings: {
+        Row: {
+          reached_at: string;
+          visitor: string;
+        };
+        Insert: {
+          reached_at?: string;
+          visitor: string;
+        };
+        Update: {
+          reached_at?: string;
+          visitor?: string;
+        };
+        Relationships: [];
+      };
       profiles: {
         Row: {
           created_at: string;
