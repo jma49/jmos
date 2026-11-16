@@ -197,7 +197,7 @@ words did not reach, there only for whoever asks.
   outside, and the taiji in ink wash (`#taiji`, the picture `taiji.webp` in ink's folder) shows
   faintly under them, turned to the line between the two koi, with the eight trigrams (`#bagua`,
   `bagua.webp`) in a ring round it turning slowly the other way (`stepTaiji()`). Both pictures are
-  asked for and not yet come: until they do the circle has no figure.
+  in ink's folder (item 0 of "Asked for now" has what came).
   `window.__pond.taiji(t)` under `?perf` sets it up for a tool.
 - **The signature** ([decision 0028](../decisions/0028-the-pond-has-three-endings.md)), the pond's
   second ending. Once every look is found, the gesture that found a look, made again in that look
@@ -754,7 +754,7 @@ flying thing seen from above (a crane or a butterfly for Dunhuang, a bee or a sw
 **Asked for now**, in this order. A thing the pond shows is asked for here and painted; it is not
 drawn in code, and what is still drawn in code that a picture would better is on this list too.
 
-0. **Asked now, first: two pictures for the koi's circle in ink**, a taiji and the eight trigrams
+0. **Delivered, to wire in: two pictures for the koi's circle in ink**, a taiji and the eight trigrams
    round it (Jincheng: "太极鱼的时候要隐隐有一个水墨的转动的太极八卦图在宣纸上"; "做出惊艳感").
    Both go in the ink folder, 1024 × 1024 with alpha, black only with its strength in the alpha,
    as ink's other pictures are, under 120 KB each, on nothing (the pond has its own paper). The
@@ -782,6 +782,21 @@ drawn in code, and what is still drawn in code that a picture would better is on
      先天八卦, clockwise from the top: 乾 ☰, 巽 ☴, 坎 ☵, 艮 ☶, 坤 ☷, 震 ☳, 离 ☲, 兑 ☱. A thin
      brushed circle may run just outside them, broken in places; no other mark, no characters.
      It turns slowly against the koi, so no trigram needs to be upright.
+   What came, both painted as ink strokes and set to these measures in code:
+   - `taiji.webp`, 102 KB: the dark half a mid wash capped at 65%, mottled, with dry streaks down
+     its tail on the left; its bare eye is clean paper 90 pixels across at (512, 292) and the
+     dark eye about 92 across at (512, 732), up to 95%. The brushed outline lies 440 pixels out,
+     broken along the right and lower sides, with two wet blots on it (at the top and at the
+     lower right) that reach about 455 out. Weak points: the outline is thin and pale (about 15%
+     to 30%), so at 60% it nearly goes; the wash is softened by about a pixel to fit the budget,
+     so its dry streaks are less crisp than a brush leaves them.
+   - `bagua.webp`, 105 KB: the eight trigrams in the order asked, clockwise from the top, each
+     bar 150 pixels long (a broken one two dabs of 66 with 18 between), 40 pixels from one bar
+     to the next, the middle bar 380 out; the ink lies from about 320 to 440 out and the inner
+     300 are empty. A thin brushed circle runs 478 out, broken in places, with wet blots
+     at the top, the lower left and the lower right. Weak points: each bar tapers from a pressed
+     head to a dry tail, so the bars are 26 thick only at the head; the short dabs of the broken
+     bars are fuzzier than the whole ones; heads point either way at random.
 1. **The dragon** of the Dragon Gate, on "The dragon sheet" below: all seven are delivered and in
    use; what came out is in each look's table (the water's with its dragon boat). In use too:
    ukiyo-e's second version, under the first one's name, drawn at its true
