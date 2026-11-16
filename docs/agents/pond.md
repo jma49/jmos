@@ -762,12 +762,10 @@ drawn in code, and what is still drawn in code that a picture would better is on
    small stars joined by a fine line; (9) the relief, the 撇: a carved groove with its lit and
    shadowed edges (a pair, `stroke-c` and `stroke-h`, as its other pictures are). Strokes 6, 7 and
    10 belong to glow, the blueprint and ASCII, which are light, ruled line and characters and need
-   no picture; stained glass, when it takes the blueprint's place, wants stroke 7 as a strip of
-   ruby glass in lead. And a seal for it: 真 (square, 朱), on a fourth sheet `seals-4.webp`, 1024 ×
+   no picture. And a seal for it: 真 (square, 朱), on a fourth sheet `seals-4.webp`, 1024 ×
    512, cut as the others are, its other cells empty for now.
-5. **A new look, stained glass, in the blueprint's place**: its kit is "Stained glass" below, with
-   the order to make it in. All eight lines are delivered, to wire in; what came out is in the
-   table under the kit.
+5. **Dropped: the stained glass look** (see "Stained glass: dropped" below). Make nothing more
+   for it.
 
 **The round asked for before** (every line is already in a look's kit below, or is new there; make them
 in this order, commit each lot as it is done, and say in its table what came out):
@@ -1080,82 +1078,13 @@ bokashi gradation, paper showing.
 6. Dove and spider: delivered and in use: the same as line drawings, one pose each, 512 × 512.
 Everything else is ruled in the shader. Nothing more wanted.
 
-**Stained glass: asked again, whole** (Jincheng, on seeing the first kit move in a demo: "底图太花
-不够优雅，换成哥特式的装饰玻璃窗那种感觉。龙做的也很丑…这个水平比起墨，敦煌差的太多了。把艺术水平和
-美感对齐统一"). The first kit is a bright Tiffany panel: every pane a strong colour, the whole busy.
-What is wanted is a Gothic church window, and it must stand beside ink and Dunhuang, which are the
-measure: quiet, old, made by one hand, most of the surface at rest. Everything below is redone to
-this; the first files stay only until the new ones replace them.
-
-How a Gothic window differs, and what to hold every picture to:
-- **Restraint.** Most of the glass is pale and quiet: grisaille (grey-white glass painted with fine
-  dark line), in small diamond or square quarries. Colour is rare and deep: the blue of Chartres,
-  ruby, a little green, and yellow only as silver stain. No turquoise, no violet, no amber fields.
-  Squint: it should read as pale stone-grey and deep blue with a few points of red.
-- **Geometry, not waves.** The lead follows an ordered design: quarries, borders, medallions,
-  foils. Nothing flows like leaves or ripples.
-- **Painted line.** A Gothic figure is drawn on the glass in dark matt paint (trace line and a
-  little stippled shadow) across few pieces; it is not built of hundreds of coloured scales.
-- **Age.** The glass is uneven, pitted and a little dimmed, the lead dull; never glossy or neon.
-- **One hand.** The bed, the koi, the dragon and the lilies must look cut from one window.
-
-It takes the blueprint's place. A new folder named stained under `public/pond/`. Judge it by: a
-thirteenth-century window (Chartres, Canterbury, the Five Sisters at York) with grey daylight
-behind it, seen from the nave. Make them in this order; the bed alone is enough to judge the look.
-1. **P0, delivered again, to wire in and look at; the rest waits on it:** the bed, `bed.webp`, 2048 × 1152, opaque to every edge, with `bed-tall.webp`,
-   1080 × 1920, the same window composed again upright (not a crop). A grisaille window seen
-   straight on, with nothing in it: a field of small diamond quarries of grey-white and faintly
-   green glass, each painted with a fine dark trace-line motif (a leaf, a quatrefoil), set in a
-   regular lattice of thin lead; over the right two thirds, one large rose or a few linked
-   medallions and foils in deep blue with thin ruby fillets and pearled borders, their fields
-   empty (the koi swim there); a narrow border of blue and ruby with a running leaf round the whole.
-   The left third (the top third of the upright one) plain quarries only, a little darker: the
-   title's type stands there. No fish, no plants, no figures, no text. The shader lays the
-   daylight and the moving water over it. Under 300 KB and 120 KB.
-2. **P0, asked again:** `koi.webp` and `koi-mask.webp`, to the common spec ("The koi sheet"): each
-   koi as a Gothic glazier draws a fish: a few pieces of glass (head, body in two or three, each
-   fin, the tail), the scales, gills, fin rays and eye drawn on them in dark matt trace line with a
-   little stippled shading, the lead only where pieces meet and lying across the body so the koi can
-   bend. Row 1 silver-stain yellow on white glass, row 2 white glass with one ruby piece on the
-   head, rows 3 and 4 in grey-whites with three or four patches to tint (the mask is those). Deep,
-   quiet colour: they must sit on the grisaille as its figures, not shout over it.
-3. **P0, asked again:** `dragon.webp`, to "The dragon sheet": the first is a string of orange scales
-   with a cartoon head, and ugly. A dragon as a thirteenth-century window draws one, in the same
-   hand as the koi: white glass and silver-stain yellow with ruby for the crest, the mane and the
-   tail's tuft and a little blue; the body in long pieces with its scales, the ridge of its back
-   and its claws drawn in trace line; a fierce, finely drawn head (the measure is the delivered
-   ukiyo-e and 青花 dragons, which have that fineness).
-4. **P1, delivered again, to wire in** (the first version's pads are a disc cut into wedges). `lilies.webp`,
-   1024 × 512, 4 × 2: three lily pads from above (large, medium, small), two lotus flowers, a bud,
-   a seed-pod and a withered pad for autumn, each as a Tiffany window builds one: a pad of 15 pieces
-   or more, its veins branching as lead lines from the stalk and not as straight spokes, in three
-   or four streaky greens with a paler rim; a flower of two or three rings of petals, each petal two
-   pieces (a pale tip, a deeper base) in pink and white opal glass round an amber heart.
-5. **P1, delivered, to wire in:** `clue.webp`, 400 × 120 with alpha, shown 200 px across: a banderole as a window letters
-   one, a pale scroll of glass in lead with five small empty quarries in a row where its words would
-   be. It points to ASCII (five letters typed).
-6. **P1, delivered, to wire in:** its seal, 琉璃 (tall, 朱, 琉 over 璃), in the one empty cell of `seals-3.webp` (column 4,
-   row 2), cut as the others are.
-7. **P1, delivered, to wire in:** `afloat.webp`, 1024 × 512, 4 × 2, as every painted look has: two spring petals, two autumn
-   leaves, a snow crystal, a frost flower, a dragonfly and a butterfly, each a small piece or two of
-   glass in lead.
-8. **P2, delivered, to wire in:** `dove.webp` and `spider.webp`, 768 × 256, three poses each, as the other looks have them,
-   in glass and lead.
-
-What has come, in `public/pond/stained/`, all made by the image model. Only the two beds are of the Gothic window; the others are still the first kit, and none of the new has been seen in the pond. (In "The dragon sheet" list above, item 4, Dunhuang's dragon, now holds the text of this kit's lilies: an edit gone astray, left for the brief's writer to put back.)
-
-| File | Size | What is in it |
-| --- | --- | --- |
-| `bed.webp` | 2048 × 1152, 196 KB | Second version, the Gothic window; the first was a Tiffany panel of leaf-shaped panes. A grisaille window straight on, opaque to every edge: diamond quarries about 75 pixels wide and 125 tall of grey-white glass (it averages `#989A8F`), each with a small four-armed trace-line motif, in thin dark lead with a dot at each crossing. One rose over the right two thirds, its centre near (1400, 580) and about 520 pixels in radius to its outer ring: a round centre about 245 in radius and eight round foils about 135 in radius round it, all of empty navy glass (`#1B304E`) with a faint crinkle, a thin ruby fillet round the centre and round the whole, a ring of pearls outside that and a thin blue ring last; the spandrels between the foils are pale glass with a small painted star. A border about 20 pixels wide round the picture, blue with a pale running leaf and a small ruby square every 250 pixels or so. The left third is quarries only, a little greyer than those on the right. It was made at 1672 × 941 and enlarged, so the trace line is a little soft; encoded at quality 35 to keep within the budget for a file, with no line in the size check. The pearls stand a little in relief; the navy is darker and duller than Chartres blue; the rose is circles in a circle, with no tracery finer than that. |
-| `bed-tall.webp` | 1080 × 1920, 157 KB | Second version: the same window composed upright, not a crop: the same quarries at about the same size, border and rose, the rose in the lower two thirds with its centre near (540, 1215) and about 470 in radius, the top third quarries only. Its quarry motif is a small three-leaved sprig where the wide one has a four-armed cross, and its ruby fillet is thinner. Over the 120 KB asked for: the lattice costs that much, and at quality 28 the line still holds. |
-| `koi.webp` | 1024 × 1536, 194 KB | Four koi from straight above in rows of 384, heads to the left, each from the barbels at x 62 to the tail tip at x 962, the spine on its row's middle line, the paint from 24 to 359 down each row (25 pixels clear). The second version: the first was nine flat pieces a fish. Each is some 150 pieces of glass in black lead: scales as rows of arcs across the body, about seven across at the widest and some twenty rows along it, each scale a tone of its own; a head of several pieces with painted eyes and two barbels; each of the four fins a fan of six to eight ribbed pieces, the forked tail one of a dozen. No lead runs along the spine. Row 1: ambers, golds and orange, a deeper piece on the brow. Row 2: milk-white, with one ruby piece on the brow. Rows 3 and 4: greys. All four are one cutting, the last three made from the first. The body is a fifth as wide as the fish is long. The glass is crinkled more than streaked, and its grain is softened by half a pixel to bring the file within the budget; the white koi's glass varies little; the fins of a pair differ a little. |
-| `koi-mask.webp` | 1024 × 1536, 8 KB | White over the patches to tint, soft by 2 pixels, black elsewhere, cut from the same pictures as the koi (the patches were painted magenta, then turned to a middle grey), so it lines up to the pixel. Each patch is a group of neighbouring scales with the leads between them. Row 3: four patches on the back, from the shoulder to two thirds along (16% of the fish). Row 4: three (9%). The patches follow the scales' edges, so their outlines are ragged; none is on a head, a fin or a tail, and row 4's are small. |
-| `dragon.webp` | 2048 × 512, 125 KB | The Dragon Gate's dragon in glass and lead: head to the left, the spine on y 256, the snout's tip at x 64 and the tail's at x 1984, one straight picture scaled evenly to those two points. Amber and gold scales as small leaded pieces in rows of arcs, about four across the body, a chain of ruby pieces down the spine, a ruby mane and tail flame, a cream muzzle, antlers, whiskers and claws, painted eyes under brows. Paint from y 111 to 401; legs at x 446 and x 1021, the claws 145 pixels from the spine. The trunk is about 140 pixels across behind the shoulders, broader than the 100 asked for; the muzzle is short and scrolled; the outer lead is heavier than the inner ones, and the glass's streaks are dense, nearer marbled enamel in places. |
-| `lilies.webp` | 1024 × 512, 101 KB | Eight motifs in a 4 × 2 grid of 256-pixel cells, from above, at one scale, each at least 14 pixels clear of its cell. The second version: the first one's pads were discs cut into wedges. Top row: three pads with one notch each (228, 180 and 130 pixels across; some 65, 60 and 45 pieces), their veins lead lines that branch and curve from the stalk, in deep, leaf, yellow and blue greens, with a pale rim of narrow pieces; an open lotus of three rings of petals, each petal a white tip and a pink base, round an amber heart (212). Bottom row: a paler lotus of two rings (200), a bud seen from above as a closed whorl of six pink pieces (88), a seed-pod with nine ringed seeds (110), a withered pad in brown, amber, rust and olive with branching veins, a ragged edge and two holes (200 × 187). The leads inside the motifs are 1 to 2 pixels, finer than the 3 asked for, so the rims and the pod run together at half size; the bud is rounder than a bud is. |
-| `afloat.webp` | 1024 × 512, 88 KB | Eight motifs in a 4 × 2 grid of 256-pixel cells, from above, each fitted to its cell with 16 pixels clear. Top row: a pink petal of two pieces with a cleft (it reads as a heart), a pale peach petal of one piece, a maple leaf in ruby and amber, a narrow leaf in amber and olive lying level. Bottom row: a snow crystal in pale blue, a frost flower of many small white pieces, a dragonfly with clear wings and a ruby body, a butterfly in ruby, amber and violet; the two flying things head to the right. The frost flower's pieces run together when small, and the butterfly's feelers are thin black lines that go on dark water. |
-| `clue.webp` | 400 × 120, 10 KB | A banderole lying level (370 × 90, centred): a scroll of straw-yellow glass with a curl and a forked end at each side, and in it five empty quarries of clear glass in a row, each in its own lead. No letter anywhere. |
-| `dove.webp`, `spider.webp` | 768 × 256, 13 KB and 18 KB | Three poses each in 256-pixel cells, from above, heads to the right, at one scale. The dove, in white and pale blue glass: sitting (99 × 50), wings half open (99 × 156, wider than the 130 asked for), flying (97 × 234); a wing is three or four pieces. The spider: an amber body with a ruby lozenge and a darker head, its eight legs lead itself with a joint each: sitting (137 × 121), walking (191 × 173), jumping (205 × 232). Its black legs go on the bed's dark third, as the dove's painted eye does at the size shown. |
-| `stroke.webp` | 512 × 512, 4 KB | One stroke of 真 for the second ending, alone on nothing, its long side 360 pixels, centred: stroke 7, a 横: a strip of ruby glass in dull lead with a solder dot at each corner (76, 237 to 436, 274). The glass is mottled and pitted; the lead is thin, about 3 pixels. Made in the Gothic hand the kit now asks for. |
+**Stained glass: dropped** (2026-11-16). Jincheng, after four beds and three koi sheets: "抛弃玻璃
+这个风格吧". The fault was the subject and not the hand: a church window is a thing in a wall, so
+the koi lie on it and are never in it; its lead is a fixed grid the water cannot move; a third of
+it must be black for the glass to glow; and its colours are far from the quiet of ink and
+Dunhuang. Its pictures are removed from `public/pond/`, and the blueprint stays. Nothing more is
+wanted for it. A look that joins the pond should be a way of painting water, with fish already
+its subject. (Its seal 琉璃 stays in its cell of `seals-3.webp`, unused.)
 
 **ASCII.** Characters only. Nothing wanted.
 

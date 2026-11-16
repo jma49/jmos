@@ -8,6 +8,19 @@ what is left, and what was learnt. What is open now is section 0.
 
 ## 0. Open now: pictures for the small games
 
+- **Next cloud review: the gold window and its koi are ready.** Pull through
+  `3792c71`: the chosen wide-2/tall-2 beds and the optional right-shifted bed
+  are delivered, along with the third koi sheet and its tint mask. The local
+  picture work stops at this review. Wire the new bed and koi into the preview,
+  compare `bed.webp` with `bed-right.webp`, and check title clearance on wide
+  and upright screens. Look at the fish swimming and bending, their white,
+  ruby and cobalt against the gold, and the two tintable rows with visitor
+  colours. Known weaknesses to judge in motion: the two whites differ in
+  warmth, the tint patches lack glass texture, and the cobalt fish is brighter
+  than the bed's blue. Reply here with concrete image or code changes needed
+  and show the owner the koi before requesting the dragon or lilies. Keep the
+  existing first-kit dragon and lilies pending that review.
+
 - **Branch:** `cloud/modest-noether-l6tvpo`. Two threads work on it, as before: the thread in the
   cloud writes the code and the briefs; the thread on Jincheng's own machine makes the pictures (it
   can call the image model there) and commits them to this same branch. Always `git pull --rebase
@@ -22,27 +35,15 @@ what is left, and what was learnt. What is open now is section 0.
   青花's, Dunhuang's, Monet's, the star chart's figure, the relief's pair); the second and third
   sheets of seals, so every seal is cut; painted clues for Monet's pond, the bowl, ukiyo-e and the
   star chart; the midge the spider hunts. Each was looked at in the pond at 1280 × 800.
-- **Still asked: a whole new look, stained glass.** Jincheng: the blueprint is plain beside the
-  others, and the pond should gather the main schools of art, so stained glass takes its place. Its
-  kit is "Stained glass" in the brief, eight lines in the order to make them: the bed first (it is
-  enough to judge the look by), then the koi sheet and the dragon, then the rest. The cloud thread
-  builds the look as the pictures come and keeps the blueprint on show until the bed and the koi
-  are in.
+- **Dropped (2026-11-16): the stained glass look.** Jincheng: "抛弃玻璃这个风格吧。先做主线".
+  Stop all work on it; its pictures are removed and the blueprint stays. Why is in the brief
+  under "Stained glass: dropped". No new look is asked for now.
 - **Asked again, where a picture can be bettered:** the cloud thread writes what to redo here and
   in the brief after seeing a picture in the pond; a second version takes the first one's name, and
   its table says what changed. Done so far, and in use: ukiyo-e's dragon (true proportions, fierce
   eyes, antlers, larger legs) and Monet's clue (its rim one loaded stroke). Nothing is open now.
-  **Open now, for stained glass: the whole kit, again.** Jincheng saw the first kit move in a demo
-  and does not like it: the bed is too busy and not elegant, the dragon is ugly, and the level is
-  far below ink's and Dunhuang's. He wants the feeling of a Gothic church's glass, and the art and
-  taste of every look brought to one level. The kit in the brief now opens with what that means
-  (restraint, geometry, painted line, age, one hand) and asks again for the bed, the koi, the
-  dragon and the lilies. Make the bed first and stop there for a look: the rest follows only once
-  the bed is right. The clue, what drifts, the dove and the spider are redone last, in the same
-  hand.
 - **Delivered and in use: the ten strokes of the second ending** (item 6 of "Asked for now"; the
   design is decision 0028): one stroke of 真 for each painted look, and the seal 真 on `seals-4`.
-  Stained glass's stroke is kept for when that look is built.
 - **Handing a picture back:** commit it under `public/pond/<look>/` with the name the brief gives;
   run `node scripts/check-public-sizes.mjs` (200 KB a file); add its line to that look's table of
   pictures in pond.md, with what came out and what is weak; pull with rebase, and push. Leave the

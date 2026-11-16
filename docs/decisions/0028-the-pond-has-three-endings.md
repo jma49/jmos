@@ -57,7 +57,6 @@ How the second ending is kept fair:
 - The dragon is no longer the last thing in the pond; the album says so
   only to a visitor who has seen it.
 - The ten strokes are ten pictures to ask for, and 真 a seal to cut.
-- A look that replaces another (stained glass for the blueprint) takes its
-  stroke with it.
+- A look that replaces another takes its stroke with it.
 - The third ending depends on the solar terms and is its own decision when
   it is built.
