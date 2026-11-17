@@ -1923,14 +1923,14 @@ def flat_shape(name, outline, thick, mat, at=(0, 0, 0), rot=(0, 0, 0), parent=No
 
 def lettering(lines, font_path, squeeze=1.0, shear=0.0, edge=0.006, fatten=0.0, weld=0.00012):
     """Words as a flat mesh in the xy plane, from a font's own outlines (Blender's sans when the
-    font file is missing). `lines` are (words, size, x, y, tilt); `fatten` thickens every
+    font file is missing). `lines` are (words, size, x, y, tilt); `shear` leans the letters forward; `fatten` thickens every
     stroke by that share of the size; long edges are cut so the mesh can afterwards be bent
     onto a curved surface; `weld` is how close two points of an outline may lie before they are made one."""
     font = bpy.data.fonts.load(font_path) if os.path.exists(font_path) else None
     bm = bmesh.new()
     for words, size, x, y, tilt in lines:
         cu = bpy.data.curves.new('t', 'FONT')
-        cu.body, cu.size, cu.align_x, cu.align_y, cu.shear = words, size, 'CENTER', 'CENTER', shear
+        cu.body, cu.size, cu.align_x, cu.align_y = words, size, 'CENTER', 'CENTER'
         cu.resolution_u = 2  # few points to a curve: the letters are small
         cu.offset = fatten
         if font:
@@ -1938,7 +1938,9 @@ def lettering(lines, font_path, squeeze=1.0, shear=0.0, edge=0.006, fatten=0.0, 
         o = bpy.data.objects.new('t', cu)
         COLL.objects.link(o)
         me = bpy.data.meshes.new_from_object(o.evaluated_get(bpy.context.evaluated_depsgraph_get()))
-        me.transform(Matrix.Translation((x, y, 0)) @ Matrix.Rotation(tilt, 4, 'Z') @ Matrix.Diagonal((squeeze, 1, 1, 1)))
+        lean = Matrix.Identity(4)
+        lean[0][1] = shear  # the letters lean forward: x grows with height
+        me.transform(Matrix.Translation((x, y, 0)) @ Matrix.Rotation(tilt, 4, 'Z') @ lean @ Matrix.Diagonal((squeeze, 1, 1, 1)))
         bm.from_mesh(me)
         bpy.data.meshes.remove(me)
         bpy.data.objects.remove(o)
@@ -1992,7 +1994,7 @@ def mug():
     lean forward and climb a little: rough brush capitals. The lettering is a font's outlines
     laid on the glaze (ROOM_FONT, a rough brush face): a stand-in until the real wrap is
     painted. The side turned away is plain."""
-    blue = pbr('mug glaze', (0.08, 0.16, 0.60), 0.05, Coat_Weight=0.8, Coat_Roughness=0.02)
+    blue = pbr('mug glaze', (0.13, 0.24, 0.72), 0.03, Coat_Weight=1.0, Coat_Roughness=0.01)
     seat = math.atan2(LOOKER[1] - MUG_AT[1], LOOKER[0] - MUG_AT[0])  # the way to who looks at it, from +x
     root = empty('mug', (*MUG_AT, TOP), (0, 0, seat - rad(90)))  # so the lettering, a quarter turn from the handle, faces them
     h = 0.095
@@ -2019,7 +2021,7 @@ def mug():
         beam('mug handle', a, b, (0.0135, 0.0098), blue, parent=root, bevel=0.0042)
     cyl('mug handle', 0.0049, 0.0135, pts[1], blue, rot=(rad(90), 0, 0), parent=root, bevel=0.0042, seg=16)
     # the lettering, bent round the wall
-    bm = lettering((('ON THE ROAD', 0.0300, 0.001, 0.0525, rad(2.5)), ('HAPPY ANNIVERSARY', 0.0098, 0.001, 0.0385, rad(2.5))), FONT, squeeze=0.86, shear=0.22)
+    bm = lettering((('ON THE ROAD', 0.0200, 0.0, 0.0525, rad(2.5)), ('HAPPY ANNIVERSARY', 0.0074, 0.0, 0.0405, rad(2.5))), FONT, squeeze=0.80, shear=0.21, weld=0.00008)
     for v in bm.verts:
         x, zz = v.co.x, v.co.y
         r = wall(zz) + 0.00025
@@ -2039,7 +2041,11 @@ def figurine():
     flat rounded star, its points the stubby arms and legs, quartered in yellow and dark
     brown. It sits leaning back a little."""
     skin = pbr('figurine skin', (0.80, 0.45, 0.24), 0.45)
-    yellow = pbr('figurine yellow', (0.80, 0.56, 0.20), 0.6, grain=1.0, grain_scale=900)
+    # the hood and outfit: matt yellow, pebbled like a citrus peel
+    n = Nodes('figurine yellow')
+    n.set(Base_Color=(0.80, 0.56, 0.20, 1), Roughness=0.6)
+    n.bump(n.node('ShaderNodeTexVoronoi', {'Vector': n.coords(), 'Scale': 1300.0}, feature='SMOOTH_F1').outputs['Distance'], 1.0, 0.0009)
+    yellow = n.mat
     brown = pbr('figurine brown', (0.075, 0.04, 0.03), 0.5)
     white = pbr('figurine eye white', (0.84, 0.84, 0.82), 0.2)
     iris = pbr('figurine iris', (0.03, 0.011, 0.006), 0.1, Coat_Weight=0.6)
@@ -2118,9 +2124,9 @@ def figurine():
     for sx in (1, -1):
         e = on_face(sx * 0.0039, 0.0002)
         turn = (0, 0, sx * rad(-20))
-        ball('figurine eye', (0.0047, 0.0024, 0.0060), e, white, root, rot=turn)
-        ball('figurine iris', (0.0039, 0.0019, 0.0046), e + Vector((-0.0006, 0.0008, 0.0005)), iris, root, rot=turn, cuts=2)
-        flat_shape('figurine spark', spark, 0.0002, white, at=e + Vector((-0.0009, 0.0019, 0.0013)), rot=(rad(-90), 0, 0), parent=root)
+        ball('figurine eye', (0.0050, 0.0024, 0.0064), e, white, root, rot=turn)
+        ball('figurine iris', (0.0033, 0.0018, 0.0040), e + Vector((-0.0006, 0.0009, 0.0007)), iris, root, rot=turn, cuts=2)
+        flat_shape('figurine spark', spark, 0.0002, white, at=e + Vector((-0.0010, 0.0019, 0.0015)), rot=(rad(-90), 0, 0), parent=root)
         tube('figurine brow', [on_face(sx * 0.0030, 0.0066) + Vector((0, 0.0002, 0)), on_face(sx * 0.0041, 0.0071) + Vector((0, 0.0002, 0)), on_face(sx * 0.0052, 0.0066) + Vector((0, 0.0002, 0))],
              0.00014, line, parent=root, res=4)
     for x, z in ((0.0066, -0.0054), (-0.0075, -0.0042)):
@@ -2128,7 +2134,7 @@ def figurine():
         out = Vector((x * 0.9, 0.0055, z * 0.5)).normalized()
         ball('figurine cheek', (0.0050, 0.0050, 0.0010), c - out * 0.0002, blush, root, rot=Vector((0, 0, 1)).rotation_difference(out).to_euler(), cuts=2)
         side = Vector((0, 0, 1)).cross(out).normalized()
-        tube('figurine squiggle', [c + out * 0.0005 + side * (0.0016 * k) + Vector((0, 0, 0.0002 + 0.0006 * (1 if i % 2 else -1))) for i, k in enumerate((-1.0, -0.5, 0.0, 0.5, 1.0))],
+        tube('figurine squiggle', [c + out * 0.0005 + side * (0.0016 * k) + Vector((0, 0, 0.0002 + 0.0006 * bend)) for k, bend in ((-1.0, -0.3), (-0.5, 1.0), (0.0, 0.0), (0.5, -1.0), (1.0, 0.3))],  # a tilde
              0.00017, line, parent=root, res=4)
     ball('figurine nose', (0.0014, 0.0010, 0.0010), on_face(0, -0.0030), skin, root, cuts=1)
     tube('figurine smile', [on_face(x, z) + Vector((0, 0.0002, 0)) for x, z in ((0.0010, -0.0055), (0.0005, -0.0060), (0, -0.0057), (-0.0005, -0.0060), (-0.0010, -0.0055))], 0.00013, line, parent=root, res=3)
@@ -2155,9 +2161,9 @@ def plush():
     def cloth(name, color, sheen=1.0, tint=(1, 1, 1)):
         n = Nodes(name)
         co = n.coords()
-        pile = n.math('ADD', n.math('MULTIPLY', n.noise(co, 2600.0, 2.0, 0.7), 0.6), n.math('MULTIPLY', n.noise(co, 420.0, 3.0, 0.6), 0.4))
+        pile = n.math('ADD', n.math('MULTIPLY', n.noise(co, 1500.0, 2.0, 0.8), 0.55), n.math('MULTIPLY', n.noise(co, 260.0, 3.0, 0.6), 0.45))
         n.set(Base_Color=rgba(color), Roughness=1.0, Sheen_Weight=sheen, Sheen_Roughness=0.32, Sheen_Tint=rgba(tint), Specular_IOR_Level=0.1)
-        n.bump(pile, 0.9, 0.0007)
+        n.bump(pile, 1.0, 0.0022)
         return n.mat
     black, terry = cloth('plush black', (0.008, 0.008, 0.010), 0.8, (0.55, 0.57, 0.62)), cloth('plush eye terry', (0.74, 0.74, 0.74), 0.4)
     thread = pbr('plush thread', (0.82, 0.82, 0.82), 0.5)
@@ -2171,17 +2177,17 @@ def plush():
     root = empty('plush', (*PLUSH_AT, TOP), (0, 0, facing_turn(PLUSH_AT) + (math.pi if VIEW == 'plushback' else 0)))  # its front is its +y
     # two thick legs, flat underfoot
     for sx in (1, -1):
-        leg = lathe('plush leg', [(0, 0.0), (0.0125, 0.0), (0.0142, 0.0022), (0.0144, 0.020), (0.0125, 0.027), (0.007, 0.031), (0, 0.032)], black, at=(sx * 0.0170, 0.001, 0), parent=root, seg=20)
+        leg = lathe('plush leg', [(0, 0.0), (0.0125, 0.0), (0.0142, 0.0022), (0.0144, 0.027), (0.0125, 0.034), (0.007, 0.038), (0, 0.039)], black, at=(sx * 0.0170, 0.001, 0), parent=root, seg=20)
         leg.scale = (1.0, 1.05, 1.0)
     # the body, and its print: lines in two crossing spirals with a dot in every diamond, lying flat on the cloth
-    bz, bw, bd, bh = 0.045, 0.063, 0.056, 0.050
+    bz, bw, bd, bh = 0.051, 0.063, 0.056, 0.050
     ball('plush body', (bw, bd, bh), (0, 0, bz), yellow, root, cuts=4, lumps=0.02, seed=1)
 
     def on_body(a, t, lift):
         r = math.sqrt(max(0.0, 0.25 - (t - 0.5) ** 2))
         return Vector((r * bw * math.cos(a), r * bd * math.sin(a), (t - 0.5) * bh)) * lift
 
-    lines, twist = 9, 1.15
+    lines, twist = 12, 1.58  # so the diamonds are as tall as they are wide
     bm = bmesh.new()
     for turn in (1, -1):
         for k in range(lines):
@@ -2195,15 +2201,15 @@ def plush():
                 prev = p
     obj_from_bm('plush print', bm, orange, at=(0, 0, bz), parent=root, sharp=180, outward=(0, 0, 0))
     step = math.pi / (lines * twist)  # from one row of crossings to the next
-    for j in range(1, 5):
+    for j in range(1, 6):
         for k in range(lines):
             n = on_body(2 * math.pi * k / lines + twist * j * step + math.pi / lines, j * step, 1.004)
             ball('plush dot', (0.0060, 0.0060, 0.0006), Vector((0, 0, bz)) + n, orange, root, rot=Vector((0, 0, 1)).rotation_difference(n.normalized()).to_euler(), cuts=1)
     # short arms hanging at the sides; the tail, short and pointed, low at the back; the tag beside it
     for sx in (1, -1):
-        ball('plush arm', (0.0185, 0.0175, 0.031), (sx * 0.0375, 0.0, 0.0455), black, root, rot=(0, sx * rad(-20), 0), lumps=0.03, seed=3)
-    lathe('plush tail', [(0.0075, 0.0), (0.0065, 0.010), (0.004, 0.019), (0.0012, 0.026), (0, 0.027)], black, at=(0, -0.024, 0.036), rot=(rad(128), 0, 0), parent=root, seg=12)
-    box('plush tag', (0.011, 0.0006, 0.016), (0.013, -0.0262, 0.024), pbr('plush tag', (0.78, 0.78, 0.76), 0.6), rot=(rad(-10), 0, rad(8)), parent=root)
+        ball('plush arm', (0.0185, 0.0175, 0.031), (sx * 0.0375, 0.0, 0.0515), black, root, rot=(0, sx * rad(-20), 0), lumps=0.03, seed=3)
+    lathe('plush tail', [(0.0075, 0.0), (0.0065, 0.010), (0.004, 0.019), (0.0012, 0.026), (0, 0.027)], black, at=(0, -0.024, 0.042), rot=(rad(128), 0, 0), parent=root, seg=12)
+    box('plush tag', (0.011, 0.0006, 0.016), (0.013, -0.0262, 0.030), pbr('plush tag', (0.78, 0.78, 0.76), 0.6), rot=(rad(-10), 0, rad(8)), parent=root)
     # the collar: flat green felt cut in points, lying on the shoulders
     points, steps = 12, 4
     bm = bmesh.new()
@@ -2216,10 +2222,10 @@ def plush():
         outer.append(bm.verts.new((r * math.cos(2 * math.pi * k / n), r * 0.95 * math.sin(2 * math.pi * k / n), -0.003 - 0.0055 * tooth)))
     for k in range(n):
         bm.faces.new((inner[k], outer[k], outer[(k + 1) % n], inner[(k + 1) % n]))
-    collar = obj_from_bm('plush collar', bm, green, at=(0, 0, 0.0665), parent=root, smooth=False)
+    collar = obj_from_bm('plush collar', bm, green, at=(0, 0, 0.0725), parent=root, smooth=False)
     collar.modifiers.new('thickness', 'SOLIDIFY').thickness = 0.001
     # the head: a rounded box (the exponent says how square), wider than tall, and deep
-    hz, hw, hd, hh, square = 0.1045, 0.111, 0.098, 0.085, 2.7
+    hz, hw, hd, hh, square = 0.1085, 0.117, 0.098, 0.082, 3.4
     bm = bmesh.new()
     bmesh.ops.create_icosphere(bm, subdivisions=4, radius=1.0)
     rng = random.Random(4)
@@ -2245,10 +2251,10 @@ def plush():
     eye_z = -0.0035
     for sx in (1, -1):
         # an ear: a broad rounded triangle, thin, standing at the head's upper corner and leaning out, its front lined with gold
-        ear = empty('plush ear', (sx * 0.0440, -0.006, hz + 0.0255), (rad(-4), sx * rad(27), 0), root)
-        e = lathe('plush ear', [(0.0225, 0.0), (0.0215, 0.009), (0.0170, 0.022), (0.0100, 0.032), (0.0045, 0.0370), (0, 0.0382)], black, parent=ear, seg=24)
+        ear = empty('plush ear', (sx * 0.0455, -0.006, hz + 0.0265), (rad(-4), sx * rad(27), 0), root)
+        e = lathe('plush ear', [(0.0240, 0.0), (0.0236, 0.010), (0.0212, 0.019), (0.0165, 0.0265), (0.0095, 0.0315), (0, 0.0335)], black, parent=ear, seg=24)
         e.scale = (1.0, 0.32, 1.0)
-        flat_shape('plush ear lining', rounded([(-0.0165, 0.0030), (0.0165, 0.0030), (0.0, 0.0320)], 2), 0.0005, gold, at=(0, 0.0060, 0.0012), rot=(rad(80), 0, 0), parent=ear)
+        flat_shape('plush ear lining', rounded([(-0.0180, 0.0020), (0.0180, 0.0020), (0.0, 0.0330)], 2), 0.0005, gold, at=(0, 0.0060, 0.0012), rot=(rad(80), 0, 0), parent=ear)
         # an eye: a big round of white terry, a raised stitched rim round it, the pupil set toward the nose
         p, n = on_head(sx * 0.0290, eye_z)
         ball('plush eye', (0.0282, 0.0282, 0.0026), p, terry, root, rot=facing(n), cuts=3)
@@ -2545,7 +2551,7 @@ def finish():
         print('no bloom:', e)
 
 
-EXPOSURE = {'hero': 0.0, 'laptop': 0.0, 'arm': 0.35, 'tree': 0.0, 'keepsakes': 1.2, 'plushback': 1.2, 'kplush': 1.2, 'kfigurine': 1.2, 'kmug': 1.0, 'plush': 1.0, 'mug': 0.6}
+EXPOSURE = {'hero': 0.0, 'laptop': 0.0, 'arm': 0.35, 'tree': 0.0, 'keepsakes': 1.2, 'plushback': 1.2, 'kplush': 1.2, 'kfigurine': 2.4, 'kmug': 1.4, 'plush': 1.0, 'mug': 0.6}
 
 
 def stats():
