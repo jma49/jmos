@@ -8,6 +8,89 @@ what is left, and what was learnt. What is open now is section 0.
 
 ## 0. Open now: pictures for the small games
 
+- **For the picture thread, asked 2026-11-17: repaint the keepsakes' paint,
+  `public/room/keepsakes.webp`.** This is the one picture wanted now; it comes before
+  everything else in this section.
+
+  _What it is._ The room under the pond (`/room`, unlinked;
+  [decision 0030](../decisions/0030-a-room-under-the-pond.md)) has three of Jincheng's own
+  keepsakes on its desk: a blue mug, a small vinyl figurine and a black cat plush. He asked that
+  they be true to the real things ("我给你的纪念物要准确还原"). Their shapes are modelled; everything
+  printed, stitched or painted on them is one picture, 1024 × 1024, that the page lays on them.
+  What is there now was painted by a script from fonts and flat shapes
+  (`tools/pond/room/atlas.py`), and it is the weakest part of the three: the lettering is the
+  wrong face, the embroidery is a font, the cloth is a flat colour.
+
+  _What to look at._ Ask Jincheng to paste his photographs of the three into your thread (he has
+  seven: the plush from the front, the side and the back; the figurine from three sides; the
+  mug). They are reference only: never commit them, never put them in `public/`, never send them
+  to a service other than the image model you already use, and do not read or record their
+  metadata. Paint from them; do not paste pieces of a photograph into the picture, because a
+  photograph carries its own light and the room lights these itself.
+
+  _What to deliver._ One file, the same name and size, replacing the one there: 1024 × 1024,
+  opaque, sRGB, WebP, under 150 KB (`cwebp -q 88 -m 6`). Keep a lossless master beside the
+  scripts as "keepsakes.png" in a new folder "tex" under `tools/pond/room`. Nothing else changes: the model
+  only holds where each surface lies on the picture, so the islands must stay exactly where
+  they are. Their rectangles (left, top, right, bottom, from the top left) and what each must
+  hold are listed under "the keepsakes' paint" in item 7 of "Asked for now" in
+  [pond.md](pond.md), with the positions of the eyes, the nose and the lettering;
+  `tools/pond/room/atlas.json` has the same rectangles. Do not run `atlas.py` after you
+  deliver: it writes over the file.
+
+  _The islands, in the order they matter, and what is wrong with each now._
+  1. `mug` (0, 0, 1024, 352). The lettering. The real one is a white dry-brush hand: heavy
+     forward-slanted capitals with streaked, ragged stroke ends, the R of ROAD larger with a
+     long leg, the line climbing a little to the right; "HAPPY ANNIVERSARY" under it in the
+     same hand, about a third the size. Keep both lines centred where they are, (512, 154)
+     and (512, 208), and "ON THE ROAD" about 530 pixels wide: wider and it runs round the
+     side of the mug. The glaze round it stays one flat blue, `#5879d4`, because the rest of
+     the mug is that blue in the model; no gloss, no reflection, no shading.
+  2. `plush-back` (512, 496, 896, 766). "Hawaii" as embroidery: a white stitched script,
+     heavier and more slanted than the thin font there now, with the thread's direction
+     showing in each stroke, about 265 pixels wide, climbing to the right.
+  3. `plush-face` (0, 496, 512, 856). The eyes as cloth: white terry with a raised
+     satin-stitch rim; the viewer's left pupil stitched, with a faint grey ring, the right
+     one solid black; the nose as orange-brown satin stitch. Keep the eyes' middles at
+     (129, 691) and (383, 691) and the nose at (256, 754). The ground is charcoal plush,
+     `#58575f`: give it a short nap, evenly, with no light from any side.
+  4. `plush-print` (0, 352, 1024, 496). The pineapple print as ink in yellow plush: orange
+     lines in an even diamond grid with one dot in each diamond, a little uneven as a print on
+     pile is. It wraps the body: the last 20° repeat the first, so the left 54 pixels and the
+     right 54 pixels must match, and the pattern must run to the top and bottom edges.
+  5. `plush-glasses` (0, 856, 512, 1024). Red felt with its fibre; the two lenses as black
+     plush, their middles near (148, 942) and (364, 942); one curved white stitch across the
+     top of each. The model cuts the outline, so fill the island with red to its edges.
+  6. `plush-ear` (896, 496, 1024, 624). The gold lining as metallic thread in a rounded
+     triangle on charcoal. Both ears use it.
+  7. `figurine-face` (512, 768, 768, 1024). Already close. Wanted: the eyes' white as a
+     crescent at the lower left of each iris, not an even ring; a smaller star highlight; the
+     blush softer; the cheek marks as the real tilde.
+  8. `figurine-body`, `figurine-back`, `figurine-hood`. The pebbled skin, like a citrus
+     peel, finer than now; the quarters' edges crisp; the brown `#50362c`, the yellow
+     `#ebc375`.
+
+  _Rules for all of it._ Evenly lit, no shadow, no highlight, no vignette: flat colour and
+  material texture only. Paint each island to its edges in its ground colour, and let nothing
+  cross from one island into the next (leave the last two pixels of each island plain ground).
+  If you think a ground colour is wrong against the photographs, change it and say which and
+  to what in your reply, so the matching plain parts of the model can follow. No maker's mark or
+  licensed logo beyond what is on the objects themselves.
+
+  _How to see it._ `npm run build`, then `node scripts/serve-dist.mjs`, and open
+  `/room?view=mug`, `/room?view=plush`, `/room?view=plushback`, `/room?view=figurine`, and
+  `/room` for the seat. A real GPU shows it at once; software WebGL takes a few seconds a
+  frame. Judge the lettering on the mug from `?view=mug` beside the photograph: that is the
+  test. What the model does with shape and light is the cloud thread's; if an island cannot
+  be made to look right because of where it lies on the model (stretched, cut off, too few
+  pixels), say so instead of painting round it.
+
+  _How to hand it back._ Commit `public/room/keepsakes.webp` and the master on this branch
+  (`git pull --rebase origin cloud/modest-noether-l6tvpo` first), then write under this entry:
+  what you changed in each island, any ground colour you changed, and what you could not get
+  right. The cloud thread looks at it in the room, asks for changes here if it is not yet
+  true to the photographs, and opens the pull request.
+
 - **Next cloud review: the gold window and its koi are ready.** Pull through
   `3792c71`: the chosen wide-2/tall-2 beds and the optional right-shifted bed
   are delivered, along with the third koi sheet and its tint mask. The local
