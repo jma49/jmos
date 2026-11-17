@@ -81,16 +81,18 @@ vec3 bakedDecode( vec3 v, float lo, float stops ) { return exp2( v * stops + lo 
   // three.js's sheen is several times stronger than the Principled one the scene was made with,
   // weight for weight; `sheen` scales it back to where the cloth, the mat and the book covers sit
   // in the offline render.
-  // The plush keepsake keeps its sheen whole: that soft lighter rim at grazing angles is what
-  // makes its cloth read as a nap and not as a hard shell.
-  const settings = { occlusion: 0.02, envIntensity: 1.0, sheen: 0.25, plushSheen: 1.0 };
+  // The keepsakes on the desk are small and stand in dim corners: `keepsakeFloor` is the least
+  // light their baked light is read as, so a white stays a white in the shade. The plush's cloth
+  // has its own values (plush, below).
+  const settings = { occlusion: 0.02, envIntensity: 1.0, sheen: 0.25, keepsakeFloor: 0.07 };
   // What the season does to the room's baked light (it was baked in summer's dusk): one colour
   // that every baked surface is multiplied by, shared so that changing it changes them all.
   const grade = { value: new THREE.Color(1, 1, 1) };
   const PROBE = { room: [0.2, 0.62, 0.765], laptop: [0, 0.69, 0.79] }; // where the reflections are captured from (Blender axes)
 
-  function bakeLit(material, lo, stops) {
+  function bakeLit(material, lo, stops, floor = 0) {
     material.onBeforeCompile = (shader) => {
+      shader.uniforms.bakeFloor = { value: floor };
       shader.uniforms.bakeLo = { value: lo };
       shader.uniforms.bakeStops = { value: stops };
       shader.uniforms.bakeOcclusion = { value: settings.occlusion };
@@ -100,7 +102,7 @@ vec3 bakedDecode( vec3 v, float lo, float stops ) { return exp2( v * stops + lo 
       // every bevel. Sampling at the centroid keeps it inside the triangle.
       shader.vertexShader = shader.vertexShader.replace('#include <color_pars_vertex>', CENTROID_COLOR.replace(/INOUT/g, 'varying'));
       shader.fragmentShader =
-        'uniform float bakeLo;\nuniform float bakeStops;\nuniform float bakeOcclusion;\nuniform vec3 bakeGrade;\n' +
+        'uniform float bakeLo;\nuniform float bakeStops;\nuniform float bakeOcclusion;\nuniform float bakeFloor;\nuniform vec3 bakeGrade;\n' +
         DECODE +
         shader.fragmentShader
           .replace('#include <color_pars_fragment>', CENTROID_COLOR.replace(/INOUT/g, 'varying'))
@@ -111,7 +113,7 @@ vec3 bakedDecode( vec3 v, float lo, float stops ) { return exp2( v * stops + lo 
         #if defined( USE_LIGHTMAP )
           vec3 bakedLight = bakedDecode( texture2D( lightMap, vLightMapUv ).rgb, bakeLo, bakeStops );
         #elif defined( USE_COLOR ) || defined( USE_COLOR_ALPHA )
-          vec3 bakedLight = bakedDecode( clamp( vColor.rgb, 0.0, 1.0 ), bakeLo, bakeStops );
+          vec3 bakedLight = max( bakedDecode( clamp( vColor.rgb, 0.0, 1.0 ), bakeLo, bakeStops ), vec3( bakeFloor ) );
         #else
           vec3 bakedLight = vec3( 0.0 );
           #define BAKED_NONE
@@ -135,7 +137,7 @@ vec3 bakedDecode( vec3 v, float lo, float stops ) { return exp2( v * stops + lo 
       `
           );
     };
-    material.customProgramCacheKey = () => `baked ${lo} ${stops}`;
+    material.customProgramCacheKey = () => `baked ${lo} ${stops} ${floor}`;
     material.needsUpdate = true;
   }
 
@@ -205,6 +207,35 @@ vec3 bakedDecode( vec3 v, float lo, float stops ) { return exp2( v * stops + lo 
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const SEASON_SECONDS = 1.2; // the cross-fade from one season to the next; a cut under reduced motion
 
+  /**
+   * A small tiling normal map of fine noise: the pile of a plush cloth. Heights are random per
+   * texel, smoothed once so neighbours lean together, and wrap at the edges.
+   */
+  function fuzzNormal(size) {
+    let seed = 7;
+    const random = () => {
+      seed = (seed * 1664525 + 1013904223) >>> 0; // a fixed sequence, so the cloth is the same on every visit
+      return seed / 4294967296;
+    };
+    const raw = Float32Array.from({ length: size * size }, random);
+    const at = (x, y) => raw[((y + size) % size) * size + ((x + size) % size)];
+    const height = (x, y) => (at(x, y) * 2 + at(x - 1, y) + at(x + 1, y) + at(x, y - 1) + at(x, y + 1)) / 6;
+    const data = new Uint8Array(size * size * 4);
+    for (let y = 0; y < size; y++)
+      for (let x = 0; x < size; x++) {
+        const n = new THREE.Vector3(height(x - 1, y) - height(x + 1, y), height(x, y - 1) - height(x, y + 1), 0.35).normalize();
+        data.set([n.x * 127.5 + 127.5, n.y * 127.5 + 127.5, n.z * 127.5 + 127.5, 255], (y * size + x) * 4);
+      }
+    const texture = new THREE.DataTexture(data, size, size, THREE.RGBAFormat);
+    texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+    texture.repeat.set(48, 48); // some 5 mm of cloth to a tile
+    texture.magFilter = THREE.LinearFilter;
+    texture.minFilter = THREE.LinearMipmapLinearFilter;
+    texture.generateMipmaps = true;
+    texture.needsUpdate = true;
+    return texture;
+  }
+
   /** A season's picture of the outside, fetched the first time it is wanted and kept. */
   const backdrops = new Map();
   function loadBackdrop(manifest, season) {
@@ -232,10 +263,11 @@ vec3 bakedDecode( vec3 v, float lo, float stops ) { return exp2( v * stops + lo 
     const manifest = await answer.json();
     const lm = manifest.lightmaps;
     const season = parseSeason(query.get('season')) ?? seasonOf(new Date());
-    const [gltf, backdropTex, dellPicture, editorSheet, ...lightTex] = await Promise.all([
+    const [gltf, backdropTex, dellPicture, atlas, editorSheet, ...lightTex] = await Promise.all([
       gltfLoader.loadAsync(ASSETS + 'room.glb'),
       loadBackdrop(manifest, season),
       loadTexture(ASSETS + 'screens/dell.webp'),
+      loadTexture(ASSETS + 'keepsakes.webp'),
       createEditorScreen(),
       ...Object.values(lm.files).map((f) => loadTexture(ASSETS + f))
     ]);
@@ -248,6 +280,18 @@ vec3 bakedDecode( vec3 v, float lo, float stops ) { return exp2( v * stops + lo 
       t.anisotropy = 4;
     }
 
+    // The keepsakes' paint: one picture (tools/pond/room/atlas.py paints it) for every material of
+    // the model whose name begins with "atlas"; the model has only where each surface lies on it.
+    atlas.colorSpace = THREE.SRGBColorSpace;
+    atlas.flipY = false; // as the GLB's own textures
+    atlas.anisotropy = maxAniso;
+    // The plush's cloth. Black plush catches light as a soft pale rim and nowhere else: matt, hardly
+    // any mirror of the room, a sheen that is dark grey and wide, and a fine fuzz in the surface (a
+    // small tiling normal map of noise, made here) that breaks up what highlight is left.
+    const fuzz = fuzzNormal(128);
+    const isCloth = (m) => m.isMeshPhysicalMaterial && (m.name.startsWith('plush') || m.name === 'atlas plush'); // the plush's tag is not cloth: it has no sheen
+    const isKeepsake = (m) => /^(atlas|plush|mug|figurine)/.test(m.name);
+
     const room = gltf.scene;
     scene.add(room);
     const named = {};
@@ -257,7 +301,13 @@ vec3 bakedDecode( vec3 v, float lo, float stops ) { return exp2( v * stops + lo 
       const owner = lightMaps[o.name] ? o.name : o.parent && lightMaps[o.parent.name] ? o.parent.name : null;
       named[o.name] = o;
       const m = o.material;
-      if (m.sheen) m.sheen = m.name.startsWith('plush') ? settings.plushSheen : settings.sheen;
+      if (m.sheen) m.sheen = settings.sheen;
+      if (m.name.startsWith('atlas')) m.map = atlas;
+      if (isCloth(m) && !done.has(m)) {
+        Object.assign(m, { roughness: 1, clearcoat: 0, specularIntensity: 0.15, sheen: 1, sheenRoughness: 0.85, normalMap: fuzz });
+        m.sheenColor.setRGB(0.16, 0.16, 0.18, THREE.LinearSRGBColorSpace);
+        m.normalScale.set(0.6, 0.6);
+      }
       if (m.map) m.map.anisotropy = maxAniso;
       if (m.emissiveMap) m.emissiveMap.anisotropy = maxAniso;
       if (owner) {
@@ -266,9 +316,9 @@ vec3 bakedDecode( vec3 v, float lo, float stops ) { return exp2( v * stops + lo 
         bakeLit(o.material, lm.lo, lm.stops);
       } else if (!done.has(m)) {
         done.add(m);
-        bakeLit(m, manifest.vertexLight.lo, manifest.vertexLight.stops);
+        bakeLit(m, manifest.vertexLight.lo, manifest.vertexLight.stops, isKeepsake(m) ? settings.keepsakeFloor : 0);
       }
-      o.material.envMapIntensity = settings.envIntensity;
+      o.material.envMapIntensity = isCloth(m) ? settings.envIntensity * 0.2 : settings.envIntensity;
     });
 
     // the Samsung (the left screen): its own mesh and material, lit by a canvas (map.js draws it)

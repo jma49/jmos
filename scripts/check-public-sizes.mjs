@@ -64,12 +64,13 @@ export const EXCEPTIONS = new Map([
     {
       bytes: 1500 * KB,
       reason:
-        'The room under the pond as one model (docs/decisions/0030): 130,000 triangles with their baked light in ' +
-        'vertex colours (27,000 of them the three keepsakes on the desk, which are modelled closely) and the ' +
-        'desk’s wood (about 150 KB of WebP inside it); no picture for the screens, which the page draws. ' +
-        'Meshopt-compressed it is 1.35 MB. It is a preview: making it smaller (fewer triangles on what the seat ' +
-        'never sees closely, coarser quantization) has not been tried yet and should be before the room is ' +
-        'linked. Only the page at /room fetches it, which nothing links to; no other page does.'
+        'The room under the pond as one model (docs/decisions/0030): 121,000 triangles with their baked light in ' +
+        'vertex colours (18,000 of them the three keepsakes on the desk, which are modelled closely) and the ' +
+        'desk’s wood (about 150 KB of WebP inside it); no picture for the screens, which the page draws, nor ' +
+        'for the keepsakes’ paint, which is room/keepsakes.webp. Meshopt-compressed it is 1.33 MB. It is a ' +
+        'preview: making it smaller (fewer triangles on what the seat never sees closely, coarser ' +
+        'quantization) has not been tried yet and should be before the room is linked. Only the page at /room ' +
+        'fetches it, which nothing links to; no other page does.'
     }
   ],
   [
