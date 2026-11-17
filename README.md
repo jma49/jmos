@@ -143,7 +143,7 @@ supabase/          migrations, the schema generated from them, Edge Functions (d
 scripts/           preview capture, photo refresh, favicon and portrait builders, bot setup
 public/os/         icons, fonts and desktop pictures (from ryOS, see NOTICE)
 public/pond/       the pond's pictures, a folder for each look
-public/room/       the room's model, baked light and backdrop, written by tools/pond/room/export.py
+public/room/       the room's model, baked light and a backdrop for each season, written by tools/pond/room/export.py
 docs/agents/       guidance for coding agents, by part (AGENTS.md is the entry point)
 docs/decisions/    decision records: what was chosen, what was turned down and why
 ```

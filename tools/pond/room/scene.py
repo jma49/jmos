@@ -1,8 +1,9 @@
 # The room under the pond, detailed: the agreed greybox (greybox.py) built out into real objects,
 # materials and light, all from code. Run with Blender's Python module (Cycles on the CPU):
-#   python tools/pond/room/scene.py out.png [samples] [width] [view] [stats]
-# view is one of hero (the seat, the default), laptop, arm, tree (and keys, a check on the keyboard).
-# "stats" prints triangles per object group. The screens' pictures are painted into ROOM_TEX.
+#   [SEASON=spring|summer|autumn|winter] python tools/pond/room/scene.py out.png [samples] [width] [view] [stats] [outside]
+# view is one of hero (the seat, the default), laptop, arm, tree (and keys, keepsakes, plushback, plush and mug, which are checks).
+# "stats" prints triangles per object group; "outside" hides the room from the camera, to look at
+# the season alone. The screens' pictures are painted into ROOM_TEX.
 # Lengths are metres. The seat looks toward -Y, so +X is on the LEFT of the picture.
 import math
 import os
@@ -22,7 +23,13 @@ SAMPLES = int(sys.argv[2]) if len(sys.argv) > 2 else 96
 WIDTH = int(sys.argv[3]) if len(sys.argv) > 3 else 1280
 VIEW = sys.argv[4] if len(sys.argv) > 4 else 'hero'
 STATS = 'stats' in sys.argv
+OUTSIDE = 'outside' in sys.argv  # only what is beyond the glass, as the seat sees it: a quick check on a season
+SEASON = os.environ.get('SEASON', 'summer')  # spring, summer, autumn or winter: what the outside looks like (SEASONS)
 TEX = os.environ.get('ROOM_TEX', '/home/user/room/tex')  # where the generated screen pictures go
+# the face the mug's lettering is set in: Permanent Marker (Apache 2.0), which is not kept in the repository
+FONT = os.environ.get('ROOM_FONT', '/home/user/room/fonts/PermanentMarker-Regular.ttf')
+# and the script the word on the plush is set in: Kaushan Script (SIL Open Font License), likewise not kept here
+SCRIPT = os.environ.get('ROOM_SCRIPT', '/home/user/room/fonts/KaushanScript-Regular.ttf')
 
 rad = math.radians
 TOP = 0.74  # the desk top's height
@@ -46,11 +53,20 @@ def empty(name, at=(0, 0, 0), rot=(0, 0, 0), parent=None):
     return o
 
 
-def obj_from_bm(name, bm, mat=None, at=(0, 0, 0), rot=(0, 0, 0), parent=None, sharp=50, smooth=True):
+def obj_from_bm(name, bm, mat=None, at=(0, 0, 0), rot=(0, 0, 0), parent=None, sharp=50, smooth=True, outward=None):
     """Turn a bmesh into an object. Faces are smooth, edges sharper than `sharp` degrees stay
-    crisp, and normals are weighted by face area so large flat faces stay flat beside their bevels."""
+    crisp, and normals are weighted by face area so large flat faces stay flat beside their bevels.
+    A solid's faces are turned to look out of it. A thin sheet laid on something has no inside
+    to tell by: give `outward`, a point its faces look away from (the light baked into its
+    corners is the light on the side its faces look to)."""
     me = bpy.data.meshes.new(name)
-    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    if outward is None:
+        bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    else:
+        bm.normal_update()
+        for f in bm.faces:
+            if f.normal.dot(f.calc_center_median() - Vector(outward)) < 0:
+                f.normal_flip()
     bm.to_mesh(me)
     bm.free()
     o = bpy.data.objects.new(name, me)
@@ -366,14 +382,22 @@ M = {}
 
 
 def materials():
-    M['desk'] = wood('desk wood', (0.105, 0.052, 0.026), (0.36, 0.20, 0.105), stave=0.115, rough=0.42)
-    M['floor'] = wood('floor wood', (0.10, 0.065, 0.04), (0.27, 0.185, 0.115), stave=0.14, along_y=True, rough=0.38, seed=3.1)
+    # the desk top: a pale, warm oak with a fine straight grain and a satin finish
+    M['desk'] = wood('desk wood', (0.33, 0.205, 0.105), (0.56, 0.375, 0.20), stave=0.26, rough=0.46)
+    # the floor: short-pile beige carpet
+    n = Nodes('carpet')
+    pile = n.noise(n.coords(), 900.0, 2.0, 0.7)
+    n.set(Base_Color=n.mix(n.math('MULTIPLY', n.noise(n.coords(), 3.0, 3.0, 0.6), 0.5), (0.40, 0.345, 0.27, 1), (0.33, 0.285, 0.225, 1)),
+          Roughness=0.95, Sheen_Weight=0.25, Sheen_Roughness=0.6, Specular_IOR_Level=0.1)
+    n.bump(pile, 0.8, 0.002)
+    M['floor'] = n.mat
     M['steel'] = pbr('black steel', (0.012, 0.012, 0.013), 0.48, 0.0, grain=0.25, grain_scale=900)
     M['arm'] = pbr('arm powder coat', (0.016, 0.016, 0.018), 0.42, 0.0, grain=0.3, grain_scale=1200)
     M['arm plastic'] = pbr('arm plastic', (0.02, 0.02, 0.021), 0.55)
     M['chrome'] = pbr('bolt steel', (0.55, 0.55, 0.56), 0.22, 1.0)
-    M['alu'] = pbr('aluminium', (0.74, 0.745, 0.76), 0.34, 1.0, grain=0.05, grain_scale=3000)
-    M['alu pad'] = pbr('trackpad glass', (0.66, 0.665, 0.68), 0.26, 1.0)
+    # the laptop's body: dark anodised aluminium, a grey near black
+    M['alu'] = pbr('aluminium', (0.085, 0.087, 0.092), 0.36, 1.0, grain=0.05, grain_scale=3000)
+    M['alu pad'] = pbr('trackpad glass', (0.070, 0.072, 0.077), 0.26, 1.0)
     M['silver'] = pbr('samsung silver', (0.70, 0.71, 0.73), 0.30, 1.0, grain=0.04, grain_scale=2500)
     M['key'] = pbr('keycap', (0.022, 0.022, 0.024), 0.40)
     M['well'] = pbr('keyboard well', (0.006, 0.006, 0.007), 0.5)
@@ -900,95 +924,461 @@ def room():
 
 
 # ---------------------------------------------------------------------------------------------
-# Outside: a deck at the door, a lawn, a hedge, a few roofs with lit windows far off, and
-# close to the glass the one big tree.
+# Outside. The room is on an upper floor: past the glass a narrow balcony (artificial turf
+# edged with white pebbles, a waist-high parapet of lap siding under a white cap, the house's
+# own wall on the right), and beyond it, at eye level, the crowns of trees. Nearest, in a row
+# below the parapet, junipers of the twisted kind; behind them left of centre a taller tree
+# with long pinnate leaves, taken for a walnut; further back on the right a big weeping pepper
+# tree. Lower on the left a neighbour's steep gable roof, and a yellow building behind it.
+#
+# The climate is mild and it does not snow: the evergreens look the same all year, and the
+# seasons show in the walnut, in the sky, in what lies on the balcony (dry leaves in autumn,
+# rain water in winter) and in the pepper tree's berries. The hour does not change: it is
+# always the same dusk. SEASON picks the season; SEASONS, and each species' own table, say
+# what it changes.
 # ---------------------------------------------------------------------------------------------
 
-def outside():
-    root = empty('outside')
-    rng = random.Random(21)
-    box('deck', (9, 1.9, 0.04), (0, -1.07, -0.05), M['deck'], parent=root, bevel=0.003)
-    box('deck skirt', (9, 0.03, 0.25), (0, -2.0, -0.17), M['deck'], parent=root)
-    box('lawn', (90, 60, 0.05), (0, -30, -0.30), M['lawn'], parent=root)
-    # a hedge along the end of the garden: a dark core clothed in leaves
-    box('hedge core', (44, 0.9, 1.5), (0, -12.1, 0.45), M['hedge'], parent=root)
-    P, A, S, N, SZ, RND = [], [], [], [], [], []
-    for _ in range(45000):
-        top = rng.random() < 0.35
-        x = rng.uniform(-22, 22)
-        p = Vector((x, -12.1 + rng.uniform(-0.45, 0.5), 1.2 + rng.uniform(-0.05, 0.12) + 0.06 * math.sin(x * 1.3))) if top else \
-            Vector((x, -11.65 + rng.uniform(-0.05, 0.1), rng.uniform(-0.3, 1.25)))
-        d = Vector((rng.gauss(0, 1), rng.gauss(0, 1) + 0.6, rng.gauss(0, 1) + 0.3)).normalized()
-        up = Vector((rng.gauss(0, 0.6), rng.gauss(0, 0.6), 1)).normalized()
-        side = d.cross(up).normalized()
-        P.append(p), A.append(d), S.append(side), N.append(side.cross(d)), SZ.append(rng.uniform(0.11, 0.17)), RND.append(rng.random() * 0.6)
-    leaf_cloud('hedge leaves', P, A, S, N, SZ, RND, M['leaf'], root)
-    # the neighbours: low houses, their roofs against the sky, a window or two lit
-    for x, w, h, lit in ((-27, 10, 3.2, (1,)), (-7, 11, 2.9, (0, 2)), (12, 9, 3.4, (1,)), (30, 10, 3.0, (2,))):
-        y = -50 + rng.uniform(-3, 3)
-        box('house', (w, 7, h), (x, y, h / 2 - 0.3), M['house'], parent=root)
-        bm = bmesh.new()
-        e = 0.5
-        vs = [bm.verts.new(p) for p in ((-w / 2 - e, -4, 0), (w / 2 + e, -4, 0), (w / 2 + e, 4, 0), (-w / 2 - e, 4, 0),
-                                        (-w / 2 - e, 0, 2.1), (w / 2 + e, 0, 2.1))]
-        for f in ((0, 1, 5, 4), (2, 3, 4, 5), (1, 2, 5), (3, 0, 4), (0, 3, 2, 1)):
-            bm.faces.new([vs[i] for i in f])
-        obj_from_bm('roof', bm, M['roof'], at=(x, y, h - 0.3), parent=root, smooth=False)
-        for k in range(3):
-            wx = x + (k - 1) * w * 0.3
-            box('house window', (0.9, 0.05, 1.1), (wx, y + 3.52, h * 0.5 + 0.2), M['window lit' if k in lit else 'window dark'], parent=root)
-    return root
+OUTDOOR = ('outside', 'trees')  # the things everything beyond the glass hangs from
+GROUND = -3.3  # the garden's level, a storey below the room's floor
+DECK = -0.06  # the top of the balcony's turf
+PARAPET_Y, PARAPET_T, PARAPET_TOP = -1.31, 0.14, 0.88  # its inner face, its thickness, where its cap sits
+WALL_X = -2.3  # the inner face of the house's wall at the balcony's right end (the seat's right is -x)
+CLEAR = PARAPET_Y - PARAPET_T - 0.25  # no branch comes nearer the house than this
+LOW = 0.15  # foliage below this height is hidden by the parapet from anywhere in the room, and is not made
+
+# What each season changes apart from the trees (which have their own tables, in SPECIES).
+# `fallen` is how many dry leaflets lie on the balcony and `wet` whether rain has darkened
+# and glossed what is out in it; `sky` is the dusk itself: the colours from below the horizon
+# to overhead, the afterglow, the cloud (from which noise value it starts, where it is full,
+# its colour, how much it is stretched level) and the sky's strength beside summer's.
+SEASONS = {
+    'spring': {
+        'fallen': 0.0, 'wet': False,
+        'sky': {'ramp': [(0.40, (0.02, 0.025, 0.035)), (0.497, (0.60, 0.40, 0.30)), (0.54, (0.50, 0.40, 0.48)), (0.60, (0.30, 0.36, 0.58)),
+                         (0.74, (0.13, 0.21, 0.45)), (1.0, (0.04, 0.08, 0.24))],
+                'glow': (0.50, 0.24, 0.10), 'cloud': (0.62, 0.85, (0.46, 0.36, 0.40), 9.0), 'strength': 1.05},
+    },
+    'summer': {
+        'fallen': 0.0, 'wet': False,
+        'sky': {'ramp': [(0.40, (0.02, 0.025, 0.035)), (0.497, (0.60, 0.33, 0.22)), (0.54, (0.50, 0.36, 0.42)), (0.60, (0.26, 0.29, 0.50)),
+                         (0.74, (0.10, 0.16, 0.38)), (1.0, (0.03, 0.06, 0.20))],
+                'glow': (0.75, 0.30, 0.08), 'cloud': (0.52, 0.75, (0.42, 0.30, 0.34), 9.0), 'strength': 1.0},
+    },
+    'autumn': {
+        'fallen': 1.0, 'wet': False,
+        'sky': {'ramp': [(0.40, (0.025, 0.022, 0.03)), (0.497, (0.80, 0.42, 0.17)), (0.54, (0.62, 0.38, 0.30)), (0.60, (0.32, 0.29, 0.44)),
+                         (0.74, (0.11, 0.15, 0.34)), (1.0, (0.035, 0.055, 0.19))],
+                'glow': (1.0, 0.42, 0.09), 'cloud': (0.50, 0.74, (0.55, 0.34, 0.24), 9.0), 'strength': 0.97},
+    },
+    'winter': {
+        'fallen': 0.22, 'wet': True,
+        'sky': {'ramp': [(0.40, (0.03, 0.035, 0.045)), (0.497, (0.27, 0.27, 0.30)), (0.54, (0.23, 0.245, 0.30)), (0.60, (0.185, 0.21, 0.28)),
+                         (0.74, (0.14, 0.165, 0.24)), (1.0, (0.10, 0.12, 0.18))],
+                'glow': (0.08, 0.06, 0.05), 'cloud': (0.30, 0.80, (0.24, 0.265, 0.33), 2.5), 'strength': 0.85},
+    },
+}
+if SEASON not in SEASONS:
+    raise SystemExit(f'SEASON is one of {", ".join(SEASONS)}, not {SEASON!r}')
+NOW = SEASONS[SEASON]
 
 
-FAR = {}  # the big tree's meshes, shown again far off as other trees
-TREE_AT = Vector((-0.9, -3.2, -0.28))
+def axes_euler(x, y, z):
+    """The turn that carries the x, y and z axes onto three given directions, as Euler angles."""
+    return tuple(Matrix((x, y, z)).transposed().to_euler())
 
 
-def leaf_cloud(name, P, A, S, N, SZ, RND, mat, parent):
-    """Many leaves as one mesh. For each leaf: where its stalk is (P), which way it points (A),
-    its sideways (S) and upward (N) directions, its length (SZ) and a random number for its colour."""
-    n = len(P)
-    P, A, S, N = (np.array([tuple(v) for v in L], dtype=np.float32) for L in (P, A, S, N))
-    SZ, RND = np.array(SZ, dtype=np.float32), np.array(RND, dtype=np.float32)
-    # one leaf: base, two points on the midrib, tip, then two points on each edge, lifted into a shallow fold
-    shape = np.array([(0, 0, 0), (0.33, 0, 0), (0.68, 0, -0.02), (1, 0, -0.08), (0.30, 0.30, 0.07), (0.66, 0.25, 0.05),
-                      (0.30, -0.30, 0.07), (0.66, -0.25, 0.05)], dtype=np.float32)
-    V = (P[:, None, :] + SZ[:, None, None] * (shape[None, :, 0:1] * A[:, None, :] + shape[None, :, 1:2] * S[:, None, :] + shape[None, :, 2:3] * N[:, None, :]))
-    faces = [(0, 1, 4), (1, 2, 5, 4), (2, 3, 5), (0, 6, 1), (1, 6, 7, 2), (2, 7, 3)]
-    corner = np.array([i for f in faces for i in f], dtype=np.int32)
-    starts = np.cumsum([0] + [len(f) for f in faces[:-1]]).astype(np.int32)
+def source(name, bm, mat, parent):
+    """A small mesh that is never rendered where it lies: scatter() stands copies of it elsewhere."""
     me = bpy.data.meshes.new(name)
-    me.vertices.add(n * 8)
-    me.vertices.foreach_set('co', V.reshape(-1))
-    me.loops.add(n * len(corner))
-    me.loops.foreach_set('vertex_index', (corner[None, :] + (np.arange(n, dtype=np.int32) * 8)[:, None]).reshape(-1))
-    me.polygons.add(n * len(faces))
-    me.polygons.foreach_set('loop_start', (starts[None, :] + (np.arange(n, dtype=np.int32) * len(corner))[:, None]).reshape(-1))
-    # the map carries, for the leaf material, a random number per leaf (u) and how far along the leaf (v)
-    uv = np.zeros((n, len(corner), 2), dtype=np.float32)
-    uv[:, :, 0] = RND[:, None]
-    uv[:, :, 1] = shape[corner, 0][None, :]
-    me.uv_layers.new(name='UVMap').data.foreach_set('uv', uv.reshape(-1))
-    me.update(calc_edges=True)
-    me.validate()
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    bm.to_mesh(me)
+    bm.free()
     me.shade_smooth()
     me.materials.append(mat)
     o = bpy.data.objects.new(name, me)
     COLL.objects.link(o)
     o.parent = parent
+    o.hide_render = True
     return o
 
 
-def tree(base=TREE_AT, seed=5):
-    """One big deciduous tree, grown branch by branch: a trunk that leans a little, low spreading
-    boughs, each forking again and again down to twigs that droop; then leaves on every twig."""
-    rng = random.Random(seed)
-    root = empty('tree')
+def scatter(name, sources, P, R, S, parent):
+    """Many copies of a few small meshes, as instances (the mesh is stored once): a point for
+    each copy, with how it is turned (R, Euler angles) and its size (S), and a geometry-nodes
+    modifier that stands a source on every point. The sources are taken in turn. Each copy has
+    its own random number in the material (Object Info), which is what colours leaf from leaf."""
+    made = []
+    for k, src in enumerate(sources):
+        p, r, s = P[k::len(sources)], R[k::len(sources)], S[k::len(sources)]
+        if not p:
+            continue
+        me = bpy.data.meshes.new(name)
+        me.vertices.add(len(p))
+        me.vertices.foreach_set('co', np.array([tuple(v) for v in p], dtype=np.float32).reshape(-1))
+        me.attributes.new('rot', 'FLOAT_VECTOR', 'POINT').data.foreach_set('vector', np.array(r, dtype=np.float32).reshape(-1))
+        me.attributes.new('scale', 'FLOAT', 'POINT').data.foreach_set('value', np.array(s, dtype=np.float32))
+        o = bpy.data.objects.new(name, me)
+        COLL.objects.link(o)
+        o.parent = parent
+        g = bpy.data.node_groups.new('scatter ' + src.name, 'GeometryNodeTree')
+        g.interface.new_socket('Geometry', in_out='INPUT', socket_type='NodeSocketGeometry')
+        g.interface.new_socket('Geometry', in_out='OUTPUT', socket_type='NodeSocketGeometry')
+        new = g.nodes.new
+        gin, gout, info, inst = new('NodeGroupInput'), new('NodeGroupOutput'), new('GeometryNodeObjectInfo'), new('GeometryNodeInstanceOnPoints')
+        info.inputs['Object'].default_value = src
+        info.inputs['As Instance'].default_value = True
+        rot, size = new('GeometryNodeInputNamedAttribute'), new('GeometryNodeInputNamedAttribute')
+        rot.data_type, size.data_type = 'FLOAT_VECTOR', 'FLOAT'
+        rot.inputs['Name'].default_value, size.inputs['Name'].default_value = 'rot', 'scale'
+        g.links.new(gin.outputs[0], inst.inputs['Points'])
+        g.links.new(info.outputs['Geometry'], inst.inputs['Instance'])
+        g.links.new(rot.outputs['Attribute'], inst.inputs['Rotation'])
+        g.links.new(size.outputs['Attribute'], inst.inputs['Scale'])
+        g.links.new(inst.outputs['Instances'], gout.inputs[0])
+        o.modifiers.new('scatter', 'NODES').node_group = g
+        made.append(o)
+    return made
+
+
+def leaflet_into(bm, uv, base, along, side, up, length, width, rnd, fold=0.07):
+    """One oval leaflet, folded a little along its midrib and bowed at the tip: 8 points, 6 faces.
+    Its texture coordinate carries a random number (u) and how far along the leaflet (v)."""
+    shape = ((0, 0, 0), (0.33, 0, 0), (0.68, 0, -0.02), (1, 0, -0.08), (0.30, 1, fold), (0.66, 0.83, fold * 0.7), (0.30, -1, fold), (0.66, -0.83, fold * 0.7))
+    vs = [bm.verts.new(base + along * (length * x) + side * (width / 2 * y) + up * (length * z)) for x, y, z in shape]
+    for f in ((0, 1, 4), (1, 2, 5, 4), (2, 3, 5), (0, 6, 1), (1, 6, 7, 2), (2, 7, 3)):
+        face = bm.faces.new([vs[i] for i in f])
+        for loop, i in zip(face.loops, f):
+            loop[uv].uv = (rnd, shape[i][0])
+
+
+def strip_into(bm, uv, a, b, wa, wb, va, vb, rnd, flat=Vector((0, 0, 1))):
+    """A flat tapering strip from a to b, wa wide at a and wb at b, lying square to `flat`."""
+    s = flat.cross(b - a).normalized()
+    face = bm.faces.new([bm.verts.new(p) for p in (a - s * wa / 2, a + s * wa / 2, b + s * wb / 2, b - s * wb / 2)])
+    for loop, v in zip(face.loops, (va, va, vb, vb)):
+        loop[uv].uv = (rnd, v)
+
+
+def compound_leaf(name, pairs, rng, mat, parent, leaflet=0.2, width=0.095, droop=(0.10, 0.24), start=0.2):
+    """One pinnate leaf: a stalk (the rachis) one unit long along +x, bare at its foot, then
+    leaflets in opposite pairs and one at the tip. It bows under its own weight. `leaflet` and
+    `width` are a leaflet's length and breadth beside the whole leaf's length."""
+    bm = bmesh.new()
+    uv = bm.loops.layers.uv.new('UVMap')
+    droop, sway, ph = rng.uniform(*droop), rng.uniform(0.01, 0.04), rng.uniform(0, 6.28)
+
+    def spine(t):
+        return Vector((t, sway * math.sin(3 * t + ph), -droop * t * t))
+
+    for i in range(6):
+        strip_into(bm, uv, spine(i / 6), spine((i + 1) / 6), 0.014, 0.010, 0.25, 0.25, 0.5)
+    for k in range(pairs):
+        t = start + (0.92 - start) * k / (pairs - 1)
+        p = spine(t)
+        tang = (spine(t + 0.01) - p).normalized()
+        for s in (1, -1):
+            a = rad(rng.uniform(55, 78))
+            along = tang * math.cos(a) + Vector((0, s, 0)) * math.sin(a) + Vector((0, 0, -rng.uniform(0.0, 0.3)))
+            along.normalize()
+            side = Vector((0, 0, 1)).cross(along).normalized()
+            leaflet_into(bm, uv, p, along, side, along.cross(side), leaflet * rng.uniform(0.85, 1.1) * (1 - 0.25 * abs(2 * t - 1.1)), width, rng.random())
+    p = spine(0.97)
+    tang = (p - spine(0.94)).normalized()
+    side = Vector((0, 0, 1)).cross(tang).normalized()
+    leaflet_into(bm, uv, p, tang, side, tang.cross(side), leaflet, width, rng.random())
+    return source(name, bm, mat, parent)
+
+
+def tuft(name, rng, mat, parent):
+    """One tuft of a juniper's scale foliage, one unit long along +x: a rib with branchlets to
+    all sides by turns, each with shorter lobes of its own, all narrow flattened strips. The
+    texture coordinate's v runs from the foot (inside the plant) to the tips."""
+    bm = bmesh.new()
+    uv = bm.loops.layers.uv.new('UVMap')
+    rnd = rng.random()
+
+    def rib(t):
+        return Vector((t, 0.03 * math.sin(4 * t + rnd * 6), 0.05 * math.sin(3 * t + rnd * 9)))
+
+    for i in range(5):
+        strip_into(bm, uv, rib(i / 5), rib((i + 1) / 5), 0.05 - 0.004 * i, 0.046 - 0.004 * i, i / 5, (i + 1) / 5, rnd)
+    for i in range(14):
+        t = 0.06 + 0.86 * i / 13
+        a, roll = rad(38 + rng.uniform(-8, 8)), i * 2.2 + rng.uniform(-0.4, 0.4)
+        length = (0.42 * (1 - 0.75 * t) + 0.10) * rng.uniform(0.85, 1.15)
+        d = Vector((math.cos(a), math.sin(a) * math.cos(roll), math.sin(a) * math.sin(roll)))
+        flat = d.cross(Vector((1, 0, 0))).normalized()
+        p, r2 = rib(t), rng.random()
+        strip_into(bm, uv, p, p + d * length, 0.065, 0.03, t, min(1.0, t + length), r2, flat)
+        for j in range(3):
+            q = p + d * (length * (0.25 + 0.25 * j))
+            d2 = (Matrix.Rotation((1 if j % 2 else -1) * rad(36), 3, flat) @ d + Vector((rng.uniform(-0.1, 0.1), rng.uniform(-0.1, 0.1), rng.uniform(-0.1, 0.1)))).normalized()
+            strip_into(bm, uv, q, q + d2 * (length * 0.42 * (1 - 0.2 * j)), 0.05, 0.022, min(1.0, t + 0.3), 1.0, r2, flat)
+    return source(name, bm, mat, parent)
+
+
+def streamer(name, rng, mat, parent):
+    """One hanging branchlet of a pepper tree, one unit long along +x (which scatter() points
+    down): a thread of a stem that sways, and along it fine pinnate leaves that hang with it,
+    each a stalk with many narrow leaflets."""
+    bm = bmesh.new()
+    uv = bm.loops.layers.uv.new('UVMap')
+    ph = [rng.uniform(0, 6.28) for _ in range(2)]
+
+    def stem(t):
+        return Vector((t, 0.05 * math.sin(4 * t + ph[0]) * t, 0.05 * math.sin(3 * t + ph[1]) * t))
+
+    for i in range(6):
+        strip_into(bm, uv, stem(i / 6), stem((i + 1) / 6), 0.006, 0.004, 0.2, 0.2, 0.5, Vector((0, 0, 1)))
+    for i in range(13):
+        t = 0.05 + 0.93 * i / 12
+        roll = i * 2.4 + rng.uniform(-0.5, 0.5)
+        out = Vector((0, math.cos(roll), math.sin(roll)))
+        d = (Vector((1, 0, 0)) * rng.uniform(0.9, 1.6) + out).normalized()  # the leaf hangs along the branchlet, a little out from it
+        flat = d.cross(out).normalized()
+        length, rnd = rng.uniform(0.16, 0.24), rng.random()
+        p = stem(t)
+        strip_into(bm, uv, p, p + d * length, 0.004, 0.003, 0.2, 0.2, rnd, flat)
+        for k in range(11):
+            q = p + d * (length * (0.12 + 0.86 * k / 10))
+            for s in (1, -1):
+                e = (d * 0.55 + flat.cross(d) * s).normalized()
+                strip_into(bm, uv, q, q + e * 0.042 * rng.uniform(0.8, 1.2), 0.012, 0.004, 0.3, 1.0, rnd, flat)
+    return source(name, bm, mat, parent)
+
+
+def cluster(name, rng, mat, parent, n=22, spread=0.3, bead=0.09):
+    """A hanging bunch one unit long along +x: small beads on threads (the pepper tree's
+    berries), or with long narrow ones close to the stalk a catkin."""
+    bm = bmesh.new()
+    uv = bm.loops.layers.uv.new('UVMap')
+    strip_into(bm, uv, Vector((0, 0, 0)), Vector((1, 0, 0)), 0.012, 0.008, 0, 0, 0.5)
+    for i in range(n):
+        t = 0.15 + 0.85 * i / (n - 1)
+        a = i * 2.4 + rng.uniform(-0.4, 0.4)
+        c = Vector((t, math.cos(a) * spread * (1 - 0.6 * t) * rng.uniform(0.4, 1), math.sin(a) * spread * (1 - 0.6 * t) * rng.uniform(0.4, 1)))
+        r = bead * rng.uniform(0.8, 1.2) / 2
+        vs = [bm.verts.new(c + Vector(d) * r) for d in ((1, 0, 0), (-1, 0, 0), (0, 1, 0), (0, -1, 0), (0, 0, 1), (0, 0, -1))]
+        for f in ((0, 2, 4), (2, 1, 4), (1, 3, 4), (3, 0, 4), (2, 0, 5), (1, 2, 5), (3, 1, 5), (0, 3, 5)):
+            face = bm.faces.new([vs[k] for k in f])
+            for loop in face.loops:
+                loop[uv].uv = (rng.random(), t)
+    return source(name, bm, mat, parent)
+
+
+def lump(name, rng, parent, mat, squash=0.5, rough=0.18, cuts=2):
+    """A rounded lump one unit across (a pebble). Flattened, never quite round."""
+    bm = bmesh.new()
+    bmesh.ops.create_icosphere(bm, subdivisions=cuts, radius=0.5)
+    ph = [rng.uniform(0, 6.28) for _ in range(6)]
+    for v in bm.verts:
+        c = v.co
+        k = 1 + rough * (math.sin(3.1 * c.x + ph[0]) * math.sin(2.7 * c.y + ph[1]) + 0.6 * math.sin(4.3 * c.z + ph[2] + 2 * c.x))
+        v.co = Vector((c.x * k * (1 + 0.25 * math.sin(ph[3])), c.y * k * (0.8 + 0.15 * math.sin(ph[4])), c.z * k * squash))
+    return source(name, bm, mat, parent)
+
+
+def lap_wall(name, length, z0, z1, mat, at, turn=0.0, parent=None, board=0.15, proud=0.014):
+    """A wall face clad in lap siding: boards lying level, each one's lower edge standing proud
+    of the board below. The face runs `length` along its own x and looks toward its own +y."""
+    bm = bmesh.new()
+    uv = bm.loops.layers.uv.new('UVMap')
+    rows = max(1, round((z1 - z0) / board))
+    h = (z1 - z0) / rows
+    for k in range(rows):
+        za, zb = z0 + k * h, z0 + (k + 1) * h
+        # the board's face, then the narrow underside of the board above
+        for quad in (((0, proud, za), (length, proud, za), (length, 0.002, zb), (0, 0.002, zb)),
+                     ((0, 0.002, zb), (length, 0.002, zb), (length, proud, zb), (0, proud, zb))):
+            face = bm.faces.new([bm.verts.new(p) for p in quad])
+            for loop in face.loops:
+                loop[uv].uv = (loop.vert.co.x, loop.vert.co.z + k * 0.37)  # metres; each board its own grain
+    return obj_from_bm(name, bm, mat, at=at, rot=(0, 0, turn), parent=parent, smooth=False)
+
+
+def lap_wall(name, length, z0, z1, mat, at, turn=0.0, parent=None, board=0.15, proud=0.014):
+    """A wall face clad in lap siding: boards lying level, each one's lower edge standing proud
+    of the board below. The face runs `length` along its own x and looks toward its own +y."""
+    bm = bmesh.new()
+    uv = bm.loops.layers.uv.new('UVMap')
+    rows = max(1, round((z1 - z0) / board))
+    h = (z1 - z0) / rows
+    for k in range(rows):
+        za, zb = z0 + k * h, z0 + (k + 1) * h
+        # the board's face, then the narrow underside of the board above
+        for quad in (((0, proud, za), (length, proud, za), (length, 0.002, zb), (0, 0.002, zb)),
+                     ((0, 0.002, zb), (length, 0.002, zb), (length, proud, zb), (0, proud, zb))):
+            face = bm.faces.new([bm.verts.new(p) for p in quad])
+            for loop in face.loops:
+                loop[uv].uv = (loop.vert.co.x, loop.vert.co.z + k * 0.37)  # metres; each board its own grain
+    return obj_from_bm(name, bm, mat, at=at, rot=(0, 0, turn), parent=parent, smooth=False)
+
+
+def balcony():
+    root = empty('outside')
+    rng = random.Random(21)
+    x0, x1 = WALL_X, 2.3  # the turf runs from the house's wall to the parapet's return on the left
+    y0, y1 = PARAPET_Y, -0.11
+    box('balcony slab', (x1 - x0 + 0.4, y1 - y0 + 0.3, 0.22), ((x0 + x1) / 2, (y0 + y1) / 2 - 0.05, DECK - 0.115), M['trim'], parent=root)
+    box('turf', (x1 - x0, y1 - y0, 0.012), ((x0 + x1) / 2, (y0 + y1) / 2, DECK - 0.006), M['turf'], parent=root)
+    # the parapet: siding inside, a white board under the cap, the cap itself, and plain outside
+    yo = PARAPET_Y - PARAPET_T
+    box('parapet', (x1 - x0 + 0.3, PARAPET_T - 0.02, PARAPET_TOP - DECK + 0.2), ((x0 + x1) / 2 + 0.15, PARAPET_Y - PARAPET_T / 2 - 0.01, (PARAPET_TOP + DECK - 0.2) / 2), M['siding'], parent=root)
+    lap_wall('parapet siding', x1 - x0, DECK, PARAPET_TOP - 0.09, M['siding'], (x1, PARAPET_Y, 0), rad(180), root)
+    box('parapet fascia', (x1 - x0, 0.02, 0.09), ((x0 + x1) / 2, PARAPET_Y + 0.008, PARAPET_TOP - 0.045), M['trim'], parent=root, bevel=0.003)
+    box('parapet cap', (x1 - x0 + 0.42, PARAPET_T + 0.07, 0.045), ((x0 + x1) / 2 + 0.2, PARAPET_Y - PARAPET_T / 2, PARAPET_TOP + 0.0225), M['cap'], parent=root, bevel=0.006)
+    # its return on the left, back to the house
+    box('parapet return', (PARAPET_T - 0.02, y1 - yo, PARAPET_TOP - DECK + 0.2), (x1 + PARAPET_T / 2 + 0.01, (y1 + yo) / 2, (PARAPET_TOP + DECK - 0.2) / 2), M['siding'], parent=root)
+    lap_wall('return siding', y1 - y0, DECK, PARAPET_TOP - 0.09, M['siding'], (x1, y1, 0), rad(90), root)
+    box('return fascia', (0.02, y1 - y0, 0.09), (x1 - 0.008, (y0 + y1) / 2, PARAPET_TOP - 0.045), M['trim'], parent=root, bevel=0.003)
+    box('return cap', (PARAPET_T + 0.07, y1 - y0 + 0.1, 0.045), (x1 + PARAPET_T / 2, (y0 + y1) / 2 + 0.05, PARAPET_TOP + 0.0225), M['cap'], parent=root, bevel=0.006)
+    # the house's own wall on the right, in the same siding, with a white board down its outer corner
+    box('house wall', (0.3, y1 - yo + 0.1, 3.6 - GROUND), (x0 - 0.16, (y1 + yo) / 2 - 0.05, (3.6 + GROUND) / 2), M['siding'], parent=root)
+    lap_wall('house siding', y1 - yo, DECK, 3.6, M['siding'], (x0, yo, 0), rad(-90), root)
+    box('corner board', (0.03, 0.11, 3.6 - DECK), (x0 + 0.012, yo - 0.02, (3.6 + DECK) / 2), M['trim'], parent=root, bevel=0.003)
+
+    # the pebbles: a band along the foot of the parapet and of both ends, two deep in places
+    stones = [lump('pebble', rng, root, M['pebble'], squash=rng.uniform(0.45, 0.7), rough=0.1) for _ in range(4)]
+    band = 0.17
+    box('pebble bed', (x1 - x0, band + 0.02, 0.004), ((x0 + x1) / 2, y0 + band / 2 + 0.01, DECK + 0.002), M['soil'], parent=root)
+    P, R, S = [], [], []
+
+    def pebbles(n, place):
+        for _ in range(n):
+            x, y = place()
+            size = rng.uniform(0.032, 0.062)
+            lift = rng.random() < 0.3
+            P.append(Vector((x, y, DECK + size * 0.27 + (size * 0.4 if lift else 0))))
+            R.append((rng.uniform(-0.25, 0.25), rng.uniform(-0.25, 0.25), rng.uniform(0, 6.28)))
+            S.append(size)
+
+    pebbles(1500, lambda: (rng.uniform(x0 + 0.02, x1 - 0.02), y0 + 0.02 + band * rng.random() ** 1.3))
+    pebbles(330, lambda: (x0 + 0.02 + band * rng.random() ** 1.3, rng.uniform(y0, y1 - 0.03)))
+    pebbles(330, lambda: (x1 - 0.02 - band * rng.random() ** 1.3, rng.uniform(y0, y1 - 0.03)))
+    scatter('pebbles', stones, P, R, S, root)
+
+    if NOW['fallen']:
+        # dry leaflets the walnut has dropped: thick against the parapet and in the corners, a few
+        # out on the turf, some caught among the pebbles and a few on the cap
+        dry = []
+        for i in range(3):
+            bm = bmesh.new()
+            uv = bm.loops.layers.uv.new('UVMap')
+            leaflet_into(bm, uv, Vector((-0.5, 0, 0)), Vector((1, 0, 0)), Vector((0, 1, 0)), Vector((0, 0, 1)), 1.0, 0.36 + 0.07 * i, 0.5, fold=0.05 + 0.07 * i)
+            dry.append(source('dry leaflet', bm, M['dry leaf'], root))
+        P, R, S = [], [], []
+        for _ in range(round(620 * NOW['fallen'])):
+            y = y0 + 0.03 + (y1 - y0 - 0.06) * rng.random() ** 2.2
+            x = rng.uniform(x0 + 0.03, x1 - 0.03)
+            on_stones = y < y0 + band or x < x0 + band or x > x1 - band
+            P.append(Vector((x, y, DECK + (rng.uniform(0.03, 0.06) if on_stones else 0.006))))
+            tilt = 0.5 if on_stones else 0.12
+            R.append((rng.uniform(-tilt, tilt), rng.uniform(-tilt, tilt), rng.uniform(0, 6.28)))
+            S.append(rng.uniform(0.05, 0.095))
+        for _ in range(round(16 * NOW['fallen'])):
+            P.append(Vector((rng.uniform(-1.9, 1.9), PARAPET_Y - PARAPET_T / 2 + rng.uniform(-0.07, 0.07), PARAPET_TOP + 0.049)))
+            R.append((rng.uniform(-0.1, 0.1), rng.uniform(-0.1, 0.1), rng.uniform(0, 6.28)))
+            S.append(rng.uniform(0.05, 0.09))
+        scatter('fallen leaves', dry, P, R, S, root)
+    return root
+
+
+def neighbours(root):
+    """A neighbour's house, lower on the left: only its steep roof and the gable under it reach
+    the view, the gable shingled, with one small attic window (lit on a winter evening). Behind
+    it a plain yellow building; along the end of the garden below, a board fence."""
+    lit = SEASON == 'winter'
+    # the house in its own frame: the ridge runs along y, the gable seen is at +y; then turned and put in place
+    w, length, eave, apex = 5.2, 9.0, -0.5, 2.85
+    turn = rad(53)
+    peak = Vector((5.3, -8.2, 0))  # under the near gable's apex
+    house = empty('neighbour', at=peak - Matrix.Rotation(turn, 3, 'Z') @ Vector((0, length / 2, 0)), rot=(0, 0, turn), parent=root)
+    hy, over = length / 2, 0.35
+    slope = Vector((w / 2, 0, eave - apex)).normalized()  # down the +x slope
+    for s in (1, -1):
+        bm = bmesh.new()
+        uv = bm.loops.layers.uv.new('UVMap')
+        run = Vector((s * slope.x, 0, slope.z))
+        top, foot = Vector((0, 0, apex + 0.02)), Vector((0, 0, apex + 0.02)) + run * ((w / 2 + over) / slope.x)
+        quad = [top + Vector((0, -hy - over, 0)), top + Vector((0, hy + over, 0)), foot + Vector((0, hy + over, 0)), foot + Vector((0, -hy - over, 0))]
+        face = bm.faces.new([bm.verts.new(p) for p in quad])
+        for loop, c in zip(face.loops, ((0, 0), (length + 2 * over, 0), (length + 2 * over, (foot - top).length), (0, (foot - top).length))):
+            loop[uv].uv = c
+        obj_from_bm('roof slope', bm, M['shingle'], parent=house, smooth=False)
+        # the white board along the gable's rake
+        beam('rake board', top + Vector((0, hy + over, -0.07)), foot + Vector((0, hy + over, -0.07)), (0.03, 0.10), M['trim'], parent=house)
+    # the gable wall and the wall under it, shingled
+    bm = bmesh.new()
+    uv = bm.loops.layers.uv.new('UVMap')
+    pts = [(-w / 2, hy, GROUND), (w / 2, hy, GROUND), (w / 2, hy, eave), (0, hy, apex), (-w / 2, hy, eave)]
+    face = bm.faces.new([bm.verts.new(p) for p in pts])
+    for loop in face.loops:
+        loop[uv].uv = (loop.vert.co.x, loop.vert.co.z)
+    obj_from_bm('gable wall', bm, M['gable'], parent=house, smooth=False)
+    box('house body', (w - 0.02, length - 0.02, eave - GROUND), (0, 0, (eave + GROUND) / 2), M['gable'], parent=house)
+    # the attic window: tall and narrow, in a white frame
+    wz = apex - 1.25
+    box('attic frame', (0.62, 0.05, 1.0), (0, hy + 0.02, wz), M['trim'], parent=house, bevel=0.004)
+    box('attic pane', (0.46, 0.02, 0.84), (0, hy + 0.045, wz), M['window lit' if lit else 'window dark'], parent=house)
+    box('attic bar', (0.46, 0.03, 0.035), (0, hy + 0.05, wz), M['trim'], parent=house)
+    # the yellow building behind: flat-roofed, a row of windows under its eaves, one or two lit
+    bx, by, bw, bh = 9.5, -30.0, 12.0, 4.6
+    box('yellow building', (bw, 8, bh - GROUND), (bx, by, (bh + GROUND) / 2), M['yellow'], parent=root)
+    box('yellow eaves', (bw + 0.5, 8.5, 0.22), (bx, by, bh + 0.11), M['trim'], parent=root)
+    for k in range(10):
+        wx = bx - bw / 2 + (k + 0.5) * bw / 10
+        box('yellow window frame', (0.62, 0.06, 0.86), (wx, by + 4.02, bh - 0.85), M['trim'], parent=root)
+        box('yellow window', (0.5, 0.04, 0.74), (wx, by + 4.05, bh - 0.85), M['window lit' if k in ((2, 3, 7) if lit else (7,)) else 'window dark'], parent=root)
+    # the fence at the end of the garden: weathered grey boards, one stretch newer
+    box('fence', (16, 0.04, 1.8), (-2.0, -11.5, GROUND + 0.9), M['fence'], parent=root)
+    box('fence, new boards', (4.5, 0.045, 1.85), (-1.0, -11.48, GROUND + 0.925), M['fence new'], parent=root)
+
+
+# ---------------------------------------------------------------------------------------------
+# The trees. Each species is a habit (a function that grows one plant) and a table of what it
+# looks like in each season; SPECIES lists them and PLANTED says where each plant stands. To
+# change a tree for another, write its habit and its table and name it in PLANTED.
+# ---------------------------------------------------------------------------------------------
+
+KITS = {}  # what a species' plants share (its materials, the small meshes they are clothed in), made once
+
+
+def kit_of(name, make):
+    if name not in KITS:
+        KITS[name] = make()
+    return KITS[name]
+
+
+def foliage(name, col, through=0.3, rough=0.5):
+    """A leaf's surface: `col` is its colour (a socket of the Nodes `name` wraps), and some of
+    the light that falls on it passes through."""
+    n = name
+    n.set(Base_Color=col, Roughness=rough, Specular_IOR_Level=0.35)
+    thru = n.node('ShaderNodeBsdfTranslucent', {'Color': col})
+    both = n.node('ShaderNodeMixShader', {0: through, 1: n.bsdf.outputs[0], 2: thru.outputs[0]})
+    n.nt.links.new(both.outputs[0], n.out.inputs['Surface'])
+    return n.mat
+
+
+def bark(name, dark, light, scale=(9, 9, 1.6)):
+    """Furrowed bark, darker when the rain has wet it."""
+    n = Nodes(name)
+    ridges = n.noise(n.mapping(n.coords(), scale), 1.0, 5.0, 0.65, 1.5)
+    k = 0.6 if NOW['wet'] else 1.0
+    n.set(Base_Color=n.ramp(ridges, [(0.3, tuple(c * k for c in dark)), (0.7, tuple(c * k for c in light))]), Roughness=0.55 if NOW['wet'] else 0.9)
+    n.bump(ridges, 1.0, 0.02)
+    return n.mat
+
+
+def grow_wood(rng, base, lean, r0, LEN, BEND, RISE, boughs, twig_level=4, split=(18, 38)):
+    """A tree's wood, grown branch by branch: a trunk, the boughs that leave it (each: how far
+    up the trunk, compass direction from +x, lean from upright, thickness), and each branch
+    forking again and again down to twigs. LEN, BEND and RISE give, for each level of
+    branching, a branch's length, how much it wanders and whether it reaches up or hangs.
+    Returns the wood as a bmesh and the centre lines of its twigs, where the leaves go."""
     bm = bmesh.new()
     twigs = []
-    LEN = [2.2, 2.2, 1.6, 1.15, 0.8, 0.55, 0.4]
-    BEND = [0.03, 0.09, 0.14, 0.18, 0.22, 0.25, 0.3]
-    RISE = [0.0, 0.11, 0.06, 0.02, -0.03, -0.08, -0.14]  # thick wood reaches up, thin wood hangs
+    last = len(LEN) - 1
 
     def gauss3():
         return Vector((rng.gauss(0, 1), rng.gauss(0, 1), rng.gauss(0, 1)))
@@ -999,8 +1389,8 @@ def tree(base=TREE_AT, seed=5):
 
     def skin(path):
         """Wrap a tube round a branch's centre line."""
-        r0 = path[0][1]
-        sides = 14 if r0 > 0.12 else 9 if r0 > 0.05 else 6 if r0 > 0.02 else 4
+        r_first = path[0][1]
+        sides = 14 if r_first > 0.12 else 9 if r_first > 0.05 else 6 if r_first > 0.02 else 4
         u, prev = None, None
         for i, (p, r) in enumerate(path):
             t = (path[min(i + 1, len(path) - 1)][0] - path[max(i - 1, 0)][0]).normalized()
@@ -1017,120 +1407,345 @@ def tree(base=TREE_AT, seed=5):
     def grow(pos, d, r, level, forks=True):
         L = LEN[level] * rng.uniform(0.8, 1.2)
         n = max(3, round(L / (0.3 if level < 2 else 0.17)))
-        path = [(pos.copy(), r * (1.7 if level == 0 else 1.0))]
+        path = [(pos.copy(), r * (1.5 if level == 0 else 1.0))]
         r_end = r * 0.7
         for i in range(n):
             d = (d + gauss3() * BEND[level] + Vector((0, 0, RISE[level]))).normalized()
-            if pos.y > -1.9:  # the house is in the way: wood near the glass turns aside, as a pruned tree's does
-                d = (d + Vector((0, -0.5 * (pos.y + 1.9) - 0.15, 0))).normalized()
+            if pos.y > CLEAR - 0.65:  # the house is in the way: wood near it turns aside, as a pruned tree's does
+                d = (d + Vector((0, -0.5 * (pos.y - CLEAR + 0.65) - 0.15, 0))).normalized()
             pos = pos + d * (L / n)
-            if pos.y > -1.0:
+            if pos.y > CLEAR:
                 break
             rr = r + (r_end - r) * (i + 1) / n
             if level == 0 and i == 0:
                 rr = r * 1.15  # the flare at the root
             path.append((pos.copy(), rr))
-            if level >= 1 and 1 <= i < n - 1 and rr > 0.011 and rng.random() < 0.5:
+            if 1 <= level < last and 1 <= i < n - 1 and rr > 0.011 and rng.random() < 0.5:
                 grow(pos, fork(d, rng.uniform(40, 75)), rr * rng.uniform(0.45, 0.6), level + 1)
         skin(path)
-        if level >= 4:
+        if level >= twig_level:
             twigs.append(path)
         if not forks:
             return path
-        if r_end < 0.010 or level >= 6:
-            if level < 4:
+        if r_end < 0.010 or level >= last:
+            if level < twig_level:
                 twigs.append(path)
             return path
         k = 2 if rng.random() < 0.7 else 3
         for _ in range(k):
-            grow(pos, fork(d, rng.uniform(18, 38)), r_end * (0.8 if k == 2 else 0.7), level + 1)
+            grow(pos, fork(d, rng.uniform(*split)), r_end * (0.8 if k == 2 else 0.7), level + 1)
         return path
 
-    trunk = grow(base.copy(), Vector((0.03, 0.02, 1)).normalized(), 0.25, 0, forks=False)
-    # the boughs: (how far up the trunk, compass direction, lean from upright, thickness)
-    for frac, az, lean, r in ((0.70, 12, 62, 0.115), (0.80, 172, 60, 0.12), (0.88, 262, 56, 0.11),
-                              (0.95, 310, 46, 0.12), (1.0, 215, 40, 0.12), (1.0, 80, 14, 0.14)):
+    trunk = grow(base.copy(), Vector(lean).normalized(), r0, 0, forks=False)
+    for frac, az, tip, r in boughs:
         i = min(int(frac * (len(trunk) - 1)), len(trunk) - 1)
-        d = Vector((math.cos(rad(az)) * math.sin(rad(lean)), math.sin(rad(az)) * math.sin(rad(lean)), math.cos(rad(lean))))
+        d = Vector((math.cos(rad(az)) * math.sin(rad(tip)), math.sin(rad(az)) * math.sin(rad(tip)), math.cos(rad(tip))))
         grow(trunk[i][0].copy(), d, r, 1)
-    wood_obj = obj_from_bm('tree wood', bm, M['bark'], parent=root, sharp=80)
+    return bm, twigs
 
-    # the leaves: small folded blades, several to each span of twig, hanging every which way
-    P, A, S, N, SZ, RND = [], [], [], [], [], []
+
+def hang(d, rng):
+    """How a thing that hangs along `d` is turned: its length along d, turned about d at random."""
+    side = d.orthogonal().normalized()
+    side = (Matrix.Rotation(rng.uniform(0, 6.28), 3, d) @ side).normalized()
+    return axes_euler(d, side, d.cross(side))
+
+
+def juniper(name, state, at, parent, seed=1, top=2.2, leaders=5, spread=1.0):
+    """A juniper of the twisted kind (as Juniperus chinensis 'Torulosa'): several leaders from
+    one foot, each leaning its own way and turning as it climbs, clothed in dense tufts that
+    wind round it, bright at their tips and dark within, thinning to a whip at the top; the
+    reddish stem shows where the tufts leave it bare."""
+    def make():
+        n = Nodes(name + ' foliage')
+        uv = n.node('ShaderNodeSeparateXYZ', {0: n.coords('UV')})
+        rnd = n.node('ShaderNodeObjectInfo').outputs['Random']
+        inner = n.ramp(n.math('ADD', n.math('MULTIPLY', rnd, 0.8), n.math('MULTIPLY', uv.outputs[0], 0.2)),
+                       [(0.0, (0.04, 0.10, 0.03)), (0.6, (0.09, 0.20, 0.05)), (1.0, (0.15, 0.29, 0.07))])
+        tip_col, reach = state['tips']
+        col = n.mix(n.math('MULTIPLY', n.math('POWER', uv.outputs[1], 1.6), reach), inner, rgba(tip_col))
+        rng = random.Random(3)
+        return {'tufts': [tuft(name + ' tuft', rng, foliage(n, col, 0.4, 0.55), parent) for _ in range(4)],
+                'stem': bark(name + ' bark', (0.05, 0.02, 0.012), (0.20, 0.085, 0.045), (14, 14, 2.5)),
+                'core': pbr(name + ' shade', (0.006, 0.013, 0.006), 0.95)}
+    kit = kit_of(name, make)
+    rng = random.Random(seed)
+    stems, core = bmesh.new(), bmesh.new()
+    P, R, S = [], [], []
+    z0 = 0.5  # where the leaders part, above the foot
+
+    def spire(start, out, h, lean, fat, stem_r, low):
+        """One leader, or one of the arms that leave it: a line that leans along `out`, winds as
+        it climbs h metres, and is clothed from `low` (a share of its length) up."""
+        turns, wob, ph = rng.uniform(0.8, 1.7) * rng.choice((-1, 1)), rng.uniform(0.10, 0.26) * min(1.0, h / 3), rng.uniform(0, 6.28)
+        bands, ph2 = rng.uniform(1.2, 2.2) * h, rng.uniform(0, 6.28)
+
+        def path(t):
+            a = ph + 2 * math.pi * turns * t
+            return start + out * (lean * h * t * (1 - 0.35 * t)) + Vector((math.cos(a) - math.cos(ph), math.sin(a) - math.sin(ph), 0)) * (wob * t) + Vector((0, 0, h * t))
+
+        def girth(t):
+            """How far the tufts stand from the stem: full low down, in bulges, a whip at the tip."""
+            return max(0.03, fat * (1 - t) ** 0.55 * (0.6 + 0.4 * math.sin(2 * math.pi * bands * t / 4 + ph2)))
+
+        if path(1.0).y > CLEAR or path(0.5).y > CLEAR:
+            return path
+        for _ in range(round(1500 * 2 * math.pi * fat * 0.55 * h * (1 - low))):
+            t = low + (1 - low) * rng.random()
+            g = girth(t)
+            if rng.random() > g / fat + 0.1:
+                continue
+            a = rng.uniform(0, 6.28)
+            radial = Vector((math.cos(a), math.sin(a), 0))
+            if radial.y < -0.45:
+                continue  # the far side, which the room never sees
+            tang = (path(min(1.0, t + 0.02)) - path(max(0.0, t - 0.02))).normalized()
+            p = path(t) + radial * (g * rng.uniform(0.35, 0.9))
+            if p.y > CLEAR + 0.1 or p.z < LOW:
+                continue
+            # a tuft reaches up along the leader and out from it, and round it the way the leader turns
+            ax = (tang * rng.uniform(0.6, 1.0) + radial * rng.uniform(0.4, 0.9) + tang.cross(radial) * (0.4 * (1 if turns > 0 else -1))
+                  + Vector((rng.gauss(0, 0.2), rng.gauss(0, 0.2), rng.gauss(0, 0.2)))).normalized()
+            P.append(p), R.append(hang(ax, rng)), S.append(rng.uniform(0.15, 0.25) * (0.55 + 0.45 * g / fat))
+        rings_s, rings_c = [], []
+        for i in range(25):
+            t = i / 24
+            c = path(t)
+            rs, rc = stem_r * (1 - 0.85 * t) + 0.005, max(0.0, girth(t) * 0.62 - 0.07)
+            rings_s.append([stems.verts.new(c + Vector((math.cos(2 * math.pi * j / 7), math.sin(2 * math.pi * j / 7), 0)) * rs) for j in range(7)])
+            if t >= low * 0.8 and rc > 0.01:
+                rings_c.append([core.verts.new(c + Vector((math.cos(2 * math.pi * j / 8), math.sin(2 * math.pi * j / 8), 0)) * rc) for j in range(8)])
+        for rings, bm, m in ((rings_s, stems, 7), (rings_c, core, 8)):
+            for a, b in zip(rings, rings[1:]):
+                for j in range(m):
+                    bm.faces.new((a[j], a[(j + 1) % m], b[(j + 1) % m], b[j]))
+        return path
+
+    for k in range(leaders):
+        az = 2 * math.pi * k / leaders + rng.uniform(-0.5, 0.5)
+        out = Vector((math.cos(az), math.sin(az), 0))
+        h = (top if k == 0 else top - rng.uniform(0.25, 1.5)) - at.z - z0
+        lean = math.tan(rad(rng.uniform(4, 20) * spread)) * (0.4 if k == 0 else 1.0)
+        low = max(0.0, (LOW - at.z - z0) / h)
+        path = spire(at + out * 0.12 + Vector((0, 0, z0)), out, h, lean, rng.uniform(0.28, 0.40), 0.05, low)
+        # the arms: short spires that leave the leader, lean out and turn up like flames
+        for _ in range(rng.randint(2, 4)):
+            t = rng.uniform(max(low, 0.3), 0.85)
+            a = rng.uniform(0, 6.28)
+            spire(path(t), Vector((math.cos(a), math.sin(a), 0)), rng.uniform(0.5, 1.1) * (1.15 - t), rng.uniform(0.5, 1.1), rng.uniform(0.16, 0.24), 0.02, 0.0)
+    obj_from_bm(name + ' stems', stems, kit['stem'], parent=parent, sharp=80)
+    obj_from_bm(name + ' shade', core, kit['core'], parent=parent, sharp=180)
+    scatter(name + ' tufts', kit['tufts'], P, R, S, parent)
+    return len(P)
+
+
+def walnut(name, state, at, parent, seed=7):
+    """The deciduous tree, taken for a walnut: a tall trunk, an open crown of rising boughs and
+    coarse twigs, and on the twigs long pinnate leaves as the season has them: `leaves` is the
+    share that are out, `bare_above` the height over which the upper crown has already dropped
+    its own, `catkins` whether the spring's hang from it."""
+    def make():
+        n = Nodes(name + ' leaf')
+        uv = n.node('ShaderNodeSeparateXYZ', {0: n.coords('UV')})
+        rnd = n.node('ShaderNodeObjectInfo').outputs['Random']
+        which = n.math('ADD', n.math('MULTIPLY', rnd, 0.78), n.math('MULTIPLY', uv.outputs[0], 0.22))
+        leaf = foliage(n, n.ramp(which, state['leaf']), 0.42, 0.45)
+        rng = random.Random(5)
+        n = Nodes(name + ' catkin')
+        cat = foliage(n, (0.20, 0.26, 0.05, 1), 0.2, 0.6)
+        return {'leaves': [compound_leaf(name + ' leaf', pairs, rng, leaf, parent, leaflet=0.17, width=0.062, droop=(0.15, 0.35), start=0.14) for pairs in (6, 7, 8, 9)],
+                'catkins': [cluster(name + ' catkin', rng, cat, parent, n=26, spread=0.05, bead=0.07) for _ in range(2)],
+                'bark': bark(name + ' bark', (0.022, 0.018, 0.015), (0.10, 0.085, 0.07))}
+    kit = kit_of(name, make)
+    rng = random.Random(seed)
+    bm, twigs = grow_wood(rng, at, (0.03, 0.04, 1), 0.21,
+                          LEN=[5.6, 2.6, 1.9, 1.35, 0.95, 0.65], BEND=[0.02, 0.09, 0.13, 0.17, 0.2, 0.24], RISE=[0.0, 0.14, 0.09, 0.05, 0.0, -0.05],
+                          boughs=((0.72, 200, 58, 0.10), (0.80, 40, 52, 0.105), (0.88, 110, 46, 0.10), (0.94, 300, 44, 0.105), (1.0, 170, 26, 0.115), (1.0, 20, 18, 0.125)))
+    obj_from_bm(name + ' wood', bm, kit['bark'], parent=parent, sharp=80)
+    P, R, S, CP, CR, CS = [], [], [], [], [], []
+    lo, hi = state.get('bare_above', (99, 100))
     for path in twigs:
         for (a, _), (b, rb) in zip(path, path[1:]):
             along = (b - a).normalized()
-            for _ in range(7 if rb < 0.012 else 4):
+            for _ in range(3 if rb < 0.012 else 2):
                 p = a.lerp(b, rng.random())
-                # none against the glass, and few low down, so the sky shows under the crown
-                if p.y > -0.9 or rng.random() > min(1.0, max(0.3, (p.z - 1.5) / 1.0)):
+                if p.y > CLEAR:
                     continue
-                d = (along * 0.6 + gauss3() * 0.75 + Vector((0, 0, -0.45))).normalized()
-                up = (gauss3() * 0.6 + Vector((0, 0, 1))).normalized()
-                side = d.cross(up).normalized()
-                P.append(p + d * 0.015)
-                A.append(d)
-                S.append(side)
-                N.append(side.cross(d))
-                SZ.append(rng.uniform(0.085, 0.135))
-                RND.append(rng.random())
-    leaves = leaf_cloud('tree leaves', P, A, S, N, SZ, RND, M['leaf'], root)
-    FAR['wood'], FAR['leaves'] = wood_obj, leaves
+                if rng.random() < state['leaves'] * min(1.0, max(0.0, (hi - p.z) / (hi - lo))):
+                    d = (along * 0.6 + Vector((rng.gauss(0, 0.6), rng.gauss(0, 0.6), rng.gauss(0, 0.6))) + Vector((0, 0, -0.25))).normalized()
+                    up = (Vector((rng.gauss(0, 0.4), rng.gauss(0, 0.4), 1))).normalized()
+                    side = up.cross(d).normalized()
+                    P.append(p), R.append(axes_euler(d, side, d.cross(side))), S.append(rng.uniform(0.28, 0.42) * state['leaf_size'])
+                if state.get('catkins') and rng.random() < 0.3:
+                    d = (Vector((0, 0, -1)) + Vector((rng.gauss(0, 0.15), rng.gauss(0, 0.15), 0))).normalized()
+                    CP.append(p), CR.append(hang(d, rng)), CS.append(rng.uniform(0.07, 0.12))
+    scatter(name + ' leaves', kit['leaves'], P, R, S, parent)
+    scatter(name + ' catkins', kit['catkins'], CP, CR, CS, parent)
+    return len(P)
+
+
+def pepper(name, state, at, parent, seed=11):
+    """A pepper tree (as Schinus molle): a thick gnarled trunk and heavy limbs that twist and
+    spread, and from every twig long branchlets of fine feathery leaves that hang straight
+    down in curtains, as a willow's do. `berries` is how much of it carries hanging bunches of
+    small pink-red berries."""
+    def make():
+        n = Nodes(name + ' leaf')
+        uv = n.node('ShaderNodeSeparateXYZ', {0: n.coords('UV')})
+        rnd = n.node('ShaderNodeObjectInfo').outputs['Random']
+        col = n.ramp(n.math('ADD', n.math('MULTIPLY', rnd, 0.7), n.math('MULTIPLY', uv.outputs[0], 0.3)),
+                     [(0.0, (0.045, 0.085, 0.048)), (0.6, (0.085, 0.15, 0.08)), (1.0, (0.15, 0.22, 0.11))])
+        leaf = foliage(n, col, 0.3, 0.5)
+        n = Nodes(name + ' berry')
+        n.set(Base_Color=n.ramp(n.node('ShaderNodeObjectInfo').outputs['Random'], [(0.0, (0.40, 0.07, 0.07)), (1.0, (0.55, 0.16, 0.14))]), Roughness=0.4)
+        rng = random.Random(9)
+        return {'streamers': [streamer(name + ' branchlet', rng, leaf, parent) for _ in range(4)],
+                'berries': [cluster(name + ' berries', rng, n.mat, parent) for _ in range(2)],
+                'bark': bark(name + ' bark', (0.012, 0.010, 0.009), (0.065, 0.05, 0.04), (5, 5, 1.2))}
+    kit = kit_of(name, make)
+    rng = random.Random(seed)
+    bm, twigs = grow_wood(rng, at, (-0.06, 0.08, 1), 0.42,
+                          LEN=[3.6, 2.8, 2.1, 1.4, 0.9], BEND=[0.05, 0.2, 0.26, 0.3, 0.32], RISE=[0.0, 0.10, 0.03, -0.04, -0.14],
+                          boughs=((0.62, 30, 66, 0.19), (0.75, 160, 62, 0.20), (0.85, 265, 60, 0.17), (0.93, 95, 50, 0.19), (1.0, 330, 38, 0.2), (1.0, 205, 30, 0.22)),
+                          twig_level=3, split=(25, 50))
+    obj_from_bm(name + ' wood', bm, kit['bark'], parent=parent, sharp=80)
+    P, R, S, BP, BR, BS = [], [], [], [], [], []
+    for path in twigs:
+        for (a, _), (b, rb) in zip(path, path[1:]):
+            for _ in range(3):
+                p = a.lerp(b, rng.random())
+                if p.z < LOW + 0.5:
+                    continue
+                d = (Vector((0, 0, -1)) + Vector((rng.gauss(0, 0.08), rng.gauss(0, 0.08), 0))).normalized()
+                P.append(p), R.append(hang(d, rng)), S.append(rng.uniform(0.9, 2.1))
+                if rng.random() < state['berries']:
+                    q = p + d * rng.uniform(0.1, 0.9)
+                    BP.append(q), BR.append(hang(d, rng)), BS.append(rng.uniform(0.12, 0.2))
+    scatter(name + ' branchlets', kit['streamers'], P, R, S, parent)
+    scatter(name + ' berries', kit['berries'], BP, BR, BS, parent)
+    return len(P)
+
+
+# The species: how each grows, whether it keeps its leaves, and its state in each season (what
+# the habit reads from `state`).
+YELLOWING = [(0.0, (0.07, 0.15, 0.02)), (0.3, (0.20, 0.26, 0.03)), (0.65, (0.46, 0.40, 0.045)), (0.9, (0.56, 0.42, 0.04)), (1.0, (0.42, 0.24, 0.04))]
+SPECIES = {
+    'juniper': {'habit': juniper, 'evergreen': True, 'seasons': {
+        'spring': {'tips': ((0.50, 0.72, 0.14), 0.95)},  # the new growth is at its brightest
+        'summer': {'tips': ((0.36, 0.55, 0.11), 0.85)},
+        'autumn': {'tips': ((0.34, 0.52, 0.10), 0.8)},
+        'winter': {'tips': ((0.30, 0.47, 0.10), 0.75)},
+    }},
+    'walnut': {'habit': walnut, 'evergreen': False, 'seasons': {
+        # late into leaf: in spring the leaves are small and few, with the catkins still hanging
+        'spring': {'leaves': 0.8, 'leaf_size': 0.62, 'catkins': True,
+                   'leaf': [(0.0, (0.10, 0.22, 0.03)), (0.6, (0.16, 0.30, 0.045)), (1.0, (0.27, 0.36, 0.07))]},
+        'summer': {'leaves': 1.0, 'leaf_size': 1.0,
+                   'leaf': [(0.0, (0.025, 0.07, 0.014)), (0.55, (0.05, 0.12, 0.02)), (0.9, (0.09, 0.16, 0.026)), (1.0, (0.16, 0.19, 0.035))]},
+        # it turns a clear yellow and drops early, from the top down
+        'autumn': {'leaves': 0.6, 'leaf_size': 0.95, 'bare_above': (2.4, 4.6), 'leaf': YELLOWING},
+        'winter': {'leaves': 0.012, 'leaf_size': 0.8, 'leaf': [(0.0, (0.30, 0.20, 0.05)), (1.0, (0.16, 0.09, 0.04))]},
+    }},
+    'pepper': {'habit': pepper, 'evergreen': True, 'seasons': {
+        'spring': {'berries': 0.0}, 'summer': {'berries': 0.04}, 'autumn': {'berries': 0.5}, 'winter': {'berries': 0.4},
+    }},
+}
+# Where each plant stands (its foot, on the ground below), and what is its own.
+PLANTED = (
+    ('walnut', (1.3, -6.0), {}),
+    ('pepper', (-4.6, -10.5), {}),
+    ('juniper', (1.9, -3.3), {'seed': 1, 'top': 1.75, 'leaders': 4}),
+    ('juniper', (0.9, -2.8), {'seed': 2, 'top': 2.5, 'leaders': 5}),
+    ('juniper', (-0.2, -3.2), {'seed': 3, 'top': 2.05, 'leaders': 5}),
+    ('juniper', (-1.2, -2.9), {'seed': 4, 'top': 2.9, 'leaders': 6}),
+    ('juniper', (-2.3, -3.3), {'seed': 5, 'top': 2.2, 'leaders': 5}),
+    ('juniper', (-3.3, -2.9), {'seed': 6, 'top': 2.6, 'leaders': 5, 'spread': 1.5}),
+    ('juniper', (-4.4, -3.4), {'seed': 7, 'top': 3.1, 'leaders': 6}),
+)
+
+
+def trees():
+    root = empty('trees')
+    for name, (x, y), own in PLANTED:
+        species = SPECIES[name]
+        n = species['habit'](name, species['seasons'][SEASON], Vector((x, y, GROUND)), root, **own)
+        print(f'{name} at ({x}, {y}): {n} pieces of foliage')
     return root
 
 
 def outdoor_materials():
-    n = Nodes('bark')
+    wet = NOW['wet']
+    dim = 0.72 if wet else 1.0  # rain darkens what it soaks
+
+    # a dry fallen leaflet: tan to brown, a few still yellow
+    n = Nodes('dry leaf')
+    rnd = n.node('ShaderNodeObjectInfo').outputs['Random']
+    n.set(Base_Color=n.ramp(rnd, [(0.0, (0.45 * dim, 0.36 * dim, 0.06)), (0.2, (0.36 * dim, 0.22 * dim, 0.09)), (0.6, (0.25 * dim, 0.14 * dim, 0.07)), (1.0, (0.12, 0.07, 0.04))]),
+          Roughness=0.35 if wet else 0.7)
+    M['dry leaf'] = n.mat
+
+    # artificial turf: short dark blades, a pile that leans this way and that
+    n = Nodes('turf')
     co = n.coords()
-    ridges = n.noise(n.mapping(co, (9, 9, 1.6)), 1.0, 5.0, 0.65, 1.5)
-    n.set(Base_Color=n.ramp(ridges, [(0.3, (0.018, 0.013, 0.010)), (0.7, (0.10, 0.075, 0.055))]), Roughness=0.9)
-    n.bump(ridges, 1.0, 0.02)
-    M['bark'] = n.mat
+    pile = n.noise(co, 2.5, 3.0, 0.6)
+    blades = n.noise(n.mapping(co, (900, 300, 300)), 1.0, 2.0, 0.7)
+    n.set(Base_Color=n.mix(n.math('MULTIPLY', blades, 0.6), n.ramp(pile, [(0.3, (0.010 * dim, 0.030 * dim, 0.012 * dim)), (0.7, (0.022 * dim, 0.055 * dim, 0.020 * dim))]),
+                           (0.045 * dim, 0.085 * dim, 0.03 * dim, 1)),
+          Roughness=n.ramp(pile, [(0.35, (0.22,) * 3), (0.6, (0.6,) * 3)]) if wet else 0.8, Sheen_Weight=0.4, Sheen_Roughness=0.6, Specular_IOR_Level=0.5 if wet else 0.2)
+    n.bump(blades, 1.0, 0.004)
+    M['turf'] = n.mat
 
-    n = Nodes('leaf')
-    uv = n.node('ShaderNodeSeparateXYZ', {0: n.coords('UV')})
-    green = n.ramp(uv.outputs[0], [(0.0, (0.020, 0.060, 0.012)), (0.55, (0.045, 0.115, 0.018)), (0.85, (0.10, 0.17, 0.025)), (1.0, (0.22, 0.20, 0.03))])
-    n.set(Base_Color=green, Roughness=0.45, Specular_IOR_Level=0.4)
-    thru = n.node('ShaderNodeBsdfTranslucent', {'Color': n.mix(0.5, green, (0.30, 0.42, 0.05, 1))})
-    both = n.node('ShaderNodeMixShader', {0: 0.42, 1: n.bsdf.outputs[0], 2: thru.outputs[0]})
-    n.nt.links.new(both.outputs[0], n.out.inputs['Surface'])
-    M['leaf'] = n.mat
+    # fibre-cement lap siding, painted beige: a faint embossed grain along each board
+    n = Nodes('siding')
+    uv = n.coords('UV')
+    grain = n.noise(n.mapping(uv, (3, 220, 1)), 1.0, 3.0, 0.6)
+    weather = n.noise(uv, 1.3, 3.0, 0.6)
+    n.set(Base_Color=n.mix(n.math('MULTIPLY', weather, 0.35), (0.36 * dim, 0.28 * dim, 0.185 * dim, 1), (0.27 * dim, 0.21 * dim, 0.14 * dim, 1)), Roughness=0.5 if wet else 0.75)
+    n.bump(grain, 0.35, 0.0015)
+    M['siding'] = n.mat
+    M['trim'] = pbr('white trim', (0.70, 0.70, 0.68), 0.55, grain=0.1, grain_scale=300)
+    # the cap's top lies open to the sky: after rain it holds a film of water, in patches
+    n = Nodes('cap paint')
+    film = n.noise(n.coords(), 5.0, 3.0, 0.6)
+    n.set(Base_Color=(0.70 * dim, 0.70 * dim, 0.68 * dim, 1), Roughness=n.ramp(film, [(0.4, (0.06,) * 3), (0.62, (0.4,) * 3)]) if wet else 0.55)
+    n.bump(n.noise(n.coords(), 300.0, 2.0, 0.6), 0.1, 0.0003)
+    M['cap'] = n.mat
+    M['soil'] = pbr('pebble bed', (0.03, 0.022, 0.016), 0.3 if wet else 0.95)
 
-    n = Nodes('lawn')
-    g = n.noise(n.coords(), 0.5, 6.0, 0.75)
-    n.set(Base_Color=n.ramp(g, [(0.3, (0.008, 0.024, 0.005)), (0.7, (0.03, 0.07, 0.014))]), Roughness=1.0, Specular_IOR_Level=0.0)
-    n.bump(n.noise(n.coords(), 60.0, 3.0, 0.7), 1.0, 0.05)
-    M['lawn'] = n.mat
-    n = Nodes('hedge')
-    g = n.noise(n.coords(), 3.0, 5.0, 0.75)
-    n.set(Base_Color=n.ramp(g, [(0.3, (0.006, 0.016, 0.007)), (0.7, (0.02, 0.045, 0.016))]), Roughness=0.9)
-    n.bump(g, 1.0, 0.1)
-    M['hedge'] = n.mat
-    M['deck'] = wood('deck wood', (0.05, 0.04, 0.032), (0.17, 0.14, 0.11), stave=0.14, along_y=True, rough=0.7, seed=5.0)
-    M['house'] = pbr('house wall', (0.05, 0.045, 0.045), 0.9)
-    M['roof'] = pbr('roof', (0.022, 0.02, 0.022), 0.8)
+    # river pebbles: white, some cream or grey, smooth; glossy and a shade darker when wet
+    n = Nodes('pebble')
+    rnd = n.node('ShaderNodeObjectInfo').outputs['Random']
+    n.set(Base_Color=n.ramp(rnd, [(0.0, (0.52 * dim, 0.47 * dim, 0.40 * dim)), (0.25, (0.74 * dim, 0.72 * dim, 0.68 * dim)), (0.8, (0.80 * dim, 0.79 * dim, 0.76 * dim)),
+                                  (1.0, (0.56 * dim, 0.56 * dim, 0.57 * dim))]), Roughness=0.12 if wet else 0.5)
+    n.bump(n.noise(n.coords(), 60.0, 2.0, 0.6), 0.15, 0.002)
+    M['pebble'] = n.mat
+
+    def shingles(name, light, dark):
+        """Courses of shingles (the texture coordinates are metres along and up the surface)."""
+        n = Nodes(name)
+        uv = n.coords('UV')
+        tiles = n.node('ShaderNodeTexBrick', {'Vector': uv, 'Color1': rgba(tuple(c * dim for c in light)), 'Color2': rgba(tuple(c * dim for c in dark)),
+                                              'Mortar': rgba(tuple(c * 0.35 for c in dark)), 'Scale': 1.0, 'Mortar Size': 0.006, 'Bias': 0.0, 'Brick Width': 0.24, 'Row Height': 0.15})
+        worn = n.noise(uv, 1.1, 4.0, 0.65)
+        n.set(Base_Color=n.mix(n.math('MULTIPLY', worn, 0.5), tiles.outputs['Color'], rgba(tuple(c * 0.55 * dim for c in dark))),
+              Roughness=n.ramp(worn, [(0.3, (0.2,) * 3), (0.7, (0.5,) * 3)]) if wet else 0.85)
+        n.bump(tiles.outputs['Fac'], 0.6, 0.004)
+        return n.mat
+
+    M['shingle'] = shingles('roof shingles', (0.085, 0.09, 0.10), (0.05, 0.055, 0.065))
+    M['gable'] = shingles('gable shingles', (0.10, 0.115, 0.14), (0.07, 0.08, 0.10))
+    M['yellow'] = pbr('yellow wall', (0.40 * dim, 0.27 * dim, 0.07), 0.85, grain=0.1, grain_scale=40)
+    M['fence'] = pbr('fence boards', (0.16 * dim, 0.15 * dim, 0.14 * dim), 0.9)
+    M['fence new'] = pbr('new fence boards', (0.42 * dim, 0.22 * dim, 0.09 * dim), 0.8)
     M['window lit'] = pbr('lit window', (0.1, 0.08, 0.05), 0.5, Emission_Color=(1.0, 0.62, 0.28), Emission_Strength=3.0)
     M['window dark'] = pbr('dark window', (0.01, 0.012, 0.016), 0.1)
 
 
-def far_trees():
-    """Other trees beyond the hedge: the big tree's own meshes again, turned and scaled, far off."""
-    root = empty('far trees')
-    rng = random.Random(8)
-    for x, y in ((-21, -24), (-12.5, -33), (4.5, -29), (13, -22), (24, -34), (-33, -38)):
-        m = (Matrix.Translation((x, y, -0.3)) @ Matrix.Rotation(rng.uniform(0, 6.28), 4, 'Z') @ Matrix.Scale(rng.uniform(0.75, 1.1), 4)
-             @ Matrix.Translation(-TREE_AT))
-        for src in (FAR['wood'], FAR['leaves']):
-            o = bpy.data.objects.new('far ' + src.name, src.data)
-            COLL.objects.link(o)
-            o.parent = root
-            o.matrix_world = m
-    return root
-
-
 def sky():
-    """Dusk, a little after sunset: a warm band low down where the sun went (behind the tree,
-    a little right of where the seat looks), lavender above it, deep blue overhead, thin cloud."""
+    """Dusk, a little after sunset, as the season has it: a band of colour low down where the sun
+    went (to the left of where the seat looks, behind the neighbour's roof), the sky deepening
+    above it, and cloud: thin level streaks most of the year, a low grey lid in the rainy winter."""
+    spec = NOW['sky']
     w = bpy.data.worlds.new('dusk')
     w.use_nodes = True
     nt = w.node_tree
@@ -1140,8 +1755,7 @@ def sky():
     link(co.outputs['Generated'], sep.inputs[0])
     ramp = new('ShaderNodeValToRGB')
     cr = ramp.color_ramp
-    stops = [(0.40, (0.02, 0.025, 0.035)), (0.497, (0.60, 0.33, 0.22)), (0.54, (0.50, 0.36, 0.42)), (0.60, (0.26, 0.29, 0.50)),
-             (0.74, (0.10, 0.16, 0.38)), (1.0, (0.03, 0.06, 0.20))]
+    stops = spec['ramp']
     while len(cr.elements) < len(stops):
         cr.elements.new(0.5)
     for e, (p, c) in zip(cr.elements, stops):
@@ -1154,7 +1768,7 @@ def sky():
     # the afterglow round where the sun set
     dot = new('ShaderNodeVectorMath')
     dot.operation = 'DOT_PRODUCT'
-    dot.inputs[1].default_value = Vector((-0.30, -0.95, 0.03)).normalized()
+    dot.inputs[1].default_value = Vector((0.52, -0.85, 0.04)).normalized()
     link(co.outputs['Generated'], dot.inputs[0])
     glow = new('ShaderNodeMath')
     glow.operation = 'POWER'
@@ -1163,28 +1777,29 @@ def sky():
     link(dot.outputs['Value'], glow.inputs[0])
     warm = new('ShaderNodeMix')
     warm.data_type, warm.blend_type = 'RGBA', 'ADD'
-    warm.inputs[7].default_value = (0.75, 0.30, 0.08, 1)
+    warm.inputs[7].default_value = (*spec['glow'], 1)
     link(glow.outputs[0], warm.inputs[0])
     link(ramp.outputs['Color'], warm.inputs[6])
-    # thin streaks of cloud, stretched level
+    # the cloud: stretched level into streaks, or left as it is for an overcast
+    lo, hi, colour, stretch = spec['cloud']
     mp = new('ShaderNodeMapping')
-    mp.inputs['Scale'].default_value = (1.2, 1.2, 9.0)
+    mp.inputs['Scale'].default_value = (1.2, 1.2, stretch)
     link(co.outputs['Generated'], mp.inputs['Vector'])
     noise = new('ShaderNodeTexNoise')
     noise.inputs['Scale'].default_value, noise.inputs['Detail'].default_value = 2.2, 5.0
     link(mp.outputs[0], noise.inputs['Vector'])
     cloud = new('ShaderNodeValToRGB')
-    cloud.color_ramp.elements[0].position, cloud.color_ramp.elements[1].position = 0.52, 0.75
-    cloud.color_ramp.elements[1].color = (0.35, 0.35, 0.35, 1)
+    cloud.color_ramp.elements[0].position, cloud.color_ramp.elements[1].position = lo, hi
+    cloud.color_ramp.elements[1].color = (0.35, 0.35, 0.35, 1) if stretch > 5 else (0.8, 0.8, 0.8, 1)
     link(noise.outputs['Fac'], cloud.inputs['Fac'])
     hazy = new('ShaderNodeMix')
     hazy.data_type = 'RGBA'
-    hazy.inputs[7].default_value = (0.42, 0.30, 0.34, 1)
+    hazy.inputs[7].default_value = (*colour, 1)
     link(cloud.outputs['Color'], hazy.inputs[0])
     link(warm.outputs[2], hazy.inputs[6])
     bg = nt.nodes['Background']
     link(hazy.outputs[2], bg.inputs['Color'])
-    bg.inputs['Strength'].default_value = SKY_STRENGTH
+    bg.inputs['Strength'].default_value = SKY_STRENGTH * spec['strength']
     scene.world = w
 
 
@@ -1213,14 +1828,6 @@ def more_materials():
     M['ceiling'] = pbr('ceiling paint', (0.52, 0.50, 0.47), 0.95)
     M['skirting'] = pbr('skirting', (0.5, 0.47, 0.42), 0.5)
 
-    # glazed stoneware with iron specks, for the mug
-    n = Nodes('stoneware')
-    co = n.coords()
-    speck = n.math('GREATER_THAN', n.noise(co, 900.0, 2.0, 0.5), 0.70)
-    cloud = n.noise(co, 30.0, 3.0, 0.6)
-    n.set(Base_Color=n.mix(speck, n.ramp(cloud, [(0.3, (0.60, 0.56, 0.48)), (0.7, (0.72, 0.69, 0.62))]), (0.12, 0.08, 0.05, 1)),
-          Roughness=0.22, Coat_Weight=0.5, Coat_Roughness=0.08)
-    M['stoneware'] = n.mat
     M['coffee'] = pbr('coffee', (0.03, 0.014, 0.006), 0.03)
     n = Nodes('cork')
     co = n.coords()
@@ -1254,7 +1861,6 @@ def more_materials():
         M[name] = pbr(name, c, 0.75, grain=0.6, grain_scale=1800, Sheen_Weight=0.3)
     M['chair wood'] = wood('chair wood', (0.07, 0.04, 0.022), (0.20, 0.12, 0.065), stave=0.5, rough=0.45, seed=9.0)
     M['chair cloth'] = pbr('chair cloth', (0.10, 0.11, 0.115), 0.9, grain=0.8, grain_scale=1200, Sheen_Weight=0.4)
-    M['rug'] = pbr('rug', (0.20, 0.17, 0.14), 0.95, grain=1.0, grain_scale=500, Sheen_Weight=0.5)
     M['gilt'] = pbr('gilt', (0.75, 0.6, 0.3), 0.35, 1.0)
     M['ribbon'] = pbr('ribbon', (0.45, 0.06, 0.05), 0.6)
     M['phone frame'] = pbr('phone frame', (0.32, 0.32, 0.33), 0.33, 1.0)
@@ -1294,18 +1900,293 @@ def lamp():
     return root
 
 
+def ball(name, size, at, mat, parent, rot=(0, 0, 0), cuts=3, lumps=0.0, seed=0):
+    """A rounded form `size` across in x, y and z: a head, a paw, a bead. `lumps` makes it
+    uneven, as stuffing does."""
+    bm = bmesh.new()
+    bmesh.ops.create_icosphere(bm, subdivisions=cuts, radius=0.5)
+    rng = random.Random(seed)
+    ph = [rng.uniform(0, 6.28) for _ in range(3)]
+    for v in bm.verts:
+        c = v.co
+        k = 1 + lumps * (math.sin(5 * c.x + ph[0]) * math.sin(4 * c.y + ph[1]) + 0.6 * math.sin(6 * c.z + ph[2]))
+        v.co = Vector((c.x * k * size[0], c.y * k * size[1], c.z * k * size[2]))
+    return obj_from_bm(name, bm, mat, at=at, rot=rot, parent=parent, sharp=180)
+
+
+def flat_shape(name, outline, thick, mat, at=(0, 0, 0), rot=(0, 0, 0), parent=None):
+    """A piece cut from a sheet: `outline` (x, y points, anticlockwise) raised `thick` along z."""
+    bm = bmesh.new()
+    lower = [bm.verts.new((x, y, 0)) for x, y in outline]
+    upper = [bm.verts.new((x, y, thick)) for x, y in outline]
+    n = len(outline)
+    for i in range(n):
+        bm.faces.new((lower[i], lower[(i + 1) % n], upper[(i + 1) % n], upper[i]))
+    bm.faces.new(list(reversed(lower)))
+    bm.faces.new(upper)
+    return obj_from_bm(name, bm, mat, at=at, rot=rot, parent=parent, smooth=False)
+
+
+def lettering(lines, font_path, squeeze=1.0, shear=0.0, edge=0.006):
+    """Words as a flat mesh in the xy plane, from a font's own outlines (Blender's sans when the
+    font file is missing). `lines` are (words, size, x, y, tilt); long edges are cut so the
+    mesh can afterwards be bent onto a curved surface."""
+    font = bpy.data.fonts.load(font_path) if os.path.exists(font_path) else None
+    bm = bmesh.new()
+    for words, size, x, y, tilt in lines:
+        cu = bpy.data.curves.new('t', 'FONT')
+        cu.body, cu.size, cu.align_x, cu.align_y, cu.shear = words, size, 'CENTER', 'CENTER', shear
+        cu.resolution_u = 2  # few points to a curve: the letters are small
+        if font:
+            cu.font = font
+        o = bpy.data.objects.new('t', cu)
+        COLL.objects.link(o)
+        me = bpy.data.meshes.new_from_object(o.evaluated_get(bpy.context.evaluated_depsgraph_get()))
+        me.transform(Matrix.Translation((x, y, 0)) @ Matrix.Rotation(tilt, 4, 'Z') @ Matrix.Diagonal((squeeze, 1, 1, 1)))
+        bm.from_mesh(me)
+        bpy.data.meshes.remove(me)
+        bpy.data.objects.remove(o)
+        bpy.data.curves.remove(cu)
+    bmesh.ops.triangulate(bm, faces=bm.faces)
+    bmesh.ops.subdivide_edges(bm, edges=[e for e in bm.edges if e.calc_length() > edge], cuts=1)
+    bmesh.ops.triangulate(bm, faces=bm.faces)
+    return bm
+
+
 def mug():
-    """A stoneware mug of coffee on a cork coaster."""
-    root = empty('mug', (-0.57, 0.64, TOP), (0, 0, rad(125)))
+    """A keepsake: a glossy cobalt mug. Its wall is nearly straight for the upper two thirds,
+    opening a little to the rim, then swells into a round bulge near the base and draws in to
+    a narrower foot; the handle is one thick bar bent to a point, like a "<", from under the
+    rim to the bulge, standing far out. On the side the seat sees, a quarter turn from the
+    handle (which is to the left of it), white lettering in two lines. The lettering is a
+    font's outlines laid on the glaze (ROOM_FONT, a marker face): a stand-in until the real
+    wrap is painted. The side turned away is plain."""
+    blue = pbr('mug glaze', (0.04, 0.085, 0.50), 0.06, Coat_Weight=0.7, Coat_Roughness=0.02)
+    seat = math.atan2(LOOKER[1] - MUG_AT[1], LOOKER[0] - MUG_AT[0])  # the way to the seat, from +x
+    root = empty('mug', (*MUG_AT, TOP), (0, 0, seat - rad(90)))  # so the lettering, a quarter turn from the handle, faces the seat
     cyl('coaster', 0.052, 0.005, (0, 0, 0.0025), M['cork'], parent=root, bevel=0.001, seg=48)
     z = 0.005
-    lathe('mug body', [(0, 0.003), (0.030, 0.003), (0.032, 0.0), (0.037, 0.0), (0.040, 0.004), (0.0415, 0.02), (0.0415, 0.088), (0.0408, 0.0912),
-                       (0.0393, 0.0925), (0.0378, 0.0912), (0.0372, 0.088), (0.0366, 0.014), (0.033, 0.008), (0, 0.007)],
-          M['stoneware'], at=(0, 0, z), parent=root, seg=64)
-    lathe('coffee', [(0, 0.074), (0.0369, 0.074)], M['coffee'], at=(0, 0, z), parent=root, seg=64)
-    h = tube('mug handle', [(0.039, 0, 0.076), (0.058, 0, 0.080), (0.071, 0, 0.062), (0.069, 0, 0.038), (0.055, 0, 0.022), (0.039, 0, 0.022)],
-             0.0058, M['stoneware'], parent=root)
-    h.location = (0, 0, z)
+    h = 0.095
+    # the outside, as (height, radius): the foot, the bulge, the waist above it, the nearly straight wall, the rim
+    shape = [(0.0, 0.0265), (0.003, 0.0285), (0.007, 0.0330), (0.013, 0.0348), (0.019, 0.0338), (0.026, 0.0308), (0.033, 0.0286), (0.042, 0.0279),
+             (0.060, 0.0281), (0.078, 0.0288), (0.090, 0.0295), (h, 0.0298)]
+
+    def wall(zz):
+        """The outside radius at a height."""
+        for (za, ra), (zb, rb) in zip(shape, shape[1:]):
+            if zz <= zb:
+                t = (zz - za) / (zb - za)
+                return ra + (rb - ra) * t * t * (3 - 2 * t)
+        return shape[-1][1]
+
+    outer = [(wall(h * i / 40), h * i / 40) for i in range(41)]
+    lathe('mug body', [(0, 0.003), (0.0235, 0.003), (0.0252, 0.0)] + outer
+          + [(wall(h) - 0.0012, h + 0.0013), (wall(h) - 0.0028, h + 0.0002)] + [(wall(zz) - 0.0042, zz) for zz in (0.085, 0.06, 0.04, 0.022)] + [(0.026, 0.011), (0, 0.010)],
+          blue, at=(0, 0, z), parent=root, seg=56)
+    lathe('coffee', [(0, 0.078), (wall(0.078) - 0.0043, 0.078)], M['coffee'], at=(0, 0, z), parent=root, seg=48)
+    # the handle: one bar bent at a point, from under the rim far out and back in to the bulge
+    pts = [Vector((wall(0.084) - 0.004, 0, 0.084 + z)), Vector((0.0585, 0, 0.047 + z)), Vector((wall(0.020) - 0.004, 0, 0.020 + z))]
+    for a, b in zip(pts, pts[1:]):
+        beam('mug handle', a, b, (0.0165, 0.0095), blue, parent=root, bevel=0.0032)
+    cyl('mug handle', 0.0048, 0.0165, pts[1], blue, rot=(rad(90), 0, 0), parent=root, bevel=0.0016, seg=16)  # the point, eased
+    # the lettering, bent round the wall: both lines lean forward and climb a little
+    bm = lettering((('ON THE ROAD', 0.0192, 0.0, 0.0525, rad(4.0)), ('HAPPY ANNIVERSARY', 0.0080, 0.0, 0.0395, rad(3.0))), FONT, squeeze=0.7, shear=0.26)
+    for v in bm.verts:
+        x, zz = v.co.x, v.co.y
+        r = wall(zz) + 0.00025
+        v.co = Vector((r * math.cos(rad(90) + x / r), r * math.sin(rad(90) + x / r), zz + z))
+    obj_from_bm('mug lettering', bm, pbr('mug lettering', (0.80, 0.80, 0.78), 0.3), parent=root, sharp=180, outward=(0, 0, 0.05))
+    return root
+
+
+def figurine():
+    """A keepsake: a small matt vinyl baby figure, four and a half centimetres tall. A wide tan
+    face, smooth, with big round eyes that look to one side, thin brows high up, a small
+    smile and an orange blush on each cheek with a little dark squiggle on it; a yellow hood,
+    its skin finely pebbled like a citrus peel, close round the face and rising to a point
+    that bends off to one side and ends in a dark-brown bow with a tiny yellow star on it.
+    The body is a small four-pointed star, the points its stubby arms and legs, quartered in
+    yellow and dark brown; the back is plain. It sits leaning back a little."""
+    skin = pbr('figurine skin', (0.55, 0.235, 0.09), 0.5)
+    yellow = pbr('figurine yellow', (0.78, 0.55, 0.20), 0.6, grain=1.0, grain_scale=900)
+    brown = pbr('figurine brown', (0.085, 0.045, 0.03), 0.55)
+    white = pbr('figurine eye white', (0.82, 0.82, 0.80), 0.25)
+    iris = pbr('figurine iris', (0.022, 0.009, 0.005), 0.12, Coat_Weight=0.6)
+    blush = pbr('figurine blush', (0.75, 0.18, 0.05), 0.5)
+    line = pbr('figurine line', (0.03, 0.012, 0.008), 0.5)
+    root = empty('figurine', (*FIGURINE_AT, TOP), (rad(-9), 0, rad(-14)))  # it looks toward +y, where the seat is; its right hand is at +x
+    # the body: a small pear, quartered: upper and lower, its right and its left, by turns
+    bm = bmesh.new()
+    rings = []
+    for j in range(9):
+        t = j / 8
+        r = 0.0068 * math.sin(math.pi * (0.10 + 0.82 * t)) ** 0.6
+        rings.append([bm.verts.new((r * math.cos(2 * math.pi * i / 16), r * 0.8 * math.sin(2 * math.pi * i / 16), 0.0025 + 0.0145 * t)) for i in range(16)])
+    for j, (a, b) in enumerate(zip(rings, rings[1:])):
+        for i in range(16):
+            x = math.cos(2 * math.pi * (i + 0.5) / 16)
+            bm.faces.new((a[i], a[(i + 1) % 16], b[(i + 1) % 16], b[i])).material_index = int((x > 0) == (j >= 4))
+    bm.faces.new(list(reversed(rings[0])))
+    body = obj_from_bm('figurine body', bm, yellow, parent=root, sharp=180)
+    body.data.materials.append(brown)
+    # the four points of the star: an arm out each side, a leg down and out each side; each in its quarter's colour
+    for sx in (1, -1):
+        ball('figurine arm', (0.0105, 0.0058, 0.0062), (sx * 0.0088, 0.0004, 0.0118), brown if sx > 0 else yellow, root, rot=(0, sx * rad(-16), 0), cuts=2)
+        ball('figurine leg', (0.0072, 0.0068, 0.0115), (sx * 0.0068, 0.0022, 0.0046), yellow if sx > 0 else brown, root, rot=(rad(-14), sx * rad(-38), 0), cuts=2)
+    # the head, and the hood round it: close round the face, drawn up to a point that bends over to its right
+    hz = 0.0265
+    ball('figurine head', (0.0200, 0.0185, 0.0200), (0, 0.0008, hz), skin, root)
+    bm = bmesh.new()
+    bmesh.ops.create_icosphere(bm, subdivisions=3, radius=0.5)
+    bmesh.ops.delete(bm, geom=[v for v in bm.verts if v.co.y > 0.10 and math.hypot(v.co.x * 0.92, v.co.z + 0.05) < 0.455], context='VERTS')
+    up = Vector((0.18, -0.08, 0.98)).normalized()
+    for v in bm.verts:
+        d = max(0.0, v.co.normalized().dot(up) - 0.55) / 0.45
+        v.co = v.co + up * (0.36 * d ** 2.2) + Vector((0.26 * d ** 4, 0, -0.05 * d ** 4))  # up to the point, then over to the side
+        v.co = Vector((v.co.x * 0.0238, v.co.y * 0.0226, v.co.z * 0.0238))
+    hood = obj_from_bm('figurine hood', bm, yellow, at=(0, -0.0004, hz + 0.0004), parent=root, sharp=180)
+    hood.modifiers.new('thickness', 'SOLIDIFY').thickness = 0.0011
+    end = Vector((0, -0.0004, hz + 0.0004)) + Vector(((up.x * 0.86 + 0.26) * 0.0238, up.y * 0.86 * 0.0226, (up.z * 0.86 - 0.05) * 0.0238))
+    # the bow: two dark lobes across the tip, and the star standing on it
+    for k in (1, -1):
+        ball('figurine bow', (0.0036, 0.0026, 0.0026), end + Vector((0.0006, 0, k * 0.0018)), brown, root, rot=(0, rad(-60), 0), cuts=2)
+    star = [((0.0026 if i % 2 == 0 else 0.0014) * math.sin(math.pi * i / 5), (0.0026 if i % 2 == 0 else 0.0014) * math.cos(math.pi * i / 5)) for i in range(10)]
+    flat_shape('figurine star', list(reversed(star)), 0.0016, pbr('figurine star', (0.80, 0.56, 0.16), 0.5), at=end + Vector((0.0030, 0.0008, 0.0012)), rot=(rad(90), rad(-35), 0), parent=root)
+    # the face: two big round eyes that look to its left, brows, a smile, and on each cheek a blush with a squiggle
+    for sx in (1, -1):
+        e = Vector((sx * 0.0038, 0.0089, hz + 0.0002))
+        turn = (0, 0, sx * rad(-20))
+        ball('figurine eye', (0.0052, 0.0026, 0.0056), e, white, root, rot=turn)
+        ball('figurine iris', (0.0040, 0.0018, 0.0044), e + Vector((-0.0006 + sx * 0.0002, 0.0009, -0.0001)), iris, root, rot=turn, cuts=2)
+        ball('figurine glint', (0.0008, 0.0006, 0.0008), e + Vector((0.0001 + sx * 0.0002, 0.0017, 0.0010)), white, root, cuts=1)
+        ball('figurine cheek', (0.0042, 0.0010, 0.0030), (sx * 0.0066, 0.0077, hz - 0.0046), blush, root, rot=(0, 0, sx * rad(-42)), cuts=2)
+        c = Vector((sx * 0.0064, 0.0086, hz - 0.0046))
+        tube('figurine squiggle', [c + Vector((sx * 0.0013 * k, -0.0012 * abs(k) * 0.4, 0.0005 * (1 if i % 2 else -1))) for i, k in enumerate((-1.0, -0.5, 0.0, 0.5, 1.0))], 0.00018, line, parent=root, res=4)
+        tube('figurine brow', [(sx * 0.0026, 0.0093, hz + 0.0058), (sx * 0.0040, 0.0090, hz + 0.0064), (sx * 0.0053, 0.0083, hz + 0.0060)], 0.00016, line, parent=root, res=4)
+    tube('figurine smile', [(0.0010, 0.0100, hz - 0.0044), (0, 0.0102, hz - 0.0049), (-0.0010, 0.0100, hz - 0.0044)], 0.00016, line, parent=root, res=4)
+    return root
+
+
+def plush():
+    """A keepsake: a plush black cat standing on stubby legs, sixteen centimetres to the tips of
+    its ears. The head is far bigger than the body, wider than tall and as deep as it is wide;
+    thin flat ears stand up toward its back, lined with gold; very large round eyes of white
+    terry with a stitched rim, the pupils set low and toward the nose, one a little larger; a
+    small orange-brown nose; three thin black cords each side for whiskers, hanging down and
+    out; red felt sunglasses lying flat on the forehead and standing out past the brow, their
+    lenses black with a white stitched glint; a green felt collar cut in round scallops; a
+    small yellow body crossed with orange lines like a pineapple, a dot in every diamond, with
+    a short pointed tail and a plain white tag at the back; short black arms held out. Across
+    the back of the head a word is stitched in white script (ROOM_SCRIPT, a brush script
+    face): a stand-in until the real embroidery is drawn. The forms are a little uneven and
+    the cloth has a nap (a sheen and a fine grain), as plush does."""
+    def cloth(name, color, sheen=1.0):
+        return pbr(name, color, 0.95, grain=0.6, grain_scale=1800, Sheen_Weight=sheen, Sheen_Roughness=0.5)
+    black, felt = cloth('plush black', (0.010, 0.010, 0.013), 0.35), cloth('plush eye terry', (0.72, 0.72, 0.72), 0.3)
+    thread = pbr('plush thread', (0.80, 0.80, 0.80), 0.6)
+    yellow, orange = cloth('plush yellow', (0.86, 0.58, 0.10)), cloth('plush orange', (0.82, 0.27, 0.03), 0.4)
+    gold = pbr('plush gold', (0.55, 0.47, 0.05), 0.42, 0.6, grain=0.6, grain_scale=1200)
+    red, green = cloth('plush red felt', (0.72, 0.045, 0.02), 0.5), cloth('plush green felt', (0.07, 0.45, 0.04), 0.5)
+    nose = cloth('plush nose', (0.50, 0.17, 0.05), 0.3)
+    glossy = pbr('plush pupil disc', (0.006, 0.006, 0.008), 0.25)
+    root = empty('plush', (*PLUSH_AT, TOP), (0, 0, rad(-14) + (math.pi if VIEW == 'plushback' else 0)))  # it faces +y, toward the seat
+    # stubby black legs under the body
+    for sx in (1, -1):
+        ball('plush leg', (0.029, 0.030, 0.032), (sx * 0.0165, 0.001, 0.0155), black, root, lumps=0.03, seed=2)
+    # the body: a small pineapple, its lines in two crossing spirals with a dot in every diamond, all the way round
+    bz, bw, bh = 0.046, 0.058, 0.052
+    ball('plush body', (bw, bw * 0.9, bh), (0, 0, bz), yellow, root, cuts=4, lumps=0.02, seed=1)
+    bm = bmesh.new()
+    for turn in (1, -1):
+        for k in range(7):
+            prev = None
+            for i in range(21):
+                t = 0.1 + 0.8 * i / 20
+                r = math.sqrt(max(0.0, 0.25 - (t - 0.5) ** 2))
+                a = 2 * math.pi * k / 7 + turn * 2.4 * t
+                p = Vector((r * bw * math.cos(a), r * bw * 0.9 * math.sin(a), (t - 0.5) * bh)) * 1.012
+                if prev:
+                    s = p.normalized().cross(p - prev).normalized() * 0.0007
+                    bm.faces.new([bm.verts.new(q) for q in (prev - s, prev + s, p + s, p - s)])
+                prev = p
+    obj_from_bm('plush stitching', bm, orange, at=(0, 0, bz), parent=root, sharp=180, outward=(0, 0, 0))
+    for k in range(7):
+        for j, t in enumerate((0.28, 0.5, 0.72)):
+            r = math.sqrt(0.25 - (t - 0.5) ** 2) * 1.01
+            a = 2 * math.pi * (k + 0.5 * ((j + 1) % 2)) / 7
+            n = Vector((r * bw * math.cos(a), r * bw * 0.9 * math.sin(a), (t - 0.5) * bh))
+            ball('plush dot', (0.0052, 0.0052, 0.0012), Vector((0, 0, bz)) + n, orange, root, rot=Vector((0, 0, 1)).rotation_difference(n.normalized()).to_euler(), cuts=1)
+    # the arms: flat tapered flaps held out from the shoulders; the tail: short and pointed, low at the back; the tag under it
+    for sx in (1, -1):
+        ball('plush arm', (0.034, 0.013, 0.019), (sx * 0.038, 0.0, 0.050), black, root, rot=(0, sx * rad(32), 0), lumps=0.03, seed=3)
+    lathe('plush tail', [(0.0075, 0.0), (0.0065, 0.010), (0.004, 0.019), (0.0012, 0.026), (0, 0.027)], black, at=(0, -0.024, 0.036), rot=(rad(128), 0, 0), parent=root, seg=12)
+    box('plush tag', (0.011, 0.0006, 0.016), (0.004, -0.0235, 0.021), pbr('plush tag', (0.78, 0.78, 0.76), 0.6), rot=(rad(-12), 0, rad(6)), parent=root)
+    # the collar: green felt cut in round scallops, lying over the shoulders
+    scallops, steps = 9, 6
+    bm = bmesh.new()
+    n = scallops * steps
+    inner = [bm.verts.new((0.012 * math.cos(2 * math.pi * k / n), 0.012 * math.sin(2 * math.pi * k / n), 0.004)) for k in range(n)]
+    outer = []
+    for k in range(n):
+        lobe = abs(math.sin(math.pi * k / steps)) ** 0.6  # a round lobe between two notches
+        r = 0.026 + 0.010 * lobe
+        outer.append(bm.verts.new((r * math.cos(2 * math.pi * k / n), r * 0.94 * math.sin(2 * math.pi * k / n), -0.002 - 0.006 * lobe)))
+    for k in range(n):
+        bm.faces.new((inner[k], outer[k], outer[(k + 1) % n], inner[(k + 1) % n]))
+    collar = obj_from_bm('plush collar', bm, green, at=(0, 0, 0.071), parent=root, sharp=180)
+    collar.modifiers.new('thickness', 'SOLIDIFY').thickness = 0.0015
+    # the head: wider than tall, and deep
+    hz, hw, hd, hh = 0.110, 0.104, 0.096, 0.086
+    ball('plush head', (hw, hd, hh), (0, 0, hz), black, root, cuts=4, lumps=0.012, seed=4)
+
+    def on_head(x, z, back=False):
+        """The point of the head's front (or back) at (x, z) from its middle, and the way the cloth faces there."""
+        y = hd / 2 * math.sqrt(max(0.0, 1 - (2 * x / hw) ** 2 - (2 * z / hh) ** 2)) * (-1 if back else 1)
+        return Vector((x, y, hz + z)), Vector((x / hw ** 2, y / hd ** 2, z / hh ** 2)).normalized()
+
+    def facing(n):
+        return Vector((0, 0, 1)).rotation_difference(n).to_euler()
+
+    for sx in (1, -1):
+        # an ear: a thin flat triangle standing up toward the back of the head, leaning out, its front lined with gold
+        ear = empty('plush ear', (sx * 0.036, -0.012, hz + 0.027), (rad(-4), sx * rad(26), 0), root)
+        e = lathe('plush ear', [(0.0175, 0.0), (0.0160, 0.012), (0.0110, 0.025), (0.0050, 0.033), (0.0018, 0.036), (0, 0.0365)], black, parent=ear, seg=20)
+        e.scale = (1.0, 0.36, 1.0)
+        flat_shape('plush ear lining', [(-0.0105, 0.004), (0.0105, 0.004), (0.0045, 0.021), (0.0, 0.0265), (-0.0045, 0.021)], 0.0005, gold, at=(0, 0.0048, 0.0015), rot=(rad(81), 0, 0), parent=ear)
+        # an eye: a big round of white terry with a stitched rim; the pupil low and toward the nose,
+        # its right one stitched and a little larger, its left one a smaller glossy disc
+        p, n = on_head(sx * 0.0295, -0.010)
+        ball('plush eye rim', (0.0296, 0.0296, 0.0022), p, thread, root, rot=facing(n), cuts=3)
+        ball('plush eye', (0.0280, 0.0280, 0.0032), p, felt, root, rot=facing(n), cuts=3)
+        p, n = on_head(sx * 0.0262, -0.0125)
+        size = 0.0100 if sx > 0 else 0.0082
+        ball('plush pupil', (size, size, 0.0034), p + n * 0.0014, black if sx > 0 else glossy, root, rot=facing(n), cuts=2)
+        # whiskers: three thin cords from each cheek, hanging down and out, a knot at the end of each
+        for k in range(3):
+            a, n = on_head(sx * 0.047, -0.008 - 0.004 * k)
+            end = a + Vector((sx * (0.012 + 0.006 * k), 0.003, -0.034 - 0.009 * k))
+            tube('plush whisker', [a, a + Vector((sx * (0.008 + 0.003 * k), 0.003, -0.004)), a.lerp(end, 0.6) + Vector((sx * 0.004, 0, 0)), end], 0.00045, black, parent=root, res=5)
+            ball('plush whisker knot', (0.0016, 0.0016, 0.0016), end, black, root, cuts=1)
+    p, n = on_head(0, -0.0245)
+    ball('plush nose', (0.0080, 0.0040, 0.0058), p, nose, root, rot=(0, 0, 0), cuts=2)
+    # the sunglasses: one flat piece of red felt lying on the forehead, its lower edge standing
+    # out past the brow; two black cloth lenses on it, each with a white stitched glint
+    half = [(0.0, 0.0040), (0.0060, -0.0085), (0.0120, -0.0135), (0.0250, -0.0155), (0.0380, -0.0135), (0.0455, -0.0070), (0.0490, 0.0030), (0.0520, 0.0170), (0.0440, 0.0150), (0.0, 0.0150)]
+    lens = [(0.0050, 0.0052), (0.0095, -0.0060), (0.0140, -0.0100), (0.0250, -0.0118), (0.0365, -0.0100), (0.0425, -0.0045), (0.0452, 0.0040), (0.0462, 0.0112), (0.0055, 0.0112)]
+    # (the piece is made lying in its own xy plane and stood up past the upright, so the side seen from the front is its -z)
+    glasses = empty('plush sunglasses', (0, hd / 2 * 0.86, hz + 0.0235), (rad(116), 0, 0), root)
+    glasses.scale = (0.93, 0.93, 1.0)
+    flat_shape('plush frame', half + [(-x, y) for x, y in reversed(half[1:-1])], 0.0016, red, parent=glasses)
+    dark = cloth('plush lens', (0.011, 0.010, 0.012), 0.3)
+    for sx in (1, -1):
+        flat_shape('plush lens', lens if sx > 0 else [(-x, y) for x, y in reversed(lens)], 0.0005, dark, at=(0, 0, -0.0004), parent=glasses)
+        tube('plush glint', [(sx * 0.016, 0.0052, -0.0007), (sx * 0.024, 0.0078, -0.0007), (sx * 0.033, 0.0068, -0.0007), (sx * 0.0355, 0.0030, -0.0007)], 0.00035, thread, parent=glasses, res=5)
+    # the word across the back of the head, stitched in white script, slanting up
+    bm = lettering((('Hawaii', 0.026, 0.0, 0.004, rad(9)),), SCRIPT, edge=0.004)
+    for v in bm.verts:
+        p, n = on_head(v.co.x, v.co.y, back=True)  # read from behind, where the cat's own +x is at the reader's right
+        v.co = p + n * 0.0006
+    obj_from_bm('plush embroidery', bm, thread, parent=root, sharp=180, outward=(0, 0, hz))
     return root
 
 
@@ -1395,9 +2276,8 @@ def plant():
 
 def chair():
     """The seat itself, pushed back a little: a plain wooden chair with a cloth seat. The seat view
-    looks over it; the other views see it, and a wool rug under desk and chair."""
-    slab('rug', 2.3, 1.7, 0.012, 0.03, M['rug'], at=(0, 1.15, 0), parent=empty('rug'), rt=0.006)
-    root = empty('chair', (0.06, 1.48, 0.012), (0, 0, rad(-8)))
+    looks over it; the other views see it."""
+    root = empty('chair', (0.06, 1.48, 0.0), (0, 0, rad(-8)))
     W = M['chair wood']
     slab('chair seat', 0.46, 0.44, 0.035, 0.07, M['chair cloth'], at=(0, 0, 0.445), parent=root, rb=0.01, rt=0.016, n=4)
     slab('chair frame', 0.44, 0.42, 0.025, 0.06, W, at=(0, 0, 0.422), parent=root, rb=0.004)
@@ -1454,6 +2334,12 @@ def usb_cables(ports):
 # ---------------------------------------------------------------------------------------------
 
 SKY_STRENGTH = 4.0
+# where the keepsakes stand on the desk: the mug on the right, the plush between the notebook and
+# the mat with the figurine in front of it; for the "keepsakes" view, all three in a row
+MUG_AT, PLUSH_AT, FIGURINE_AT = (-0.57, 0.64), (0.50, 0.465), (0.455, 0.625)
+LOOKER = (0.0, 1.85)  # who the mug's lettering is turned to: the seat
+if VIEW in ('keepsakes', 'plushback'):
+    MUG_AT, PLUSH_AT, FIGURINE_AT, LOOKER = (0.49, 0.52), (0.375, 0.52), (0.585, 0.54), (0.48, 1.03)
 LAPTOP_GLOW, DELL_GLOW, MAP_GLOW = 2.2, 2.0, 1.1  # kept low: the screens must not blow out
 BULB_GLOW, LAMP_W = 2.5, 16.0
 WINDOW_W, FILL_W = 72.0, 8.0
@@ -1481,6 +2367,12 @@ VIEWS = {
     'laptop': ((0.47, 1.12, 1.08), (0.03, 0.50, 0.87), 38, 2.8, (0.0, 0.56, 0.82)),
     'arm': ((0.28, -1.2, 1.5), (0.02, 0.13, 1.06), 26, 4.0, (0.0, 0.10, 1.1)),
     'keys': ((0.0, 0.93, 1.02), (0.0, 0.60, 0.76), 60, 5.6, (0.0, 0.60, 0.76)),  # a check on the keyboard, not a deliverable
+    # checks on the keepsakes, not deliverables. "keepsakes" stands the mug between the other two
+    # for the picture, as they lay in the photograph they were made from (KEEPSAKES_AT)
+    'keepsakes': ((0.48, 1.03, 0.90), (0.475, 0.52, 0.815), 55, 11.0, (0.48, 0.52, 0.82)),
+    'plushback': ((0.375, 0.95, 0.90), (0.375, 0.52, 0.815), 70, 11.0, (0.375, 0.52, 0.83)),  # the plush is turned round for this one
+    'plush': ((0.40, 0.98, 0.93), (0.485, 0.52, 0.80), 62, 8.0, (0.50, 0.47, 0.82)),
+    'mug': ((-0.40, 1.02, 0.93), (-0.57, 0.64, 0.79), 75, 8.0, (-0.57, 0.64, 0.79)),
     'tree': ((0.75, 3.5, 1.35), (-0.35, -1.0, 1.72), 22, 4.0, (-0.9, -3.2, 2.0)),
 }
 
@@ -1541,7 +2433,7 @@ def finish():
         print('no bloom:', e)
 
 
-EXPOSURE = {'hero': 0.0, 'laptop': 0.0, 'arm': 0.35, 'tree': 0.0}
+EXPOSURE = {'hero': 0.0, 'laptop': 0.0, 'arm': 0.35, 'tree': 0.0, 'keepsakes': 1.2, 'plushback': 1.2, 'plush': 1.0, 'mug': 0.6}
 
 
 def stats():
@@ -1569,9 +2461,8 @@ def build():
     more_materials()
     outdoor_materials()
     room()
-    outside()
-    tree()
-    far_trees()
+    neighbours(balcony())
+    trees()
     sky()
     desk()
     macbook()
@@ -1582,17 +2473,27 @@ def build():
     usb_cables([s_mw @ s_port, d_mw @ d_port])
     lamp()
     mug()
+    figurine()
+    plush()
     books()
-    notebook()
-    phone()
-    headphones()
+    if VIEW not in ('keepsakes', 'plushback'):  # they lie where those views line the keepsakes up
+        notebook()
+        phone()
+        headphones()
     plant()
     chair()
     lights()
     camera(VIEW)
     if VIEW == 'arm':
-        # this view stands on the deck looking in: the glass would only show the sky's reflection
+        # this view stands outside looking in: the glass would only show the sky's reflection
         bpy.data.objects['window glass'].hide_render = True
+    if OUTSIDE:
+        for o in scene.objects:
+            top = o
+            while top.parent:
+                top = top.parent
+            if top.name not in OUTDOOR:
+                o.visible_camera = False
     finish()
 
 

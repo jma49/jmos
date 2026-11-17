@@ -1,16 +1,19 @@
 # The room for the browser: builds the scene exactly as scene.py does, then writes what the
 # page at /room (src/room/main.js) loads into ROOM_WEB (default public/room/, which the site
 # serves as /room/):
-#   backdrop.webp   the garden as the seat sees it through the glass (the room hidden from the camera)
+#   backdrop-<season>.webp   what is outside as the seat sees it through the glass (the room hidden
+#                   from the camera), in the season SEASON names (scene.py; summer if unset)
 #   room.glb        the indoor part, Meshopt-compressed (by glTF Transform, from ROOM_TOOLS's
 #                   node_modules: `npm install` in tools/pond/room/web puts it there), with flat
 #                   materials, the woods' colour maps and the light in vertex colours
-#   lm/*.webp       the diffuse light on the big surfaces (desk top, mat, floor, rug, walls, ceiling)
-#   manifest.json   the seat camera, the lamp, and how the baked pictures are encoded
+#   lm/*.webp       the diffuse light on the big surfaces (desk top, mat, floor, walls, ceiling)
+#   manifest.json   the seat camera, the lamp, how the baked pictures are encoded, and for each
+#                   season its backdrop and the tint that sits the room with it
 # Run with Blender's Python module:
-#   python tools/pond/room/export.py [backdrop] [maps] [vertices] [glb] [look] [quick]
+#   [SEASON=spring|summer|autumn|winter] python tools/pond/room/export.py [backdrop] [maps] [vertices] [glb] [look] [quick]
 # With no stage named, the first four run ("bake" means maps and vertices). Every run rewrites
-# manifest.json; "look" alone does only that, and so refreshes the tone curve. A GLB written
+# manifest.json; "look" alone does only that, and so refreshes the tone curve. The room's own
+# light is baked once, in summer's dusk; the other seasons need only "backdrop", one run each. A GLB written
 # without "vertices" in the same run has no light on the small things; one written without
 # "maps" reuses the woods' colour maps from the last run that baked them. "quick" is a
 # low-quality pass to test the pipeline (it overwrites the real output). What a run keeps for
@@ -64,26 +67,29 @@ bpy.context.view_layer.update()
 os.makedirs(os.path.join(WEB, 'lm'), exist_ok=True)
 os.makedirs(WORK, exist_ok=True)
 
-OUTDOOR = {'outside', 'tree', 'far trees'}
+OUTDOOR = set(S['OUTDOOR'])
+SEASON = S['SEASON']
 # the big surfaces that get a light map: object name -> (new name, the way its seen face looks, width, height)
 LIGHTMAPPED = {
     'desk top': ('desk_top', None, 2048, 1024),
     'desk mat': ('desk_mat', (0, 0, 1), 1024, 512),
     'floor': ('floor', (0, 0, 1), 1024, 1024),
-    'rug.001': ('rug', (0, 0, 1), 512, 512),  # the slab; 'rug' is the point it hangs from
     'ceiling': ('ceiling', (0, 0, -1), 512, 512),
     'side wall': ('wall_right', (1, 0, 0), 512, 512),  # at -x, which the seat has on its right
     'side wall.001': ('wall_left', (-1, 0, 0), 512, 512),
     'back wall': ('wall_back', (0, -1, 0), 512, 512),
 }
-ALBEDO = {'desk_top': (4096, 2048), 'floor': (2048, 2048)}  # the woods: their figure baked to a colour map
+ALBEDO = {'desk_top': (4096, 2048)}  # the desk's wood: its figure baked to a colour map
 # objects that stay their own mesh in the GLB, with their names there
 KEPT = {'samsung picture': 'samsung_screen', 'dell picture': 'dell_screen', 'macbook picture': 'macbook_screen',
         'window glass': 'window_glass', 'lamp bulb': 'lamp_bulb'}
 # how baked light is stored: value = (log2(light) - LO) / STOPS, clipped to 0..1
 TEX_LO, TEX_STOPS = -8.0, 11.0  # pictures, 8 bits: 1/256 to 8
 VTX_LO, VTX_STOPS = -10.0, 17.0  # vertex colours, 12 bits: 1/1024 to 128
-BACKDROP_LENS, BACKDROP_SIZE, BACKDROP_DISTANCE = 18.0, (3072, 1728), 5.05  # the plane stands at the tree's trunk
+BACKDROP_LENS, BACKDROP_SIZE, BACKDROP_DISTANCE = 18.0, (3072, 1728), 5.05  # the plane stands among the nearest trees
+# how much of the room's baked light is the dusk's own (the rest is the lamp and the screens): the
+# room is tinted by this share of how a season's sky differs from summer's, which it was baked in
+DUSK_SHARE = 0.3
 SAMPLES = {'backdrop': 48, 'light': 64, 'albedo': 8, 'vertex': 1024}
 if QUICK:
     SAMPLES = {'backdrop': 6, 'light': 8, 'albedo': 1, 'vertex': 8}
@@ -94,11 +100,11 @@ if QUICK:
 # flat stand-ins for what the procedural materials average to (they do not export)
 BASE = {
     'chair wood': (0.125, 0.075, 0.04), 'speaker grille': (0.42, 0.42, 0.43), 'vent slots': (0.012, 0.012, 0.013),
-    'stoneware': (0.64, 0.60, 0.53), 'cork': (0.26, 0.165, 0.095), 'terracotta': (0.44, 0.175, 0.088),
+    'carpet': (0.365, 0.315, 0.248), 'cork': (0.26, 0.165, 0.095), 'terracotta': (0.44, 0.175, 0.088),
     'pages': (0.675, 0.63, 0.53), 'linen': (0.43, 0.387, 0.321), 'pilea leaf': (0.08, 0.21, 0.035),
-    'desk wood': (0.2, 0.11, 0.06), 'floor wood': (0.17, 0.115, 0.07),
+    'desk wood': (0.445, 0.29, 0.152),
 }
-ROUGH = {'desk wood': 0.42, 'floor wood': 0.38, 'chair wood': 0.45}
+ROUGH = {'desk wood': 0.46, 'carpet': 0.95, 'chair wood': 0.45}
 
 
 def top_of(o):
@@ -143,13 +149,13 @@ def save_bytes(name, rgb, path, fmt='WEBP', quality=92, space='Non-Color'):
 
 
 # ---------------------------------------------------------------------------------------------
-# The garden, as a picture behind the glass.
+# What is outside, as a picture behind the glass.
 # ---------------------------------------------------------------------------------------------
 
 def backdrop():
     """Render the outside alone from the seat, wider than the seat's own view so the camera can
     drift, with the seat lens's blur (the outside is far out of focus in the offline render)."""
-    # the room stays, so the house still shades the deck and the tree; only the camera looks through it
+    # the room stays, so the house still shades the balcony and the trees; only the camera looks through it
     hidden = [o for o in indoor_objects() if o.visible_camera]
     for o in hidden:
         o.visible_camera = False
@@ -168,7 +174,11 @@ def backdrop():
     log('backdrop: rendering', BACKDROP_SIZE, SAMPLES['backdrop'], 'samples')
     bpy.ops.render.render(write_still=True)
     im = bpy.data.images.load(r.filepath)
-    save_bytes('backdrop', encode(pixels_of(im)[..., :3], TEX_LO, TEX_STOPS), os.path.join(WEB, 'backdrop.webp'), quality=90)
+    light = pixels_of(im)[..., :3]
+    save_bytes('backdrop', encode(light, TEX_LO, TEX_STOPS), os.path.join(WEB, f'backdrop-{SEASON}.webp'), quality=90)
+    # the light that comes in at the glass: the picture's mean, for the season's tint (manifest)
+    mean = [round(float(v), 4) for v in light.reshape(-1, 3).mean(axis=0)]
+    json.dump(mean, open(os.path.join(WORK, f'backdrop-{SEASON}.json'), 'w'))
     bpy.data.images.remove(im)
     cam.lens, cam.dof.aperture_fstop = lens, fstop
     scene.compositing_node_group = group
@@ -176,7 +186,7 @@ def backdrop():
         o.visible_camera = True
         o.update_tag()
     bpy.context.view_layer.update()
-    log('backdrop: done')
+    log('backdrop: done', SEASON, mean)
 
 
 # ---------------------------------------------------------------------------------------------
@@ -480,7 +490,7 @@ def flatten(mat, albedo=None, name=None):
         unlink(sock)
         sock.default_value = 1.0
     unlink(b.inputs['Normal'])
-    if name in ('desk wood', 'floor wood'):
+    if name == 'desk wood':
         b.inputs['Coat Weight'].default_value = 0.0
     sock = b.inputs['Base Color']
     if sock.is_linked:
@@ -569,6 +579,29 @@ def tone_curve(n=256):
     return {'log2Min': lo, 'log2Max': hi, 'curve': curve}
 
 
+def seasons():
+    """Each season's backdrop and the tint the room takes with it. A backdrop's mean light was
+    kept by the run that rendered it (in ROOM_WORK). The tint is the room's share of the dusk
+    (DUSK_SHARE) moved from summer's light to the season's: in colour by how the backdrop's
+    mean differs from summer's (not in brightness, which says more about how much sky the
+    trees leave open than about the light), and in brightness by the season's own sky strength
+    (scene.py's SEASONS). So winter's room is a little cooler and darker, autumn's a little
+    warmer, and summer's is left as it was baked."""
+    out = {}
+    for name in S['SEASONS']:
+        kept = os.path.join(WORK, f'backdrop-{name}.json')
+        out[name] = {'file': f'backdrop-{name}.webp', 'light': json.load(open(kept)) if os.path.exists(kept) else None}
+    base = out['summer']['light']
+    for name, s in out.items():
+        s['grade'] = [1.0, 1.0, 1.0]
+        if base and s['light']:
+            ratio = [s['light'][k] / base[k] for k in range(3)]
+            mean = sum(ratio) / 3
+            level = 1 + DUSK_SHARE * (S['SEASONS'][name]['sky']['strength'] / S['SEASONS']['summer']['sky']['strength'] - 1)
+            s['grade'] = [round(level * (1 + DUSK_SHARE * (max(0.6, min(1.4, r / mean)) - 1)), 4) for r in ratio]
+    return out
+
+
 def manifest(lit, tris):
     at, aim, lens, fstop, focus = S['VIEWS']['hero']
     lamp = bpy.data.objects['lamp light']
@@ -578,7 +611,7 @@ def manifest(lit, tris):
         'views': {k: {'position': v[0], 'aim': v[1], 'lens': v[2]} for k, v in S['VIEWS'].items()},
         'lamp': {'position': list(lamp.matrix_world.translation), 'color': list(lamp.data.color), 'watts': lamp.data.energy},
         'glow': {'laptop': S['LAPTOP_GLOW'], 'dell': S['DELL_GLOW'], 'map': S['MAP_GLOW'], 'bulb': S['BULB_GLOW']},
-        'backdrop': {'file': 'backdrop.webp', 'lens': BACKDROP_LENS, 'sensor': 36, 'aspect': BACKDROP_SIZE[0] / BACKDROP_SIZE[1],
+        'backdrop': {'lens': BACKDROP_LENS, 'sensor': 36, 'aspect': BACKDROP_SIZE[0] / BACKDROP_SIZE[1],
                      'distance': BACKDROP_DISTANCE, 'lo': TEX_LO, 'stops': TEX_STOPS},
         'lightmaps': {'lo': TEX_LO, 'stops': TEX_STOPS, 'files': lit},
         'vertexLight': {'lo': VTX_LO, 'stops': VTX_STOPS},
@@ -590,6 +623,7 @@ def manifest(lit, tris):
     path = os.path.join(WEB, 'manifest.json')
     if os.path.exists(path):
         old = json.load(open(path))
+    m['backdrop']['seasons'] = seasons()
     if not lit and 'lightmaps' in old:
         m['lightmaps'] = old['lightmaps']
     if not tris and 'triangles' in old:
@@ -599,7 +633,7 @@ def manifest(lit, tris):
 
 if 'backdrop' in STAGES:
     backdrop()
-# keep the garden's 3.7M triangles between bakes (only from here: a bake straight after a
+# keep the trees between bakes (only from here: a bake straight after a
 # render that hid things from the camera would still see them hidden)
 scene.render.use_persistent_data = True
 lit, tris = {}, {}
