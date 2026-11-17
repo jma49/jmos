@@ -26,10 +26,10 @@ STATS = 'stats' in sys.argv
 OUTSIDE = 'outside' in sys.argv  # only what is beyond the glass, as the seat sees it: a quick check on a season
 SEASON = os.environ.get('SEASON', 'summer')  # spring, summer, autumn or winter: what the outside looks like (SEASONS)
 TEX = os.environ.get('ROOM_TEX', '/home/user/room/tex')  # where the generated screen pictures go
-# the face the mug's lettering is set in: Protest Revolution (SIL Open Font License), which is not kept in the repository
-FONT = os.environ.get('ROOM_FONT', '/home/user/room/fonts/ProtestRevolution-Regular.ttf')
-# and the script the word on the plush is set in: Kaushan Script (SIL Open Font License), likewise not kept here
-SCRIPT = os.environ.get('ROOM_SCRIPT', '/home/user/room/fonts/KaushanScript-Regular.ttf')
+# the face the mug's lettering is set in: Sedgwick Ave Display (SIL Open Font License), which is not kept in the repository
+FONT = os.environ.get('ROOM_FONT', '/home/user/room/fonts/SedgwickAveDisplay-Regular.ttf')
+# and the script the word on the plush is set in: Sacramento (SIL Open Font License), likewise not kept here
+SCRIPT = os.environ.get('ROOM_SCRIPT', '/home/user/room/fonts/Sacramento-Regular.ttf')
 
 rad = math.radians
 TOP = 0.74  # the desk top's height
@@ -512,42 +512,34 @@ def save_image(name, img):
 
 
 def laptop_picture():
-    """The MacBook's desktop: wallpaper, menu bar around the notch, a terminal, the Dock."""
+    """What the MacBook shows, for the light it throws: the page draws an editor and a terminal
+    there (src/room/editor.js), so this is a stand-in of the same kind, a dark blue-black sheet
+    with sparse pale rows of text. It is not exported; only its glow on the desk is."""
     rng = random.Random(11)
     w, h = 1512, 982
-    img = wallpaper(w, h, rng)
-    menu_bar(img, 1, 34, rng)
-    window(img, 150, 150, 900, 640, 1)
-    text_lines(img, 172, 196, 880, 628, rng, 15, [(0.62, 0.66, 0.7), (0.62, 0.66, 0.7), (0.45, 0.75, 0.55)], indent=False)
-    window(img, 820, 300, 1380, 760, 1, body=(0.11, 0.11, 0.12))
-    text_lines(img, 846, 350, 1356, 740, rng, 18, [(0.7, 0.7, 0.72), (0.55, 0.55, 0.58)], indent=False)
-    icons = [(0.30, 0.55, 0.90), (0.90, 0.45, 0.30), (0.35, 0.75, 0.50), (0.85, 0.75, 0.35), (0.65, 0.45, 0.85),
-             (0.30, 0.70, 0.80), (0.88, 0.40, 0.55), (0.55, 0.58, 0.62), (0.25, 0.35, 0.75), (0.75, 0.75, 0.78)]
-    dw = len(icons) * 58 + 16
-    paint_rr(img, w / 2 - dw / 2, h - 76, w / 2 + dw / 2, h - 10, 18, (0.3, 0.3, 0.36), 0.55)
-    for i, c in enumerate(icons):
-        x = w / 2 - dw / 2 + 13 + i * 58
-        paint_rr(img, x, h - 67, x + 48, h - 19, 12, tuple(v * 0.8 for v in c))
-    paint_rr(img, w / 2 - 92, -20, w / 2 + 92, 32, 10, (0, 0, 0))  # the notch
+    img = np.zeros((h, w, 3), dtype=np.float32)
+    img[:] = (11 / 255, 18 / 255, 32 / 255)
+    text_lines(img, 40, 60, 900, 560, rng, 17, CODE, indent=True)
+    text_lines(img, 40, 620, 1100, 940, rng, 17, [(0.62, 0.66, 0.7), (0.62, 0.66, 0.7), (0.45, 0.75, 0.55)], indent=False)
     mask = np.zeros((h, w, 3), dtype=np.float32)
     paint_rr(mask, 0, 0, w, h, 26, (1, 1, 1))  # the display's rounded corners
     return save_image('screen-laptop', img * mask)
 
 
 def dell_picture():
-    """The Dell's desktop: the same wallpaper with an editor and a notes window."""
+    """What the Dell shows, for the light it throws: the picture the page itself puts there
+    (public/room/screens/dell.webp). It is not exported with the model. Without that file, a
+    painted desktop stands in."""
+    real = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', 'public', 'room', 'screens', 'dell.webp')
+    if os.path.exists(real):
+        return bpy.data.images.load(os.path.normpath(real))
     rng = random.Random(5)
     w, h = 2560, 1440
     img = wallpaper(w, h, rng)
     s = 1.6
     menu_bar(img, s, 26 * s, rng)
     window(img, 180, 130, 1640, 1290, s)
-    paint_rr(img, 180, 130 + 30 * s, 470, 1290, 0, (0.07, 0.074, 0.09))
-    paint_rr(img, 180, 1270, 470, 1290, 11 * s, (0.07, 0.074, 0.09))
-    text_lines(img, 205, 200, 450, 1260, rng, 26, [(0.5, 0.52, 0.58)], indent=True)
     text_lines(img, 510, 200, 1600, 1260, rng, 27, CODE, indent=True)
-    window(img, 1740, 250, 2400, 1000, s, body=(0.12, 0.115, 0.11))
-    text_lines(img, 1775, 330, 2370, 980, rng, 30, [(0.75, 0.73, 0.68), (0.6, 0.58, 0.55)], indent=False)
     return save_image('screen-dell', img)
 
 
@@ -1908,8 +1900,9 @@ def ball(name, size, at, mat, parent, rot=(0, 0, 0), cuts=3, lumps=0.0, seed=0):
     return obj_from_bm(name, bm, mat, at=at, rot=rot, parent=parent, sharp=180)
 
 
-def flat_shape(name, outline, thick, mat, at=(0, 0, 0), rot=(0, 0, 0), parent=None):
-    """A piece cut from a sheet: `outline` (x, y points, anticlockwise) raised `thick` along z."""
+def flat_shape(name, outline, thick, mat, at=(0, 0, 0), rot=(0, 0, 0), parent=None, bend=None):
+    """A piece cut from a sheet: `outline` (x, y points, anticlockwise) raised `thick` along z.
+    `bend` curves the sheet: it takes a point of the flat piece and gives where it goes."""
     bm = bmesh.new()
     lower = [bm.verts.new((x, y, 0)) for x, y in outline]
     upper = [bm.verts.new((x, y, thick)) for x, y in outline]
@@ -1918,7 +1911,15 @@ def flat_shape(name, outline, thick, mat, at=(0, 0, 0), rot=(0, 0, 0), parent=No
         bm.faces.new((lower[i], lower[(i + 1) % n], upper[(i + 1) % n], upper[i]))
     bm.faces.new(list(reversed(lower)))
     bm.faces.new(upper)
-    return obj_from_bm(name, bm, mat, at=at, rot=rot, parent=parent, smooth=False)
+    if bend:
+        # a sheet that curves needs more than its outline: cut its faces small first
+        bmesh.ops.triangulate(bm, faces=bm.faces)
+        for _ in range(2):
+            bmesh.ops.subdivide_edges(bm, edges=[e for e in bm.edges if e.calc_length() > 0.008], cuts=1)
+            bmesh.ops.triangulate(bm, faces=bm.faces)
+        for v in bm.verts:
+            v.co = bend(v.co)
+    return obj_from_bm(name, bm, mat, at=at, rot=rot, parent=parent, smooth=bend is not None, sharp=60)
 
 
 def lettering(lines, font_path, squeeze=1.0, shear=0.0, edge=0.006, fatten=0.0, weld=0.00012):
@@ -1992,7 +1993,7 @@ def mug():
     round bar bent at a corner: from just under the rim out and down, then back in to the top
     of the bulge. On the front, with the handle to its left, white lettering in two lines that
     lean forward and climb a little: rough brush capitals. The lettering is a font's outlines
-    laid on the glaze (ROOM_FONT, a rough brush face): a stand-in until the real wrap is
+    laid on the glaze (ROOM_FONT, a heavy brush face): a stand-in until the real wrap is
     painted. The side turned away is plain."""
     blue = pbr('mug glaze', (0.13, 0.24, 0.72), 0.03, Coat_Weight=1.0, Coat_Roughness=0.01)
     seat = math.atan2(LOOKER[1] - MUG_AT[1], LOOKER[0] - MUG_AT[0])  # the way to who looks at it, from +x
@@ -2021,7 +2022,13 @@ def mug():
         beam('mug handle', a, b, (0.0135, 0.0098), blue, parent=root, bevel=0.0042)
     cyl('mug handle', 0.0049, 0.0135, pts[1], blue, rot=(rad(90), 0, 0), parent=root, bevel=0.0042, seg=16)
     # the lettering, bent round the wall
-    bm = lettering((('ON THE ROAD', 0.0222, 0.0, 0.0525, rad(2.5)), ('HAPPY ANNIVERSARY', 0.0080, 0.0, 0.0398, rad(2.5))), FONT, squeeze=0.80, shear=0.21, weld=0.00008)
+    bm = lettering((('ON THE ROAD', 0.0455, 0.0, 0.0530, rad(2.5)),), FONT, squeeze=0.69, shear=0.17, weld=0.00008)
+    small = lettering((('HAPPY ANNIVERSARY', 0.0123, 0.0, 0.0385, rad(2.5)),), FONT, squeeze=0.80, shear=0.17, weld=0.00005)
+    me = bpy.data.meshes.new('small line')
+    small.to_mesh(me)
+    small.free()
+    bm.from_mesh(me)
+    bpy.data.meshes.remove(me)
     for v in bm.verts:
         x, zz = v.co.x, v.co.y
         r = wall(zz) + 0.00025
@@ -2044,12 +2051,13 @@ def figurine():
     # the hood and outfit: matt yellow, pebbled like a citrus peel
     n = Nodes('figurine yellow')
     n.set(Base_Color=(0.80, 0.56, 0.20, 1), Roughness=0.6)
-    n.bump(n.node('ShaderNodeTexVoronoi', {'Vector': n.coords(), 'Scale': 1300.0}, feature='SMOOTH_F1').outputs['Distance'], 1.0, 0.0009)
+    n.bump(n.node('ShaderNodeTexVoronoi', {'Vector': n.coords(), 'Scale': 1900.0}, feature='SMOOTH_F1').outputs['Distance'], 1.0, 0.0005)
     yellow = n.mat
     brown = pbr('figurine brown', (0.075, 0.04, 0.03), 0.5)
     white = pbr('figurine eye white', (0.84, 0.84, 0.82), 0.2)
     iris = pbr('figurine iris', (0.03, 0.011, 0.006), 0.1, Coat_Weight=0.6)
-    blush = pbr('figurine blush', (0.78, 0.20, 0.06), 0.5)
+    blush = pbr('figurine blush', (0.80, 0.24, 0.08), 0.5)
+    blush_soft = pbr('figurine blush edge', (0.80, 0.36, 0.16), 0.47)
     line = pbr('figurine line', (0.03, 0.012, 0.008), 0.5)
     # it looks toward +y; what is on its right (the looker's left) is at +x
     root = empty('figurine', (*FIGURINE_AT, TOP), (rad(-9), 0, facing_turn(FIGURINE_AT)))
@@ -2068,9 +2076,9 @@ def figurine():
     rings = []
     for j in range(1, across):
         lat = math.pi * (j / across - 0.5)
-        rings.append([bm.verts.new((-reach(2 * math.pi * i / around) * math.cos(lat) ** 0.55 * math.cos(2 * math.pi * i / around), 0.0046 * math.sin(lat),
+        rings.append([bm.verts.new((-reach(2 * math.pi * i / around) * math.cos(lat) ** 0.55 * math.cos(2 * math.pi * i / around), 0.0074 * math.sin(lat),
                                     reach(2 * math.pi * i / around) * math.cos(lat) ** 0.55 * math.sin(2 * math.pi * i / around))) for i in range(around)])
-    back, front = bm.verts.new((0, -0.0046, 0)), bm.verts.new((0, 0.0046, 0))
+    back, front = bm.verts.new((0, -0.0074, 0)), bm.verts.new((0, 0.0074, 0))
 
     def quarter(face):
         """Upper and lower, its right and its left: brown and yellow by turns."""
@@ -2085,9 +2093,10 @@ def figurine():
         quarter(bm.faces.new((front, rings[-1][i], rings[-1][(i + 1) % around])))
     body = obj_from_bm('figurine body', bm, yellow, at=(0, 0, bz), parent=root, sharp=180)
     body.data.materials.append(brown)
+    ball('figurine shoulder', (0.0034, 0.0030, 0.0032), (-0.0060, 0.0040, bz + 0.0050), brown, root, cuts=2)  # a small dark patch on its left shoulder
     # the bib: a pointed flap of the hood over the chest
     flat_shape('figurine bib', rounded([(0.0030, 0.0070), (0.0036, 0.0034), (0.0018, 0.0004), (-0.0006, -0.0014), (-0.0030, 0.0002), (-0.0052, 0.0030), (-0.0048, 0.0070)], 1),
-               0.0010, yellow, at=(0, 0.0052, bz), rot=(rad(90), 0, 0), parent=root)
+               0.0010, yellow, at=(0, 0.0074, bz - 0.0004), rot=(rad(90), 0, 0), parent=root)
     # the head: a wide oval, fuller at the cheeks
     hz = 0.0262
     bm = bmesh.new()
@@ -2116,6 +2125,11 @@ def figurine():
     ball('figurine bow knot', (0.0020, 0.0022, 0.0024), tip, brown, root, cuts=1)
     star = [((0.0027 if i % 2 == 0 else 0.0015) * math.sin(math.pi * i / 5), (0.0027 if i % 2 == 0 else 0.0015) * math.cos(math.pi * i / 5)) for i in range(10)]
     flat_shape('figurine star', rounded(star, 1), 0.0016, pbr('figurine star', (0.84, 0.60, 0.16), 0.5), at=tip + up * 0.0036 + Vector((0.0006, 0.0008, 0)), rot=(rad(-90), 0, rad(20)), parent=root)
+    # the star's tiny face: two dots and a smile
+    c = tip + up * 0.0036 + Vector((0.0006, 0.0008 + 0.0017, 0))
+    for k in (1, -1):
+        ball('figurine star eye', (0.00042, 0.00030, 0.00042), c + Vector((k * 0.0006, 0, 0.0003)), line, root, cuts=1)
+    tube('figurine star smile', [c + Vector((0.0006, 0, -0.0004)), c + Vector((0, 0, -0.0008)), c + Vector((-0.0006, 0, -0.0004))], 0.00011, line, parent=root, res=3)
     # the face
     def on_face(x, z):
         return Vector((x, 0.0008 + 0.0092 * math.sqrt(max(0.0, 1 - (x / 0.0099) ** 2 - (z / 0.0098) ** 2)), hz + z))
@@ -2125,14 +2139,16 @@ def figurine():
         e = on_face(sx * 0.0039, 0.0002)
         turn = (0, 0, sx * rad(-20))
         ball('figurine eye', (0.0050, 0.0024, 0.0064), e, white, root, rot=turn)
-        ball('figurine iris', (0.0033, 0.0018, 0.0040), e + Vector((-0.0006, 0.0009, 0.0007)), iris, root, rot=turn, cuts=2)
+        ball('figurine iris', (0.0040, 0.0019, 0.0047), e + Vector((-0.0006, 0.0008, 0.0008)), iris, root, rot=turn, cuts=2)  # the white shows as a crescent below and beside it
         flat_shape('figurine spark', spark, 0.0002, white, at=e + Vector((-0.0010, 0.0019, 0.0015)), rot=(rad(-90), 0, 0), parent=root)
         tube('figurine brow', [on_face(sx * 0.0030, 0.0066) + Vector((0, 0.0002, 0)), on_face(sx * 0.0041, 0.0071) + Vector((0, 0.0002, 0)), on_face(sx * 0.0052, 0.0066) + Vector((0, 0.0002, 0))],
              0.00014, line, parent=root, res=4)
     for x, z in ((0.0066, -0.0054), (-0.0075, -0.0042)):
         c = on_face(x * 0.86, z)
         out = Vector((x * 0.9, 0.0055, z * 0.5)).normalized()
-        ball('figurine cheek', (0.0050, 0.0050, 0.0010), c - out * 0.0002, blush, root, rot=Vector((0, 0, 1)).rotation_difference(out).to_euler(), cuts=2)
+        # the blush fades at its edge: a paler round under a smaller, stronger one
+        ball('figurine cheek', (0.0062, 0.0062, 0.0008), c - out * 0.0003, blush_soft, root, rot=Vector((0, 0, 1)).rotation_difference(out).to_euler(), cuts=2)
+        ball('figurine cheek', (0.0040, 0.0040, 0.0010), c - out * 0.0001, blush, root, rot=Vector((0, 0, 1)).rotation_difference(out).to_euler(), cuts=2)
         side = Vector((0, 0, 1)).cross(out).normalized()
         tube('figurine squiggle', [c + out * 0.0005 + side * (0.0016 * k) + Vector((0, 0, 0.0002 + 0.0006 * bend)) for k, bend in ((-1.0, -0.3), (-0.5, 1.0), (0.0, 0.0), (0.5, -1.0), (1.0, 0.3))],  # a tilde
              0.00017, line, parent=root, res=4)
@@ -2156,7 +2172,7 @@ def plush():
     body is yellow, printed like a pineapple with orange lines crossing and a dot in every
     diamond, all the way round; short black arms hang at its sides; a short pointed tail and a
     plain white tag are at the back. Across the back of the head a word is stitched in white
-    script (ROOM_SCRIPT, a brush script face): a stand-in until the real embroidery is drawn.
+    script (ROOM_SCRIPT, a thin script face): a stand-in until the real embroidery is drawn.
     The cloth has a nap: a strong soft sheen at grazing angles and a fine uneven pile."""
     def cloth(name, color, sheen=1.0, tint=(1, 1, 1)):
         n = Nodes(name)
@@ -2181,7 +2197,7 @@ def plush():
         leg.scale = (1.0, 1.05, 1.0)
     # the body, and its print: lines in two crossing spirals with a dot in every diamond, lying flat on the cloth
     bz, bw, bd, bh = 0.051, 0.063, 0.056, 0.050
-    ball('plush body', (bw, bd, bh), (0, 0, bz), yellow, root, cuts=4, lumps=0.02, seed=1)
+    ball('plush body', (bw, bd, bh), (0, 0, bz), yellow, root, cuts=4, lumps=0.003, seed=1)  # nearly even, so the print lies on it everywhere
 
     def on_body(a, t, lift):
         r = math.sqrt(max(0.0, 0.25 - (t - 0.5) ** 2))
@@ -2194,7 +2210,7 @@ def plush():
             prev = None
             for i in range(19):
                 t = 0.1 + 0.8 * i / 18
-                p = on_body(2 * math.pi * k / lines + turn * twist * t, t, 1.005)
+                p = on_body(2 * math.pi * k / lines + turn * twist * t, t, 1.012)
                 if prev:
                     s = p.normalized().cross(p - prev).normalized() * 0.0007
                     bm.faces.new([bm.verts.new(q) for q in (prev - s, prev + s, p + s, p - s)])
@@ -2203,7 +2219,7 @@ def plush():
     step = math.pi / (lines * twist)  # from one row of crossings to the next
     for j in range(1, 6):
         for k in range(lines):
-            n = on_body(2 * math.pi * k / lines + twist * j * step + math.pi / lines, j * step, 1.004)
+            n = on_body(2 * math.pi * k / lines + twist * j * step + math.pi / lines, j * step, 1.014)
             ball('plush dot', (0.0060, 0.0060, 0.0006), Vector((0, 0, bz)) + n, orange, root, rot=Vector((0, 0, 1)).rotation_difference(n.normalized()).to_euler(), cuts=1)
     # short arms hanging at the sides; the tail, short and pointed, low at the back; the tag beside it
     for sx in (1, -1):
@@ -2250,11 +2266,17 @@ def plush():
 
     eye_z = -0.0035
     for sx in (1, -1):
-        # an ear: a broad rounded triangle, thin, standing at the head's upper corner and leaning out, its front lined with gold
-        ear = empty('plush ear', (sx * 0.0455, -0.006, hz + 0.0265), (rad(-4), sx * rad(27), 0), root)
-        e = lathe('plush ear', [(0.0240, 0.0), (0.0236, 0.010), (0.0212, 0.019), (0.0165, 0.0265), (0.0095, 0.0315), (0, 0.0335)], black, parent=ear, seg=24)
-        e.scale = (1.0, 0.32, 1.0)
-        flat_shape('plush ear lining', rounded([(-0.0180, 0.0020), (0.0180, 0.0020), (0.0, 0.0330)], 2), 0.0005, gold, at=(0, 0.0060, 0.0012), rot=(rad(80), 0, 0), parent=ear)
+        # an ear: a broad triangle with a rounded tip, thin, at the head's upper corner. It leans out,
+        # so that its outer edge runs nearly straight down into the side of the head; its front is
+        # lined with a smaller triangle of gold thread of the same shape
+        slant = Matrix.Identity(4)
+        slant[0][2] = sx * 0.42  # x grows with height: the tip stands out over the outer edge
+        ear = empty('plush ear', (sx * 0.0335, -0.003, hz + 0.0290), (rad(-4), 0, 0), root)
+        e = lathe('plush ear', [(0.0235, 0.0), (0.0215, 0.008), (0.0160, 0.021), (0.0092, 0.032), (0.0048, 0.0372), (0.0022, 0.0392), (0, 0.0400)], black, parent=ear, seg=24)
+        e.data.transform(slant @ Matrix.Diagonal((1.0, 0.30, 1.0, 1.0)))
+        lining = [(-0.0140, 0.0030), (0.0140, 0.0030), (0.0, 0.0275)]
+        flat_shape('plush ear lining', rounded([(x + sx * 0.42 * y, y) for x, y in lining], 2), 0.0005, gold,
+                   at=(0, 0.0046, 0.0022), rot=(rad(81), 0, 0), parent=ear)
         # an eye: a big round of white terry, a raised stitched rim round it, the pupil set toward the nose
         p, n = on_head(sx * 0.0290, eye_z)
         ball('plush eye', (0.0282, 0.0282, 0.0026), p, terry, root, rot=facing(n), cuts=3)
@@ -2276,25 +2298,30 @@ def plush():
     ball('plush nose', (0.0105, 0.0078, 0.0026), p, nose, root, rot=facing(n), cuts=2)
     # the sunglasses: one flat piece. Half its outline, from the notch between the lenses round
     # the lower rim to the point at the outer end and back along the top; the other half mirrors it
-    half = [(0.0, 0.0085), (0.0050, -0.0040), (0.0110, -0.0130), (0.0230, -0.0165), (0.0360, -0.0155), (0.0450, -0.0095), (0.0475, -0.0010), (0.0525, 0.0040),
-            (0.0480, 0.0105), (0.0410, 0.0150), (0.0250, 0.0165), (0.0, 0.0150)]
+    half = [(0.0, 0.0085), (0.0050, -0.0040), (0.0110, -0.0130), (0.0230, -0.0165), (0.0360, -0.0155), (0.0450, -0.0095), (0.0478, -0.0010), (0.0492, 0.0080),
+            (0.0560, 0.0178), (0.0572, 0.0196), (0.0540, 0.0188), (0.0440, 0.0158), (0.0250, 0.0165), (0.0, 0.0150)]  # the corner at the top flares up and out to a point
     outline = rounded(half + [(-x, y) for x, y in reversed(half[1:-1])], 2)
     lens = rounded([(0.0070, 0.0062), (0.0090, -0.0062), (0.0150, -0.0128), (0.0245, -0.0142), (0.0355, -0.0130), (0.0428, -0.0070), (0.0448, 0.0030), (0.0410, 0.0118), (0.0260, 0.0140), (0.0105, 0.0132)], 2)
     lean = rad(24)
+
+    def droop(p):
+        """The felt is soft: its ends follow the head's curve back and hang a little."""
+        return Vector((p.x, p.y - 0.9 * p.x * p.x, p.z - 3.0 * p.x * p.x))
+
     # (the piece is cut in its own xy plane; stood up, its y is up the forehead and its +z looks out and a little up, so its x runs to the cat's left)
-    glasses = empty('plush sunglasses', (0, hd / 2 - 0.0035, hz + 0.0265), axes_euler(Vector((-1, 0, 0)), Vector((0, -math.sin(lean), math.cos(lean))), Vector((0, math.cos(lean), math.sin(lean)))), root)
+    glasses = empty('plush sunglasses', (0, hd / 2 - 0.0030, hz + 0.0265), axes_euler(Vector((-1, 0, 0)), Vector((0, -math.sin(lean), math.cos(lean))), Vector((0, math.cos(lean), math.sin(lean)))), root)
     glasses.rotation_euler.rotate_axis('Z', rad(-3))
     glasses.scale = (0.87, 0.87, 1.0)
-    flat_shape('plush glasses underlay', [(x * 1.035, y * 1.07) for x, y in outline], 0.0008, white_felt, at=(0, 0, -0.0008), parent=glasses)
-    flat_shape('plush frame', outline, 0.0014, red, parent=glasses)
+    flat_shape('plush glasses underlay', [(x * 1.035, y * 1.07) for x, y in outline], 0.0008, white_felt, at=(0, 0, -0.0008), parent=glasses, bend=droop)
+    flat_shape('plush frame', outline, 0.0014, red, parent=glasses, bend=droop)
     dark = cloth('plush lens', (0.009, 0.008, 0.010), 0.5, (0.5, 0.5, 0.55))
     for sx in (1, -1):
-        flat_shape('plush lens', lens if sx > 0 else [(-x, y) for x, y in reversed(lens)], 0.0006, dark, at=(0, 0, 0.0012), parent=glasses)
+        flat_shape('plush lens', lens if sx > 0 else [(-x, y) for x, y in reversed(lens)], 0.0006, dark, at=(0, 0, 0.0012), parent=glasses, bend=droop)
         # the white stitch: an arc near the lens's top that hooks down at one end
-        tube('plush glint', [(sx * 0.0260 - 0.0080, 0.0062, 0.0021), (sx * 0.0260 - 0.0020, 0.0086, 0.0021), (sx * 0.0260 + 0.0050, 0.0080, 0.0021), (sx * 0.0260 + 0.0076, 0.0040, 0.0021)],
+        tube('plush glint', [droop(Vector(q)) for q in ((sx * 0.0260 - 0.0080, 0.0062, 0.0021), (sx * 0.0260 - 0.0020, 0.0086, 0.0021), (sx * 0.0260 + 0.0050, 0.0080, 0.0021), (sx * 0.0260 + 0.0076, 0.0040, 0.0021))],
              0.0004, thread, parent=glasses, res=5)
     # the word across the back of the head, stitched in white script, climbing
-    bm = lettering((('Hawaii', 0.032, 0.0, 0.004, rad(11)),), SCRIPT, squeeze=1.25, edge=0.004)
+    bm = lettering((('Hawaii', 0.050, 0.0, 0.004, rad(11)),), SCRIPT, squeeze=1.1, edge=0.004, weld=0.00005)
     for v in bm.verts:
         p, n = on_head(v.co.x, v.co.y, back=True)  # read from behind, where the cat's own +x is at the reader's right
         v.co = p + n * 0.0006
@@ -2446,16 +2473,17 @@ def usb_cables(ports):
 # ---------------------------------------------------------------------------------------------
 
 SKY_STRENGTH = 4.0
-# where the keepsakes stand on the desk: the mug on the right, the plush between the notebook and
-# the mat with the figurine in front of it; for the "keepsakes" view, all three in a row
-MUG_AT, PLUSH_AT, FIGURINE_AT = (-0.57, 0.64), (0.50, 0.465), (0.455, 0.625)
+# where the keepsakes stand on the desk: the mug on the right, beyond the lamp so that the lamp
+# lights the side the seat sees; the plush between the notebook and the mat with the figurine in
+# front of it; for the "keepsakes" view, all three in a row
+MUG_AT, PLUSH_AT, FIGURINE_AT = (-0.44, 0.13), (0.50, 0.465), (0.455, 0.625)
 LOOKER = (0.0, 1.85)  # who the keepsakes are turned to: the seat
 # the views that check the keepsakes stand the three in a row, turned to the camera
 KEEPSAKE_VIEWS = ('keepsakes', 'plushback', 'kplush', 'kfigurine', 'kmug')
 if VIEW in KEEPSAKE_VIEWS:
     MUG_AT, PLUSH_AT, FIGURINE_AT = (0.49, 0.52), (0.36, 0.52), (0.60, 0.54)
     LOOKER = {'kplush': (0.36, 0.95), 'plushback': (0.36, 0.95), 'kfigurine': (0.60, 0.80), 'kmug': (0.49, 0.95)}.get(VIEW, (0.48, 1.03))
-LAPTOP_GLOW, DELL_GLOW, MAP_GLOW = 2.2, 2.0, 1.1  # kept low: the screens must not blow out
+LAPTOP_GLOW = DELL_GLOW = MAP_GLOW = 1.1  # kept low: the screens must not blow out; alike, as the page shows them
 BULB_GLOW, LAMP_W = 2.5, 16.0
 WINDOW_W, FILL_W = 72.0, 8.0
 
@@ -2485,12 +2513,12 @@ VIEWS = {
     # checks on the keepsakes, not deliverables. "keepsakes" stands the mug between the other two
     # for the picture, as they lay in the photograph they were made from (KEEPSAKES_AT)
     'keepsakes': ((0.48, 1.03, 0.90), (0.468, 0.52, 0.815), 47, 11.0, (0.48, 0.52, 0.82)),
-    'plushback': ((0.36, 0.95, 0.86), (0.36, 0.52, 0.826), 62, 11.0, (0.36, 0.52, 0.83)),  # the plush is turned round for this one
-    'kplush': ((0.36, 0.95, 0.86), (0.36, 0.52, 0.826), 62, 11.0, (0.36, 0.52, 0.83)),
+    'plushback': ((0.36, 0.95, 0.86), (0.36, 0.52, 0.826), 50, 11.0, (0.36, 0.52, 0.83)),  # the plush is turned round for this one
+    'kplush': ((0.36, 0.95, 0.86), (0.36, 0.52, 0.826), 50, 11.0, (0.36, 0.52, 0.83)),
     'kfigurine': ((0.60, 0.84, 0.80), (0.60, 0.54, 0.764), 135, 16.0, (0.60, 0.54, 0.765)),
     'kmug': ((0.49, 0.95, 0.85), (0.50, 0.52, 0.79), 72, 11.0, (0.49, 0.52, 0.79)),
     'plush': ((0.40, 0.98, 0.93), (0.485, 0.52, 0.80), 62, 8.0, (0.50, 0.47, 0.82)),
-    'mug': ((-0.40, 1.02, 0.93), (-0.57, 0.64, 0.79), 75, 8.0, (-0.57, 0.64, 0.79)),
+    'mug': ((-0.33, 0.62, 0.90), (-0.44, 0.13, 0.785), 75, 8.0, (-0.44, 0.13, 0.79)),
     'tree': ((0.75, 3.5, 1.35), (-0.35, -1.0, 1.72), 22, 4.0, (-0.9, -3.2, 2.0)),
 }
 
