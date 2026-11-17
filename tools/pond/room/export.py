@@ -8,6 +8,8 @@
 #                   materials, the desk wood's colour map and the light in vertex colours; no
 #                   picture for the screens, which the page draws itself
 #   lm/*.webp       the diffuse light on the big surfaces (desk top, mat, floor, walls, ceiling)
+#   (keepsakes.webp, the picture of what is painted on the keepsakes, is atlas.py's; the model
+#                   carries only where each surface lies on it)
 #   manifest.json   the seat camera, the lamp, how the baked pictures are encoded, and for each
 #                   season its backdrop and the tint that sits the room with it
 # Run with Blender's Python module:
@@ -494,7 +496,12 @@ def flatten(mat, albedo=None, name=None):
     if name == 'desk wood':
         b.inputs['Coat Weight'].default_value = 0.0
     sock = b.inputs['Base Color']
-    if sock.is_linked:
+    if name.startswith('atlas'):
+        # a keepsake's paint: the page lays the atlas (public/room/keepsakes.webp) on these
+        # materials by their name, so the model carries white and the texture coordinates
+        unlink(sock)
+        sock.default_value = (1, 1, 1, 1)
+    elif sock.is_linked:
         unlink(sock)
         sock.default_value = (*BASE[name], 1)
     elif name in BASE:
@@ -611,7 +618,7 @@ def manifest(lit, tris):
     m = {
         'units': 'metres, Blender axes (z up); the GLB itself is y up: (x, y, z) -> (x, z, -y)',
         'camera': {'position': at, 'aim': aim, 'lens': lens, 'sensor': 36, 'fstop': fstop, 'focus': focus},
-        'views': {k: {'position': v[0], 'aim': v[1], 'lens': v[2]} for k, v in S['VIEWS'].items()},
+        'views': {k: {'position': v[0], 'aim': v[1], 'lens': v[2]} for k, v in S['VIEWS'].items() if k not in S['KEEPSAKE_VIEWS']},
         'lamp': {'position': list(lamp.matrix_world.translation), 'color': list(lamp.data.color), 'watts': lamp.data.energy},
         'glow': {'laptop': S['LAPTOP_GLOW'], 'dell': S['DELL_GLOW'], 'map': S['MAP_GLOW'], 'bulb': S['BULB_GLOW']},
         'backdrop': {'lens': BACKDROP_LENS, 'sensor': 36, 'aspect': BACKDROP_SIZE[0] / BACKDROP_SIZE[1],

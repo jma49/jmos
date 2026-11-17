@@ -860,17 +860,49 @@ drawn in code, and what is still drawn in code that a picture would better is on
      beige fibre-cement lap siding, seven boards lying level, each with a faint embossed
      grain, weathered a little. And "turf" (albedo, normal), 1024 × 1024, tiling: dark green
      artificial turf seen from above, short blades.
-   - "mug-wrap" (albedo with alpha), 2048 × 512, the print that goes round a cobalt-blue mug,
-     white on nothing: a large brush-script line "ON THE ROAD" and under it, small, "HAPPY
-     ANNIVERSARY", both in forward-slanted dry-brush capitals with ragged stroke ends, in the
-     middle third of the picture. (The scene sets these words in a rough brush font for now.)
-   - "plush-face" and "plush-pineapple" (albedo), each 1024 × 1024: for a black cat plush, the
-     embroidered face seen from the front (very large round white eyes with black pupils, a
-     small brown nose, on black), and the body's cloth, tiling: yellow with an orange
-     criss-cross and a dot in every diamond, as a pineapple. And "plush-back" (albedo with
-     alpha), 1024 × 512: the word "Hawaii" as it is embroidered across the back of the head,
-     in white satin-stitch script slanting up, on nothing. (The scene makes the face and the
-     pattern from geometry for now, and sets the word in a script font.)
+   - The keepsakes' paint is the one exception to "sources, not pictures the site loads": it is
+     a picture the page fetches, `public/room/keepsakes.webp`, 1024 × 1024, opaque, sRGB, under
+     150 KB (`cwebp -q 88 -m 6`). `tools/pond/room/atlas.py` paints a stand-in for all of it
+     (lettering set from fonts); repaint any island and replace the file: nothing else changes,
+     since the model only holds where each surface lies on the picture
+     (`tools/pond/room/atlas.json` has the same rectangles). Paint each island to its edges
+     in its ground colour, evenly lit, with no shadow. The islands, as pixel rectangles
+     (left, top, right, bottom; the top left of the picture is 0, 0):
+     - "mug" (0, 0, 1024, 352): the front 200° of the mug's wall unrolled, the middle of the
+       front at x 512, the rim at the top (y 0), the foot at the bottom. Glossy cobalt blue all
+       over; in white, "ON THE ROAD" in forward-slanted dry-brush capitals with ragged stroke
+       ends, about 530 pixels wide and centred at (512, 154), and under it, a third the size
+       and about 275 pixels wide, "HAPPY ANNIVERSARY", centred at (512, 208). Both climb a little to the right.
+     - "plush-print" (0, 352, 1024, 496): the plush's pineapple body unrolled, 380° of it (the
+       left edge is the middle of its back, x 485 the middle of its front, and the last 20°
+       repeat the first, so it must tile there), its top at the top. Yellow plush, orange
+       lines crossing in an even diamond grid (twelve each way), an orange dot in every diamond.
+     - "plush-face" (0, 496, 512, 856): the front of the plush's head seen square on, 117 mm
+       wide by 82 mm tall. Soft charcoal cloth; two rounds of white terry 28 mm across with a
+       flat stitched rim, their middles at (129, 691) and (383, 691); a black pupil in each,
+       set toward the nose (the left one stitched with a faint ring, the right one a glossy
+       disc); a small orange-brown satin-stitch nose at (256, 754).
+     - "plush-back" (512, 496, 896, 766): the back of its head seen square on from behind, the
+       same size. Charcoal, with "Hawaii" stitched across it in thin white script, climbing
+       to the right, about 265 pixels wide.
+     - "plush-ear" (896, 496, 1024, 624): one ear from the front, stood upright, 47 mm wide by
+       40 mm tall, its foot at the bottom: charcoal, with a rounded triangle of gold thread.
+       Both ears use it.
+     - "plush-glasses" (0, 856, 512, 1024): the sunglasses laid flat, 120 mm by 39 mm. Red
+       felt all over (the model cuts the outline); two lenses of black cloth, their middles
+       near (148, 942) and (364, 942); a white stitch curved across the top of each.
+     - "figurine-face" (512, 768, 768, 1024): the figurine's face seen square on, 22 mm by
+       19.6 mm. Smooth warm tan; two tall white eyes with a large dark-brown iris toward the
+       upper right and a white four-point star in it; thin short brows; a button nose; a small
+       smile; an orange blush on each cheek with a dark tilde on it.
+     - "figurine-body" (768, 768, 1024, 960): its star-shaped body from the front, 32 mm by
+       28 mm, the body’s middle at (896, 850). Pebbled yellow and dark brown in quarters
+       (upper left and lower right brown), the hood's yellow bib over the chest, a small brown
+       shoulder at the upper right.
+     - "figurine-back" (896, 624, 1024, 768): the same body from behind: pebbled yellow, the
+       quartering only low down.
+     - "figurine-hood" (768, 960, 1024, 1024): the hood's skin, pebbled yellow like a citrus
+       peel, plain.
    - "smudges", 2048 × 2048, one grey roughness map, tiling: fingerprints, wipe marks and a little
      dust as they sit on a glass screen and a trackpad; mostly clean, never an even pattern.
    - "mat" (normal), 1024 × 1024, tiling: the grain of a dark wool-felt desk mat. "linen"
