@@ -91,6 +91,70 @@ what is left, and what was learnt. What is open now is section 0.
   right. The cloud thread looks at it in the room, asks for changes here if it is not yet
   true to the photographs, and opens the pull request.
 
+  _Handed back: a first repaint, made without the photographs._ Jincheng asked for it to be
+  painted and pushed before pasting them here, so every island is painted from the words above
+  and not from the objects: read it against the photographs and say here what is untrue. The
+  pieces are painted by the image model and set in place by code; the master is
+  `tools/pond/room/tex/keepsakes.png`, the picture 135 KB.
+  1. `mug`: new lettering in a white dry-brush hand, slanted capitals with ragged ends, the R
+     of ROAD the largest with a long leg, climbing to the right. "ON THE ROAD" is 530 wide,
+     centred at (512, 154); "HAPPY ANNIVERSARY" 275 wide, centred at (512, 208). The ground is
+     flat `#5879d4` to every edge, the white `#f4f4f0`.
+  2. `plush-back`: "Hawaii" as a heavy slanted satin-stitch script, 265 wide, centred at
+     (704, 631), on charcoal with a short nap.
+  3. `plush-face`: eyes of white terry with a stitched rim, 122 across, at (129, 691) and
+     (383, 691); the left pupil stitched with a grey ring, the right one plain black, both
+     toward the nose; the nose in orange-brown satin stitch at (258, 754). The charcoal's
+     middle value is `#58575f`.
+  4. `plush-print`: the stand-in's grid and dots kept where they were, now as ink in pile: the
+     lines' edges and strength vary and the yellow has a nap. It repeats every 970 pixels, so
+     the left 54 and the right 54 are the same, and it runs to the top and bottom edges.
+  5. `plush-glasses`: red felt with fibre, two lenses of black plush with their middles at
+     (148, 942) and (364, 942), a curved white stitch on each. The red is now `#e10e0b`,
+     brighter than the stand-in's: the plain parts of the model should follow, or say so and
+     it goes back.
+  6. `plush-ear`: a rounded triangle of gold thread in upright rows, in the box the stand-in's
+     gold had. It reads as bright yellow thread more than metal.
+  7. `figurine-face`: repainted with its irises where they were: the white as a crescent at
+     the lower left of each iris, a smaller star, a softer blush, the cheek marks as tildes.
+     The skin's colour is kept.
+  8. `figurine-body`, `figurine-back`, `figurine-hood`: the same shapes in `#50362c` and
+     `#ebc375` with a finer pebble; the quarters' edges are redrawn from the stand-in, so they
+     are no truer than it was.
+
+  Not got right, or not known: whether any of it matches the real things (above all the
+  mug's hand and the embroidery's letter shapes); the threads carry a little painted relief
+  (a pale side and a dark side to each stitch), which is light the room does not cast; the
+  last two pixels of each island are plain ground except in the print (it must run to its
+  edges) and the three pebbled islands. Send the photographs' corrections as words here, or
+  ask Jincheng to paste the photographs into the picture thread.
+
+  _Looked at in the room beside the photographs, 2026-11-17 (the cloud thread)._ Taken as it
+  is and going to main: it is a clear step up, and the mug is now the best of the three. The
+  mug's hand is true to the photograph (slant, weight, the large R with its leg, the ragged
+  ends); nothing to change there. A second pass is wanted on four islands, in this order,
+  from the photographs as seen here:
+  1. `plush-print`: the brief was wrong about the count. The real print is large: about six
+     lines each way round the whole body (so three or four diamonds show across the front),
+     each line about 3 mm wide, and one round dot about 8 mm across in the middle of each
+     diamond. On the picture that is lines about 170 pixels apart along the island and dots
+     about 22 pixels across. The orange is a clear mid orange, flat as ink, not darker at the
+     crossings. It must still repeat every 970 pixels and run to the top and bottom edges.
+  2. `plush-back`: the real "Hawaii" is a lighter, more open hand than the one delivered:
+     thin even strokes (about a third of the weight now), letters upright in their bowls but
+     the whole word slanted and climbing about 8 degrees, wide spacing, a tall open H whose
+     left stroke starts with a long flourish from the lower left, the w reading as two u's,
+     no connecting swash under the word, and small separate dots on the two i's. Satin stitch
+     running across each stroke. Same width (265 pixels), same middle.
+  3. `plush-ear`: the real lining is an olive gold, darker and greener than the yellow
+     delivered (near `#b59a1e`), with a metallic thread's sparkle, and its shape is a
+     triangle with all three corners well rounded, filling most of the box.
+  4. `plush-face`: close. Make the stitched rim of each eye a little wider and brighter than
+     the terry inside it, and the left pupil's grey ring fainter. The nose is right.
+  The red of the glasses stays as delivered; the model's plain red follows it. The figurine's
+  islands and the mug stay as they are. The painted relief on the stitches is slight enough
+  to keep.
+
 - **Next cloud review: the gold window and its koi are ready.** Pull through
   `3792c71`: the chosen wide-2/tall-2 beds and the optional right-shifted bed
   are delivered, along with the third koi sheet and its tint mask. The local
