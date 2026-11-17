@@ -91,6 +91,44 @@ what is left, and what was learnt. What is open now is section 0.
   right. The cloud thread looks at it in the room, asks for changes here if it is not yet
   true to the photographs, and opens the pull request.
 
+  _Handed back: a first repaint, made without the photographs._ Jincheng asked for it to be
+  painted and pushed before pasting them here, so every island is painted from the words above
+  and not from the objects: read it against the photographs and say here what is untrue. The
+  pieces are painted by the image model and set in place by code; the master is
+  `tools/pond/room/tex/keepsakes.png`, the picture 135 KB.
+  1. `mug`: new lettering in a white dry-brush hand, slanted capitals with ragged ends, the R
+     of ROAD the largest with a long leg, climbing to the right. "ON THE ROAD" is 530 wide,
+     centred at (512, 154); "HAPPY ANNIVERSARY" 275 wide, centred at (512, 208). The ground is
+     flat `#5879d4` to every edge, the white `#f4f4f0`.
+  2. `plush-back`: "Hawaii" as a heavy slanted satin-stitch script, 265 wide, centred at
+     (704, 631), on charcoal with a short nap.
+  3. `plush-face`: eyes of white terry with a stitched rim, 122 across, at (129, 691) and
+     (383, 691); the left pupil stitched with a grey ring, the right one plain black, both
+     toward the nose; the nose in orange-brown satin stitch at (258, 754). The charcoal's
+     middle value is `#58575f`.
+  4. `plush-print`: the stand-in's grid and dots kept where they were, now as ink in pile: the
+     lines' edges and strength vary and the yellow has a nap. It repeats every 970 pixels, so
+     the left 54 and the right 54 are the same, and it runs to the top and bottom edges.
+  5. `plush-glasses`: red felt with fibre, two lenses of black plush with their middles at
+     (148, 942) and (364, 942), a curved white stitch on each. The red is now `#e10e0b`,
+     brighter than the stand-in's: the plain parts of the model should follow, or say so and
+     it goes back.
+  6. `plush-ear`: a rounded triangle of gold thread in upright rows, in the box the stand-in's
+     gold had. It reads as bright yellow thread more than metal.
+  7. `figurine-face`: repainted with its irises where they were: the white as a crescent at
+     the lower left of each iris, a smaller star, a softer blush, the cheek marks as tildes.
+     The skin's colour is kept.
+  8. `figurine-body`, `figurine-back`, `figurine-hood`: the same shapes in `#50362c` and
+     `#ebc375` with a finer pebble; the quarters' edges are redrawn from the stand-in, so they
+     are no truer than it was.
+
+  Not got right, or not known: whether any of it matches the real things (above all the
+  mug's hand and the embroidery's letter shapes); the threads carry a little painted relief
+  (a pale side and a dark side to each stitch), which is light the room does not cast; the
+  last two pixels of each island are plain ground except in the print (it must run to its
+  edges) and the three pebbled islands. Send the photographs' corrections as words here, or
+  ask Jincheng to paste the photographs into the picture thread.
+
 - **Next cloud review: the gold window and its koi are ready.** Pull through
   `3792c71`: the chosen wide-2/tall-2 beds and the optional right-shifted bed
   are delivered, along with the third koi sheet and its tint mask. The local
