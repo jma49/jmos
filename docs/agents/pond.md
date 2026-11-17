@@ -885,7 +885,7 @@ drawn in code, and what is still drawn in code that a picture would better is on
      - "plush-back" (512, 496, 896, 766): the back of its head seen square on from behind, the
        same size. Charcoal, with "Hawaii" stitched across it in thin white script, climbing
        to the right, about 265 pixels wide.
-     - "plush-ear" (896, 496, 1024, 624): one ear from the front, stood upright, 47 mm wide by
+     - "plush-ear" (896, 496, 1024, 624): one ear from the front, stood upright, 52 mm wide by
        40 mm tall, its foot at the bottom: charcoal, with a rounded triangle of gold thread.
        Both ears use it.
      - "plush-glasses" (0, 856, 512, 1024): the sunglasses laid flat, 120 mm by 39 mm. Red

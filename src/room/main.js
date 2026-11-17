@@ -84,7 +84,7 @@ vec3 bakedDecode( vec3 v, float lo, float stops ) { return exp2( v * stops + lo 
   // The keepsakes on the desk are small and stand in dim corners: `keepsakeFloor` is the least
   // light their baked light is read as, so a white stays a white in the shade. The plush's cloth
   // has its own values (plush, below).
-  const settings = { occlusion: 0.02, envIntensity: 1.0, sheen: 0.25, keepsakeFloor: 0.07 };
+  const settings = { occlusion: 0.02, envIntensity: 1.0, sheen: 0.25, keepsakeFloor: 0.1 };
   // What the season does to the room's baked light (it was baked in summer's dusk): one colour
   // that every baked surface is multiplied by, shared so that changing it changes them all.
   const grade = { value: new THREE.Color(1, 1, 1) };
@@ -305,7 +305,7 @@ vec3 bakedDecode( vec3 v, float lo, float stops ) { return exp2( v * stops + lo 
       if (m.name.startsWith('atlas')) m.map = atlas;
       if (isCloth(m) && !done.has(m)) {
         Object.assign(m, { roughness: 1, clearcoat: 0, specularIntensity: 0.15, sheen: 1, sheenRoughness: 0.85, normalMap: fuzz });
-        m.sheenColor.setRGB(0.16, 0.16, 0.18, THREE.LinearSRGBColorSpace);
+        m.sheenColor.setRGB(0.24, 0.24, 0.27, THREE.LinearSRGBColorSpace);
         m.normalScale.set(0.6, 0.6);
       }
       if (m.map) m.map.anisotropy = maxAniso;

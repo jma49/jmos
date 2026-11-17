@@ -28,11 +28,11 @@ LAYOUT = json.load(open(os.path.join(HERE, 'atlas.json')))
 SIZE = LAYOUT['size']
 UP = 4  # every island is painted this many times larger and brought down, for clean edges
 
-CHARCOAL = (58, 58, 62)  # the plush's black cloth: a soft charcoal, so its form shows
+CHARCOAL = (88, 88, 94)  # the plush's black cloth: a soft charcoal, so its form shows
 BLUE = (88, 120, 212)
 WHITE = (236, 236, 232)
 YELLOW, ORANGE = (243, 196, 84), (233, 132, 44)
-FIG_YELLOW, FIG_BROWN, SKIN = (232, 190, 110), (72, 48, 40), (229, 158, 112)
+FIG_YELLOW, FIG_BROWN, SKIN = (236, 196, 118), (78, 52, 44), (238, 178, 134)
 
 
 def font(name, size):
@@ -97,7 +97,7 @@ def mug(w, h, spec, rng):
         # it climbs a little to the right: sheared up, since the island is not square
         climb = math.tan(math.radians(2.5)) * (degrees * per_degree) * (per_metre / (per_degree * 360 / (2 * math.pi * radius)))
         mask = mask.transform((mask.size[0], int(mask.size[1] + abs(climb))), Image.AFFINE, (1, 0, 0, climb / mask.size[0], 1, -climb), Image.BICUBIC)
-        stamp(img, mask, (w / 2, (1 - z / spec['height']) * h), (240, 240, 236))
+        stamp(img, mask, (w / 2, (1 - z / spec['height']) * h), (255, 255, 255))
     return img
 
 
@@ -120,7 +120,14 @@ def plush_print(w, h, spec, rng):
         for k in range(-lines, 2 * lines):
             cx, cy = x(360 * k / lines + math.degrees(twist * j * step) + 180 / lines), y(j * step)
             draw.ellipse((cx - 3.2 * per_degree, cy - 0.055 * h, cx + 3.2 * per_degree, cy + 0.055 * h), fill=ORANGE)
-    return img
+    # the print is even in the middle band; under the collar and toward the foot it gives way to plain cloth
+    plain = speckle(Image.new('RGB', (w, h), YELLOW), rng, 0.10, UP * 2)
+    fade = Image.new('L', (w, h), 0)
+    fd = ImageDraw.Draw(fade)
+    for row in range(h):
+        t = row / h
+        fd.line((0, row, w, row), fill=int(255 * min(1.0, max(0.0, (0.26 - t) / 0.10, (t - 0.84) / 0.10))))
+    return Image.composite(plain, img, fade)
 
 
 def stitched_round(draw, cx, cy, r, colour, rim, ticks, rng):
@@ -175,11 +182,11 @@ def plush_ear(w, h, spec, rng):
     img = speckle(Image.new('RGB', (w, h), CHARCOAL), rng, 0.10, UP)
     draw = ImageDraw.Draw(img)
     px, pz = w / spec['extent'][0], h / spec['extent'][1]
-    tri = rounded([(w / 2 - 0.0150 * px, h - 0.0030 * pz), (w / 2 + 0.0150 * px, h - 0.0030 * pz), (w / 2, h - 0.0290 * pz)], 2)
-    draw.polygon(tri, fill=(196, 170, 60))
+    tri = rounded([(w / 2 - 0.0200 * px, h - 0.0020 * pz), (w / 2 + 0.0200 * px, h - 0.0020 * pz), (w / 2, h - 0.0350 * pz)], 2)  # most of the ear's front
+    draw.polygon(tri, fill=(232, 202, 72))
     for i in range(60):  # the lining is thread laid side by side
         x0 = w * i / 60
-        draw.line((x0, 0, x0, h), fill=(170, 146, 46), width=1)
+        draw.line((x0, 0, x0, h), fill=(250, 232, 130) if i % 3 == 0 else (204, 174, 54), width=max(1, UP // 2))  # metal thread: bright strands among the rest
     mask = Image.new('L', (w, h), 0)
     ImageDraw.Draw(mask).polygon(tri, fill=255)
     return Image.composite(img, speckle(Image.new('RGB', (w, h), CHARCOAL), rng, 0.10, UP), mask)

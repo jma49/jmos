@@ -2051,6 +2051,8 @@ def figurine():
     rising to a point that leans to its right, with a dark-brown bow and a tiny yellow star
     above it, and the body, one plump rounded star whose points are the stubby arms and legs.
     It sits leaning back a little."""
+    face = atlas_material('atlas face')  # the face is smooth and a little glossy; the eyes catch the light
+    face.set(Roughness=0.3, Coat_Weight=0.5, Coat_Roughness=0.08)
     n = atlas_material('atlas vinyl')
     n.set(Roughness=0.6)
     n.bump(n.node('ShaderNodeTexVoronoi', {'Vector': n.coords(), 'Scale': 1900.0}, feature='SMOOTH_F1').outputs['Distance'], 0.6, 0.0004)
@@ -2069,13 +2071,13 @@ def figurine():
             r += length * math.exp(-(d / 0.36) ** 2)
         return r
 
-    bz, around, across, deep = 0.0118, 44, 8, 0.0074
+    bz, around, across, deep = 0.0118, 44, 8, 0.0060
     bm = bmesh.new()
     rings = []
     for j in range(1, across):
         lat = math.pi * (j / across - 0.5)
-        rings.append([bm.verts.new((-reach(2 * math.pi * i / around) * math.cos(lat) ** 0.55 * math.cos(2 * math.pi * i / around), deep * math.sin(lat),
-                                    reach(2 * math.pi * i / around) * math.cos(lat) ** 0.55 * math.sin(2 * math.pi * i / around))) for i in range(around)])
+        rings.append([bm.verts.new((-reach(2 * math.pi * i / around) * math.cos(lat) ** 0.4 * math.cos(2 * math.pi * i / around), deep * math.sin(lat),
+                                    reach(2 * math.pi * i / around) * math.cos(lat) ** 0.4 * math.sin(2 * math.pi * i / around))) for i in range(around)])
     back, front = bm.verts.new((0, -deep, 0)), bm.verts.new((0, deep, 0))
     for a, b in zip(rings, rings[1:]):
         for i in range(around):
@@ -2096,22 +2098,22 @@ def figurine():
         full = 1 + 0.10 * max(0.0, -2 * v.co.z) * (1 - abs(2 * v.co.z)) * 4 * 0.5
         v.co = Vector((v.co.x * 0.0198 * full, v.co.y * 0.0184, v.co.z * 0.0196))
     fw, fh = ATLAS['islands']['figurine-face']['extent']
-    lay(obj_from_bm('figurine head', bm, paint, at=(0, 0.0008, hz), parent=root, sharp=180), lambda c, normal: ('figurine-face', lambda co: (0.5 - co.x / fw, 0.5 - co.z / fh)))
+    lay(obj_from_bm('figurine head', bm, face.mat, at=(0, 0.0008, hz), parent=root, sharp=180), lambda c, normal: ('figurine-face', lambda co: (0.5 - co.x / fw, 0.5 - co.z / fh)))
     # the hood round it: close round the face, rising to a point that leans over to its right
     bm = bmesh.new()
     bmesh.ops.create_icosphere(bm, subdivisions=3, radius=0.5)
     bmesh.ops.delete(bm, geom=[v for v in bm.verts if v.co.y > 0.12 and math.hypot(v.co.x * 0.92, v.co.z + 0.05) < 0.44], context='VERTS')
     up = Vector((0.42, -0.06, 0.90)).normalized()
     for v in bm.verts:
-        d = max(0.0, v.co.normalized().dot(up) - 0.72) / 0.28
-        v.co = v.co + up * (0.22 * d ** 2.0) + Vector((0.06 * d ** 4, 0, 0))
+        d = max(0.0, v.co.normalized().dot(up) - 0.76) / 0.24
+        v.co = v.co + up * (0.36 * d ** 2.4) + Vector((0.07 * d ** 4, 0, 0))
         v.co = Vector((v.co.x * 0.0216, v.co.y * 0.0204, v.co.z * 0.0214))
     hood_at = Vector((0, -0.0002, hz + 0.0006))
     hood = obj_from_bm('figurine hood', bm, paint, at=hood_at, parent=root, sharp=180)
     x0, z0, x1, z1 = ATLAS['islands']['figurine-hood']['extent']
     lay(hood, lambda c, normal: ('figurine-hood', lambda co: ((co.x - x0) / (x1 - x0), (z1 - co.z) / (z1 - z0))))
     hood.modifiers.new('thickness', 'SOLIDIFY').thickness = 0.0011
-    tip = hood_at + Vector(((up.x * 0.70 + 0.06) * 0.0216, up.y * 0.70 * 0.0204, up.z * 0.70 * 0.0214))
+    tip = hood_at + Vector(((up.x * 0.82 + 0.07) * 0.0216, up.y * 0.82 * 0.0204, up.z * 0.82 * 0.0214))
     # the bow: two dark lobes across the tip; the star stands above it, with its tiny face: two dots and a smile
     cross = Vector((up.z, 0, -up.x))
     for k in (1, -1):
@@ -2153,8 +2155,8 @@ def plush():
         return nap(n, sheen, tint)
 
     printed = nap(atlas_material('atlas plush'), 0.6, (0.6, 0.6, 0.64))
-    black = cloth('plush black', (0.042, 0.042, 0.048), 0.6, (0.6, 0.6, 0.64))  # the atlas's charcoal
-    green = cloth('plush green felt', (0.09, 0.52, 0.05), 0.5)
+    black = cloth('plush black', (0.098, 0.098, 0.112), 0.6, (0.6, 0.6, 0.64))  # the atlas's charcoal
+    green = cloth('plush green felt', (0.14, 0.62, 0.08), 0.5)
     white_felt = cloth('plush white felt', (0.78, 0.76, 0.74), 0.3)
     root = empty('plush', (*PLUSH_AT, TOP), (0, 0, facing_turn(PLUSH_AT) + (math.pi if VIEW == 'kback' else 0)))  # its front is its +y
     # two thick legs, flat underfoot
@@ -2176,7 +2178,14 @@ def plush():
             return (d - spec['from']) / (spec['to'] - spec['from']), 0.5 - co.z / bh
         return 'plush-print', fn
 
-    lay(ball('plush body', (bw, bd, bh), (0, 0, bz), printed, root, cuts=4, lumps=0.003, seed=1), on_body)
+    # a barrel more than a ball: its middle band is of one width, so the print's diamonds are even there
+    bm = bmesh.new()
+    bmesh.ops.create_icosphere(bm, subdivisions=4, radius=1.0)
+    for v in bm.verts:
+        c = v.co
+        k = (math.hypot(c.x, c.y) ** 3 + abs(c.z) ** 3) ** (-1 / 3)
+        v.co = Vector((c.x * k * bw / 2, c.y * k * bd / 2, c.z * k * bh / 2))
+    lay(obj_from_bm('plush body', bm, printed, at=(0, 0, bz), parent=root, sharp=180), on_body)
     # short arms hanging at the sides; the tail, short and pointed, low at the back; the tag beside it
     for sx in (1, -1):
         cloth_uv(ball('plush arm', (0.0185, 0.0175, 0.031), (sx * 0.0375, 0.0, 0.0515), black, root, rot=(0, sx * rad(-20), 0), lumps=0.03, seed=3))
@@ -2186,12 +2195,12 @@ def plush():
     points, steps = 12, 4
     bm = bmesh.new()
     count = points * steps
-    inner = [bm.verts.new((0.013 * math.cos(2 * math.pi * k / count), 0.013 * math.sin(2 * math.pi * k / count), 0.0015)) for k in range(count)]
+    inner = [bm.verts.new((0.014 * math.cos(2 * math.pi * k / count), 0.014 * math.sin(2 * math.pi * k / count), 0.0015)) for k in range(count)]
     outer = []
     for k in range(count):
         tooth = 1 - abs((k % steps) / steps * 2 - 1)  # up to a point and back down
-        r = 0.0300 + 0.0100 * tooth ** 0.8
-        outer.append(bm.verts.new((r * math.cos(2 * math.pi * k / count), r * 0.95 * math.sin(2 * math.pi * k / count), -0.003 - 0.0055 * tooth)))
+        r = 0.0340 + 0.0120 * tooth ** 0.8  # out to the shoulders' width
+        outer.append(bm.verts.new((r * math.cos(2 * math.pi * k / count), r * 0.93 * math.sin(2 * math.pi * k / count), -0.0045 - 0.0085 * tooth)))
     for k in range(count):
         bm.faces.new((inner[k], outer[k], outer[(k + 1) % count], inner[(k + 1) % count]))
     collar = cloth_uv(obj_from_bm('plush collar', bm, green, at=(0, 0, 0.0725), parent=root, smooth=False))
@@ -2218,19 +2227,19 @@ def plush():
         # the atlas's "plush-ear" (the ear stood upright, with its gold lining); its back is plain
         slant = Matrix.Identity(4)
         slant[0][2] = sx * 0.42  # x grows with height: the tip stands out over the outer edge
-        ear = empty('plush ear', (sx * 0.0335, -0.003, hz + 0.0290), (rad(-4), 0, 0), root)
-        e = lathe('plush ear', [(0.0235, 0.0), (0.0215, 0.008), (0.0160, 0.021), (0.0092, 0.032), (0.0048, 0.0372), (0.0022, 0.0392), (0, 0.0400)], printed, parent=ear, seg=24)
+        ear = empty('plush ear', (sx * 0.0320, -0.003, hz + 0.0290), (rad(-4), 0, 0), root)
+        e = lathe('plush ear', [(0.0260, 0.0), (0.0240, 0.008), (0.0180, 0.021), (0.0102, 0.032), (0.0052, 0.0372), (0.0024, 0.0392), (0, 0.0400)], printed, parent=ear, seg=24)
         e.data.transform(slant @ Matrix.Diagonal((1.0, 0.30, 1.0, 1.0)))
         e.data.materials.append(black)
         e.data.update()
         lay(e, lambda c, normal, sx=sx: ('plush-ear', lambda co: (0.5 + (co.x - sx * 0.42 * co.z) / ew, 1 - co.z / eh)) if normal.y > 0 else None)
-        # whiskers: two thick cords from the cheek, hanging in loose bends, a knot at the end
+        # whiskers: two thick cords from the cheek, hanging limp with a kink or two, a knot at the end
         for k in range(2):
             a = Vector((sx * (hw / 2 - 0.003), 0.012, hz - 0.006 - 0.012 * k))
-            path = [a, a + Vector((sx * 0.006, 0.003, -0.003 - 0.004 * k)), a + Vector((sx * (0.008 - 0.004 * k), 0.006, -0.020)), a + Vector((sx * (0.003 + 0.005 * k), 0.003, -0.036)),
-                    a + Vector((sx * (0.007 - 0.003 * k), 0.002, -0.050 + 0.012 * k))]
-            tube('plush whisker', path, 0.0008, black, parent=root, res=6)
-            ball('plush whisker knot', (0.0030, 0.0030, 0.0030), path[-1], black, root, cuts=1)
+            path = [a, a + Vector((sx * 0.007, 0.003, -0.002 - 0.004 * k)), a + Vector((sx * (0.010 - 0.004 * k), 0.006, -0.013)), a + Vector((sx * (0.005 + 0.004 * k), 0.004, -0.019)),
+                    a + Vector((sx * (0.009 - 0.003 * k), 0.005, -0.031)), a + Vector((sx * (0.004 + 0.005 * k), 0.003, -0.037)), a + Vector((sx * (0.007 - 0.003 * k), 0.002, -0.050 + 0.012 * k))]
+            tube('plush whisker', path, 0.0010, black, parent=root, res=4)
+            ball('plush whisker knot', (0.0034, 0.0034, 0.0034), path[-1], black, root, cuts=1)
     # the sunglasses: one flat piece. Half its outline, from the notch between the lenses round
     # the lower rim to the point at the outer end and back along the top; the other half mirrors
     # it. What is on it (the lenses, their stitch) is the atlas's "plush-glasses"
@@ -2247,10 +2256,19 @@ def plush():
     glasses = empty('plush sunglasses', (0, hd / 2 - 0.0030, hz + 0.0265), axes_euler(Vector((-1, 0, 0)), Vector((0, -math.sin(lean), math.cos(lean))), Vector((0, math.cos(lean), math.sin(lean)))), root)
     glasses.rotation_euler.rotate_axis('Z', rad(-3))
     glasses.scale = (0.87, 0.87, 1.0)
-    cloth_uv(flat_shape('plush glasses underlay', [(x * 1.035, y * 1.07) for x, y in outline], 0.0008, white_felt, at=(0, 0, -0.0008), parent=glasses, bend=droop))
+    # white felt under the red, showing as an edge a millimetre wide all round; the red felt on
+    # it; and in each rim a lens of black plush, a little puffed
+    cloth_uv(flat_shape('plush glasses underlay', [(x + math.copysign(0.0011, x), y + math.copysign(0.0011, y - 0.002)) for x, y in outline], 0.0010, white_felt, at=(0, 0, -0.0010), parent=glasses, bend=droop))
     x0, y0, x1, y1 = ATLAS['islands']['plush-glasses']['extent']
-    lay(flat_shape('plush frame', outline, 0.0014, printed, parent=glasses, bend=droop),
-        lambda c, normal: ('plush-glasses', lambda co: ((co.x - x0) / (x1 - x0), (y1 - (co.y + 0.9 * co.x * co.x)) / (y1 - y0))))  # where the point was before the piece drooped
+
+    def on_glasses(c, normal):
+        return 'plush-glasses', lambda co: ((co.x - x0) / (x1 - x0), (y1 - (co.y + 0.9 * co.x * co.x)) / (y1 - y0))  # where the point was before the piece drooped
+
+    lay(flat_shape('plush frame', outline, 0.0020, printed, parent=glasses, bend=droop), on_glasses)
+    lens = [(0.0070, 0.0062), (0.0090, -0.0062), (0.0150, -0.0128), (0.0245, -0.0142), (0.0355, -0.0130), (0.0428, -0.0070), (0.0448, 0.0030), (0.0410, 0.0118), (0.0260, 0.0140), (0.0105, 0.0132)]
+    for sx in (1, -1):
+        pad = rounded([(sx * x, y) for x, y in (lens if sx > 0 else reversed(lens))], 2)
+        lay(flat_shape('plush lens', pad, 0.0012, printed, at=(0, 0, 0.0020), parent=glasses, bend=droop), on_glasses)
     return root
 
 
@@ -2399,9 +2417,9 @@ def usb_cables(ports):
 
 SKY_STRENGTH = 4.0
 # where the keepsakes stand on the desk: the mug on the right, beyond the lamp so that the lamp
-# lights the side the seat sees; the plush between the notebook and the mat with the figurine in
-# front of it; for the "keepsakes" view, all three in a row
-MUG_AT, PLUSH_AT, FIGURINE_AT = (-0.44, 0.13), (0.50, 0.465), (0.455, 0.625)
+# lights the side the seat sees; the plush left of the laptop, behind the mat's corner, where some of the
+# lamp's light and the screens' reaches it, with the figurine in front of it; for the "keepsakes" view, all three in a row
+MUG_AT, PLUSH_AT, FIGURINE_AT = (-0.44, 0.13), (0.42, 0.42), (0.445, 0.60)
 LOOKER = (0.0, 1.85)  # who the keepsakes are turned to: the seat
 # the views that check the keepsakes stand the three in a row, turned to the camera
 KEEPSAKE_VIEWS = ('keepsakes', 'kback', 'kplush', 'kfigurine', 'kmug')
@@ -2443,9 +2461,9 @@ VIEWS = {
     'kfigurine': ((0.60, 0.84, 0.80), (0.60, 0.54, 0.764), 135, 16.0, (0.60, 0.54, 0.765)),
     'kmug': ((0.49, 0.95, 0.85), (0.50, 0.52, 0.79), 72, 11.0, (0.49, 0.52, 0.79)),
     # close views of the keepsakes where they stand, for the page too (?view=plush and so on)
-    'plush': ((0.385, 0.93, 0.90), (0.50, 0.465, 0.822), 58, 8.0, (0.50, 0.465, 0.82)),
-    'plushback': ((0.60, 0.04, 0.90), (0.50, 0.465, 0.822), 58, 8.0, (0.50, 0.465, 0.82)),
-    'figurine': ((0.40, 0.92, 0.84), (0.455, 0.625, 0.762), 120, 8.0, (0.455, 0.625, 0.763)),
+    'plush': ((0.31, 0.90, 0.90), (0.42, 0.42, 0.822), 58, 8.0, (0.42, 0.42, 0.82)),
+    'plushback': ((0.52, 0.02, 0.90), (0.42, 0.42, 0.822), 58, 8.0, (0.42, 0.42, 0.82)),
+    'figurine': ((0.39, 0.89, 0.84), (0.445, 0.60, 0.762), 120, 8.0, (0.445, 0.60, 0.763)),
     'mug': ((-0.33, 0.62, 0.90), (-0.44, 0.13, 0.787), 75, 8.0, (-0.44, 0.13, 0.79)),
     'tree': ((0.75, 3.5, 1.35), (-0.35, -1.0, 1.72), 22, 4.0, (-0.9, -3.2, 2.0)),
 }
