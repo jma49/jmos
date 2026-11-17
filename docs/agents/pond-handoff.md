@@ -30,7 +30,7 @@ what is left, and what was learnt. What is open now is section 0.
 
   _What to deliver._ One file, the same name and size, replacing the one there: 1024 × 1024,
   opaque, sRGB, WebP, under 150 KB (`cwebp -q 88 -m 6`). Keep a lossless master beside the
-  scripts as `tools/pond/room/tex/keepsakes.png` (a new folder). Nothing else changes: the model
+  scripts as "keepsakes.png" in a new folder "tex" under `tools/pond/room`. Nothing else changes: the model
   only holds where each surface lies on the picture, so the islands must stay exactly where
   they are. Their rectangles (left, top, right, bottom, from the top left) and what each must
   hold are listed under "the keepsakes' paint" in item 7 of "Asked for now" in
