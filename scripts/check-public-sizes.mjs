@@ -64,22 +64,23 @@ export const EXCEPTIONS = new Map([
     {
       bytes: 1500 * KB,
       reason:
-        'The room under the pond as one model (docs/decisions/0030): 106,000 triangles with their baked light in ' +
-        'vertex colours, the desk’s and the floor’s wood (about 260 KB of WebP inside it) and two screens’ ' +
-        'pictures. Meshopt-compressed it is 1.31 MB. It is a preview: making it smaller (fewer triangles on what ' +
-        'the seat never sees closely, coarser quantization) has not been tried yet and should be before the room ' +
-        'is linked. Only the page at /room fetches it, which nothing links to; no other page does.'
+        'The room under the pond as one model (docs/decisions/0030): 128,000 triangles with their baked light in ' +
+        'vertex colours (22,000 of them the three keepsakes on the desk, which are modelled closely), the ' +
+        'desk’s wood (about 150 KB of WebP inside it) and two screens’ pictures. Meshopt-compressed it is ' +
+        '1.39 MB. It is a preview: making it smaller (fewer triangles on what the seat never sees closely, ' +
+        'coarser quantization) has not been tried yet and should be before the room is linked. Only the page at ' +
+        '/room fetches it, which nothing links to; no other page does.'
     }
   ],
   ...['spring', 'summer', 'autumn', 'winter'].map((season) => [
     `room/backdrop-${season}.webp`,
     {
-      bytes: 400 * KB,
+      bytes: 320 * KB,
       reason:
         'What is outside the room’s glass in one season (a balcony, trees, a neighbour’s roof), wider than the ' +
         'window since the camera drifts: 3072 × 1728. It holds the logarithm of the light, not a finished ' +
         'picture, so what WebP loses is stretched again when the page decodes it; at quality 90 ' +
-        '(tools/pond/room/export.py) the four are between SIZES, and a lower quality has not been tried yet. ' +
+        '(tools/pond/room/export.py) the four are between 218 and 287 KB, and a lower quality has not been tried yet. ' +
         'Only the page at /room fetches them, one for the season shown and another only when the visitor turns ' +
         'the season.'
     }

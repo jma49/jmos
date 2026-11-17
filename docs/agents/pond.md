@@ -862,13 +862,15 @@ drawn in code, and what is still drawn in code that a picture would better is on
      artificial turf seen from above, short blades.
    - "mug-wrap" (albedo with alpha), 2048 × 512, the print that goes round a cobalt-blue mug,
      white on nothing: a large brush-script line "ON THE ROAD" and under it, small, "HAPPY
-     ANNIVERSARY", in the middle third of the picture. (The scene sets these words in a marker
-     font for now.)
+     ANNIVERSARY", both in forward-slanted dry-brush capitals with ragged stroke ends, in the
+     middle third of the picture. (The scene sets these words in a marker font for now.)
    - "plush-face" and "plush-pineapple" (albedo), each 1024 × 1024: for a black cat plush, the
      embroidered face seen from the front (very large round white eyes with black pupils, a
      small brown nose, on black), and the body's cloth, tiling: yellow with an orange
-     criss-cross and a dot in every diamond, as a pineapple. (The scene makes both from
-     geometry for now.)
+     criss-cross and a dot in every diamond, as a pineapple. And "plush-back" (albedo with
+     alpha), 1024 × 512: the word "Hawaii" as it is embroidered across the back of the head,
+     in white satin-stitch script slanting up, on nothing. (The scene makes the face and the
+     pattern from geometry for now, and sets the word in a script font.)
    - "smudges", 2048 × 2048, one grey roughness map, tiling: fingerprints, wipe marks and a little
      dust as they sit on a glass screen and a trackpad; mostly clean, never an even pattern.
    - "mat" (normal), 1024 × 1024, tiling: the grain of a dark wool-felt desk mat. "linen"

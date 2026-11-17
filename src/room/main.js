@@ -389,7 +389,7 @@ vec3 bakedDecode( vec3 v, float lo, float stops ) { return exp2( v * stops + lo 
           if ( rain > 0.5 ) {
             // a streak down the middle of the point, a little aslant, a pixel wide, fading at its ends
             float off = abs( q.x + q.y * 0.07 ) * vSize;
-            a = ( 1.0 - smoothstep( 0.25, 1.0, off ) ) * ( 1.0 - smoothstep( 0.25, 0.5, abs( q.y ) ) ) * 0.34;
+            a = ( 1.0 - smoothstep( 0.25, 1.0, off ) ) * ( 1.0 - smoothstep( 0.25, 0.5, abs( q.y ) ) ) * 0.5;
             c = light * vec3( 0.8, 0.86, 1.0 );
           } else {
             // a leaflet: an oval turned at some angle, narrowed as it tumbles edge-on

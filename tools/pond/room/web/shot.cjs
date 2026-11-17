@@ -7,7 +7,8 @@ const { chromium } = require('playwright');
   const port = process.argv[2] || '4321';
   const out = process.argv[3] || 'shot-hero.png';
   const query = process.argv[4] || 'still';
-  const browser = await chromium.launch();
+  // PLAYWRIGHT_CHROMIUM names a browser to use in place of the one Playwright would download
+  const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_CHROMIUM || undefined });
   const page = await browser.newPage({
     viewport: { width: 1600, height: 900 },
     deviceScaleFactor: 1

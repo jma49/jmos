@@ -16,7 +16,7 @@ light), and of a quality no lower than that site's.
 ## Decision
 
 - **The scene.** A desk seen from its seat. On it, an open MacBook Pro
-  square in front, with no other keyboard or mouse. Above its screen,
+  (dark grey, as his is) square in front, with no other keyboard or mouse. Above its screen,
   their lower edges on its lid's upper edge as seen from the seat, two
   monitors strictly side by side, in one plane and not turned toward the
   seat, on a dual arm clamped to the desk's back edge: a
@@ -25,7 +25,9 @@ light), and of a quality no lower than that site's.
   room's wall is glass from floor to ceiling. The desk top is a pale
   oak and the floor a beige carpet, as his are, and three keepsakes of
   his stand on the desk: a blue anniversary mug, a small figurine and a
-  black cat plush.
+  black cat plush, each modelled from his photographs of it. Their
+  lettering is set from open-licence fonts until the art thread draws
+  it; the fonts are not kept in the repository.
 - **The view.** Outside the glass is what is outside his own window,
   in general terms and modelled, not photographed: the room is on an
   upper floor, with a narrow balcony (artificial turf edged with white

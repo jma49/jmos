@@ -18,7 +18,8 @@ const SEASONS = ['spring', 'summer', 'autumn', 'winter'];
     console.log(ok ? 'ok   ' : 'WRONG', what);
     if (!ok) wrong.push(what);
   };
-  const browser = await chromium.launch();
+  // PLAYWRIGHT_CHROMIUM names a browser to use in place of the one Playwright would download
+  const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_CHROMIUM || undefined });
   const open = async (path) => {
     const page = await browser.newPage({ viewport: { width: 1600, height: 900 }, deviceScaleFactor: 1 });
     const asked = [];

@@ -581,17 +581,24 @@ def tone_curve(n=256):
 
 def seasons():
     """Each season's backdrop and the tint the room takes with it. A backdrop's mean light was
-    kept by the run that rendered it (in ROOM_WORK); the tint is the room's share of the dusk (DUSK_SHARE)
-    moved from summer's light to the season's, so winter's room is a little cooler and darker
-    and autumn's a little warmer, and summer's is left as it was baked."""
+    kept by the run that rendered it (in ROOM_WORK). The tint is the room's share of the dusk
+    (DUSK_SHARE) moved from summer's light to the season's: in colour by how the backdrop's
+    mean differs from summer's (not in brightness, which says more about how much sky the
+    trees leave open than about the light), and in brightness by the season's own sky strength
+    (scene.py's SEASONS). So winter's room is a little cooler and darker, autumn's a little
+    warmer, and summer's is left as it was baked."""
     out = {}
     for name in S['SEASONS']:
         kept = os.path.join(WORK, f'backdrop-{name}.json')
         out[name] = {'file': f'backdrop-{name}.webp', 'light': json.load(open(kept)) if os.path.exists(kept) else None}
     base = out['summer']['light']
     for name, s in out.items():
-        ok = base and s['light']
-        s['grade'] = [round(1 + DUSK_SHARE * (max(0.5, min(1.5, s['light'][k] / base[k])) - 1), 4) for k in range(3)] if ok else [1.0, 1.0, 1.0]
+        s['grade'] = [1.0, 1.0, 1.0]
+        if base and s['light']:
+            ratio = [s['light'][k] / base[k] for k in range(3)]
+            mean = sum(ratio) / 3
+            level = 1 + DUSK_SHARE * (S['SEASONS'][name]['sky']['strength'] / S['SEASONS']['summer']['sky']['strength'] - 1)
+            s['grade'] = [round(level * (1 + DUSK_SHARE * (max(0.6, min(1.4, r / mean)) - 1)), 4) for r in ratio]
     return out
 
 
