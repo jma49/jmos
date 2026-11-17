@@ -81,7 +81,9 @@ vec3 bakedDecode( vec3 v, float lo, float stops ) { return exp2( v * stops + lo 
   // three.js's sheen is several times stronger than the Principled one the scene was made with,
   // weight for weight; `sheen` scales it back to where the cloth, the mat and the book covers sit
   // in the offline render.
-  const settings = { occlusion: 0.02, envIntensity: 1.0, sheen: 0.25 };
+  // The plush keepsake keeps its sheen whole: that soft lighter rim at grazing angles is what
+  // makes its cloth read as a nap and not as a hard shell.
+  const settings = { occlusion: 0.02, envIntensity: 1.0, sheen: 0.25, plushSheen: 1.0 };
   // What the season does to the room's baked light (it was baked in summer's dusk): one colour
   // that every baked surface is multiplied by, shared so that changing it changes them all.
   const grade = { value: new THREE.Color(1, 1, 1) };
@@ -255,7 +257,7 @@ vec3 bakedDecode( vec3 v, float lo, float stops ) { return exp2( v * stops + lo 
       const owner = lightMaps[o.name] ? o.name : o.parent && lightMaps[o.parent.name] ? o.parent.name : null;
       named[o.name] = o;
       const m = o.material;
-      if (m.sheen) m.sheen = settings.sheen;
+      if (m.sheen) m.sheen = m.name.startsWith('plush') ? settings.plushSheen : settings.sheen;
       if (m.map) m.map.anisotropy = maxAniso;
       if (m.emissiveMap) m.emissiveMap.anisotropy = maxAniso;
       if (owner) {
@@ -290,8 +292,9 @@ vec3 bakedDecode( vec3 v, float lo, float stops ) { return exp2( v * stops + lo 
 
     // The other two screens show a picture that never changes, sent to the card once: the Dell the
     // site's own desktop (a picture of /os that tools/pond/room/web/shot-screens.cjs takes), the
-    // MacBook an editor and a terminal (editor.js draws them). They take the place of the pictures
-    // the model came with. All three screens glow alike, so a white on one is a white on another.
+    // MacBook an editor and a terminal (editor.js draws them). The model carries no picture for any
+    // screen: export.py leaves them out. All three screens glow alike, so a white on one is a white
+    // on another.
     for (const [mesh, picture] of [
       [named.dell_screen, dellPicture],
       [named.macbook_screen, new THREE.CanvasTexture(editorSheet)]

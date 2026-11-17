@@ -5,7 +5,8 @@
 #                   from the camera), in the season SEASON names (scene.py; summer if unset)
 #   room.glb        the indoor part, Meshopt-compressed (by glTF Transform, from ROOM_TOOLS's
 #                   node_modules: `npm install` in tools/pond/room/web puts it there), with flat
-#                   materials, the woods' colour maps and the light in vertex colours
+#                   materials, the desk wood's colour map and the light in vertex colours; no
+#                   picture for the screens, which the page draws itself
 #   lm/*.webp       the diffuse light on the big surfaces (desk top, mat, floor, walls, ceiling)
 #   manifest.json   the seat camera, the lamp, how the baked pictures are encoded, and for each
 #                   season its backdrop and the tint that sits the room with it
@@ -503,8 +504,10 @@ def flatten(mat, albedo=None, name=None):
         tex.image = albedo
         nt.links.new(tex.outputs['Color'], sock)
     sock = b.inputs['Emission Color']
-    if sock.is_linked and sock.links[0].from_node.type != 'TEX_IMAGE':
-        unlink(sock)  # the map's placeholder: the page paints its own
+    if sock.is_linked:
+        # a screen: the page puts its own picture on each of the three, so none goes into the
+        # model; what the scene showed there was for the light it throws on the room
+        unlink(sock)
         sock.default_value = (0.012, 0.03, 0.10, 1)
     if not out.inputs['Surface'].is_linked or out.inputs['Surface'].links[0].from_node != b:
         unlink(out.inputs['Surface'])
