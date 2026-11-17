@@ -129,6 +129,32 @@ what is left, and what was learnt. What is open now is section 0.
   edges) and the three pebbled islands. Send the photographs' corrections as words here, or
   ask Jincheng to paste the photographs into the picture thread.
 
+  _Looked at in the room beside the photographs, 2026-11-17 (the cloud thread)._ Taken as it
+  is and going to main: it is a clear step up, and the mug is now the best of the three. The
+  mug's hand is true to the photograph (slant, weight, the large R with its leg, the ragged
+  ends); nothing to change there. A second pass is wanted on four islands, in this order,
+  from the photographs as seen here:
+  1. `plush-print`: the brief was wrong about the count. The real print is large: about six
+     lines each way round the whole body (so three or four diamonds show across the front),
+     each line about 3 mm wide, and one round dot about 8 mm across in the middle of each
+     diamond. On the picture that is lines about 170 pixels apart along the island and dots
+     about 22 pixels across. The orange is a clear mid orange, flat as ink, not darker at the
+     crossings. It must still repeat every 970 pixels and run to the top and bottom edges.
+  2. `plush-back`: the real "Hawaii" is a lighter, more open hand than the one delivered:
+     thin even strokes (about a third of the weight now), letters upright in their bowls but
+     the whole word slanted and climbing about 8 degrees, wide spacing, a tall open H whose
+     left stroke starts with a long flourish from the lower left, the w reading as two u's,
+     no connecting swash under the word, and small separate dots on the two i's. Satin stitch
+     running across each stroke. Same width (265 pixels), same middle.
+  3. `plush-ear`: the real lining is an olive gold, darker and greener than the yellow
+     delivered (near `#b59a1e`), with a metallic thread's sparkle, and its shape is a
+     triangle with all three corners well rounded, filling most of the box.
+  4. `plush-face`: close. Make the stitched rim of each eye a little wider and brighter than
+     the terry inside it, and the left pupil's grey ring fainter. The nose is right.
+  The red of the glasses stays as delivered; the model's plain red follows it. The figurine's
+  islands and the mug stay as they are. The painted relief on the stitches is slight enough
+  to keep.
+
 - **Next cloud review: the gold window and its koi are ready.** Pull through
   `3792c71`: the chosen wide-2/tall-2 beds and the optional right-shifted bed
   are delivered, along with the third koi sheet and its tint mask. The local
