@@ -863,7 +863,7 @@ drawn in code, and what is still drawn in code that a picture would better is on
    - "mug-wrap" (albedo with alpha), 2048 × 512, the print that goes round a cobalt-blue mug,
      white on nothing: a large brush-script line "ON THE ROAD" and under it, small, "HAPPY
      ANNIVERSARY", both in forward-slanted dry-brush capitals with ragged stroke ends, in the
-     middle third of the picture. (The scene sets these words in a marker font for now.)
+     middle third of the picture. (The scene sets these words in a rough brush font for now.)
    - "plush-face" and "plush-pineapple" (albedo), each 1024 × 1024: for a black cat plush, the
      embroidered face seen from the front (very large round white eyes with black pupils, a
      small brown nose, on black), and the body's cloth, tiling: yellow with an orange

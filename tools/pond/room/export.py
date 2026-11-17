@@ -100,7 +100,7 @@ if QUICK:
 # flat stand-ins for what the procedural materials average to (they do not export)
 BASE = {
     'chair wood': (0.125, 0.075, 0.04), 'speaker grille': (0.42, 0.42, 0.43), 'vent slots': (0.012, 0.012, 0.013),
-    'carpet': (0.365, 0.315, 0.248), 'cork': (0.26, 0.165, 0.095), 'terracotta': (0.44, 0.175, 0.088),
+    'carpet': (0.365, 0.315, 0.248), 'terracotta': (0.44, 0.175, 0.088),
     'pages': (0.675, 0.63, 0.53), 'linen': (0.43, 0.387, 0.321), 'pilea leaf': (0.08, 0.21, 0.035),
     'desk wood': (0.445, 0.29, 0.152),
 }
