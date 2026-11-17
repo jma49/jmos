@@ -54,6 +54,24 @@ light), and of a quality no lower than that site's.
   Illinois (Chicago), Indiana, Wisconsin (Milwaukee), California,
   Washington (Seattle) and Georgia (Atlanta). Pressing a state opens the
   photographs he took there.
+- **The other two screens** show real things, not stand-ins. The Dell
+  shows the site's own desktop: a picture of `/os` at the screen's
+  2560 by 1440 with the Projects and Macintosh HD windows open, kept as
+  `public/room/screens/dell.webp`. The MacBook shows an editor in full
+  screen with `src/room/season.ts` open, its text taken from the file
+  when the site is built, and under it a terminal with the newest
+  commits on `main` (their subjects only, kept in
+  `src/room/terminal.json`) and the file's line count; `src/room/editor.js`
+  draws it once on a canvas, in JetBrains Mono from the site's own
+  bundle. Nothing on either names a person the site does not already
+  name. Both are sent to the graphics card once and glow as the Samsung
+  does. To make the picture and the terminal's lines again, from a
+  built site being served:
+  `node tools/pond/room/web/shot-screens.cjs [port]`. The clock, the
+  time zone and reduced motion are pinned as the project covers' are,
+  and nothing outside the site is fetched. `room.glb` still carries the
+  two stand-in pictures these replace, until `export.py` leaves them
+  out.
 - **How it is made.** Modelled and lit in Blender from scripts kept in
   `tools/pond/room/` (`scene.py` builds it, `export.py` bakes the light
   and writes what the browser loads into `public/room/`: the model,
@@ -81,7 +99,6 @@ light), and of a quality no lower than that site's.
 - The way in. As designed it is reached only after the third ending,
   which takes weeks; whether it should be easier is Jincheng's to say.
 - The photographs, which he will add.
-- What the Dell and the MacBook's own screen show.
 
 ## Consequences
 

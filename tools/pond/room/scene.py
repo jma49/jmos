@@ -2021,7 +2021,7 @@ def mug():
         beam('mug handle', a, b, (0.0135, 0.0098), blue, parent=root, bevel=0.0042)
     cyl('mug handle', 0.0049, 0.0135, pts[1], blue, rot=(rad(90), 0, 0), parent=root, bevel=0.0042, seg=16)
     # the lettering, bent round the wall
-    bm = lettering((('ON THE ROAD', 0.0200, 0.0, 0.0525, rad(2.5)), ('HAPPY ANNIVERSARY', 0.0074, 0.0, 0.0405, rad(2.5))), FONT, squeeze=0.80, shear=0.21, weld=0.00008)
+    bm = lettering((('ON THE ROAD', 0.0222, 0.0, 0.0525, rad(2.5)), ('HAPPY ANNIVERSARY', 0.0080, 0.0, 0.0398, rad(2.5))), FONT, squeeze=0.80, shear=0.21, weld=0.00008)
     for v in bm.verts:
         x, zz = v.co.x, v.co.y
         r = wall(zz) + 0.00025

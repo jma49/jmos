@@ -72,6 +72,17 @@ export const EXCEPTIONS = new Map([
         '/room fetches it, which nothing links to; no other page does.'
     }
   ],
+  [
+    'room/screens/dell.webp',
+    {
+      bytes: 290 * KB,
+      reason:
+        'What the room’s right screen shows (docs/decisions/0030): a picture of the site’s own desktop at the ' +
+        'screen’s 2560 × 1440, taken by tools/pond/room/web/shot-screens.cjs. The desktop picture in it is pebbles, ' +
+        'fine detail all over, so it is 274 KB at WebP quality 36 and 356 KB at 52; lower than 36 the type in the ' +
+        'windows starts to ring. Only the page at /room fetches it.'
+    }
+  ],
   ...['spring', 'summer', 'autumn', 'winter'].map((season) => [
     `room/backdrop-${season}.webp`,
     {
