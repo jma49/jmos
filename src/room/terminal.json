@@ -1,0 +1,13 @@
+{
+  "command": "git log --oneline -8 origin/main",
+  "lines": [
+    "b710bca feat(room): the real view outside in four seasons, and keepsakes (#375)",
+    "8221763 feat(room): the room at an unlinked preview address (#374)",
+    "3d80dd6 feat(pond): press the room's left screen to look at it closely (#373)",
+    "7302232 feat(pond): export the room for the browser, with a prototype page (#372)",
+    "e7c5f75 docs(pond): a room under the pond (decision 0030) and its greybox (#371)",
+    "72bdbd3 feat(pond): the two koi paint the taiji; it opens and closes (#370)",
+    "44294a6 feat(pond): the two koi keep to the taiji's eyes and turn with it (#369)",
+    "dbc9721 feat(pond): the taiji figure stands still and only turns, slowly (#368)"
+  ]
+}

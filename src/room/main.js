@@ -4,7 +4,8 @@
 // backdrop-<season>.webp (what is outside the glass, one picture for each season) and
 // manifest.json (the seat camera, the lamp, how light is encoded, the seasons). The map's shapes
 // and places are bundled with the code (us-map.json, which tools/pond/room/web/build-map.mjs
-// writes, and places.json).
+// writes, and places.json). The Dell's picture is public/room/screens/dell.webp, which
+// tools/pond/room/web/shot-screens.cjs takes of the site's own desktop.
 //
 // All diffuse light is baked: light maps on the big surfaces, vertex colours on everything
 // else. What is live: reflections (an environment captured from the scene itself, and the
@@ -28,6 +29,7 @@ import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+import { createEditorScreen } from './editor.js';
 import { createMapScreen } from './map.js';
 import { focusDistance, verticalFov } from './optics';
 import { nextSeason, parseSeason, seasonOf } from './season';
@@ -228,9 +230,11 @@ vec3 bakedDecode( vec3 v, float lo, float stops ) { return exp2( v * stops + lo 
     const manifest = await answer.json();
     const lm = manifest.lightmaps;
     const season = parseSeason(query.get('season')) ?? seasonOf(new Date());
-    const [gltf, backdropTex, ...lightTex] = await Promise.all([
+    const [gltf, backdropTex, dellPicture, editorSheet, ...lightTex] = await Promise.all([
       gltfLoader.loadAsync(ASSETS + 'room.glb'),
       loadBackdrop(manifest, season),
+      loadTexture(ASSETS + 'screens/dell.webp'),
+      createEditorScreen(),
       ...Object.values(lm.files).map((f) => loadTexture(ASSETS + f))
     ]);
     const lightMaps = Object.fromEntries(Object.keys(lm.files).map((k, i) => [k, lightTex[i]]));
@@ -283,6 +287,23 @@ vec3 bakedDecode( vec3 v, float lo, float stops ) { return exp2( v * stops + lo 
     samsung.material.emissiveMap = mapTexture;
     samsung.material.emissive.set(0xffffff);
     samsung.material.emissiveIntensity = manifest.glow.map;
+
+    // The other two screens show a picture that never changes, sent to the card once: the Dell the
+    // site's own desktop (a picture of /os that tools/pond/room/web/shot-screens.cjs takes), the
+    // MacBook an editor and a terminal (editor.js draws them). They take the place of the pictures
+    // the model came with. All three screens glow alike, so a white on one is a white on another.
+    for (const [mesh, picture] of [
+      [named.dell_screen, dellPicture],
+      [named.macbook_screen, new THREE.CanvasTexture(editorSheet)]
+    ]) {
+      picture.colorSpace = THREE.SRGBColorSpace;
+      picture.flipY = false; // as the GLB's own textures
+      picture.anisotropy = maxAniso; // with the mipmaps, what keeps small type from shimmering as the camera drifts
+      mesh.material.emissiveMap?.dispose();
+      mesh.material.emissiveMap = picture;
+      mesh.material.emissive.set(0xffffff);
+      mesh.material.emissiveIntensity = manifest.glow.map;
+    }
 
     // the glass: what is outside is already dimmed by it (below); here only its faint mirror of the room
     const glass = named.window_glass;
