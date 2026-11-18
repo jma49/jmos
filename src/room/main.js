@@ -11,8 +11,13 @@
 // else. What is live: reflections (an environment captured from the scene itself, and the
 // lamp as a point light, both specular only), the screens' glow, bloom and the tone curve.
 //
-// A press on the left screen brings the camera up to it (focusScreen); a press beside it, Escape
-// or the "back" control takes it to the seat again (unfocus). The map is only pressed from close.
+// A press on any of the three screens brings the camera up to it (focusScreen); a press beside
+// it, Escape or the "back" control takes it to the seat again (unfocus), and a press on another
+// screen, or the left and right arrow keys, takes it across to that one. Each screen is only used
+// from close: the Samsung's map (map.js) has states to press; the MacBook (editor.js) has file
+// tabs, an editor that scrolls and a terminal that takes the keyboard; the Dell becomes the
+// site's desktop itself, /os in a frame laid exactly over its glass, for as long as the camera
+// is in front of it.
 //
 // The window shows the season of the visitor's own date (season.ts); a press on the view outside,
 // from the seat, moves to the next one: the backdrops cross-fade, the room's baked light is
@@ -34,6 +39,7 @@ import { createMapScreen } from './map.js';
 import { focusDistance, verticalFov } from './optics';
 import { nextSeason, parseSeason, seasonOf } from './season';
 import places from './places.json';
+import terminal from './terminal.json';
 import usMap from './us-map.json';
 
 const ASSETS = '/room/'; // public/room/, where export.py writes
@@ -60,6 +66,8 @@ export function startRoom() {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x000000);
   const camera = new THREE.PerspectiveCamera(44, 16 / 9, 0.05, 60);
+  // what the MacBook's terminal asks of the room, filled in once the room is there
+  const hooks = { season: () => 'summer', effect: () => {} };
 
   // ---------------------------------------------------------------------------------------------
   // Baked light. A picture or a vertex colour holds (log2(light) - lo) / stops; `light` is the
@@ -263,12 +271,18 @@ vec3 bakedDecode( vec3 v, float lo, float stops ) { return exp2( v * stops + lo 
     const manifest = await answer.json();
     const lm = manifest.lightmaps;
     const season = parseSeason(query.get('season')) ?? seasonOf(new Date());
-    const [gltf, backdropTex, dellPicture, atlas, editorSheet, ...lightTex] = await Promise.all([
+    const [gltf, backdropTex, dellPicture, atlas, editor, ...lightTex] = await Promise.all([
       gltfLoader.loadAsync(ASSETS + 'room.glb'),
       loadBackdrop(manifest, season),
       loadTexture(ASSETS + 'screens/dell.webp'),
       loadTexture(ASSETS + 'keepsakes.webp'),
-      createEditorScreen(),
+      createEditorScreen({
+        commits: terminal.lines,
+        // the map's places as words: "Texas", "Florida (Tampa)"
+        places: places.places.map((p) => (p.city ? `${usMap.states[p.state].name} (${p.city})` : usMap.states[p.state].name)),
+        season: () => hooks.season(),
+        effect: (e) => hooks.effect(e)
+      }),
       ...Object.values(lm.files).map((f) => loadTexture(ASSETS + f))
     ]);
     const lightMaps = Object.fromEntries(Object.keys(lm.files).map((k, i) => [k, lightTex[i]]));
@@ -340,14 +354,16 @@ vec3 bakedDecode( vec3 v, float lo, float stops ) { return exp2( v * stops + lo 
     samsung.material.emissive.set(0xffffff);
     samsung.material.emissiveIntensity = manifest.glow.map;
 
-    // The other two screens show a picture that never changes, sent to the card once: the Dell the
-    // site's own desktop (a picture of /os that tools/pond/room/web/shot-screens.cjs takes), the
-    // MacBook an editor and a terminal (editor.js draws them). The model carries no picture for any
-    // screen: export.py leaves them out. All three screens glow alike, so a white on one is a white
-    // on another.
+    // The other two screens: the Dell shows the site's own desktop, a picture of /os that
+    // tools/pond/room/web/shot-screens.cjs takes, sent to the card once (the desktop itself is laid
+    // over it when the camera is in front of it); the MacBook an editor and a terminal, a canvas
+    // that editor.js draws and that is sent again when it has changed. The model carries no picture
+    // for any screen: export.py leaves them out. All three screens glow alike, so a white on one is
+    // a white on another.
+    const editorTexture = new THREE.CanvasTexture(editor.canvas);
     for (const [mesh, picture] of [
       [named.dell_screen, dellPicture],
-      [named.macbook_screen, new THREE.CanvasTexture(editorSheet)]
+      [named.macbook_screen, editorTexture]
     ]) {
       picture.colorSpace = THREE.SRGBColorSpace;
       picture.flipY = false; // as the GLB's own textures
@@ -506,7 +522,7 @@ vec3 bakedDecode( vec3 v, float lo, float stops ) { return exp2( v * stops + lo 
     scene.add(lamp);
 
     grade.value.setRGB(...manifest.backdrop.seasons[season].grade, THREE.LinearSRGBColorSpace);
-    return { manifest, room, named, samsung, map, mapTexture, mapTextures, backdrop, glass, lamp, weather, season };
+    return { manifest, room, named, samsung, map, mapTexture, mapTextures, editor, editorTexture, backdrop, glass, lamp, weather, season };
   }
 
   // ---------------------------------------------------------------------------------------------
@@ -521,14 +537,37 @@ vec3 bakedDecode( vec3 v, float lo, float stops ) { return exp2( v * stops + lo 
   };
   const drift = { x: 0, y: 0, tx: 0, ty: 0, reach: [0.035, 0.02] }; // metres, sideways and up
   const still = query.has('still');
-  // The other place the camera can be: square in front of the left screen. `f` runs from 0 (the
-  // seat) to 1 (the screen); `on` is where it is headed. `screen` is the glass in the world.
-  const focus = { on: false, f: 0, from: 0, started: 0, moving: false, screen: null };
+  // The other places the camera can be: square in front of one of the screens (`on` names it; null
+  // is the seat). A move from one place to another takes FOCUS_SECONDS, `f` running from 0 to 1
+  // along it, from where the camera stood when the move began (`from`) to where it is headed,
+  // which is worked out afresh each time so that a resized page is followed. `screens` holds each
+  // screen's glass in the world; `screen` is the one the camera is at, or was at last; `rect` is
+  // that glass on the page, in CSS pixels. `position` to `spot` are the camera as last placed.
+  const SCREENS = ['samsung', 'macbook', 'dell']; // as they stand on the desk, left to right: the way the arrow keys go
+  const focus = {
+    on: null,
+    f: 0,
+    started: 0,
+    moving: false,
+    screen: null,
+    screens: {},
+    rect: { x: 0, y: 0, width: 0, height: 0 },
+    position: new THREE.Vector3(),
+    aim: new THREE.Vector3(),
+    reach: 1,
+    shade: 0,
+    spot: new THREE.Vector4(0.5, 0.5, 0.5, 0.5),
+    from: { position: new THREE.Vector3(), aim: new THREE.Vector3(), reach: 1, shade: 0, spot: new THREE.Vector4(0.5, 0.5, 0.5, 0.5) }
+  };
   const FOCUS_SECONDS = reducedMotion ? 0.01 : 0.9;
   const FOCUS_FILL = 0.88; // of the picture's width or height, whichever the screen meets first
-  const FOCUS_DRIFT = 0.12; // how much of the drift is left in front of the screen
+  // How much of the drift is left in front of a screen. None at the Dell: the desktop laid over
+  // it is a rectangle of the page, so its glass has to stay one too.
+  const FOCUS_DRIFT = { samsung: 0.12, macbook: 0.12, dell: 0 };
   const FOCUS_SHADE = 0.6; // how much of the light around the screen is taken away there
   const smooth = (t) => t * t * t * (t * (t * 6 - 15) + 10); // no speed and no push at either end
+  // The page as the room fills it, in CSS pixels: the window, or what a phone's keyboard leaves of it (resize).
+  const page = { width: window.innerWidth, height: window.innerHeight };
 
   function setView(manifest, name) {
     const v = manifest.views[name] || manifest.views.hero;
@@ -537,41 +576,80 @@ vec3 bakedDecode( vec3 v, float lo, float stops ) { return exp2( v * stops + lo 
     view.lens = v.lens;
   }
 
+  // placeCamera's own vectors, so that a frame makes none
+  const placed = {
+    position: new THREE.Vector3(),
+    aim: new THREE.Vector3(),
+    forward: new THREE.Vector3(),
+    right: new THREE.Vector3(),
+    up: new THREE.Vector3(),
+    corner: new THREE.Vector3(),
+    spot: new THREE.Vector4()
+  };
   function placeCamera() {
     const aspect = camera.aspect;
     camera.fov = verticalFov(view.lens, view.sensor, aspect);
     camera.updateProjectionMatrix();
-    const position = view.position.clone(),
-      aim = view.aim.clone();
-    let reach = 1;
-    if (focus.f > 0 && focus.screen) {
-      // back along the glass's normal, as far as puts the screen FOCUS_FILL across the picture
-      const s = focus.screen;
-      const distance = focusDistance(s.width, s.height, camera.fov, aspect, FOCUS_FILL);
-      position.lerp(s.centre.clone().addScaledVector(s.normal, distance), focus.f);
-      aim.lerp(s.centre, focus.f);
-      reach = THREE.MathUtils.lerp(1, FOCUS_DRIFT, focus.f);
+    // where the camera is headed: the seat, or back along a screen's normal as far as puts the screen FOCUS_FILL across the picture
+    const { position, aim, forward, right, up } = placed;
+    const s = focus.on ? focus.screen : null;
+    let reach = 1,
+      shade = 0;
+    if (s) {
+      position.copy(s.centre).addScaledVector(s.normal, focusDistance(s.width, s.height, camera.fov, aspect, FOCUS_FILL));
+      aim.copy(s.centre);
+      reach = s.drift;
+      shade = FOCUS_SHADE;
+    } else {
+      position.copy(view.position);
+      aim.copy(view.aim);
     }
-    const forward = aim.clone().sub(position).normalize();
-    const right = forward.clone().cross(camera.up).normalize();
-    const up = right.clone().cross(forward);
+    if (focus.moving) {
+      const from = focus.from;
+      position.lerpVectors(from.position, position, focus.f);
+      aim.lerpVectors(from.aim, aim, focus.f);
+      reach = THREE.MathUtils.lerp(from.reach, reach, focus.f);
+      shade = THREE.MathUtils.lerp(from.shade, shade, focus.f);
+    }
+    focus.position.copy(position);
+    focus.aim.copy(aim);
+    focus.reach = reach;
+    focus.shade = shade;
+    forward.copy(aim).sub(position).normalize();
+    right.copy(forward).cross(camera.up).normalize();
+    up.copy(right).cross(forward);
     camera.position
       .copy(position)
       .addScaledVector(right, drift.x * drift.reach[0] * reach)
       .addScaledVector(up, drift.y * drift.reach[1] * reach);
     camera.lookAt(aim); // the camera's up stays the room's: no roll on the way
     const u = finish.uniforms;
-    u.shade.value = 0;
-    if (focus.f > 0 && focus.screen) {
+    u.shade.value = shade;
+    if (focus.screen && (shade > 0 || focus.on)) {
+      // where the screen's glass is in the picture: the room around it is turned down
       camera.updateMatrixWorld();
-      const box = new THREE.Box2();
+      let x0 = Infinity,
+        x1 = -Infinity,
+        y0 = Infinity,
+        y1 = -Infinity;
       for (const p of focus.screen.corners) {
-        const v = p.clone().project(camera);
-        box.expandByPoint(new THREE.Vector2(v.x * 0.5 + 0.5, v.y * 0.5 + 0.5));
+        const v = placed.corner.copy(p).project(camera);
+        x0 = Math.min(x0, v.x);
+        x1 = Math.max(x1, v.x);
+        y0 = Math.min(y0, v.y);
+        y1 = Math.max(y1, v.y);
       }
-      u.spot.value.set((box.min.x + box.max.x) / 2, (box.min.y + box.max.y) / 2, (box.max.x - box.min.x) / 2, (box.max.y - box.min.y) / 2);
+      placed.spot.set((x0 + x1) / 4 + 0.5, (y0 + y1) / 4 + 0.5, (x1 - x0) / 4, (y1 - y0) / 4);
+      // from one screen to another the lit place goes across with the camera
+      if (focus.moving && focus.on && focus.from.shade > 0) u.spot.value.lerpVectors(focus.from.spot, placed.spot, focus.f);
+      else u.spot.value.copy(placed.spot);
+      focus.spot.copy(u.spot.value);
       u.aspect.value = aspect;
-      u.shade.value = FOCUS_SHADE * focus.f;
+      const r = focus.rect;
+      r.x = ((x0 + 1) / 2) * page.width;
+      r.y = ((1 - y1) / 2) * page.height;
+      r.width = ((x1 - x0) / 2) * page.width;
+      r.height = ((y1 - y0) / 2) * page.height;
     }
   }
 
@@ -599,9 +677,18 @@ vec3 bakedDecode( vec3 v, float lo, float stops ) { return exp2( v * stops + lo 
   composer.addPass(finish);
 
   let dirty = true;
+  const keys = document.getElementById('keys'); // the field that takes what is typed at the MacBook's terminal
   function resize() {
+    // A phone's keyboard, up for the terminal, covers the lower part of the page without making
+    // the window any smaller: the room is then drawn in what is left above it, so the line being
+    // typed can be seen. (Not while the page is pinched larger, when the same numbers mean that.)
+    const seen = window.visualViewport;
+    const above = document.activeElement === keys && seen && Math.abs(seen.scale - 1) < 0.01 && seen.height < window.innerHeight - 80;
     const w = window.innerWidth,
-      h = window.innerHeight;
+      h = above ? Math.round(seen.height) : window.innerHeight;
+    canvas.style.height = above ? `${h}px` : '';
+    page.width = w;
+    page.height = h;
     renderer.setSize(w, h, false);
     composer.setPixelRatio(renderer.getPixelRatio());
     composer.setSize(w, h);
@@ -609,7 +696,10 @@ vec3 bakedDecode( vec3 v, float lo, float stops ) { return exp2( v * stops + lo 
     dirty = true;
   }
   window.addEventListener('resize', resize);
-  // The pointer: it pulls the camera a little (the drift) and it points at the left screen's map.
+  window.visualViewport?.addEventListener('resize', resize);
+  keys.addEventListener('focus', resize);
+  keys.addEventListener('blur', resize);
+  // The pointer: it pulls the camera a little (the drift) and it points at what is on the screens.
   // What it points at is worked out in the frame loop, against the camera as last drawn, so the
   // drift cannot put the hit somewhere other than where the picture shows it.
   const pointer = { x: 0, y: 0, known: false, moved: true, down: null };
@@ -621,8 +711,8 @@ vec3 bakedDecode( vec3 v, float lo, float stops ) { return exp2( v * stops + lo 
       moved: true
     });
     if (still) return;
-    drift.tx = (e.clientX / window.innerWidth) * 2 - 1;
-    drift.ty = -((e.clientY / window.innerHeight) * 2 - 1);
+    drift.tx = (e.clientX / page.width) * 2 - 1;
+    drift.ty = -((e.clientY / page.height) * 2 - 1);
   });
 
   load()
@@ -731,28 +821,74 @@ vec3 bakedDecode( vec3 v, float lo, float stops ) { return exp2( v * stops + lo 
       }
       settle(season, backdropUniforms.map.value);
 
-      // The map on the left screen. A ray from the pointer meets the screen's glass; where it meets
-      // it, the glass's own texture coordinate says which pixel of the map's canvas is under it.
-      const { map, samsung, mapTextures } = world;
+      // The screens. A ray from the pointer meets a screen's glass; where it meets it, the glass's
+      // own texture coordinate says which pixel of that screen's canvas is under it.
+      const { map, samsung, mapTextures, editor, editorTexture } = world;
       const raycaster = new THREE.Raycaster();
       const ndc = new THREE.Vector2();
-      /** Where on the left screen's glass a point of the page (client pixels) is, as canvas pixels, or null beside it. */
-      function onScreen(x, y) {
-        ndc.set((x / window.innerWidth) * 2 - 1, -((y / window.innerHeight) * 2 - 1));
+      const aimRay = (x, y) => {
+        ndc.set((x / page.width) * 2 - 1, -((y / page.height) * 2 - 1));
         camera.updateMatrixWorld();
         raycaster.setFromCamera(ndc, camera);
-        const at = raycaster.intersectObject(samsung, false)[0];
-        // the texture is not flipped (flipY = false), so v runs down the canvas as y does
-        return at && at.uv ? [at.uv.x * map.width, at.uv.y * map.height] : null;
+      };
+
+      /** A screen's glass in the world: a flat rectangle, its corners found by their texture coordinates. */
+      function glassOf(name, mesh, sheet) {
+        const corner = (u, v) => {
+          const p = mesh.geometry.attributes.position,
+            t = mesh.geometry.attributes.uv;
+          let best = 0;
+          for (let i = 1; i < p.count; i++) if (Math.hypot(t.getX(i) - u, t.getY(i) - v) < Math.hypot(t.getX(best) - u, t.getY(best) - v)) best = i;
+          return new THREE.Vector3().fromBufferAttribute(p, best);
+        };
+        const local = [corner(0, 0), corner(1, 0), corner(0, 1), corner(1, 1)]; // in the mesh's own space
+        const [a, b, c, d] = local.map((p) => mesh.localToWorld(p.clone()));
+        const across = b.clone().sub(a),
+          down = c.clone().sub(a);
+        const centre = a.clone().add(b).add(c).add(d).multiplyScalar(0.25);
+        const normal = across.clone().cross(down).normalize();
+        if (normal.dot(view.position.clone().sub(centre)) < 0) normal.negate(); // the side the seat is on
+        // `sheet`: the size of what the glass shows, in its own pixels
+        return { name, mesh, sheet, local, centre, normal, width: across.length(), height: down.length(), corners: [a, b, c, d], drift: FOCUS_DRIFT[name] };
+      }
+      scene.updateMatrixWorld(true);
+      focus.screens.samsung = glassOf('samsung', samsung, map);
+      focus.screens.macbook = glassOf('macbook', world.named.macbook_screen, editor);
+      focus.screens.dell = glassOf('dell', world.named.dell_screen, { width: 2560, height: 1440 });
+      focus.screen = focus.screens.samsung;
+      const glasses = SCREENS.map((name) => focus.screens[name].mesh);
+      const nameOf = new Map(SCREENS.map((name) => [focus.screens[name].mesh, name]));
+
+      const met = [];
+      const under = { name: '', x: 0, y: 0 };
+      /**
+       * Which screen a point of the page (client pixels) is on, the nearest where one stands before
+       * another, and where on it in that screen's own pixels; null beside them all. The answer is
+       * one object used again at each call.
+       */
+      function screenAt(x, y) {
+        aimRay(x, y);
+        met.length = 0;
+        const at = raycaster.intersectObjects(glasses, false, met)[0];
+        if (!at || !at.uv) return null;
+        under.name = nameOf.get(at.object);
+        const sheet = focus.screens[under.name].sheet;
+        // the textures are not flipped (flipY = false), so v runs down the canvas as y does
+        under.x = at.uv.x * sheet.width;
+        under.y = at.uv.y * sheet.height;
+        return under;
+      }
+      /** Where on the left screen's glass a point of the page (client pixels) is, as canvas pixels, or null beside it. */
+      function onScreen(x, y) {
+        const at = screenAt(x, y);
+        return at && at.name === 'samsung' ? [at.x, at.y] : null;
       }
       /**
        * Whether a point of the page (client pixels) is on the view outside: the pointer's ray reaches
        * the window's glass with nothing of the room in its way (a frame, a curtain, a monitor, the lamp).
        */
       function onOutside(x, y) {
-        ndc.set((x / window.innerWidth) * 2 - 1, -((y / window.innerHeight) * 2 - 1));
-        camera.updateMatrixWorld();
-        raycaster.setFromCamera(ndc, camera);
+        aimRay(x, y);
         if (!raycaster.intersectObject(world.glass, false).length) return false;
         return raycaster.intersectObject(world.room, true)[0]?.object === world.glass;
       }
@@ -762,70 +898,172 @@ vec3 bakedDecode( vec3 v, float lo, float stops ) { return exp2( v * stops + lo 
         return at ? map.hit(at[0], at[1]) : null;
       }
 
-      // The glass in the world: a flat rectangle, its corners found by their texture coordinates.
-      const corner = (u, v) => {
-        const p = samsung.geometry.attributes.position,
-          t = samsung.geometry.attributes.uv;
-        let best = 0;
-        for (let i = 1; i < p.count; i++) if (Math.hypot(t.getX(i) - u, t.getY(i) - v) < Math.hypot(t.getX(best) - u, t.getY(best) - v)) best = i;
-        return new THREE.Vector3().fromBufferAttribute(p, best);
-      };
-      const corners = [corner(0, 0), corner(1, 0), corner(0, 1), corner(1, 1)]; // in the mesh's own space
-      {
-        scene.updateMatrixWorld(true);
-        const [a, b, c, d] = corners.map((p) => samsung.localToWorld(p.clone()));
-        const across = b.clone().sub(a),
-          down = c.clone().sub(a);
-        const centre = a.clone().add(b).add(c).add(d).multiplyScalar(0.25);
-        const normal = across.clone().cross(down).normalize();
-        if (normal.dot(view.position.clone().sub(centre)) < 0) normal.negate(); // the side the seat is on
-        focus.screen = { centre, normal, width: across.length(), height: down.length(), corners: [a, b, c, d] };
+      // The MacBook's type is sized for the page: where its screen would be small in front of the
+      // camera (a narrow window, a phone held upright) the type is made larger on the canvas, to
+      // come out near TYPE_SEEN CSS pixels.
+      const TYPE_SEEN = 11.5;
+      function fitEditor() {
+        const s = focus.screens.macbook;
+        const across = FOCUS_FILL * Math.min(page.width, (page.height * s.width) / s.height); // the screen's width on the page, from close
+        editor.setZoom((TYPE_SEEN * editor.width) / (24 * across));
+      }
+      fitEditor();
+      window.addEventListener('resize', fitEditor);
+      editor.bind(keys);
+
+      // The Dell, from close, is the site's desktop itself: /os in a frame laid over the glass,
+      // made when the camera first arrives and taken off the page again (so that its scripts
+      // stop) when the camera leaves. The picture on the glass stays under it, and is what shows
+      // until the desktop has loaded. The desktop is given the glass's own size on the page as
+      // its window, and never less than DESK_MIN across: narrower than that it is laid out at
+      // DESK_MIN and scaled down to fit.
+      const DESK_MIN = 1280;
+      const DESK_FADE = reducedMotion ? 0 : 0.3; // seconds
+      const desk = { frame: null, live: false };
+      const back = document.getElementById('back');
+      const full = document.getElementById('full');
+      function placeDesk() {
+        const r = focus.rect;
+        const w = Math.round(r.width),
+          h = Math.round(r.height);
+        const scale = Math.min(1, w / DESK_MIN);
+        const style = desk.frame.style;
+        style.width = `${w / scale}px`;
+        style.height = `${h / scale}px`;
+        style.transform = `translate(${Math.round(r.x)}px, ${Math.round(r.y)}px) scale(${scale})`;
+      }
+      function openDesk() {
+        const frame = document.createElement('iframe');
+        frame.id = 'desk';
+        frame.title = 'The site’s desktop';
+        frame.src = '/os';
+        // set here, not in the page's style sheet: Astro scopes that to the elements the page is built with
+        frame.style.cssText = `position: fixed; left: 0; top: 0; border: 0; transform-origin: 0 0; background: #000; opacity: 0; transition: opacity ${DESK_FADE}s ease;`;
+        frame.addEventListener('load', () => {
+          if (desk.frame !== frame) return; // the camera left before the desktop came
+          try {
+            // Keys typed in the desktop never reach this page, and Escape has to: it is the way out.
+            frame.contentWindow.addEventListener('keydown', (e) => {
+              if (e.key === 'Escape') unfocus();
+            });
+          } catch {
+            // the frame has gone to another site (a link followed in it): its keys cannot be heard; the back control still leaves
+          }
+          frame.style.opacity = '1';
+          desk.live = true;
+        });
+        desk.frame = frame;
+        placeDesk();
+        document.body.insertBefore(frame, back.parentElement); // under the controls, over the canvas
+      }
+      /** Takes the desktop off the glass; answers how many seconds its fade takes. */
+      function closeDesk() {
+        const frame = desk.frame;
+        if (!frame) return 0;
+        const shown = desk.live;
+        desk.frame = null;
+        desk.live = false;
+        dirty = true;
+        if (!shown || !DESK_FADE) {
+          frame.remove();
+          return 0;
+        }
+        frame.style.opacity = '0';
+        frame.style.pointerEvents = 'none';
+        setTimeout(() => frame.remove(), DESK_FADE * 1000);
+        return DESK_FADE;
       }
 
-      const back = document.getElementById('back');
-      function setFocus(on) {
-        if (focus.on === on) return false;
-        Object.assign(focus, { on, from: focus.f, started: performance.now(), moving: true });
-        document.body.toggleAttribute('data-focused', on);
-        back.tabIndex = on ? 0 : -1;
-        if (!on) back.blur();
+      /** Send the camera to a screen by its name, or to the seat (null). False when it is there already or headed there. */
+      function setFocus(name) {
+        if (focus.on === name || (name && !focus.screens[name])) return false;
+        const { from } = focus;
+        from.position.copy(focus.position);
+        from.aim.copy(focus.aim);
+        from.reach = focus.reach;
+        from.shade = focus.shade;
+        from.spot.copy(focus.spot);
+        focus.on = name;
+        if (name) focus.screen = focus.screens[name];
+        // the camera waits for the desktop to fade from the Dell's glass: it would not follow the glass across the page
+        const wait = closeDesk();
+        Object.assign(focus, { f: 0, started: performance.now() + wait * 1000, moving: true });
+        if (name) document.body.dataset.focused = name;
+        else delete document.body.dataset.focused;
+        back.tabIndex = name ? 0 : -1;
+        full.tabIndex = name === 'dell' ? 0 : -1;
+        if (!name) back.blur();
+        if (name !== 'dell') full.blur();
+        // the terminal has the keyboard while the camera is at the MacBook
+        if (name === 'macbook') keys.focus({ preventScroll: true });
+        else keys.blur();
         pointer.moved = true;
         return true;
       }
-      const focusScreen = () => setFocus(true);
-      const unfocus = () => setFocus(false);
-      // the control is on the page, above the canvas: what is pressed there is not a press on the room
-      for (const type of ['pointerdown', 'pointerup']) back.addEventListener(type, (e) => e.stopPropagation());
+      const focusScreen = (name = 'samsung') => setFocus(name);
+      const unfocus = () => setFocus(null);
+      // the controls are on the page, above the canvas: what is pressed there is not a press on the room
+      for (const control of [back, full]) for (const type of ['pointerdown', 'pointerup']) control.addEventListener(type, (e) => e.stopPropagation());
       back.addEventListener('click', unfocus);
 
-      // From the seat the screen is one thing to press (a hand anywhere on it); the map's own states
-      // answer only once the camera has arrived in front of it. From the seat the view outside is
-      // another thing to press: it turns the season.
+      // what the MacBook's terminal asks for (terminal.ts)
+      hooks.season = () => (turn ? turn.to : season);
+      hooks.effect = (e) => {
+        if (e.kind === 'season')
+          setSeason(e.season).catch((error) => {
+            console.error(error);
+            editor.print({ text: 'season: its picture did not come', tone: 'error' });
+          });
+        else if (e.kind === 'focus') setFocus(e.screen);
+        else if (e.kind === 'exit') unfocus();
+      };
+
+      // From the seat a screen is one thing to press (a hand anywhere on it); what is on it
+      // answers only once the camera has arrived in front of it. From the seat the view outside
+      // is another thing to press: it turns the season.
       function hover() {
-        const at = pointer.known ? onScreen(pointer.x, pointer.y) : null;
-        const near = focus.on && !focus.moving;
-        const hand = map.point(near && at ? map.hit(at[0], at[1]) : null);
-        const outside = !focus.on && !at && pointer.known && onOutside(pointer.x, pointer.y);
-        canvas.style.cursor = focus.on ? (hand ? 'pointer' : at || !pointer.known ? '' : 'zoom-out') : at || outside ? 'pointer' : '';
+        const at = pointer.known ? screenAt(pointer.x, pointer.y) : null;
+        const near = focus.on && !focus.moving && at && at.name === focus.on;
+        const onMap = map.point(near && at.name === 'samsung' ? map.hit(at.x, at.y) : null);
+        const onEditor = editor.point(near && at.name === 'macbook' ? editor.hit(at.x, at.y) : null);
+        let cursor = '';
+        if (!focus.on) {
+          if (at || (pointer.known && onOutside(pointer.x, pointer.y))) cursor = 'pointer';
+        } else if (pointer.known) {
+          if (!at) cursor = 'zoom-out';
+          else if (at.name !== focus.on || onMap || onEditor) cursor = 'pointer';
+        }
+        canvas.style.cursor = cursor;
       }
       // a press counts where the pointer goes down and comes up in one place (a tap, a click), not a drag
       window.addEventListener('pointerdown', (e) => {
-        if (e.button === 0) pointer.down = { x: e.clientX, y: e.clientY, id: e.pointerId };
+        if (e.button === 0) pointer.down = { x: e.clientX, y: e.clientY, id: e.pointerId, y1: e.clientY, grip: undefined };
+      });
+      // a mouse button going down on the canvas would take the keyboard from the terminal
+      canvas.addEventListener('mousedown', (e) => {
+        if (focus.on === 'macbook') e.preventDefault();
       });
       window.addEventListener('pointerup', (e) => {
         const down = pointer.down;
         pointer.down = null;
         if (!down || down.id !== e.pointerId || Math.hypot(e.clientX - down.x, e.clientY - down.y) > (e.pointerType === 'mouse' ? 6 : 14)) return;
-        const at = onScreen(e.clientX, e.clientY);
+        const at = screenAt(e.clientX, e.clientY);
         if (!focus.on) {
           if (at)
-            focusScreen(); // and nothing else: this press does not reach the map
+            focusScreen(at.name); // and nothing else: this press does not reach what is on the screen
           else if (onOutside(e.clientX, e.clientY))
             setSeason(nextSeason(turn ? turn.to : season)).catch((error) => {
               console.error(error); // the next backdrop did not come: the season stays as it is
             });
         } else if (!at) unfocus();
-        else if (!focus.moving) map.press(map.hit(at[0], at[1]));
+        else if (at.name !== focus.on) focusScreen(at.name);
+        else if (!focus.moving) {
+          if (at.name === 'samsung') map.press(map.hit(at.x, at.y));
+          else if (at.name === 'macbook') {
+            editor.press(editor.hit(at.x, at.y));
+            keys.focus({ preventScroll: true }); // a tap on the screen brings a phone's keyboard up
+          }
+        }
         // a finger leaves nothing hovering behind it
         if (e.pointerType !== 'mouse') pointer.known = false;
         pointer.moved = true;
@@ -833,10 +1071,45 @@ vec3 bakedDecode( vec3 v, float lo, float stops ) { return exp2( v * stops + lo 
       window.addEventListener('pointercancel', () => {
         pointer.down = null;
       });
-      // Escape undoes the last thing: an open panel first, then the push-in
+
+      // The MacBook's panes scroll: under a wheel (a mouse's, or two fingers on a trackpad) and
+      // under a finger dragged on the glass. Page pixels are turned into the canvas's rows.
+      const rowsFor = (pixels) => (pixels * editor.height) / (focus.rect.height * editor.rowHeight);
+      window.addEventListener(
+        'wheel',
+        (e) => {
+          if (focus.on !== 'macbook' || focus.moving) return;
+          const at = screenAt(e.clientX, e.clientY);
+          if (at && at.name === 'macbook') editor.scroll(editor.hit(at.x, at.y), e.deltaMode === 1 ? e.deltaY : rowsFor(e.deltaY));
+        },
+        { passive: true }
+      );
+      window.addEventListener('pointermove', (e) => {
+        const down = pointer.down;
+        if (!down || down.id !== e.pointerId || e.pointerType === 'mouse' || focus.on !== 'macbook' || focus.moving) return;
+        if (down.grip === undefined) {
+          // what the finger went down on
+          const at = screenAt(down.x, down.y);
+          down.grip = at && at.name === 'macbook' ? editor.hit(at.x, at.y) : null;
+        }
+        editor.scroll(down.grip, rowsFor(down.y1 - e.clientY));
+        down.y1 = e.clientY;
+      });
+
+      // Escape undoes the last thing: an open panel first, then the push-in. The arrows go to the
+      // screen on that side, but for the MacBook's while a line is being typed there.
       window.addEventListener('keydown', (e) => {
-        if (e.key !== 'Escape') return;
-        if (map.close() || unfocus()) pointer.moved = true;
+        if (e.key === 'Escape') {
+          if ((focus.on !== 'macbook' && focus.on !== 'dell' && map.close()) || unfocus()) pointer.moved = true;
+          return;
+        }
+        // a key typed at the MacBook when nothing has the keyboard (the window was left and come back to): the field takes it, and the key with it
+        if (focus.on === 'macbook' && document.activeElement === document.body && e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey)
+          keys.focus({ preventScroll: true });
+        if ((e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') || !focus.on || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+        if (e.target === keys && keys.value) return;
+        const next = SCREENS[SCREENS.indexOf(focus.on) + (e.key === 'ArrowLeft' ? -1 : 1)];
+        if (next && setFocus(next)) e.preventDefault();
       });
 
       let last = performance.now();
@@ -844,26 +1117,32 @@ vec3 bakedDecode( vec3 v, float lo, float stops ) { return exp2( v * stops + lo 
       function frame(now) {
         const dt = Math.min((now - last) / 1000, 0.1);
         last = now;
-        const k = 1 - Math.exp(-dt * 3.5);
-        const dx = drift.tx - drift.x,
-          dy = drift.ty - drift.y;
+        // With the desktop over the Dell's glass the room is drawn only when something in it has
+        // changed (the page resized, a season turning): nothing drifts and nothing falls, and the
+        // frames are the desktop's.
+        const covered = desk.live;
         let moved = dirty;
         if (focus.moving) {
-          const t = Math.min((now - focus.started) / (FOCUS_SECONDS * 1000), 1);
-          focus.f = THREE.MathUtils.lerp(focus.from, focus.on ? 1 : 0, smooth(t));
+          const t = THREE.MathUtils.clamp((now - focus.started) / (FOCUS_SECONDS * 1000), 0, 1);
+          focus.f = smooth(t);
           if (t >= 1) focus.moving = false;
           pointer.moved = true; // what the pointer is over changes with the camera, and once more on arriving
           moved = true;
         }
-        if (Math.abs(dx) + Math.abs(dy) > 1e-4) {
-          drift.x += dx * k;
-          drift.y += dy * k;
-          moved = true;
-        } else if (dx || dy) {
-          // the last of the way in one step, so the camera rests in the same place however it got there
-          drift.x = drift.tx;
-          drift.y = drift.ty;
-          moved = true;
+        if (!covered) {
+          const k = 1 - Math.exp(-dt * 3.5);
+          const dx = drift.tx - drift.x,
+            dy = drift.ty - drift.y;
+          if (Math.abs(dx) + Math.abs(dy) > 1e-4) {
+            drift.x += dx * k;
+            drift.y += dy * k;
+            moved = true;
+          } else if (dx || dy) {
+            // the last of the way in one step, so the camera rests in the same place however it got there
+            drift.x = drift.tx;
+            drift.y = drift.ty;
+            moved = true;
+          }
         }
         if (turn) {
           const t = Math.min((now - turn.started) / (SEASON_SECONDS * 1000), 1);
@@ -878,11 +1157,16 @@ vec3 bakedDecode( vec3 v, float lo, float stops ) { return exp2( v * stops + lo 
         }
         // What falls outside moves on its own: the picture is drawn again for it some thirty times
         // a second, and not at all while the tab is hidden (no frames come then, and no time passes).
-        if (world.weather.visible && !document.hidden) {
+        if (world.weather.visible && !document.hidden && !covered) {
           weatherUniforms.time.value += dt;
           if (now - drawn > 30) moved = true;
         }
-        if (moved) placeCamera();
+        if (moved) {
+          placeCamera();
+          if (desk.frame) placeDesk();
+        }
+        // the camera is in front of the Dell: its desktop comes
+        if (focus.on === 'dell' && !focus.moving && !desk.frame) openDesk();
         // the camera has moved under the pointer, or the pointer over the picture
         if (moved || pointer.moved || !map.settled) {
           pointer.moved = false;
@@ -893,6 +1177,10 @@ vec3 bakedDecode( vec3 v, float lo, float stops ) { return exp2( v * stops + lo 
           const texture = mapTextures.get(sheet);
           samsung.material.emissiveMap = texture;
           texture.needsUpdate = true;
+          moved = true;
+        }
+        if (editor.update(now)) {
+          editorTexture.needsUpdate = true;
           moved = true;
         }
         if (moved) {
@@ -906,14 +1194,19 @@ vec3 bakedDecode( vec3 v, float lo, float stops ) { return exp2( v * stops + lo 
       }
       requestAnimationFrame(frame);
 
+      /** Where a point of a screen's glass (0..1 across and down it) is on the page right now (client pixels), for tests that press it. */
+      function screenPoint(name, u, v) {
+        const s = focus.screens[name];
+        if (!s) return null;
+        const top = s.local[0].clone().lerp(s.local[1], u),
+          bottom = s.local[2].clone().lerp(s.local[3], u);
+        const p = s.mesh.localToWorld(top.lerp(bottom, v)).project(camera);
+        return [((p.x + 1) / 2) * page.width, ((1 - p.y) / 2) * page.height];
+      }
       /** Where a state's middle is on the page right now (client pixels), for tests that press it. */
       function statePoint(id) {
         const uv = map.where(id);
-        if (!uv) return null;
-        const top = corners[0].clone().lerp(corners[1], uv[0]),
-          bottom = corners[2].clone().lerp(corners[3], uv[0]);
-        const v = samsung.localToWorld(top.lerp(bottom, uv[1])).project(camera);
-        return [((v.x + 1) / 2) * window.innerWidth, ((1 - v.y) / 2) * window.innerHeight];
+        return uv ? screenPoint('samsung', uv[0], uv[1]) : null;
       }
 
       // for the console and the tests
@@ -941,17 +1234,23 @@ vec3 bakedDecode( vec3 v, float lo, float stops ) { return exp2( v * stops + lo 
         closeState: () => map.close(),
         pick,
         onScreen,
+        screenAt: (x, y) => {
+          const at = screenAt(x, y);
+          return at ? { ...at } : null;
+        },
+        screenPoint,
         statePoint,
         focus,
         focusScreen,
         unfocus,
+        desk,
         onOutside,
         setSeason,
         /** The season at the window, or the one it is turning to. */
         get season() {
           return turn ? turn.to : season;
         },
-        /** True when the camera is at the screen or on its way there. */
+        /** The screen the camera is at or on its way to ('samsung', 'macbook', 'dell'), or null at the seat. */
         get focused() {
           return focus.on;
         }

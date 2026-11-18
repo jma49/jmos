@@ -54,24 +54,54 @@ light), and of a quality no lower than that site's.
   Illinois (Chicago), Indiana, Wisconsin (Milwaukee), California,
   Washington (Seattle) and Georgia (Atlanta). Pressing a state opens the
   photographs he took there.
-- **The other two screens** show real things, not stand-ins. The Dell
-  shows the site's own desktop: a picture of `/os` at the screen's
-  2560 by 1440 with the Projects and Macintosh HD windows open, kept as
-  `public/room/screens/dell.webp`. The MacBook shows an editor in full
-  screen with `src/room/season.ts` open, its text taken from the file
-  when the site is built, and under it a terminal with the newest
-  commits on `main` (their subjects only, kept in
-  `src/room/terminal.json`) and the file's line count; `src/room/editor.js`
-  draws it once on a canvas, in JetBrains Mono from the site's own
-  bundle. Nothing on either names a person the site does not already
-  name. Both are sent to the graphics card once and glow as the Samsung
-  does. To make the picture and the terminal's lines again, from a
-  built site being served:
+- **The three screens** can each be pressed from the seat: the camera
+  goes up to that one, square on, and Escape, the "back" control or a
+  press beside it goes back; a press on another screen's glass, or the
+  left and right arrow keys, goes across to it. None shows a stand-in.
+  - *The Dell* shows the site's own desktop. From the seat it is a
+    picture of `/os` at the screen's 2560 by 1440 with the Projects and
+    Macintosh HD windows open, kept as `public/room/screens/dell.webp`.
+    From close it is the desktop itself: `/os` in a frame laid exactly
+    over the glass, made when the camera first arrives and taken off
+    the page when it leaves, so nothing of the desktop is fetched or
+    runs otherwise. The picture stays under the frame until the desktop
+    has loaded. The desktop is given the glass's own size on the page
+    as its window, and never less than 1280 across (narrower than that
+    it is laid out at 1280 and scaled down, which on a phone held
+    upright is small: there the "Open in full" control beside "Back"
+    is the better way). `/os` is not told it is framed and nothing of
+    it was changed; the headers already let the site frame itself.
+    Escape typed inside the frame leaves it, since keys typed there do
+    not reach the room's page: the desktop's own uses of Escape give
+    way to that while it is on the Dell. While the frame covers the
+    screen the room is drawn only when something in it changes, and
+    the camera does not drift, so the glass stays a rectangle of the
+    page.
+  - *The MacBook* is an editor in full screen over a terminal, drawn
+    on one canvas by `src/room/editor.js`, in JetBrains Mono from the
+    site's own bundle, and drawn again only when it changes. The editor
+    holds a few of the room's own files, their text taken from the
+    repository when the site is built (`season.ts`, `optics.ts`,
+    `terminal.ts`, `places.json` and a `readme.txt` that says what the
+    room is); a tab or `cat` opens one and the wheel scrolls it. The
+    terminal takes the keyboard while the camera is there (a field on
+    the page that nobody sees holds the line, so a phone brings its
+    keyboard up). Its commands are few and all act on the room or
+    print what is true of it (`src/room/terminal.ts`): `season winter`
+    turns the view outside the window, `map` and `os` go to the other
+    screens, `git log` prints the newest commits on `main` (their
+    subjects only, kept in `src/room/terminal.json`), `places` the
+    states on the map. There is no made-up user, host or uptime. Where
+    the screen is small on the page the type is drawn larger.
+  Nothing on either names a person the site does not already name. All
+  three glow alike. To make the Dell's picture and the terminal's
+  commits again, from a built site being served:
   `node tools/pond/room/web/shot-screens.cjs [port]`. The clock, the
   time zone and reduced motion are pinned as the project covers' are,
   and nothing outside the site is fetched. `room.glb` still carries the
   two stand-in pictures these replace, until `export.py` leaves them
-  out.
+  out. `node tools/pond/room/web/shot-interact.cjs [port]` tries all
+  three screens in a browser.
 - **How it is made.** Modelled and lit in Blender from scripts kept in
   `tools/pond/room/` (`scene.py` builds it, `export.py` bakes the light
   and writes what the browser loads into `public/room/`: the model,

@@ -16,7 +16,8 @@ const { chromium } = require('playwright');
 (async () => {
   const port = process.argv[2] || '4321';
   const url = `http://localhost:${port}/room`;
-  const browser = await chromium.launch();
+  // PLAYWRIGHT_CHROMIUM names a browser to use in place of the one Playwright would download
+  const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_CHROMIUM || undefined });
   const VISITED = ['TX', 'FL', 'OH', 'IL', 'IN', 'WI', 'CA', 'WA', 'GA'];
   const OTHERS = ['CO', 'OK', 'MI', 'NY', 'NV', 'AK'];
   let failed = 0;
@@ -115,7 +116,8 @@ const { chromium } = require('playwright');
 
   // in and out as a visitor goes, the camera drifting after the pointer; and the pictures
   {
-    const { page, state, rest, fill, click, moveTo, toDesk } = await mouse('');
+    // in summer, when nothing falls outside: the seat's two pictures are compared pixel for pixel
+    const { page, state, rest, fill, click, moveTo, toDesk } = await mouse('season=summer');
     await toDesk();
     let s = await state();
     check('seat: nothing focused, hovered or open', !s.focused && !s.hovered && !s.opened && !s.cursor, s);
@@ -244,7 +246,7 @@ const { chromium } = require('playwright');
     s = await state();
     check('the back control goes back to the seat', !s.focused, s);
     const hooks = await page.evaluate(() => [room.focusScreen(), room.focused, room.focusScreen(), room.unfocus(), room.focused, room.unfocus()]);
-    check('hooks: focusScreen, unfocus, focused', JSON.stringify(hooks) === '[true,true,false,true,false,false]', hooks);
+    check('hooks: focusScreen, unfocus, focused', JSON.stringify(hooks) === '[true,"samsung",false,true,null,false]', hooks);
     await rest();
     await page.close();
   }
