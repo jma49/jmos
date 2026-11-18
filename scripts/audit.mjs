@@ -13,7 +13,14 @@ const EXCEPTIONS = {
   // response to another. Astro uses it only in assets/build/remote.js, to
   // cache remote images while `astro build` runs: no users, no shared
   // cache at run time, since the site is static.
-  'GHSA-ch52-4w7c-c8xp': { until: '2026-11-15' }
+  'GHSA-ch52-4w7c-c8xp': { until: '2026-11-15' },
+  // picomatch, every version so far (via astro, vite and tinyglobby): a
+  // crafted glob can take very long to match. The globs it is given here
+  // are the ones in this repository's own config, matched while `astro
+  // build` runs; nothing a visitor sends reaches it, and the functions in
+  // api/ do not load it. No fixed version exists yet: when one does, take
+  // it (an override if astro lags) and drop this.
+  'GHSA-fc5q-39xc-vjpf': { until: '2026-12-02' }
 };
 
 const LEVELS = ['high', 'critical'];
