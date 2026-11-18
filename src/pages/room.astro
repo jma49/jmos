@@ -4,9 +4,13 @@
 // out of the sitemap). It stands apart from Layout.astro, whose head describes the site for
 // link previews and search, which this page is not for.
 //
-// The page is a canvas and three things over it: a note (loading, or why there is no room), and
-// the way back from the left screen. The scene's code (src/room/, with three.js) is this page's
-// own script and in no other page's bundle; it starts once the browser has shown it has WebGL.
+// The page is a canvas and a few things over it: a note (loading, or why there is no room), the
+// way back from a screen, beside it at the right screen a link to the desktop that screen shows,
+// and a field nobody sees, which holds what is typed at the laptop's terminal (so that a phone
+// brings its keyboard up for it). The site's desktop, when the camera is at the right screen, is a
+// frame that src/room/main.js adds and takes away. The scene's code (src/room/, with three.js) is
+// this page's own script and in no other page's bundle; it starts once the browser has shown it
+// has WebGL.
 // vercel.json gives this path its own Content Security Policy for what three.js needs.
 ---
 
@@ -76,11 +80,18 @@
       body[data-failed] canvas {
         display: none;
       }
-      /* the way back from the left screen: shown only while the camera is up at it */
-      #back {
+      /* the way back from a screen, and the way to the desktop the right screen shows: each
+         shown only while the camera is up at a screen (the second, at the right one) */
+      #controls {
         position: fixed;
         left: max(18px, env(safe-area-inset-left));
         top: max(18px, env(safe-area-inset-top));
+        display: flex;
+        gap: 8px;
+        pointer-events: none;
+      }
+      #back,
+      #full {
         display: flex;
         align-items: center;
         gap: 7px;
@@ -98,6 +109,7 @@
           Roboto,
           sans-serif;
         letter-spacing: 0.02em;
+        text-decoration: none;
         cursor: pointer;
         opacity: 0;
         transform: translateY(-6px);
@@ -107,24 +119,52 @@
           transform 0.35s ease,
           background 0.15s ease;
       }
-      #back svg {
+      #full {
+        padding: 8px 12px 8px 14px;
+        color: #b9bdc6;
+        font-weight: 400;
+      }
+      #back svg,
+      #full svg {
         display: block;
       }
-      #back:hover {
+      #back:hover,
+      #full:hover {
         background: rgba(34, 39, 49, 0.78);
       }
-      #back:focus-visible {
+      #back:focus-visible,
+      #full:focus-visible {
         outline: 2px solid #f0ae62;
         outline-offset: 2px;
       }
-      body[data-focused] #back {
+      body[data-focused] #back,
+      body[data-focused='dell'] #full {
         opacity: 1;
         transform: none;
         pointer-events: auto;
         transition-delay: 0.35s, 0.35s, 0s;
       }
+      /* the terminal's field: on the page so it can hold the keyboard, and not to be seen. At
+         the top, where a phone need not scroll to it; 16px, under which iOS zooms in on a field. */
+      #keys {
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        border: 0;
+        outline: 0;
+        background: none;
+        color: transparent;
+        caret-color: transparent;
+        font-size: 16px;
+        opacity: 0;
+        pointer-events: none;
+      }
       @media (prefers-reduced-motion: reduce) {
-        #back {
+        #back,
+        #full {
           transition: none;
         }
         #note {
@@ -134,13 +174,22 @@
     </style>
   </head>
   <body>
-    <canvas id="room" aria-label="A desk at dusk, seen from its seat: a laptop, two monitors above it, and behind them a window on a balcony and trees, in the season of the year. Pressing the view outside turns the season."></canvas>
-    <button id="back" type="button" tabindex="-1" aria-label="Back to the desk">
-      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M8.5 2.5 4 7l4.5 4.5"></path>
-      </svg>
-      Back
-    </button>
+    <canvas id="room" aria-label="A desk at dusk, seen from its seat: a laptop, two monitors above it, and behind them a window on a balcony and trees, in the season of the year. Pressing the view outside turns the season. Pressing a screen goes up to it: the left one is a map of places visited, the laptop has an editor and a terminal that takes commands, the right one is this site's desktop."></canvas>
+    <input id="keys" type="text" tabindex="-1" maxlength="200" aria-label="The terminal on the laptop's screen: type help and press Enter" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go" />
+    <div id="controls">
+      <button id="back" type="button" tabindex="-1" aria-label="Back to the desk">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M8.5 2.5 4 7l4.5 4.5"></path>
+        </svg>
+        Back
+      </button>
+      <a id="full" href="/os" tabindex="-1" aria-label="Open the desktop in the whole window">
+        Open in full
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M4.5 2.5h5v5M9.5 2.5 3 9"></path>
+        </svg>
+      </a>
+    </div>
     <p id="note" role="status">Loading the room</p>
     <noscript>
       <style>

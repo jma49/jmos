@@ -155,6 +155,27 @@ what is left, and what was learnt. What is open now is section 0.
   islands and the mug stay as they are. The painted relief on the stitches is slight enough
   to keep.
 
+  _Handed back: the second pass on those four islands_ (the picture 134 KB; the rest is as
+  it was).
+  1. `plush-print`: redrawn large. Six lines each way round the body, 162 pixels apart along
+     the island (970 / 6) and about 8 wide, crossing at about 45° in two rows of whole
+     diamonds 72 pixels tall; one round dot 22 across in the middle of each. A flat mid
+     orange (`#e88024`), no darker at the crossings, its edges a little uneven in the pile.
+     It repeats every 970 pixels exactly and runs to the top and bottom edges, with no plain
+     band under the collar or at the foot. The diamonds' height is a guess: say if the real
+     ones are taller or flatter.
+  2. `plush-back`: "Hawaii" in a light open hand: one thin even stroke about 2 pixels wide,
+     upright letters set wide apart, the word climbing about 8°, a tall open H with a
+     flourish in from the lower left, the w as two u's, nothing under the word, separate dots
+     on the i's. 265 wide with its flourish, centred at (704, 631). At this weight the satin
+     stitch across the stroke no longer shows: it reads as a white thread line.
+  3. `plush-ear`: an olive gold (`#b59a1e`) in upright thread rows with pale specks for the
+     metallic sparkle, as a triangle with three well-rounded corners, 97 wide by 96 tall in
+     its 128 box.
+  4. `plush-face`: each eye's rim is about 13 pixels wide and brighter than the terry inside
+     it, which is a touch greyer than before; the left pupil's ring is at less than half its
+     strength.
+
 - **Next cloud review: the gold window and its koi are ready.** Pull through
   `3792c71`: the chosen wide-2/tall-2 beds and the optional right-shifted bed
   are delivered, along with the third koi sheet and its tint mask. The local
