@@ -38,7 +38,7 @@ jobs:
     # job_workflow_ref), so a pinned reviewer still logs in, and a push to
     # Open-CR-Agent's main reaches this repository only through a bump of
     # this line. The budget comes from this repository's variables.
-    uses: jma49/Open-CR-Agent/.github/workflows/ocra-dogfood.yml@8594dbba861c752f601bc394023a994ae7ccf87a # main
+    uses: jma49/Open-CR-Agent/.github/workflows/ocra-dogfood.yml@1993a8b25ebb84b5881b4f354832b33f8c74ae89 # main
     secrets:
       GCP_WIF_PROVIDER: ${{ secrets.GCP_WIF_PROVIDER }}
       GCP_SERVICE_ACCOUNT: ${{ secrets.GCP_SERVICE_ACCOUNT }}
